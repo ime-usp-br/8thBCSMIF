@@ -65,7 +65,7 @@ ESSENTIAL_CONTENT_DELIMITER_END = "--- END OF ESSENTIAL FILE "
 
 # Numeric Constants
 SUMMARY_TOKEN_LIMIT_PER_CALL = 200000  # Example limit for batching summaries
-ESTIMATED_TOKENS_PER_SUMMARY = 200  # Rough estimate for a single summary
+ESTIMATED_TOKENS_PER_SUMMARY = 100  # Rough estimate for a single summary
 SLEEP_DURATION_SECONDS = 1  # Default sleep duration for rate limiting
 DEFAULT_API_TIMEOUT_SECONDS = 300  # Default timeout for Gemini API calls
 MANIFEST_MAX_TOKEN_FILTER = 200000
