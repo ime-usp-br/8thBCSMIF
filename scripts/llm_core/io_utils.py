@@ -7,6 +7,7 @@ import re
 import datetime
 import json  # Adicionado para update_manifest_file
 import traceback  # Adicionado para update_manifest_file
+import shutil  # Adicionado para clean_temp_directory
 from pathlib import Path
 from typing import Tuple, Optional, Dict, Any, List, Set
 
@@ -221,4 +222,52 @@ def update_manifest_file(manifest_path: Path, manifest_data: Dict[str, Any]) -> 
             file=sys.stderr,
         )
         traceback.print_exc(file=sys.stderr)
+        return False
+
+
+def clean_temp_directory(temp_dir: Path, verbose: bool = False) -> bool:
+    """
+    AC4: Limpa completamente o conteúdo do diretório temporário.
+    Remove o diretório e o recria vazio.
+    
+    Args:
+        temp_dir: Caminho para o diretório temporário
+        verbose: Se True, exibe logs detalhados
+        
+    Returns:
+        bool: True se a limpeza foi bem-sucedida, False caso contrário
+    """
+    try:
+        if temp_dir.exists():
+            if verbose:
+                print(f"  AC4: Removendo diretório temporário existente: {temp_dir.relative_to(core_config.PROJECT_ROOT)}")
+            shutil.rmtree(temp_dir)
+        
+        if verbose:
+            print(f"  AC4: Criando diretório temporário limpo: {temp_dir.relative_to(core_config.PROJECT_ROOT)}")
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        
+        if verbose:
+            print(f"  AC4: Diretório temporário limpo e pronto para uso")
+        return True
+        
+    except PermissionError as e:
+        print(
+            f"Erro: Permissão negada ao limpar diretório temporário '{temp_dir}': {e}",
+            file=sys.stderr,
+        )
+        return False
+    except OSError as e:
+        print(
+            f"Erro: Falha ao limpar diretório temporário '{temp_dir}': {e}",
+            file=sys.stderr,
+        )
+        return False
+    except Exception as e:
+        print(
+            f"Erro inesperado ao limpar diretório temporário '{temp_dir}': {e}",
+            file=sys.stderr,
+        )
+        if verbose:
+            traceback.print_exc(file=sys.stderr)
         return False
