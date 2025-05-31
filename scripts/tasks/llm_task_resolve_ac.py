@@ -155,7 +155,9 @@ def main_resolve_ac():
                 file=sys.stderr,
             )
 
-        if args.only_prompt and not args.two_stage:
+        # AC1.1: Não sair prematuramente se --select-context também estiver ativo
+        # Permite que a seleção de contexto seja executada antes de exibir o prompt
+        if args.only_prompt and not args.two_stage and not args.select_context:
             print(f"\n--- Prompt Final (--only-prompt) ---")
             print(initial_prompt_content_current.strip())
             print("--- Fim ---")
@@ -297,14 +299,22 @@ def main_resolve_ac():
                     sys.exit(1)
                 load_default_context_after_selection_failure = True
             else:
-                final_selected_files_for_context = (
-                    core_context.confirm_and_modify_selection(
-                        suggested_files_from_api,
-                        manifest_data_for_context_selection,
-                        max_tokens_for_main_call,  # AC3.2
-                        verbose=verbose,  # AC5.1d, AC5.1e
+                # AC1.2: Consultar usuário para confirmar/modificar lista (se -y não for usado)
+                if args.yes:
+                    # Se --yes está ativo, usar diretamente a lista sugerida pela LLM
+                    final_selected_files_for_context = suggested_files_from_api
+                    if verbose:
+                        print(f"  AC1.2: Flag --yes ativa, usando diretamente {len(suggested_files_from_api)} arquivos sugeridos pela LLM.")
+                else:
+                    # Caso contrário, permitir confirmação/modificação pelo usuário
+                    final_selected_files_for_context = (
+                        core_context.confirm_and_modify_selection(
+                            suggested_files_from_api,
+                            manifest_data_for_context_selection,
+                            max_tokens_for_main_call,  # AC3.2
+                            verbose=verbose,  # AC5.1d, AC5.1e
+                        )
                     )
-                )
                 if final_selected_files_for_context is None:
                     load_default_context_after_selection_failure = True
 
