@@ -229,28 +229,32 @@ def clean_temp_directory(temp_dir: Path, verbose: bool = False) -> bool:
     """
     AC4: Limpa completamente o conteúdo do diretório temporário.
     Remove o diretório e o recria vazio.
-    
+
     Args:
         temp_dir: Caminho para o diretório temporário
         verbose: Se True, exibe logs detalhados
-        
+
     Returns:
         bool: True se a limpeza foi bem-sucedida, False caso contrário
     """
     try:
         if temp_dir.exists():
             if verbose:
-                print(f"  AC4: Removendo diretório temporário existente: {temp_dir.relative_to(core_config.PROJECT_ROOT)}")
+                print(
+                    f"  AC4: Removendo diretório temporário existente: {temp_dir.relative_to(core_config.PROJECT_ROOT)}"
+                )
             shutil.rmtree(temp_dir)
-        
+
         if verbose:
-            print(f"  AC4: Criando diretório temporário limpo: {temp_dir.relative_to(core_config.PROJECT_ROOT)}")
+            print(
+                f"  AC4: Criando diretório temporário limpo: {temp_dir.relative_to(core_config.PROJECT_ROOT)}"
+            )
         temp_dir.mkdir(parents=True, exist_ok=True)
-        
+
         if verbose:
             print(f"  AC4: Diretório temporário limpo e pronto para uso")
         return True
-        
+
     except PermissionError as e:
         print(
             f"Erro: Permissão negada ao limpar diretório temporário '{temp_dir}': {e}",
@@ -279,55 +283,64 @@ def copy_files_to_temp_directory(
     """
     AC5: Copia arquivos para o diretório temporário sem preservar estrutura de diretórios.
     Todos os arquivos são copiados diretamente para temp_dir com extensão .txt.
-    
+
     Args:
         files_to_copy: Lista de caminhos absolutos dos arquivos a copiar
         temp_dir: Diretório temporário de destino
         project_root: Raiz do projeto para cálculos relativos
         verbose: Se True, exibe logs detalhados
-        
+
     Returns:
         Tuple[bool, List[str]]: (sucesso, lista de nomes dos arquivos copiados)
     """
     copied_files = []
-    
+
     try:
         for source_file in files_to_copy:
             if not source_file.exists():
                 if verbose:
-                    print(f"  AC5: Aviso - Arquivo não encontrado, pulando: {source_file.relative_to(project_root) if source_file.is_absolute() and source_file.is_relative_to(project_root) else source_file}")
+                    print(
+                        f"  AC5: Aviso - Arquivo não encontrado, pulando: {source_file.relative_to(project_root) if source_file.is_absolute() and source_file.is_relative_to(project_root) else source_file}"
+                    )
                 continue
-                
+
             if not source_file.is_file():
                 if verbose:
-                    print(f"  AC5: Aviso - Não é um arquivo, pulando: {source_file.relative_to(project_root) if source_file.is_absolute() and source_file.is_relative_to(project_root) else source_file}")
+                    print(
+                        f"  AC5: Aviso - Não é um arquivo, pulando: {source_file.relative_to(project_root) if source_file.is_absolute() and source_file.is_relative_to(project_root) else source_file}"
+                    )
                 continue
-            
+
             # AC5: Usar apenas o nome do arquivo, sem estrutura de diretórios
             original_name = source_file.name
             # Remover extensão e adicionar .txt
             name_without_ext = source_file.stem
             dest_filename = f"{name_without_ext}.txt"
-            
+
             # Se já existe um arquivo com mesmo nome, adicionar sufixo
             counter = 1
             final_dest_filename = dest_filename
             while (temp_dir / final_dest_filename).exists():
                 final_dest_filename = f"{name_without_ext}_{counter}.txt"
                 counter += 1
-            
+
             dest_file = temp_dir / final_dest_filename
-            
+
             # Copiar o arquivo
             shutil.copy2(source_file, dest_file)
             copied_files.append(final_dest_filename)
-            
+
             if verbose:
-                relative_source = source_file.relative_to(project_root) if source_file.is_absolute() and source_file.is_relative_to(project_root) else source_file
+                relative_source = (
+                    source_file.relative_to(project_root)
+                    if source_file.is_absolute()
+                    and source_file.is_relative_to(project_root)
+                    else source_file
+                )
                 print(f"  AC5: Copiado {relative_source} -> {final_dest_filename}")
-        
+
         return True, copied_files
-        
+
     except PermissionError as e:
         print(
             f"Erro: Permissão negada ao copiar arquivos para '{temp_dir}': {e}",

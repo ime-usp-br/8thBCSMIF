@@ -304,7 +304,9 @@ def main_resolve_ac():
                     # Se --yes está ativo, usar diretamente a lista sugerida pela LLM
                     final_selected_files_for_context = suggested_files_from_api
                     if verbose:
-                        print(f"  AC1.2: Flag --yes ativa, usando diretamente {len(suggested_files_from_api)} arquivos sugeridos pela LLM.")
+                        print(
+                            f"  AC1.2: Flag --yes ativa, usando diretamente {len(suggested_files_from_api)} arquivos sugeridos pela LLM."
+                        )
                 else:
                     # Caso contrário, permitir confirmação/modificação pelo usuário
                     final_selected_files_for_context = (
@@ -319,12 +321,23 @@ def main_resolve_ac():
                     load_default_context_after_selection_failure = True
 
         # AC5: Se -op e -sc estão juntas, preparar diretório temporário com arquivos selecionados
-        if args.only_prompt and args.select_context and final_selected_files_for_context is not None:
-            print(f"\nPreparando diretório temporário para uso manual (--only-prompt + --select-context)...")
-            
+        if (
+            args.only_prompt
+            and args.select_context
+            and final_selected_files_for_context is not None
+        ):
+            print(
+                f"\nPreparando diretório temporário para uso manual (--only-prompt + --select-context)..."
+            )
+
             # Limpar diretório temporário primeiro (AC4)
-            if not io_utils.clean_temp_directory(core_config.TEMP_CONTEXT_COPY_DIR, verbose=verbose):
-                print("Erro: Falha ao limpar diretório temporário. Continuando sem cópia.", file=sys.stderr)
+            if not io_utils.clean_temp_directory(
+                core_config.TEMP_CONTEXT_COPY_DIR, verbose=verbose
+            ):
+                print(
+                    "Erro: Falha ao limpar diretório temporário. Continuando sem cópia.",
+                    file=sys.stderr,
+                )
             else:
                 # Obter arquivos essenciais para a tarefa (AC2)
                 try:
@@ -334,35 +347,49 @@ def main_resolve_ac():
                 except Exception as e:
                     print(f"Erro ao obter arquivos essenciais: {e}", file=sys.stderr)
                     essential_files_abs = []
-                
+
                 # Converter arquivos selecionados para caminhos absolutos
                 selected_files_abs = []
                 for file_path_str in final_selected_files_for_context:
-                    abs_path = (core_config.PROJECT_ROOT / file_path_str).resolve(strict=False)
+                    abs_path = (core_config.PROJECT_ROOT / file_path_str).resolve(
+                        strict=False
+                    )
                     selected_files_abs.append(abs_path)
-                
+
                 # Combinar listas e remover duplicatas (AC2)
                 all_files_set = set(essential_files_abs + selected_files_abs)
                 all_files_to_copy = list(all_files_set)
-                
+
                 if verbose:
-                    print(f"  Total de arquivos a copiar: {len(all_files_to_copy)} ({len(essential_files_abs)} essenciais + {len(selected_files_abs)} selecionados)")
-                
+                    print(
+                        f"  Total de arquivos a copiar: {len(all_files_to_copy)} ({len(essential_files_abs)} essenciais + {len(selected_files_abs)} selecionados)"
+                    )
+
                 # Copiar arquivos para diretório temporário (AC5)
                 success, copied_files = io_utils.copy_files_to_temp_directory(
-                    all_files_to_copy, core_config.TEMP_CONTEXT_COPY_DIR, core_config.PROJECT_ROOT, verbose=verbose
+                    all_files_to_copy,
+                    core_config.TEMP_CONTEXT_COPY_DIR,
+                    core_config.PROJECT_ROOT,
+                    verbose=verbose,
                 )
-                
+
                 if success:
                     # AC6: Informar usuário sobre arquivos copiados
                     print(f"\n✅ Arquivos copiados para diretório temporário:")
-                    print(f"   📁 {core_config.TEMP_CONTEXT_COPY_DIR.relative_to(core_config.PROJECT_ROOT)}")
-                    print(f"   📋 {len(copied_files)} arquivos copiados (extensão .txt para Google AI Studio)")
+                    print(
+                        f"   📁 {core_config.TEMP_CONTEXT_COPY_DIR.relative_to(core_config.PROJECT_ROOT)}"
+                    )
+                    print(
+                        f"   📋 {len(copied_files)} arquivos copiados (extensão .txt para Google AI Studio)"
+                    )
                     if verbose:
                         for filename in sorted(copied_files):
                             print(f"      - {filename}")
                 else:
-                    print("⚠️  Falha na cópia de alguns arquivos. Verifique as mensagens de erro acima.", file=sys.stderr)
+                    print(
+                        "⚠️  Falha na cópia de alguns arquivos. Verifique as mensagens de erro acima.",
+                        file=sys.stderr,
+                    )
 
         # Lógica de carregamento de contexto, agora usando max_tokens_for_main_call
         if (
@@ -482,7 +509,7 @@ def main_resolve_ac():
 
         if args.only_prompt:
             print(f"\n--- Prompt Final Para Envio (--only-prompt) ---")
-            
+
             # AC7: Se -op e -sc foram usadas juntas, adicionar referência aos arquivos temporários
             if args.select_context and core_config.TEMP_CONTEXT_COPY_DIR.exists():
                 # Listar arquivos copiados para referência no prompt
@@ -492,40 +519,51 @@ def main_resolve_ac():
                     enhanced_prompt = final_prompt_to_send.strip()
                     enhanced_prompt += "\n\n## Arquivos de Contexto Anexados\n"
                     enhanced_prompt += f"Os seguintes {len(temp_files)} arquivos foram selecionados e estão anexados a esta conversa para fornecer contexto relevante:\n\n"
-                    
+
                     for temp_file in temp_files:
                         # Remover extensão .txt para mostrar o nome original
                         original_name = temp_file.stem
                         enhanced_prompt += f"- **{original_name}**: "
-                        
+
                         # Tentar identificar o tipo/propósito do arquivo baseado no nome
                         if "Model" in original_name or "model" in original_name:
                             enhanced_prompt += "Modelo de dados/entidade"
-                        elif "Controller" in original_name or "controller" in original_name:
+                        elif (
+                            "Controller" in original_name
+                            or "controller" in original_name
+                        ):
                             enhanced_prompt += "Controlador da aplicação"
                         elif "Service" in original_name or "service" in original_name:
                             enhanced_prompt += "Serviço de negócio"
-                        elif "migration" in original_name or "Migration" in original_name:
+                        elif (
+                            "migration" in original_name or "Migration" in original_name
+                        ):
                             enhanced_prompt += "Migração de banco de dados"
                         elif "test" in original_name.lower() or "Test" in original_name:
                             enhanced_prompt += "Arquivo de teste"
-                        elif "config" in original_name.lower() or "Config" in original_name:
+                        elif (
+                            "config" in original_name.lower()
+                            or "Config" in original_name
+                        ):
                             enhanced_prompt += "Arquivo de configuração"
                         elif original_name.endswith("_details"):
                             enhanced_prompt += "Detalhes da issue GitHub"
-                        elif "guia" in original_name.lower() or "padrao" in original_name.lower():
+                        elif (
+                            "guia" in original_name.lower()
+                            or "padrao" in original_name.lower()
+                        ):
                             enhanced_prompt += "Documentação/guia do projeto"
                         else:
                             enhanced_prompt += "Arquivo do projeto"
                         enhanced_prompt += "\n"
-                    
+
                     enhanced_prompt += "\nPor favor, analise estes arquivos anexados juntamente com o prompt para fornecer a melhor solução possível."
                     print(enhanced_prompt)
                 else:
                     print(final_prompt_to_send.strip())
             else:
                 print(final_prompt_to_send.strip())
-            
+
             print("--- Fim ---")
             sys.exit(0)
 
