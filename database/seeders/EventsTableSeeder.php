@@ -12,7 +12,7 @@ class EventsTableSeeder extends Seeder
      */
     public function run(): void
     {
-    
+
         Event::updateOrCreate(
             ['code' => 'BCSMIF2025'],
             [

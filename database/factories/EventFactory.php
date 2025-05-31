@@ -43,8 +43,6 @@ class EventFactory extends Factory
 
     /**
      * Indicate that the event is the main conference.
-     *
-     * @return \Illuminate\Database\Eloquent\Factories\Factory
      */
     public function mainConference(): Factory
     {
@@ -57,8 +55,6 @@ class EventFactory extends Factory
 
     /**
      * Indicate that the event is a workshop (not the main conference).
-     *
-     * @return \Illuminate\Database\Eloquent\Factories\Factory
      */
     public function workshop(): Factory
     {
