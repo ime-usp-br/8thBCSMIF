@@ -482,7 +482,50 @@ def main_resolve_ac():
 
         if args.only_prompt:
             print(f"\n--- Prompt Final Para Envio (--only-prompt) ---")
-            print(final_prompt_to_send.strip())
+            
+            # AC7: Se -op e -sc foram usadas juntas, adicionar referência aos arquivos temporários
+            if args.select_context and core_config.TEMP_CONTEXT_COPY_DIR.exists():
+                # Listar arquivos copiados para referência no prompt
+                temp_files = sorted(core_config.TEMP_CONTEXT_COPY_DIR.glob("*.txt"))
+                if temp_files:
+                    # Adicionar contexto sobre os arquivos anexados ao prompt
+                    enhanced_prompt = final_prompt_to_send.strip()
+                    enhanced_prompt += "\n\n## Arquivos de Contexto Anexados\n"
+                    enhanced_prompt += f"Os seguintes {len(temp_files)} arquivos foram selecionados e estão anexados a esta conversa para fornecer contexto relevante:\n\n"
+                    
+                    for temp_file in temp_files:
+                        # Remover extensão .txt para mostrar o nome original
+                        original_name = temp_file.stem
+                        enhanced_prompt += f"- **{original_name}**: "
+                        
+                        # Tentar identificar o tipo/propósito do arquivo baseado no nome
+                        if "Model" in original_name or "model" in original_name:
+                            enhanced_prompt += "Modelo de dados/entidade"
+                        elif "Controller" in original_name or "controller" in original_name:
+                            enhanced_prompt += "Controlador da aplicação"
+                        elif "Service" in original_name or "service" in original_name:
+                            enhanced_prompt += "Serviço de negócio"
+                        elif "migration" in original_name or "Migration" in original_name:
+                            enhanced_prompt += "Migração de banco de dados"
+                        elif "test" in original_name.lower() or "Test" in original_name:
+                            enhanced_prompt += "Arquivo de teste"
+                        elif "config" in original_name.lower() or "Config" in original_name:
+                            enhanced_prompt += "Arquivo de configuração"
+                        elif original_name.endswith("_details"):
+                            enhanced_prompt += "Detalhes da issue GitHub"
+                        elif "guia" in original_name.lower() or "padrao" in original_name.lower():
+                            enhanced_prompt += "Documentação/guia do projeto"
+                        else:
+                            enhanced_prompt += "Arquivo do projeto"
+                        enhanced_prompt += "\n"
+                    
+                    enhanced_prompt += "\nPor favor, analise estes arquivos anexados juntamente com o prompt para fornecer a melhor solução possível."
+                    print(enhanced_prompt)
+                else:
+                    print(final_prompt_to_send.strip())
+            else:
+                print(final_prompt_to_send.strip())
+            
             print("--- Fim ---")
             sys.exit(0)
 
