@@ -22,9 +22,9 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('event_code')
-                  ->references('code')
-                  ->on('events')
-                  ->onDelete('cascade');
+                ->references('code')
+                ->on('events')
+                ->onDelete('cascade');
 
             $table->unique([
                 'event_code',
@@ -33,7 +33,7 @@ return new class extends Migration
                 'period',
                 'is_discount_for_main_event_participant',
             ], 'fees_unique_combination_index');
-            
+
             $table->index('participant_category');
             $table->index('type');
             $table->index('period');
