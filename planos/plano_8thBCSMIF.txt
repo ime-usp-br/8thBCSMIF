@@ -1,0 +1,971 @@
+TITLE: [BCSMIF][Fase0.1] Configurar Aplicação Laravel para o Evento 8thBCSMIF
+TYPE: chore
+LABELS: bcsmif,setup,config,todo,fase-0
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 0: Configuração Inicial
+CHORE_MOTIVATION: Preparar o ambiente Laravel do Starter Kit para o projeto específico do 8th BCSMIF, estabelecendo as configurações base da aplicação.
+CHORE_DESCRIPTION: Esta tarefa envolve a configuração inicial da aplicação Laravel 12, adaptando o Starter Kit para o evento 8th BCSMIF. Isso inclui atualizar o nome da aplicação, URLs, locales, fuso horário e outras configurações básicas. Também envolve garantir que o banco de dados esteja configurado e que as migrações iniciais possam ser executadas.
+PROPOSED_SOLUTION:
+1.  Copiar `.env.example` para `.env`.
+2.  No arquivo `.env`:
+    *   Definir `APP_NAME="8thBCSMIF"` (ou nome similar aprovado).
+    *   Definir `APP_URL` para a URL de desenvolvimento local (ex: `http://localhost:8000` ou `http://8thbcsmif.test`).
+    *   Definir `APP_ENV=local`.
+    *   Definir `APP_DEBUG=true`.
+    *   Configurar `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` para o banco de dados de desenvolvimento (ex: MySQL, MariaDB).
+    *   Definir `APP_LOCALE=pt_BR`.
+    *   Definir `APP_FALLBACK_LOCALE=pt_BR`.
+    *   Definir `APP_FAKER_LOCALE=pt_BR`.
+    *   Garantir que `SESSION_DRIVER` e `CACHE_STORE` estejam como `database`.
+    *   Garantir que `QUEUE_CONNECTION` esteja como `database`.
+3.  Gerar a chave da aplicação com `php artisan key:generate`.
+4.  No arquivo `config/app.php`:
+    *   Verificar/Confirmar `name` => `env('APP_NAME', '8thBCSMIF')`.
+    *   Verificar/Confirmar `locale` => `env('APP_LOCALE', 'pt_BR')`.
+    *   Verificar/Confirmar `fallback_locale` => `env('APP_FALLBACK_LOCALE', 'pt_BR')`.
+    *   Verificar/Confirmar `faker_locale` => `env('APP_FAKER_LOCALE', 'pt_BR')`.
+    *   Definir `timezone` => `'America/Sao_Paulo'`.
+5.  Limpar/adaptar rotas e views de exemplo do Breeze que não serão utilizadas, se necessário (ex: a view `welcome.blade.php` pode ser adaptada para a home do evento).
+6.  Executar `php artisan migrate` para criar as tabelas base no banco de dados configurado.
+7.  Atualizar o `README.md` do projeto para refletir que é o site do 8thBCSMIF, incluindo o nome do evento, datas, e um breve resumo. Remover ou adaptar seções do README do Starter Kit que não se aplicam diretamente.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Arquivo `.env` criado e configurado com `APP_NAME="8thBCSMIF"` (ou similar), `APP_URL` (desenvolvimento), `APP_LOCALE="pt_BR"`, `APP_FALLBACK_LOCALE="pt_BR"`, `APP_FAKER_LOCALE="pt_BR"`.
+- [ ] AC2: Chave da aplicação (`APP_KEY`) gerada no `.env`.
+- [ ] AC3: Configurações em `config/app.php` (name, locale, fallback_locale, faker_locale, timezone) estão corretas para o projeto 8thBCSMIF (Português do Brasil, Fuso Horário de São Paulo).
+- [ ] AC4: Conexão com o banco de dados de desenvolvimento (`DB_CONNECTION`, etc.) está configurada no `.env`.
+- [ ] AC5: O comando `php artisan migrate` executa com sucesso no banco de dados de desenvolvimento, criando as tabelas padrão do Laravel e dos pacotes (users, sessions, cache, jobs, permissions, roles, etc.).
+- [ ] AC6: A página inicial (`/`) carrega sem erros, exibindo conteúdo adaptado para o 8thBCSMIF (ou a view `welcome.blade.php` padrão do Breeze se a adaptação for uma issue separada).
+- [ ] AC7: O `README.md` do projeto foi atualizado para descrever o site do 8thBCSMIF.
+- [ ] AC8: Código PHP/Blade/JS (etc.) implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC9: Código PHP/Blade/JS (etc.) implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+- [ ] AC10: Todos os testes automatizados (PHPUnit, Dusk) existentes no Starter Kit ainda passam após estas configurações.
+- [ ] AC11: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase1.1] Implementar Model, Migration e Seeder para Events
+TYPE: feature
+LABELS: bcsmif,fase-1,database,eloquent,migration,seeder,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 1: Modelagem e Dados Core
+FEATURE_MOTIVATION: Armazenar informações detalhadas sobre o evento principal (8th BCSMIF) e os workshops satélites (Risk Analysis and Applications, Dependence Analysis) é fundamental para a gestão do site de inscrições, cálculo de taxas e exibição de informações aos usuários.
+FEATURE_DESCRIPTION: Esta tarefa envolve a criação da estrutura de banco de dados e dos dados iniciais para a entidade "Event". Isso inclui:
+1.  Criar uma migration para a tabela `events`.
+2.  Definir o Model Eloquent `App\Models\Event` com seus atributos, fillable, casts.
+3.  Criar um Seeder (`EventsTableSeeder`) para popular a tabela `events` com os dados do 8th BCSMIF e dos dois workshops, conforme as informações disponíveis em `docs/descricao_evento.md` e `docs/formulario_inscricao.md` (para deadlines).
+PROPOSED_SOLUTION:
+*   **Migration (`create_events_table`):**
+    *   Gerar com `php artisan make:migration create_events_table --create=events`.
+    *   Campos a incluir:
+        *   `id` (PK, bigIncrements) - Chave primária padrão.
+        *   `code` (string, unique, index) - Código curto para o evento (ex: 'BCSMIF2025', 'RAA2025', 'WDA2025'). Usado como chave lógica.
+        *   `name` (string) - Nome completo do evento/workshop.
+        *   `description` (text, nullable) - Descrição detalhada do evento.
+        *   `start_date` (date) - Data de início.
+        *   `end_date` (date) - Data de término.
+        *   `location` (string) - Local de realização (ex: "Maresias Beach Hotel, Maresias, SP", "IME-USP, São Paulo", "IMECC-UNICAMP, Campinas").
+        *   `registration_deadline_early` (date, nullable) - Data limite para inscrição com desconto "early bird" (Ex: 15/08/2025).
+        *   `registration_deadline_late` (date, nullable) - Data limite final para inscrição.
+        *   `is_main_conference` (boolean, default: false, index) - Indica se é o evento principal (8th BCSMIF).
+        *   `timestamps`
+*   **Model (`App\Models\Event`):**
+    *   Gerar com `php artisan make:model Event`.
+    *   Definir `$fillable` para todos os campos da tabela (exceto `id`, `timestamps`).
+    *   Definir `$casts` para `start_date`, `end_date`, `registration_deadline_early`, `registration_deadline_late` como `'date'` e `is_main_conference` como `'boolean'`.
+*   **Seeder (`EventsTableSeeder`):**
+    *   Gerar com `php artisan make:seeder EventsTableSeeder`.
+    *   No método `run()`, usar `Event::updateOrCreate(['code' => '...'], [ ...dados... ])` para popular:
+        *   8th BCSMIF: code='BCSMIF2025', name='8th Brazilian Conference on Statistical Modeling in Insurance and Finance', start_date='2025-09-28', end_date='2025-10-03', location='Maresias Beach Hotel, Maresias, SP', registration_deadline_early='2025-08-15', is_main_conference=true. Description de `descricao_evento.md`.
+        *   Risk Analysis and Applications: code='RAA2025', name='Risk Analysis and Applications Workshop', start_date='2025-09-24', end_date='2025-09-25', location='IME-USP, São Paulo', registration_deadline_early='2025-08-15'. Description de `descricao_evento.md`.
+        *   Dependence Analysis: code='WDA2025', name='Dependence Analysis Workshop', start_date='2025-09-26', end_date='2025-09-27', location='IMECC-UNICAMP, Campinas', registration_deadline_early='2025-08-15'. Description de `descricao_evento.md`.
+    *   Chamar `EventsTableSeeder` a partir de `DatabaseSeeder.php`.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Migration `create_events_table` existe e define corretamente todos os campos especificados (id, code, name, description, start_date, end_date, location, registration_deadline_early, registration_deadline_late, is_main_conference, timestamps) com tipos de dados e constraints apropriados (unique e index para code, index para is_main_conference).
+- [ ] AC2: Model `App\Models\Event` existe, estende `Illuminate\Database\Eloquent\Model`, e possui as propriedades `$fillable` e `$casts` corretamente definidas para todos os campos da migration.
+- [ ] AC3: Seeder `EventsTableSeeder` existe e, quando executado, popula a tabela `events` com os dados corretos para o 8th BCSMIF, o workshop de Risk Analysis e o workshop de Dependence Analysis, incluindo nomes, datas, locais, deadlines e o status `is_main_conference`.
+- [ ] AC4: O `EventsTableSeeder` é chamado corretamente dentro do método `run()` do `DatabaseSeeder.php`.
+- [ ] AC5: O comando `php artisan migrate --seed` (ou `php artisan migrate` seguido de `php artisan db:seed`) executa sem erros e a tabela `events` é criada e populada corretamente no banco de dados.
+- [ ] AC6: Código PHP desenvolvido (Migration, Model, Seeder) segue estritamente os padrões PSR-12 (verificado com `./vendor/bin/pint`).
+- [ ] AC7: Código PHP desenvolvido passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+- [ ] AC8: Testes unitários (PHPUnit) são criados para o Model `Event` para verificar casts e qualquer lógica customizada futura simples (se houver, como um accessor para nome formatado).
+- [ ] AC9: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase1.2] Implementar Model, Migration e Seeder para Fees (Tabela de Preços)
+TYPE: feature
+LABELS: bcsmif,fase-1,database,eloquent,migration,seeder,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 1: Modelagem e Dados Core
+FEATURE_MOTIVATION: Estruturar as regras de precificação do evento principal e workshops, considerando diferentes categorias de participantes (estudante de graduação, pós-graduação, professor associado ABE, professor não-associado ABE, profissional) e prazos (até 15/08/2025 e após), incluindo preços para participação online e descontos para participantes do evento principal nos workshops.
+FEATURE_DESCRIPTION: Esta tarefa envolve criar a estrutura de banco de dados e os dados iniciais para a entidade "Fee", que armazenará as diferentes taxas de inscrição.
+1.  Criar uma migration para a tabela `fees`.
+2.  Definir o Model Eloquent `App\Models\Fee`.
+3.  Criar um Seeder (`FeesTableSeeder`) para popular a tabela `fees` com todos os cenários de preço conforme especificado no documento `docs/formulario_inscricao.md` (seção "Tabela de valores").
+PROPOSED_SOLUTION:
+*   **Migration (`create_fees_table`):**
+    *   Gerar com `php artisan make:migration create_fees_table --create=fees`.
+    *   Campos a incluir:
+        *   `id` (PK)
+        *   `event_code` (string, FK para `events.code`, index)
+        *   `participant_category` (string, index) - Valores como: 'undergrad_student', 'grad_student', 'professor_abe', 'professor_non_abe_professional'. Considerar se "ABE non-member" e "Professional" podem ser agrupados ou se precisam de distinção se os preços forem diferentes. O plano atual agrupa "Professor - ABE non-member Professional".
+        *   `type` (string, index, default: 'in-person') - Valores: 'in-person', 'online'.
+        *   `period` (string, index, default: 'early') - Valores: 'early' (até 15/08), 'late' (após 15/08).
+        *   `price` (decimal, 8, 2) - Preço da taxa.
+        *   `is_discount_for_main_event_participant` (boolean, default: false, index) - Aplicável para workshops, indica se o preço é o com desconto para quem já está no evento principal.
+        *   `timestamps`
+    *   Definir chaves estrangeiras: `event_code` referenciando `events(code)`.
+    *   Índices compostos podem ser úteis para `(event_code, participant_category, type, period, is_discount_for_main_event_participant)` para garantir unicidade e otimizar consultas.
+*   **Model (`App\Models\Fee`):**
+    *   Gerar com `php artisan make:model Fee`.
+    *   Definir `$fillable` e `$casts` (para `price` como 'decimal:2', `is_discount_for_main_event_participant` como 'boolean').
+    *   Definir relacionamento `belongsTo Event::class` (usando `event_code` como foreign key e `code` como owner key).
+*   **Seeder (`FeesTableSeeder`):**
+    *   Gerar com `php artisan make:seeder FeesTableSeeder`.
+    *   No método `run()`, popular a tabela `fees` com todas as combinações de evento, categoria, tipo, período e preço, conforme `docs/formulario_inscricao.md`.
+        *   Ex: 8th BCSMIF, Grad Student, in-person, early, R$ 600, is_discount=false.
+        *   Ex: Workshop RAA, Grad Student, in-person, early, R$ 0 (se for gratuito para quem está no BCSMIF E é estudante), is_discount=true.
+        *   Ex: Workshop RAA, Professor ABE, in-person, early, R$ 100 (se for o preço com desconto), is_discount=true.
+        *   Ex: Workshop RAA, Professor ABE, in-person, early, R$ 250 (se for o preço sem desconto), is_discount=false.
+    *   Chamar `FeesTableSeeder` a partir de `DatabaseSeeder.php`.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Migration `create_fees_table` criada e define corretamente todos os campos (id, event_code, participant_category, type, period, price, is_discount_for_main_event_participant, timestamps) com tipos e constraints.
+- [ ] AC2: Chave estrangeira `event_code` na tabela `fees` referencia `events(code)`.
+- [ ] AC3: Model `App\Models\Fee` criado com `$fillable`, `$casts` e relacionamento `belongsTo Event`.
+- [ ] AC4: Seeder `FeesTableSeeder` criado e popula a tabela `fees` com todas as combinações de taxas para os 3 eventos (8th BCSMIF, Workshop RAA, Workshop WDA) e todas as categorias de participantes (Undergrad, Grad, Prof ABE, Prof Non-ABE/Professional), considerando os períodos (early/late), tipos (in-person/online) e os descontos para workshops.
+- [ ] AC5: O `FeesTableSeeder` é chamado em `DatabaseSeeder.php`.
+- [ ] AC6: `php artisan migrate --seed` executa sem erros e a tabela `fees` é populada corretamente.
+- [ ] AC7: Código PHP desenvolvido segue padrões PSR-12 (Pint) e passa no PHPStan.
+- [ ] AC8: Testes unitários (PHPUnit) para o Model `Fee` (casts, relacionamento com Event).
+- [ ] AC9: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase1.3] Implementar Model e Migration para Registrations
+TYPE: feature
+LABELS: bcsmif,fase-1,database,eloquent,migration,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 1: Modelagem e Dados Core
+FEATURE_MOTIVATION: Armazenar dados de inscrição dos participantes de forma estruturada, vinculando-os aos usuários e permitindo o acompanhamento do processo de pagamento e participação.
+FEATURE_DESCRIPTION: Esta tarefa foca na criação da estrutura de banco de dados para as inscrições (tabela `registrations`) e o Model Eloquent correspondente.
+1.  Criar uma migration para a tabela `registrations`, incluindo todos os campos necessários para coletar as informações do formulário (conforme `docs/formulario_inscricao.md`).
+2.  Definir o Model Eloquent `App\Models\Registration` com seus atributos, `$fillable`, `$casts`, e o relacionamento `belongsTo User`. Relacionamentos com `Event` serão tratados na Issue da tabela pivot.
+PROPOSED_SOLUTION:
+*   **Migration (`create_registrations_table`):**
+    *   Gerar com `php artisan make:migration create_registrations_table --create=registrations`.
+    *   Campos a incluir (baseado em `docs/formulario_inscricao.md`):
+        *   `id` (PK)
+        *   `user_id` (unsignedBigInteger, FK para `users.id`, index, **NÃO NULO**).
+        *   **Informações Pessoais (alguns podem vir do User model, mas duplicar aqui para snapshot no momento da inscrição pode ser útil):**
+            *   `full_name` (string) - Pode ser pré-preenchido do User, mas editável.
+            *   `nationality` (string, nullable)
+            *   `date_of_birth` (date, nullable)
+            *   `gender` (string, nullable) - Valores como 'male', 'female', 'other', 'prefer_not_to_say'.
+        *   **Identificação (condicional):**
+            *   `document_country_origin` (string, nullable) - País do documento principal.
+            *   `cpf` (string, nullable, index) - Para brasileiros.
+            *   `rg_number` (string, nullable) - Para brasileiros.
+            *   `passport_number` (string, nullable, index) - Para internacionais.
+            *   `passport_expiry_date` (date, nullable) - Para internacionais.
+        *   **Contato (alguns podem vir do User model):**
+            *   `email` (string) - Email principal para contato, pode ser pré-preenchido.
+            *   `phone_number` (string, nullable)
+            *   `address_street` (string, nullable)
+            *   `address_city` (string, nullable)
+            *   `address_state_province` (string, nullable)
+            *   `address_country` (string, nullable)
+            *   `address_postal_code` (string, nullable)
+        *   **Profissionais:**
+            *   `affiliation` (string, nullable) - Universidade/Organização.
+            *   `position` (string, nullable) - Categoria do participante para preço (ex: 'undergrad_student', 'grad_student', 'researcher', 'professor', 'professional', 'other_position').
+            *   `is_abe_member` (boolean, nullable, default: false)
+        *   **Participação no Evento (detalhes específicos de quais eventos serão na pivot):**
+            *   `arrival_date` (date, nullable)
+            *   `departure_date` (date, nullable)
+            *   `participation_format` (string, nullable) - 'in-person', 'online'.
+            *   `needs_transport_from_gru` (boolean, default: false)
+            *   `needs_transport_from_usp` (boolean, default: false)
+        *   **Restrições Alimentares:**
+            *   `dietary_restrictions` (string, nullable) - 'none', 'vegetarian', 'vegan', 'gluten-free'.
+            *   `other_dietary_restrictions` (text, nullable)
+        *   **Contato de Emergência:**
+            *   `emergency_contact_name` (string, nullable)
+            *   `emergency_contact_relationship` (string, nullable)
+            *   `emergency_contact_phone` (string, nullable)
+        *   **Suporte a Visto (internacionais):**
+            *   `requires_visa_letter` (boolean, default: false)
+        *   **Dados da Inscrição/Pagamento:**
+            *   `registration_category_snapshot` (string) - Armazena a `participant_category` usada para calcular o preço no momento da inscrição.
+            *   `calculated_fee` (decimal, 8, 2) - Taxa total calculada.
+            *   `payment_status` (string, index, default: 'pending_payment') - Ex: 'pending_payment', 'pending_br_proof_approval', 'paid_br', 'invoice_sent_int', 'paid_int', 'free', 'cancelled'.
+            *   `payment_proof_path` (string, nullable) - Caminho para o comprovante (para BR).
+            *   `payment_uploaded_at` (timestamp, nullable)
+            *   `invoice_sent_at` (timestamp, nullable) - Para controle de envio de invoice internacional.
+            *   `notes` (text, nullable) - Notas administrativas sobre a inscrição.
+        *   `timestamps`
+    *   Definir chave estrangeira `user_id` referenciando `users(id)`.
+*   **Model (`App\Models\Registration`):**
+    *   Gerar com `php artisan make:model Registration -f` (para incluir factory).
+    *   Definir `$fillable` para todos os campos da tabela (exceto `id`, `timestamps`).
+    *   Definir `$casts` para datas, booleans e `calculated_fee` ('decimal:2').
+    *   Definir relacionamento `public function user(): BelongsTo { return $this->belongsTo(User::class); }`.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Migration `create_registrations_table` criada e define corretamente todos os campos listados na `PROPOSED_SOLUTION` com tipos de dados, nulabilidade e defaults apropriados.
+- [ ] AC2: Chave estrangeira `user_id` na tabela `registrations` referencia `users(id)` e está configurada para não permitir nulos.
+- [ ] AC3: Model `App\Models\Registration` criado com a propriedade `$fillable` incluindo todos os campos designados.
+- [ ] AC4: Model `App\Models\Registration` possui a propriedade `$casts` corretamente definida para campos de data, booleanos (ex: `is_abe_member`, `requires_visa_letter`, `needs_transport_*`) e o campo `calculated_fee`.
+- [ ] AC5: Relacionamento `belongsTo User::class` está corretamente definido no Model `Registration`.
+- [ ] AC6: Factory `RegistrationFactory` criada e pode gerar instâncias válidas do modelo `Registration` (pode ser um AC simples para agora, a ser expandido se necessário).
+- [ ] AC7: `php artisan migrate` (após a criação da migration) executa sem erros.
+- [ ] AC8: Código PHP desenvolvido (Migration, Model, Factory) segue padrões PSR-12 (Pint) e passa no PHPStan.
+- [ ] AC9: Testes unitários (PHPUnit) para o Model `Registration` verificam casts e o relacionamento com `User`.
+- [ ] AC10: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase1.4] Implementar Tabela Pivot registration_event e Relacionamentos Many-to-Many
+TYPE: feature
+LABELS: bcsmif,fase-1,database,eloquent,migration,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 1: Modelagem e Dados Core
+FEATURE_MOTIVATION: Permitir que uma única inscrição (`Registration`) possa estar associada a múltiplos eventos (ex: o 8th BCSMIF principal e um ou mais workshops satélites), e que cada evento possa ter múltiplas inscrições. Registrar o preço do evento no momento da inscrição.
+FEATURE_DESCRIPTION: Esta tarefa consiste em criar a tabela pivot para o relacionamento Many-to-Many entre `registrations` e `events`, e definir esses relacionamentos nos respectivos Models.
+1.  Criar uma migration para a tabela pivot `event_registration` (seguindo a convenção do Laravel de nomes de tabela pivot em ordem alfabética e singular).
+2.  A tabela pivot deve conter as chaves estrangeiras `registration_id` e `event_code`, além de um campo `price_at_registration` para armazenar o preço do evento específico no momento em que o usuário se inscreveu para ele.
+3.  Definir os relacionamentos `belongsToMany` nos Models `App\Models\Event` e `App\Models\Registration`.
+PROPOSED_SOLUTION:
+*   **Migration (`create_event_registration_table`):**
+    *   Gerar com `php artisan make:migration create_event_registration_table`.
+    *   Campos:
+        *   `id` (PK, opcional, mas recomendado para facilitar queries diretas na pivot se necessário).
+        *   `registration_id` (unsignedBigInteger, FK para `registrations.id`, index).
+        *   `event_code` (string, FK para `events.code`, index).
+        *   `price_at_registration` (decimal, 8, 2) - Preço do evento individual no momento da associação.
+        *   `timestamps` (opcional, mas pode ser útil para rastrear quando a associação foi feita).
+    *   Definir chaves primárias compostas: `PRIMARY KEY (registration_id, event_code)`.
+    *   Definir chaves estrangeiras: `registration_id` -> `registrations(id)` ON DELETE CASCADE; `event_code` -> `events(code)` ON DELETE CASCADE.
+*   **Model `App\Models\Registration`:**
+    *   Adicionar método:
+      ```php
+      public function events(): BelongsToMany
+      {
+          return $this->belongsToMany(Event::class, 'event_registration', 'registration_id', 'event_code')
+                      ->withPivot('price_at_registration')
+                      ->withTimestamps(); // Se timestamps foram adicionados na pivot
+      }
+      ```
+*   **Model `App\Models\Event`:**
+    *   Adicionar método:
+      ```php
+      public function registrations(): BelongsToMany
+      {
+          return $this->belongsToMany(Registration::class, 'event_registration', 'event_code', 'registration_id')
+                      ->withPivot('price_at_registration')
+                      ->withTimestamps(); // Se timestamps foram adicionados na pivot
+      }
+      ```
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Migration `create_event_registration_table` criada e define corretamente as colunas `registration_id`, `event_code`, e `price_at_registration` (com tipo decimal).
+- [ ] AC2: Chaves estrangeiras na tabela `event_registration` para `registrations(id)` e `events(code)` estão corretamente definidas com `ON DELETE CASCADE`.
+- [ ] AC3: Chave primária composta `(registration_id, event_code)` definida na tabela `event_registration`.
+- [ ] AC4: Relacionamento `belongsToMany` chamado `events()` está corretamente definido no Model `App\Models\Registration`, especificando a tabela pivot, chaves estrangeiras e pivot (`price_at_registration`).
+- [ ] AC5: Relacionamento `belongsToMany` chamado `registrations()` está corretamente definido no Model `App\Models\Event`, especificando a tabela pivot, chaves estrangeiras e pivot (`price_at_registration`).
+- [ ] AC6: `php artisan migrate` (após a criação da migration) executa sem erros.
+- [ ] AC7: Código PHP desenvolvido (Migration, Models) segue padrões PSR-12 (Pint) e passa no PHPStan.
+- [ ] AC8: Testes unitários (PHPUnit) verificam a capacidade de associar e desassociar `Event`s a `Registration`s, e de acessar o campo `price_at_registration` através da relação pivot.
+- [ ] AC9: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase2.1] Implementar FeeCalculationService
+TYPE: feature
+LABELS: bcsmif,fase-2,backend,service,business-logic,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 2: Lógica de Backend (Core)
+FEATURE_MOTIVATION: Centralizar a lógica de cálculo de taxas de inscrição, tornando-a reutilizável, testável e fácil de manter. O cálculo depende da categoria do participante, dos eventos selecionados, das datas (early/late) e de possíveis descontos.
+FEATURE_DESCRIPTION: Criar uma classe de serviço `App\Services\FeeCalculationService`. Esta classe terá um método principal (ex: `calculateTotalFee`) que receberá os dados relevantes do participante (como categoria, eventos selecionados) e a data da inscrição (para determinar se é "early bird" ou "late"). O serviço consultará os Models `App\Models\Fee` e `App\Models\Event` para determinar a taxa correta para cada evento selecionado e o total.
+PROPOSED_SOLUTION:
+*   Criar `app/Services/FeeCalculationService.php`.
+*   Implementar um método público, por exemplo:
+    `public function calculateFees(string $participantCategory, array $eventCodes, Carbon $registrationDate, bool $isMainConferenceParticipant = false): array`
+    Este método retornaria um array associativo com:
+    *   `details`: Um array de arrays, onde cada subarray contém `event_code`, `event_name`, `calculated_price` para cada evento.
+    *   `total_fee`: A soma total das taxas.
+*   **Lógica Interna do Serviço:**
+    1.  Para cada `eventCode` em `$eventCodes`:
+        *   Buscar o `Event` model para obter `registration_deadline_early`.
+        *   Determinar o período: 'early' se `$registrationDate <= event.registration_deadline_early`, senão 'late'.
+        *   Determinar o tipo de participação (assumir 'in-person' por padrão, ou adicionar parâmetro se necessário).
+        *   Consultar a tabela `fees` usando `event_code`, `participant_category`, `type` (ex: 'in-person'), e o `period` determinado.
+        *   **Lógica de Desconto para Workshops:**
+            *   Se o evento atual é um workshop (ex: `event.code != 'BCSMIF2025'`) E `$isMainConferenceParticipant` é `true` (ou se 'BCSMIF2025' está em `$eventCodes`), procurar primeiro pela taxa com `is_discount_for_main_event_participant = true`.
+            *   Se não encontrar com desconto (ou se não for aplicável), procurar pela taxa com `is_discount_for_main_event_participant = false`.
+        *   Se nenhuma taxa for encontrada para uma combinação, tratar como erro ou taxa zero (a ser definido, talvez lançar exceção).
+        *   Armazenar o `calculated_price` para o evento.
+    2.  Calcular `total_fee`.
+*   Considerar injeção de dependência para `Fee` e `Event` models no construtor do serviço se fizer sentido para testes.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Classe `App\Services\FeeCalculationService` existe.
+- [ ] AC2: Método `calculateFees` (ou similar) está implementado e aceita categoria do participante, códigos dos eventos e data da inscrição.
+- [ ] AC3: O serviço busca corretamente os dados da tabela `fees` e `events`.
+- [ ] AC4: O serviço calcula corretamente a taxa 'early' se a data de inscrição for anterior ou igual à `registration_deadline_early` do evento.
+- [ ] AC5: O serviço calcula corretamente a taxa 'late' se a data de inscrição for posterior à `registration_deadline_early` do evento.
+- [ ] AC6: O serviço aplica corretamente o desconto para workshops se o participante também estiver inscrito no evento principal (BCSMIF2025).
+- [ ] AC7: O método retorna um array estruturado com detalhes por evento e a taxa total.
+- [ ] AC8: O serviço lida graciosamente (ex: lança exceção customizada ou retorna erro claro) se uma combinação de taxa não for encontrada.
+- [ ] AC9: Testes unitários (PHPUnit) para `FeeCalculationService` cobrem diversos cenários:
+    -   Diferentes categorias de participantes.
+    -   Inscrição em um único evento (principal e workshop).
+    -   Inscrição em múltiplos eventos (principal + workshops, apenas workshops).
+    -   Períodos 'early' e 'late'.
+    -   Aplicação correta e não aplicação de descontos para workshops.
+    -   Cenário onde uma taxa específica não é encontrada.
+- [ ] AC10: Código PHP segue padrões PSR-12 (Pint) e passa no PHPStan.
+- [ ] AC11: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase2.2] Implementar Lógica de Criação de Inscrição (Controller/Service e FormRequest)
+TYPE: feature
+LABELS: bcsmif,fase-2,backend,controller,livewire,validation,formrequest,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 2: Lógica de Backend (Core)
+FEATURE_MOTIVATION: Orquestrar o processo completo de criação de uma nova inscrição, desde a validação dos dados do formulário e cálculo de taxas até o salvamento no banco de dados e disparo de notificações por email.
+FEATURE_DESCRIPTION: Esta tarefa envolve criar a lógica de backend para processar o formulário de inscrição.
+1.  Criar um `RegistrationController` (ou usar um componente Livewire existente como `pages.auth.register` se for adaptado) com um método `store`.
+2.  Criar um `StoreRegistrationRequest` (Form Request) para validar todos os dados do formulário de inscrição, incluindo a lógica de validação condicional para CPF/RG vs. Passaporte, e a validação do Nº USP (codpes) via `ReplicadoService` se `sou_da_usp` for verdadeiro.
+3.  No método `store` do controller/componente:
+    *   Obter o usuário autenticado (`Auth::user()`).
+    *   Utilizar o `FeeCalculationService` (da Issue #21) para calcular a taxa total com base nos eventos selecionados e categoria do participante.
+    *   Criar uma nova instância de `App\Models\Registration` e preenchê-la com os dados validados e a taxa calculada.
+    *   Salvar a `Registration` no banco de dados.
+    *   Associar os eventos selecionados à inscrição na tabela pivot `event_registration`, armazenando o `price_at_registration` para cada um.
+    *   Disparar um evento `NewRegistrationCreated` (ou similar) ou diretamente a notificação por email (Issue #23).
+PROPOSED_SOLUTION:
+*   **`StoreRegistrationRequest.php`**:
+    *   Gerar com `php artisan make:request StoreRegistrationRequest`.
+    *   Método `authorize()`: `return Auth::check();` (usuário deve estar logado).
+    *   Método `rules()`: Definir regras de validação para todos os campos do formulário `docs/formulario_inscricao.md`.
+        *   Ex: `full_name => ['required', 'string', 'max:255']`, `email => ['required', 'email']` (pode ser pré-preenchido do usuário logado, mas permitir override se necessário e validar).
+        *   Validação condicional para `cpf`, `rg_number` vs. `passport_number`, `passport_expiry_date` baseada em `document_country_origin`.
+        *   `codpes` -> `required_if:sou_da_usp,true|nullable|numeric|digits_between:6,8`.
+        *   Adicionar uma regra customizada (usando `Rule::closure` ou uma classe de Rule) para `codpes` que:
+            *   Se `sou_da_usp` for `true` E `codpes` estiver preenchido, injeta `ReplicadoService` e chama `validarNuspEmail($value, $this->input('email'))`.
+            *   Se `validarNuspEmail` retornar `false`, falha a validação (`$fail('validation.custom.codpes.replicado_validation_failed')`).
+            *   Se `ReplicadoService` lançar `ReplicadoServiceException`, falha a validação (`$fail('validation.custom.codpes.replicado_service_unavailable')`).
+    *   Método `messages()`: Definir mensagens de erro customizadas em português, usando `__()`.
+*   **`RegistrationController@store` (ou método em Componente Livewire):**
+    *   Type-hint `StoreRegistrationRequest $request`.
+    *   `$user = Auth::user();`
+    *   `$validatedData = $request->validated();`
+    *   Determinar `participant_category` (ex: com base em `$validatedData['position']`, `$validatedData['is_abe_member']`).
+    *   `$feeData = app(FeeCalculationService::class)->calculateFees($participantCategory, $validatedData['selected_event_codes'], now(), in_array('BCSMIF2025', $validatedData['selected_event_codes']));`
+    *   Criar `Registration` model:
+        ```php
+        $registration = $user->registrations()->create(array_merge(
+            $validatedData, // Contém a maioria dos campos do formulário
+            [
+                'registration_category_snapshot' => $participantCategory,
+                'calculated_fee' => $feeData['total_fee'],
+                'payment_status' => ($feeData['total_fee'] == 0) ? 'free' : 'pending_payment',
+                // Preencher outros campos não diretamente do formulário, se houver
+            ]
+        ));
+        ```
+    *   Sincronizar eventos na pivot:
+        ```php
+        $eventSyncData = [];
+        foreach ($feeData['details'] as $eventDetail) {
+            $eventSyncData[$eventDetail['event_code']] = ['price_at_registration' => $eventDetail['calculated_price']];
+        }
+        $registration->events()->sync($eventSyncData);
+        ```
+    *   Disparar evento/notificação: `event(new NewRegistrationCreated($registration));` ou `Mail::to(...)->send(new NewRegistrationNotification($registration));` (Issue #23).
+    *   Redirecionar para uma página de sucesso/confirmação ou dashboard com mensagem flash.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: `StoreRegistrationRequest` Form Request criado e contém regras de validação para todos os campos do formulário de inscrição.
+- [ ] AC2: Validação condicional para CPF/RG (Brasil) vs. Passaporte (Internacional) implementada no Form Request.
+- [ ] AC3: Validação para `codpes` no Form Request é `required_if:sou_da_usp,true`, numérico, e com dígitos entre 6 e 8.
+- [ ] AC4: Regra customizada no Form Request para `codpes` chama `ReplicadoService->validarNuspEmail()` e falha com a mensagem `validation.custom.codpes.replicado_validation_failed` se a validação do Replicado falhar.
+- [ ] AC5: Regra customizada no Form Request para `codpes` trata `ReplicadoServiceException` e falha com a mensagem `validation.custom.codpes.replicado_service_unavailable`.
+- [ ] AC6: Método `store` no `RegistrationController` (ou componente Livewire) utiliza `StoreRegistrationRequest` para validação.
+- [ ] AC7: `FeeCalculationService` é chamado corretamente para obter as taxas.
+- [ ] AC8: Uma nova `Registration` é criada e salva no banco de dados com os dados validados, `user_id`, `registration_category_snapshot` e `calculated_fee`.
+- [ ] AC9: Se `calculated_fee` for zero, `payment_status` é definido como 'free'; caso contrário, 'pending_payment'.
+- [ ] AC10: Os eventos selecionados são corretamente associados à inscrição na tabela `event_registration` com o `price_at_registration` correto para cada evento.
+- [ ] AC11: Evento `NewRegistrationCreated` (ou notificação por email) é disparado após a criação bem-sucedida da inscrição (coberto na Issue #23).
+- [ ] AC12: Usuário é redirecionado para uma página de confirmação/dashboard com mensagem de sucesso após a inscrição.
+- [ ] AC13: Código PHP segue padrões PSR-12 (Pint) e passa no PHPStan.
+- [ ] AC14: Testes de Feature (PHPUnit) cobrem:
+    -   Criação bem-sucedida de inscrição para usuário não-USP.
+    -   Criação bem-sucedida de inscrição para usuário USP com validação Replicado OK (usando `FakeReplicadoService`).
+    -   Falha na criação de inscrição para usuário USP com validação Replicado falhando (mock para erro).
+    -   Falha na criação de inscrição para usuário USP com `ReplicadoService` indisponível (mock para exceção).
+    -   Validação de todos os campos do `StoreRegistrationRequest` (testes de validação de formulário).
+    -   Cálculo correto da taxa e associação correta de eventos e preços na tabela pivot.
+- [ ] AC15: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase2.3] Implementar Notificações por Email para Inscrição
+TYPE: feature
+LABELS: bcsmif,fase-2,backend,mail,notification,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 2: Lógica de Backend (Core)
+FEATURE_MOTIVATION: Manter os usuários e os coordenadores do evento informados sobre o status das inscrições e o processo de pagamento, enviando emails automáticos em momentos chave.
+FEATURE_DESCRIPTION: Esta tarefa consiste em criar e configurar as classes Mailable para as seguintes notificações:
+1.  **`NewRegistrationNotification`**: Enviada ao usuário e ao coordenador do evento após uma nova inscrição ser realizada com sucesso.
+    *   Para o usuário: Deve conter um resumo da inscrição (eventos selecionados, taxa total) e instruções claras sobre como proceder com o pagamento (diferenciando para participantes brasileiros e internacionais).
+    *   Para o coordenador: Deve conter os detalhes da inscrição para acompanhamento.
+2.  **`ProofUploadedNotification`**: Enviada ao coordenador do evento (e opcionalmente uma cópia para o usuário) quando um participante brasileiro anexa o comprovante de pagamento. Deve incluir um link para a área administrativa onde o comprovante pode ser visualizado/aprovado.
+PROPOSED_SOLUTION:
+*   Gerar os Mailables com `php artisan make:mail NewRegistrationNotification --markdown=emails.registration.new` e `php artisan make:mail ProofUploadedNotification --markdown=emails.registration.proof_uploaded`.
+*   **`NewRegistrationNotification.php`:**
+    *   Receber a instância de `Registration` no construtor.
+    *   View Markdown:
+        *   Para o usuário: Saudação, agradecimento, resumo dos eventos inscritos (nome, preço individual), taxa total. Se a taxa for > 0:
+            *   Se for brasileiro (inferir do `document_country_origin` ou de um campo `is_brazilian` na `Registration` se adicionado): Instruções para pagamento (dados bancários, PIX - obter do `docs/formulario_inscricao.md`) e como enviar o comprovante.
+            *   Se for internacional: Informar que uma invoice será enviada em breve com detalhes para pagamento.
+        *   Para o coordenador: Detalhes completos da inscrição, link para a inscrição no painel admin.
+    *   Configurar para enviar condicionalmente para o email do usuário e para `env('COORDINATOR_EMAIL')`.
+*   **`ProofUploadedNotification.php`:**
+    *   Receber a instância de `Registration` no construtor.
+    *   View Markdown: Informar ao coordenador que o usuário X (nome, email) da inscrição #Y anexou um comprovante. Incluir um link para a página de detalhes da inscrição no painel admin.
+    *   Enviar para `env('COORDINATOR_EMAIL')`. Opcionalmente, enviar uma cópia para o usuário confirmando o upload.
+*   Configurar `COORDINATOR_EMAIL` no arquivo `.env` e `.env.example`.
+*   Integrar o disparo dessas notificações nos fluxos correspondentes (Controller de Registro para `NewRegistrationNotification`, Controller/Lógica de Upload para `ProofUploadedNotification`).
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Mailable `NewRegistrationNotification` criado e configurado para receber uma instância de `Registration`.
+- [ ] AC2: View Markdown para `NewRegistrationNotification` (usuário) contém saudação, resumo da inscrição (eventos, valor total).
+- [ ] AC3: View Markdown para `NewRegistrationNotification` (usuário brasileiro, taxa > 0) inclui instruções de pagamento para brasileiros (dados bancários/PIX) e como enviar comprovante.
+- [ ] AC4: View Markdown para `NewRegistrationNotification` (usuário internacional, taxa > 0) informa sobre o envio futuro de invoice.
+- [ ] AC5: View Markdown para `NewRegistrationNotification` (coordenador) contém detalhes da inscrição e link para o painel admin.
+- [ ] AC6: Mailable `ProofUploadedNotification` criado e configurado para receber uma instância de `Registration`.
+- [ ] AC7: View Markdown para `ProofUploadedNotification` (coordenador) informa sobre o upload e inclui link para visualização do comprovante no painel admin.
+- [ ] AC8: `COORDINATOR_EMAIL` configurado no `.env.example` e usado pelos Mailables.
+- [ ] AC9: `NewRegistrationNotification` é disparada corretamente no final do fluxo de criação de inscrição (após salvar a `Registration` e associar eventos).
+- [ ] AC10: `ProofUploadedNotification` é disparada corretamente após o upload bem-sucedido do comprovante de pagamento.
+- [ ] AC11: Código PHP e Blade dos Mailables e views seguem padrões PSR-12/Pint e passam no PHPStan.
+- [ ] AC12: Testes de Feature (PHPUnit) usando `Mail::fake()` verificam:
+    -   Que `NewRegistrationNotification` é enfileirada/enviada para o usuário e coordenador com o conteúdo correto (verificar dados do usuário, eventos, valor).
+    -   Que as instruções de pagamento corretas (BR vs. INT) são incluídas para o usuário na `NewRegistrationNotification`.
+    -   Que `ProofUploadedNotification` é enfileirada/enviada para o coordenador com link correto.
+- [ ] AC13: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase2.4] Implementar Lógica de Upload de Comprovante de Pagamento
+TYPE: feature
+LABELS: bcsmif,fase-2,backend,file-upload,storage,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 2: Lógica de Backend (Core)
+FEATURE_MOTIVATION: Permitir que participantes brasileiros possam anexar seus comprovantes de pagamento para que a equipe organizadora possa validar e confirmar a inscrição.
+FEATURE_DESCRIPTION: Esta tarefa consiste em implementar a funcionalidade de backend para o upload do arquivo de comprovante de pagamento.
+1.  Criar um método em um Controller apropriado (ex: `RegistrationController` ou um novo `PaymentProofController`, ou dentro de um componente Livewire na área do usuário) para lidar com o request de upload.
+2.  Validar o arquivo enviado (tipo: PDF, JPG, PNG; tamanho máximo, ex: 5MB).
+3.  Armazenar o arquivo de forma segura no sistema de arquivos (ex: `storage/app/proofs/{registration_id}/` ou similar, usando o disco 'local' ou 'private'). O nome do arquivo deve ser sanitizado ou gerado unicamente para evitar conflitos/problemas.
+4.  Atualizar o registro da `Registration` correspondente no banco de dados com o caminho do arquivo (`payment_proof_path`), a data do upload (`payment_uploaded_at`), e mudar o `payment_status` para um status apropriado (ex: 'pending_br_proof_approval').
+5.  Disparar a notificação `ProofUploadedNotification` para o coordenador (conforme Issue #23).
+PROPOSED_SOLUTION:
+*   **Rota:** Definir uma rota POST, ex: `/my-registrations/{registration}/upload-proof`.
+*   **Controller/Método (ex: `RegistrationProofController@store`):**
+    *   Type-hint `Request $request` e `Registration $registration` (com route model binding).
+    *   Autorização: Verificar se o usuário autenticado é o dono da inscrição (`Gate::authorize('uploadProof', $registration)`).
+    *   Validação do arquivo:
+        ```php
+        $request->validate([
+            'payment_proof_file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'], // 5MB max
+        ]);
+        ```
+    *   Armazenamento:
+        ```php
+        $file = $request->file('payment_proof_file');
+        $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+        $path = $file->storeAs("proofs/{$registration->id}", $filename, 'private'); // Usar disco 'private' (configurar em filesystems.php)
+        ```
+    *   Atualização do Model:
+        ```php
+        $registration->update([
+            'payment_proof_path' => $path,
+            'payment_uploaded_at' => now(),
+            'payment_status' => 'pending_br_proof_approval',
+        ]);
+        ```
+    *   Disparar Notificação: `Mail::to(config('mail.coordinator_address'))->send(new ProofUploadedNotification($registration));` (ou via evento).
+    *   Redirecionar de volta com mensagem de sucesso.
+*   **Filesystem Disk 'private':**
+    *   Configurar em `config/filesystems.php`:
+        ```php
+        'private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private_uploads'), // Ou apenas storage_path('app/proofs')
+            'visibility' => 'private',
+        ],
+        ```
+*   **Policy (Opcional, mas recomendado):**
+    *   Criar `RegistrationPolicy` com método `uploadProof(User $user, Registration $registration)` que retorna `$user->id === $registration->user_id;`.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Rota POST para upload de comprovante definida e protegida por autenticação.
+- [ ] AC2: Método no Controller (ou componente Livewire) implementado para processar o upload.
+- [ ] AC3: Autorização implementada para garantir que apenas o dono da inscrição possa fazer upload do comprovante.
+- [ ] AC4: Arquivo de comprovante é validado quanto ao tipo (PDF, JPG, PNG) e tamanho máximo (ex: 5MB).
+- [ ] AC5: Arquivo é armazenado de forma segura em um disco não público (ex: `storage/app/private_uploads/proofs/{registration_id}/`).
+- [ ] AC6: Nome do arquivo armazenado é sanitizado ou gerado unicamente.
+- [ ] AC7: Caminho do arquivo (`payment_proof_path`), data de upload (`payment_uploaded_at`) e status de pagamento (`payment_status` para 'pending_br_proof_approval') são corretamente atualizados na tabela `registrations`.
+- [ ] AC8: Notificação `ProofUploadedNotification` é disparada para o coordenador após o upload bem-sucedido (coberto pela Issue #23).
+- [ ] AC9: Usuário é redirecionado com mensagem de sucesso após o upload.
+- [ ] AC10: Código PHP segue padrões PSR-12 (Pint) e passa no PHPStan.
+- [ ] AC11: Testes de Feature (PHPUnit) usando `Storage::fake('private')` e `UploadedFile::fake()` cobrem:
+    -   Upload bem-sucedido de um arquivo válido.
+    -   Falha no upload de arquivo com tipo/tamanho inválido.
+    -   Tentativa de upload por usuário não autorizado.
+    -   Verificação dos dados atualizados no banco e do arquivo armazenado (fake).
+- [ ] AC12: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase3.1] Criar Páginas Públicas Informativas Estáticas
+TYPE: ui
+LABELS: bcsmif,fase-3,frontend,blade,livewire,tailwind,content,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 3: Interface do Usuário (Frontend)
+FEATURE_MOTIVATION: Fornecer aos visitantes e potenciais participantes informações essenciais sobre o 8th BCSMIF e seus workshops satélites, incluindo descrição, datas, locais, tabela de preços e detalhes de pagamento.
+FEATURE_DESCRIPTION: Esta tarefa consiste em criar as views Blade (ou componentes Livewire simples, se preferível para consistência de layout) para as seguintes páginas públicas:
+1.  **Home Page (`/`):** Deve exibir a descrição geral do 8th BCSMIF, conforme `docs/descricao_evento.md`. Deve ser visualmente atraente e clara.
+2.  **Página de Workshops (`/workshops`):** Deve listar os dois workshops satélites (Risk Analysis and Applications, Dependence Analysis) com suas descrições, datas e locais, também baseados em `docs/descricao_evento.md`.
+3.  **Página de Taxas de Inscrição (`/fees`):** Deve apresentar a "Tabela de valores" completa, conforme `docs/formulario_inscricao.md`, de forma clara e organizada.
+4.  **Página de Informações de Pagamento (`/payment-info`):** Deve detalhar as instruções de pagamento para participantes brasileiros (dados bancários, PIX) e informar aos internacionais que receberão uma invoice.
+PROPOSED_SOLUTION:
+*   Criar rotas em `routes/web.php` para cada página.
+*   Para cada página, criar uma view Blade em `resources/views/public/` (ex: `home.blade.php`, `workshops.blade.php`, `fees.blade.php`, `payment_info.blade.php`).
+*   Estas views devem estender o layout principal da aplicação (ou um layout público se for diferente, ex: `layouts.public.blade.php` que pode incluir `x-usp.header` mas uma navegação mais simples).
+*   Popular o conteúdo das views com as informações dos arquivos Markdown especificados. A tabela de preços pode ser construída dinamicamente consultando o Model `Fee` ou, para simplicidade inicial, pode ser hardcoded na view se os dados forem estáticos.
+*   Estilizar as páginas com Tailwind CSS para garantir responsividade e uma apresentação profissional.
+*   Adicionar links para estas páginas na navegação principal (ver Issue #34).
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Rota e view para a Home Page (`/`) criadas e exibem a descrição do 8th BCSMIF.
+- [ ] AC2: Rota e view para a Página de Workshops (`/workshops`) criadas e listam os workshops com suas informações.
+- [ ] AC3: Rota e view para a Página de Taxas (`/fees`) criadas e apresentam a tabela de preços completa e correta.
+- [ ] AC4: Rota e view para a Página de Informações de Pagamento (`/payment-info`) criadas e contêm as instruções de pagamento para BR e INT.
+- [ ] AC5: Todas as páginas públicas estendem um layout consistente (ex: `layouts.public` ou `layouts.app` adaptado).
+- [ ] AC6: Conteúdo das páginas é fiel ao fornecido nos documentos Markdown.
+- [ ] AC7: Páginas são estilizadas com Tailwind CSS, responsivas e visualmente agradáveis.
+- [ ] AC8: Código Blade/PHP segue padrões PSR-12 (Pint) e passa no PHPStan.
+- [ ] AC9: Testes de Feature (PHPUnit) verificam se as rotas retornam status 200 e contêm texto chave esperado de cada página.
+- [ ] AC10: (Opcional) Testes de Browser (Dusk) simples para verificar a renderização básica das páginas.
+- [ ] AC11: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase3.2] Desenvolver Componente Livewire/Volt para Formulário de Inscrição
+TYPE: ui
+LABELS: bcsmif,fase-3,frontend,livewire,volt,tailwind,form,validation,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 3: Interface do Usuário (Frontend)
+FEATURE_MOTIVATION: Permitir que usuários (logados e com email verificado) preencham e submetam o formulário de inscrição para o 8th BCSMIF e seus workshops, com cálculo dinâmico de taxas e validação.
+FEATURE_DESCRIPTION: Desenvolver um componente Livewire/Volt (ex: `RegistrationForm`) que renderize todos os campos do formulário de inscrição conforme `docs/formulario_inscricao.md`.
+1.  O componente deve ser acessível apenas para usuários autenticados e com email verificado (aplicar middleware na rota).
+2.  Incluir todos os campos: Informações Pessoais, Identificação, Contato, Profissionais, Participação no Evento (seleção dos eventos), Restrições Alimentares, Contato de Emergência, Suporte a Visto.
+3.  Implementar lógica condicional para exibição de campos (ex: CPF/RG vs. Passaporte baseado no país; campo "outro" para gênero/restrição alimentar).
+4.  Integrar ou simular Date Pickers para campos de data.
+5.  Exibir dinamicamente a taxa total calculada conforme o usuário seleciona eventos e informa sua categoria (usando `FeeCalculationService` via uma ação no backend do componente).
+6.  Implementar validação frontend básica (HTML5 `required`, `type="email"`, etc.) e feedback visual para erros.
+7.  Submeter os dados do formulário para o método `store` do `RegistrationController` (ou uma ação no próprio componente Livewire que chama o `RegistrationService`).
+PROPOSED_SOLUTION:
+*   Criar componente Livewire/Volt: `php artisan make:livewire RegistrationForm` (ou `php artisan make:volt RegistrationForm --class`).
+*   Definir propriedades públicas no componente para todos os campos do formulário.
+*   Na view do componente (`registration-form.blade.php`):
+    *   Usar componentes Blade do Breeze/customizados para os campos (`x-input-label`, `x-text-input`, `x-input-error`, selects, checkboxes, radios).
+    *   Usar `wire:model` para two-way data binding.
+    *   Usar `@if` ou `x-show` (Alpine.js) para lógica condicional de campos.
+    *   Para date pickers, pode-se usar um input `type="date"` simples ou integrar uma lib JS (ex: Flatpickr) com Alpine.js.
+    *   Para cálculo dinâmico da taxa:
+        *   Chamar um método no backend do componente Livewire (ex: `calculateFee()`) via `wire:click` ou `wire:change` nos campos relevantes (seleção de eventos, categoria).
+        *   Este método usaria `FeeCalculationService` e atualizaria uma propriedade pública `totalFee` exibida na view.
+*   No backend do componente (classe PHP):
+    *   Método para calcular taxa (se feito via Livewire).
+    *   Método `submit()` (ou `save()`) que:
+        *   Chama `$this->validate()` usando as regras do `StoreRegistrationRequest` (pode-se instanciar o FormRequest ou replicar as regras).
+        *   Chama o `RegistrationController@store` ou diretamente o `RegistrationService` para salvar a inscrição.
+        *   Redireciona ou emite evento de sucesso.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Componente Livewire/Volt `RegistrationForm` criado e renderiza todos os campos do formulário conforme `docs/formulario_inscricao.md`.
+- [ ] AC2: Rota para o formulário de inscrição (ex: `/register-event`) está protegida por middleware `auth` e `verified`.
+- [ ] AC3: Lógica condicional para campos (CPF/RG vs. Passaporte; "outro" para gênero/restrições; suporte a visto para internacionais) funciona corretamente.
+- [ ] AC4: Campos de data (Nascimento, Passaporte Expiry, Chegada, Partida) utilizam input `type="date"` ou um date picker funcional.
+- [ ] AC5: Taxa de inscrição é exibida e atualizada dinamicamente na tela conforme o usuário altera seleções de eventos e/ou categoria de participante.
+- [ ] AC6: Validação de campos obrigatórios e formatos básicos é realizada no frontend (HTML5) e feedback de erro é mostrado via `x-input-error`.
+- [ ] AC7: Componente submete os dados para a lógica de backend (Controller ou Service de Registro) ao ser enviado.
+- [ ] AC8: Componente é responsivo e estilizado com Tailwind CSS, seguindo o tema visual.
+- [ ] AC9: Código PHP/Blade segue padrões PSR-12 (Pint) e passa no PHPStan.
+- [ ] AC10: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase3.2.T] Implementar Testes Dusk para o Formulário de Inscrição
+TYPE: test
+LABELS: bcsmif,fase-3,test,dusk,frontend,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 3: Interface do Usuário (Frontend)
+TEST_MOTIVATION: Garantir a funcionalidade completa do formulário de inscrição, incluindo a correta renderização dos campos, a lógica de exibição condicional, a validação de entrada do usuário e a submissão bem-sucedida para o backend.
+TEST_SCOPE: Testes de Browser (Dusk) para a página/componente do formulário de inscrição.
+1.  Verificar a presença de todos os campos esperados.
+2.  Testar a lógica de exibição condicional de campos (ex: CPF/RG vs. Passaporte).
+3.  Testar a submissão do formulário com dados válidos e verificar o redirecionamento ou mensagem de sucesso.
+4.  Testar a submissão do formulário com dados inválidos (campos obrigatórios faltando, formatos incorretos) e verificar se as mensagens de erro apropriadas são exibidas.
+5.  Testar a interação com seletores de evento/categoria e a atualização dinâmica da taxa (se visível e testável via Dusk).
+PROPOSED_SOLUTION:
+*   Criar uma nova classe de teste Dusk, ex: `RegistrationFormTest.php` em `tests/Browser/`.
+*   Usar `UserFactory` para criar um usuário autenticado e verificado para acessar o formulário.
+*   Para cada cenário de teste:
+    *   Usar `$browser->loginAs($user)->visit('/register-event')`.
+    *   Interagir com os campos usando seletores Dusk (ex: `@dusk('full-name-input')`).
+    *   Usar asserções Dusk (`assertVisible`, `assertSee`, `assertPathIs`, `assertHasErrors`, `assertValue`, etc.).
+    *   Para validação, usar `type()`, `press()`, e depois `assertSee('mensagem de erro esperada')`.
+    *   Para cálculo de taxa dinâmica, pode ser necessário `waitForText` ou `pause` para que o Livewire atualize a DOM.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Teste Dusk verifica a presença de todos os campos fixos do formulário de inscrição (Nome, Email, etc.).
+- [ ] AC2: Teste Dusk verifica a lógica de exibição condicional dos campos de Identificação (CPF/RG para Brasil, Passaporte para outros).
+- [ ] AC3: Teste Dusk verifica a lógica de exibição condicional do campo "Outro" para Gênero e Restrições Alimentares.
+- [ ] AC4: Teste Dusk simula o preenchimento e submissão bem-sucedida do formulário com dados válidos para um participante brasileiro.
+- [ ] AC5: Teste Dusk simula o preenchimento e submissão bem-sucedida do formulário com dados válidos para um participante internacional (incluindo suporte a visto).
+- [ ] AC6: Testes Dusk verificam a validação de campos obrigatórios (ex: submeter sem nome, sem email).
+- [ ] AC7: Testes Dusk verificam a validação de formatos de campos (ex: email inválido, CPF inválido, data inválida).
+- [ ] AC8: Teste Dusk verifica a validação do `codpes` (requerido se `sou_da_usp`, numérico, dígitos) se for feito no frontend, ou a mensagem de erro vinda do backend.
+- [ ] AC9: (Opcional, se testável via Dusk) Teste Dusk verifica se a taxa é atualizada ao mudar eventos/categoria.
+- [ ] AC10: Todos os testes Dusk passam na CI.
+- [ ] AC11: Código dos testes formatado com Pint e passa no PHPStan.
+- [ ] AC12: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase3.3] Desenvolver Área do Usuário Logado (Minhas Inscrições, Upload de Comprovante)
+TYPE: ui
+LABELS: bcsmif,fase-3,frontend,livewire,volt,tailwind,user-dashboard,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 3: Interface do Usuário (Frontend)
+FEATURE_MOTIVATION: Permitir que usuários autenticados possam visualizar suas inscrições realizadas para os eventos do 8th BCSMIF e, para participantes brasileiros com pagamento pendente, permitir o upload do comprovante de pagamento.
+FEATURE_DESCRIPTION: Criar uma nova seção na área do usuário logado (ex: `/dashboard/my-registrations` ou integrada ao `/dashboard` existente).
+1.  **Listagem de Inscrições:**
+    *   Exibir uma lista/tabela das inscrições que o usuário autenticado realizou.
+    *   Para cada inscrição, mostrar informações chave: nome do evento principal (ou "Múltiplos Eventos"), data da inscrição, taxa total calculada, status do pagamento.
+    *   Permitir clicar em uma inscrição para ver detalhes.
+2.  **Detalhes da Inscrição (View):**
+    *   Exibir todos os dados da inscrição selecionada (conforme foram preenchidos no formulário).
+    *   Mostrar os eventos específicos para os quais o usuário se inscreveu, com os respectivos preços no momento da inscrição.
+3.  **Upload de Comprovante (para BR, pendente):**
+    *   Se a inscrição for de um participante brasileiro E o status de pagamento for 'pending_payment' (ou similar), exibir um formulário simples para upload de arquivo (PDF, JPG, PNG).
+    *   Este formulário deve submeter o arquivo para a lógica de backend definida na Issue #24.
+    *   Exibir feedback de sucesso ou erro após a tentativa de upload.
+PROPOSED_SOLUTION:
+*   Criar um novo componente Livewire/Volt, ex: `MyRegistrations`.
+*   **Backend do Componente (`MyRegistrations.php`):**
+    *   Método `mount()` ou `render()`: Buscar as inscrições do usuário autenticado (`Auth::user()->registrations()->with('events')->get()`).
+    *   Propriedade para a inscrição selecionada (para exibir detalhes).
+    *   Propriedade para o arquivo de upload (`$paymentProofFile`).
+    *   Método `viewRegistration(Registration $registration)` para carregar detalhes.
+    *   Método `uploadProof(Registration $registration)`:
+        *   Validar `$paymentProofFile`.
+        *   Chamar a lógica de backend da Issue #24 (ex: `PaymentProofService` ou diretamente no controller).
+        *   Atualizar a lista de inscrições ou o status da inscrição visualizada.
+        *   Emitir mensagem flash de sucesso/erro.
+*   **View do Componente (`my-registrations.blade.php`):**
+    *   Tabela/Lista de inscrições com colunas (Evento(s), Data, Taxa, Status).
+    *   Modal ou seção separada para exibir detalhes da inscrição.
+    *   Formulário condicional para upload:
+        ```html
+        @if ($selectedRegistration && $selectedRegistration->user->is_brazilian_document_type && $selectedRegistration->payment_status === 'pending_payment')
+            <form wire:submit.prevent="uploadProof({{ $selectedRegistration->id }})">
+                <input type="file" wire:model="paymentProofFile">
+                @error('paymentProofFile') <span class="error">{{ $message }}</span> @enderror
+                <button type="submit">Enviar Comprovante</button>
+            </form>
+        @endif
+        ```
+    *   Usar Tailwind CSS para estilização.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Rota para "Minhas Inscrições" (ex: `/my-registrations`) criada e protegida por middleware `auth` (e `verified` se necessário).
+- [ ] AC2: Componente Livewire/Volt `MyRegistrations` criado.
+- [ ] AC3: Lista de inscrições do usuário autenticado é exibida corretamente, mostrando informações chave (evento(s), data, taxa, status).
+- [ ] AC4: Clicar em uma inscrição exibe seus detalhes completos, incluindo os eventos específicos e preços individuais.
+- [ ] AC5: Formulário para upload de comprovante é exibido condicionalmente APENAS para inscrições de usuários brasileiros com status de pagamento 'pending_payment' (ou equivalente).
+- [ ] AC6: Upload de um arquivo válido (PDF, JPG, PNG, dentro do limite de tamanho) através do formulário é processado pela lógica de backend (Issue #24).
+- [ ] AC7: Após o upload bem-sucedido, o status da inscrição na lista/detalhe é atualizado (ex: para 'pending_br_proof_approval') e uma mensagem de sucesso é exibida.
+- [ ] AC8: Tentativa de upload de arquivo inválido exibe mensagem de erro de validação apropriada.
+- [ ] AC9: Interface é responsiva e estilizada com Tailwind CSS.
+- [ ] AC10: Código PHP/Blade segue padrões PSR-12 (Pint) e passa no PHPStan.
+- [ ] AC11: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase3.3.T] Implementar Testes Dusk para a Área do Usuário (Minhas Inscrições, Upload)
+TYPE: test
+LABELS: bcsmif,fase-3,test,dusk,frontend,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 3: Interface do Usuário (Frontend)
+TEST_MOTIVATION: Validar a funcionalidade da área "Minhas Inscrições", incluindo a listagem correta das inscrições do usuário, a visualização de detalhes, e o fluxo de upload de comprovante de pagamento (condicionalidade e sucesso/falha).
+TEST_SCOPE: Testes de Browser (Dusk) para a seção "Minhas Inscrições".
+1.  Verificar se as inscrições de um usuário são listadas corretamente.
+2.  Testar a visualização dos detalhes de uma inscrição.
+3.  Verificar se o formulário de upload de comprovante aparece apenas para inscrições elegíveis (brasileiro, pagamento pendente).
+4.  Simular o upload de um arquivo de comprovante válido e verificar a atualização do status/feedback.
+5.  Simular a tentativa de upload de um arquivo inválido (tipo/tamanho) e verificar a mensagem de erro.
+PROPOSED_SOLUTION:
+*   Criar classe de teste Dusk, ex: `UserRegistrationsTest.php`.
+*   Usar `UserFactory` e `RegistrationFactory` (e `EventFactory` se necessário para criar cenários) para popular o banco de dados de teste Dusk.
+*   No teste de upload, usar `attach()` do Dusk para simular o anexo de um arquivo. Pode ser necessário criar um arquivo de teste fake (ex: `fake_proof.pdf`) em `tests/Browser/files/`.
+*   Usar `assertSee`, `assertVisible`, `assertMissing`, `assertPathIs`, `assertValueIn`, `waitForText`, etc.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Teste Dusk verifica se a página "Minhas Inscrições" lista corretamente as inscrições de um usuário de teste (após criar algumas via factory).
+- [ ] AC2: Teste Dusk verifica se ao clicar para ver detalhes, os dados corretos da inscrição são exibidos.
+- [ ] AC3: Teste Dusk verifica se o formulário de upload de comprovante NÃO é visível para uma inscrição já paga ou de um usuário internacional.
+- [ ] AC4: Teste Dusk verifica se o formulário de upload de comprovante É visível para uma inscrição de usuário brasileiro com pagamento pendente.
+- [ ] AC5: Teste Dusk simula o upload de um arquivo de comprovante válido (ex: PDF pequeno) e verifica se uma mensagem de sucesso é exibida e/ou o status da inscrição é atualizado na página.
+- [ ] AC6: Teste Dusk tenta fazer upload de um arquivo com tipo inválido (ex: .txt) e verifica se uma mensagem de erro de validação apropriada é exibida.
+- [ ] AC7: Teste Dusk tenta fazer upload de um arquivo muito grande (excedendo o limite) e verifica a mensagem de erro.
+- [ ] AC8: Todos os testes Dusk passam na CI.
+- [ ] AC9: Código dos testes formatado com Pint e passa no PHPStan.
+- [ ] AC10: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase3.4] Adaptar Layouts e Navegação Principal
+TYPE: ui
+LABELS: bcsmif,fase-3,frontend,layout,navigation,tailwind,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 3: Interface do Usuário (Frontend)
+FEATURE_MOTIVATION: Integrar as novas seções do site (páginas públicas informativas, formulário de inscrição, área de minhas inscrições) à navegação principal da aplicação, garantindo uma experiência de usuário coesa e intuitiva.
+FEATURE_DESCRIPTION: Modificar o componente de navegação principal (ex: `resources/views/livewire/layout/navigation.blade.php` ou `resources/views/layouts/navigation.blade.php` do Breeze) para incluir links para:
+1.  Home Page (Página Inicial do Evento)
+2.  Workshops
+3.  Taxas de Inscrição (Fees)
+4.  Informações de Pagamento
+5.  Link "Inscrever-se" (que levará ao formulário de inscrição - Issue #32).
+6.  Link "Minhas Inscrições" (que levará à área do usuário - Issue #33, visível apenas para usuários logados).
+A navegação deve ser responsiva e seguir o estilo visual do tema USP/Tailwind.
+PROPOSED_SOLUTION:
+*   Identificar o arquivo Blade responsável pela navegação principal.
+*   Adicionar os novos itens de menu usando `x-nav-link` ou `x-responsive-nav-link` do Breeze, ou tags `<a>` estilizadas.
+*   Usar `route()` helper para gerar as URLs.
+*   Usar `@auth` e `@guest` para exibir/ocultar links condicionalmente (ex: "Minhas Inscrições" só para logados, "Inscrever-se" pode ser para todos, mas a rota do formulário em si será protegida).
+*   Garantir que os links ativos (`:active="request()->routeIs('...')`) funcionem corretamente.
+*   Testar a responsividade da navegação em diferentes tamanhos de tela.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Link para a Home Page do evento adicionado à navegação principal e funcional.
+- [ ] AC2: Link para a Página de Workshops adicionado à navegação principal e funcional.
+- [ ] AC3: Link para a Página de Taxas de Inscrição adicionado à navegação principal e funcional.
+- [ ] AC4: Link para a Página de Informações de Pagamento adicionado à navegação principal e funcional.
+- [ ] AC5: Link "Inscrever-se" (para o formulário de inscrição) adicionado à navegação principal e funcional.
+- [ ] AC6: Link "Minhas Inscrições" adicionado à navegação principal, funcional, e visível apenas para usuários autenticados.
+- [ ] AC7: Navegação principal é responsiva (menu hamburger em telas menores funciona corretamente com os novos links).
+- [ ] AC8: Estilo visual da navegação é consistente com o tema USP/Tailwind da aplicação.
+- [ ] AC9: Links ativos são destacados corretamente.
+- [ ] AC10: Código Blade/PHP segue padrões PSR-12 (Pint) e passa no PHPStan.
+- [ ] AC11: Testes de Browser (Dusk) verificam a presença e funcionalidade dos novos links de navegação em desktop e mobile (menu hamburger), incluindo a condicionalidade de exibição.
+- [ ] AC12: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase4.1] Implementar Listagem e Visualização de Inscrições para Admin
+TYPE: feature
+LABELS: bcsmif,fase-4,backend,admin,ui,livewire,todo,roles
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 4: Administração (MVP)
+FEATURE_MOTIVATION: Permitir que administradores do evento possam visualizar todas as inscrições realizadas, filtrar informações básicas e acessar os detalhes de cada inscrição, incluindo o download de comprovantes de pagamento.
+FEATURE_DESCRIPTION: Desenvolver uma interface administrativa (protegida pelo role `admin` do `spatie/laravel-permission`, guard `web`) para listar e visualizar inscrições.
+1.  **Rotas de Admin:** Criar um grupo de rotas prefixado (ex: `/admin/registrations`) e protegido por middleware `auth` e `role:admin`.
+2.  **Listagem de Inscrições (Componente Livewire/Volt):**
+    *   Criar um componente `Admin/RegistrationsList` (ou similar).
+    *   Exibir uma tabela com todas as inscrições, incluindo colunas como: ID da Inscrição, Nome do Participante, Email, Evento(s) Principal(is) Inscrito(s), Taxa Total, Status do Pagamento, Data da Inscrição.
+    *   Implementar filtros básicos (ex: filtrar por evento principal, por status de pagamento).
+    *   Implementar paginação.
+    *   Incluir um link/botão para visualizar os detalhes de cada inscrição.
+3.  **Detalhes da Inscrição (View/Componente):**
+    *   Criar uma página ou modal para exibir todos os detalhes de uma inscrição selecionada (todos os campos do formulário).
+    *   Se houver um comprovante de pagamento anexado (`payment_proof_path`), fornecer um link seguro para o administrador fazer o download do arquivo (requer uma rota e controller para servir o arquivo do storage privado).
+PROPOSED_SOLUTION:
+*   **Middleware `role:admin`**: Certificar-se de que o role 'admin' existe (criado por RoleSeeder ou manualmente) e pode ser usado para proteger rotas.
+*   **`Admin/RegistrationController.php`**:
+    *   Método `index()`: Passar as inscrições (com paginação e filtros) para a view/componente Livewire.
+    *   Método `show(Registration $registration)`: Passar a inscrição para a view de detalhes.
+    *   Método `downloadProof(Registration $registration)`: Verificar se o admin tem permissão, se o arquivo existe, e retornar `Storage::disk('private')->download($registration->payment_proof_path)`.
+*   **Componente Livewire `Admin/RegistrationsList.blade.php` e classe:**
+    *   Propriedades para filtros (`$filterEvent`, `$filterStatus`).
+    *   Método `render()` que busca `Registration::query()->with(['user', 'events'])->when(...)->paginate()`.
+    *   Tabela com Tailwind, usando `wire:model` para filtros e `wire:click` para paginação/visualização.
+*   **View `admin/registrations/show.blade.php` (ou parte do componente Livewire):**
+    *   Exibir todos os campos de `$registration`.
+    *   Loop sobre `$registration->events` para mostrar eventos e preços.
+    *   Link para `route('admin.registrations.downloadProof', $registration)` se `payment_proof_path` existir.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Rotas de administração para inscrições (listar, ver detalhes, baixar comprovante) criadas e protegidas por middleware `auth` e `role:admin`.
+- [ ] AC2: Componente Livewire/Volt `Admin/RegistrationsList` criado e exibe uma tabela paginada de todas as inscrições com colunas chave (ID, Participante, Email, Evento(s), Taxa, Status, Data).
+- [ ] AC3: Filtros na lista de admin por evento principal (ex: 8th BCSMIF, RAA2025, WDA2025) e por status de pagamento funcionam corretamente.
+- [ ] AC4: Clicar em uma inscrição na lista leva a uma página/modal de detalhes que exibe todas as informações da inscrição, incluindo os eventos específicos e seus preços.
+- [ ] AC5: Se um comprovante de pagamento foi anexado, um link para download é exibido na página de detalhes da inscrição para o admin.
+- [ ] AC6: Clicar no link de download do comprovante inicia o download do arquivo correto de forma segura (sem expor o caminho direto do storage).
+- [ ] AC7: Interface administrativa é responsiva e funcional, estilizada com Tailwind CSS.
+- [ ] AC8: Código PHP/Blade segue padrões PSR-12 (Pint) e passa no PHPStan.
+- [ ] AC9: Testes de Feature (PHPUnit) verificam:
+    -   Acesso não autorizado às rotas de admin por usuários não-admin.
+    -   Acesso autorizado e listagem de inscrições por usuário admin.
+    -   Funcionamento dos filtros na listagem.
+    -   Visualização de detalhes de uma inscrição.
+    -   Download seguro do comprovante (mockando `Storage`).
+- [ ] AC10: (Opcional) Testes de Browser (Dusk) para a interface de listagem/detalhes de admin.
+- [ ] AC11: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase4.2] Implementar Atualização de Status de Pagamento para Admin
+TYPE: feature
+LABELS: bcsmif,fase-4,backend,admin,ui,livewire,todo,payment
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 4: Administração (MVP)
+FEATURE_MOTIVATION: Permitir que administradores do evento possam confirmar os pagamentos recebidos (especialmente os comprovantes enviados por participantes brasileiros) e atualizar o status das inscrições no sistema.
+FEATURE_DESCRIPTION: Na interface de visualização de detalhes de uma inscrição (desenvolvida na Issue #41), adicionar a funcionalidade para que um administrador possa alterar o `payment_status` da inscrição.
+1.  **Interface de Atualização:**
+    *   Exibir o status de pagamento atual.
+    *   Fornecer controles (ex: um dropdown ou botões) para selecionar um novo status de pagamento (ex: 'paid_br', 'paid_int', 'invoice_sent_int', 'free', 'cancelled').
+    *   Um botão para "Atualizar Status".
+2.  **Lógica de Backend:**
+    *   Criar um método no `Admin/RegistrationController` (ou no componente Livewire de detalhes) para processar a atualização do status.
+    *   Validar se o novo status é um valor permitido.
+    *   Atualizar o campo `payment_status` da `Registration` no banco de dados.
+    *   (Opcional, mas recomendado) Registrar quem e quando alterou o status (pode ser um log simples ou uma tabela de histórico de status).
+    *   Redirecionar de volta com mensagem de sucesso.
+    *   (Opcional) Disparar uma notificação por email para o usuário informando sobre a mudança de status do pagamento (ex: "Seu pagamento foi confirmado!").
+PROPOSED_SOLUTION:
+*   **No componente Livewire de detalhes da inscrição (ou `admin/registrations/show.blade.php`):**
+    *   Adicionar um formulário com `wire:submit.prevent="updatePaymentStatus"` (se Livewire).
+    *   Dropdown `<select wire:model="newPaymentStatus">` com as opções de status válidas.
+    *   Botão `<button type="submit">Atualizar Status</button>`.
+*   **No backend do componente Livewire (ou `Admin/RegistrationController@updateStatus`):**
+    *   Método `updatePaymentStatus(Registration $registration)`:
+        *   Validar `$this->newPaymentStatus` contra uma lista de status permitidos.
+        *   `$registration->update(['payment_status' => $this->newPaymentStatus]);`
+        *   (Opcional) Log da alteração.
+        *   (Opcional) Disparar `PaymentStatusUpdatedNotification` para o usuário.
+        *   Emitir evento Livewire ou mensagem flash de sucesso.
+        *   Atualizar a visualização da inscrição.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Na página de detalhes da inscrição (admin), o status de pagamento atual é exibido.
+- [ ] AC2: Controles (dropdown ou botões) para selecionar um novo status de pagamento estão disponíveis.
+- [ ] AC3: Ao submeter a alteração, o `payment_status` da inscrição é atualizado corretamente no banco de dados.
+- [ ] AC4: A interface de detalhes da inscrição reflete o novo status de pagamento após a atualização.
+- [ ] AC5: Uma mensagem de sucesso é exibida ao administrador após a atualização.
+- [ ] AC6: (Opcional, mas bom) Um log da alteração de status é registrado (ex: na tabela `activity_log` se `spatie/laravel-activitylog` for usado, ou em `registrations.notes`).
+- [ ] AC7: (Opcional, mas bom) Uma notificação por email é enviada ao usuário informando a confirmação/alteração do status de seu pagamento.
+- [ ] AC8: Código PHP/Blade segue padrões PSR-12 (Pint) e passa no PHPStan.
+- [ ] AC9: Testes de Feature (PHPUnit) verificam:
+    -   Que um administrador pode alterar o status de pagamento de uma inscrição.
+    -   Que a alteração é refletida no banco de dados.
+    -   (Se implementado) Que o log de alteração é criado.
+    -   (Se implementado) Que a notificação ao usuário é enviada.
+- [ ] AC10: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase5.1] Escrever Testes de Feature (PHPUnit) para Fluxos Críticos de Backend
+TYPE: test
+LABELS: bcsmif,fase-5,test,phpunit,backend,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 5: Testes, Qualidade e Config. Final
+TEST_MOTIVATION: Garantir a robustez e o correto funcionamento de todos os fluxos críticos de backend da aplicação de inscrições, incluindo cálculo de taxas, criação de inscrições, envio de emails, upload de comprovantes e gerenciamento de status de pagamento pelo admin. Muitos destes já foram cobertos por testes específicos em issues anteriores (ex: #22, #24), mas esta issue serve para consolidar, revisar e garantir a cobertura de interações entre serviços e casos de borda.
+TEST_SCOPE:
+1.  **Revisão dos Testes Existentes:** Verificar se os testes de Feature criados nas Issues #21, #22, #23, #24, #41, #42 cobrem adequadamente os cenários de sucesso e falha.
+2.  **Testes de Integração entre Serviços (se aplicável):**
+    *   Verificar o fluxo completo: Validação de Formulário -> Cálculo de Taxa -> Criação de Registro -> Associação de Eventos -> Disparo de Email.
+3.  **Casos de Borda e Cenários Complexos:**
+    *   Inscrição em múltiplos workshops com e sem o evento principal (verificar descontos).
+    *   Tentativa de upload de comprovante para inscrição já paga ou de tipo incorreto.
+    *   Alteração de status de pagamento para diversos estados válidos e inválidos (admin).
+    *   Falhas de comunicação com serviços externos (Replicado, se não totalmente mockado em todos os cenários).
+4.  **Segurança e Autorização:**
+    *   Reconfirmar que endpoints de admin estão protegidos.
+    *   Reconfirmar que um usuário só pode gerenciar suas próprias inscrições/comprovantes.
+PROPOSED_SOLUTION:
+*   Analisar os testes existentes nas issues mencionadas.
+*   Identificar lacunas de cobertura ou cenários não testados.
+*   Criar novas classes de teste de Feature ou adicionar métodos às existentes em `tests/Feature/`.
+*   Utilizar factories para criar dados de teste (`User`, `Event`, `Fee`, `Registration`).
+*   Utilizar `Mail::fake()`, `Storage::fake()`, `Event::fake()` e o `FakeReplicadoService` para mockar dependências externas.
+*   Focar em asserções sobre o estado do banco de dados, eventos disparados, emails enviados, respostas HTTP e redirecionamentos.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Todos os testes de Feature existentes relacionados aos fluxos de inscrição e admin (Issues #21-#24, #41-#42) foram revisados e estão passando.
+- [ ] AC2: Teste de Feature verifica o fluxo completo de inscrição (validação, cálculo de taxa, salvamento, associação de eventos, email) para um usuário USP.
+- [ ] AC3: Teste de Feature verifica o fluxo completo de inscrição para um usuário externo.
+- [ ] AC4: Teste de Feature verifica o cálculo de taxas e aplicação de descontos em cenários de inscrição em múltiplos workshops (com e sem evento principal).
+- [ ] AC5: Testes de Feature para a área de admin cobrem a alteração de status de pagamento para todos os estados válidos (ex: de 'pending_br_proof_approval' para 'paid_br', de 'pending_payment' para 'cancelled').
+- [ ] AC6: Testes de Feature verificam o tratamento de erro para tentativas inválidas de alteração de status de pagamento pelo admin.
+- [ ] AC7: Testes de Feature confirmam que as regras de autorização para upload de comprovante e gerenciamento de status de pagamento (admin) estão funcionando corretamente.
+- [ ] AC8: Código dos novos testes/testes atualizados segue padrões PSR-12 (Pint) e passa no PHPStan.
+- [ ] AC9: Todos os testes de Feature (PHPUnit) passam na CI.
+- [ ] AC10: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase5.2] Configurar e Validar CI para Testes Dusk do Site de Inscrições
+TYPE: chore
+LABELS: bcsmif,fase-5,ci,dusk,devops,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 5: Testes, Qualidade e Config. Final
+TEST_MOTIVATION: Garantir que os testes de browser (Dusk) específicos para o site de inscrições do 8th BCSMIF sejam executados automaticamente no pipeline de Integração Contínua (GitHub Actions), fornecendo feedback rápido sobre a integridade da UI.
+TEST_SCOPE: Revisar e, se necessário, ajustar o workflow `.github/workflows/laravel.yml` para incluir:
+1.  Instalação correta de todas as dependências necessárias para Dusk (navegador Chrome, ChromeDriver).
+2.  Configuração do ambiente para testes Dusk (ex: cópia do `.env.dusk.local` para `.env.dusk` no CI).
+3.  Criação e migração de um banco de dados SQLite dedicado para os testes Dusk (`database/testing/dusk.sqlite`).
+4.  Inicialização correta do ChromeDriver e do servidor da aplicação Laravel (`php artisan serve`) no ambiente de CI antes da execução dos testes Dusk.
+5.  Execução dos testes Dusk (ex: `php artisan dusk`).
+6.  Coleta e upload de artefatos de falha Dusk (screenshots, console logs) em caso de falha.
+7.  Garantir que os testes Dusk criados nas Issues #32.T e #33.T passem consistentemente na CI.
+PROPOSED_SOLUTION:
+*   Analisar o workflow atual `.github/workflows/laravel.yml` do Starter Kit.
+*   Adicionar ou modificar os steps para:
+    *   `sudo apt-get update && sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libgtk-3-0 libgbm-dev libasound2t64 xvfb` (para dependências do Chrome headless).
+    *   `cp .env.dusk.local .env.dusk`
+    *   `mkdir -p database/testing && touch database/testing/dusk.sqlite`
+    *   `php artisan migrate --database=sqlite --path=database/migrations --env=dusk.local --force`
+    *   `php artisan dusk:chrome-driver --detect --no-interaction` (ou usar uma versão específica do ChromeDriver)
+    *   `php artisan serve --port=8000 --env=dusk.local &` (rodar em background)
+    *   `sleep 8` (ou um check mais robusto para o servidor estar pronto)
+    *   `./vendor/laravel/dusk/bin/chromedriver-linux --port=9515 &` (rodar em background)
+    *   `sleep 8` (ou um check mais robusto para o ChromeDriver estar pronto)
+    *   `php artisan dusk --env=dusk.local`
+    *   Usar `actions/upload-artifact@v4` para `tests/Browser/screenshots/failure-*.*` e `tests/Browser/console/*.log` em caso de falha.
+*   Testar o workflow modificado com um PR.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Workflow `.github/workflows/laravel.yml` atualizado com steps para instalação de dependências do Chrome/ChromeDriver.
+- [ ] AC2: Workflow copia `.env.dusk.local` para `.env.dusk` (ou configura variáveis de ambiente equivalentes para Dusk).
+- [ ] AC3: Workflow cria e migra o banco de dados SQLite para testes Dusk (ex: `database/testing/dusk.sqlite`).
+- [ ] AC4: Workflow instala/configura o ChromeDriver corretamente.
+- [ ] AC5: Workflow inicia o servidor da aplicação Laravel em background na porta e ambiente corretos para Dusk.
+- [ ] AC6: Workflow inicia o ChromeDriver em background na porta correta.
+- [ ] AC7: Workflow executa o comando `php artisan dusk --env=dusk.local` (ou similar).
+- [ ] AC8: Todos os testes Dusk existentes (de #32.T e #33.T) passam consistentemente no ambiente de CI.
+- [ ] AC9: Em caso de falha nos testes Dusk, os screenshots e logs de console são salvos como artefatos da run do workflow.
+- [ ] AC10: Commit atômico bem escrito referenciando esta issue foi feito.
+------
+TITLE: [BCSMIF][Fase5.3] Configurações Finais e Conteúdo para Produção
+TYPE: chore
+LABELS: bcsmif,fase-5,config,content,deployment,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE: Fase 5: Testes, Qualidade e Config. Final
+FEATURE_MOTIVATION: Preparar a aplicação para um possível ambiente de produção ou homologação, garantindo que todas as configurações, conteúdos e dados iniciais estejam corretos e completos.
+FEATURE_DESCRIPTION: Esta tarefa envolve uma série de verificações e configurações finais:
+1.  **Variáveis de Ambiente:**
+    *   Revisar e completar o arquivo `.env.example` com todas as variáveis de ambiente necessárias para a aplicação rodar em produção, incluindo chaves de API (se houver, com placeholders), configurações de email, URL da aplicação, `COORDINATOR_EMAIL`, etc.
+    *   Documentar no `.env.example` o propósito de cada variável.
+2.  **Conteúdo das Páginas e Emails:**
+    *   Revisar todo o conteúdo das páginas públicas informativas (Home, Workshops, Taxas, Pagamento) e garantir que esteja finalizado, correto e aprovado.
+    *   Revisar o conteúdo de todos os templates de email (Nova Inscrição, Comprovante Enviado, etc.) para garantir clareza, correção e profissionalismo.
+3.  **Dados Iniciais (Seeders):**
+    *   Garantir que os seeders `EventsTableSeeder` e `FeesTableSeeder` estejam populando as tabelas com os dados finais e corretos do evento e das taxas de inscrição.
+    *   Verificar se o `DatabaseSeeder` principal chama todos os seeders necessários na ordem correta.
+4.  **Revisão de Segurança Básica:**
+    *   Verificar permissões de arquivo/diretório no servidor (se aplicável ao ambiente de teste).
+    *   Revisar se dados sensíveis não estão hardcoded ou expostos.
+    *   Garantir que o modo debug esteja desabilitado em `.env` de produção.
+5.  **Revisão de Usabilidade:**
+    *   Realizar uma passagem final pelos fluxos principais da aplicação (inscrição, login, área do usuário, admin) para identificar problemas de usabilidade óbvios.
+PROPOSED_SOLUTION:
+*   Criar uma checklist detalhada para cada item acima.
+*   Atualizar o arquivo `.env.example` com todas as variáveis e comentários explicativos.
+*   Validar o conteúdo textual com os responsáveis pelo evento (se houver).
+*   Executar `php artisan migrate:fresh --seed` em um ambiente de teste limpo para validar os seeders.
+*   Seguir uma checklist de segurança básica para aplicações Laravel.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Arquivo `.env.example` está completo, com todas as variáveis necessárias para produção (com placeholders para segredos) e comentários explicativos.
+- [ ] AC2: Conteúdo textual de todas as páginas públicas (Home, Workshops, Taxas, Pagamento) está finalizado e correto.
+- [ ] AC3: Conteúdo de todos os templates de email (Nova Inscrição, Comprovante Enviado, etc.) está finalizado e correto.
+- [ ] AC4: Seeders `EventsTableSeeder` e `FeesTableSeeder` contêm os dados finais e corretos do evento e taxas.
+- [ ] AC5: `DatabaseSeeder` chama todos os seeders necessários.
+- [ ] AC6: `php artisan migrate:fresh --seed` executa com sucesso e popula o banco de dados corretamente.
+- [ ] AC7: Uma revisão básica de segurança foi realizada (ex: debug desabilitado em .env de produção simulado, sem chaves hardcoded).
+- [ ] AC8: Uma revisão final de usabilidade dos fluxos principais foi realizada.
+- [ ] AC9: Código PHP/Blade (se houver alterações) segue padrões PSR-12 (Pint) e passa no PHPStan.
+- [ ] AC10: Commit atômico bem escrito referenciando esta issue foi feito.
