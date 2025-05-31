@@ -23,6 +23,7 @@ yarn-error.log
 /.zed
 source_code_string.txt
 /context_llm/
+context_llm/temp/
 /llm_outputs/
 /scripts/data/
 /docs/laravel_12

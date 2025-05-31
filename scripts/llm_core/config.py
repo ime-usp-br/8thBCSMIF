@@ -15,6 +15,7 @@ META_PROMPT_DIR = PROJECT_ROOT / "templates" / "meta-prompts"
 CONTEXT_SELECTORS_DIR = PROJECT_ROOT / "templates" / "context_selectors"
 CONTEXT_DIR_BASE = PROJECT_ROOT / "context_llm" / "code"
 COMMON_CONTEXT_DIR = PROJECT_ROOT / "context_llm" / "common"
+TEMP_CONTEXT_COPY_DIR = PROJECT_ROOT / "context_llm" / "temp"  # AC3: Diretório temporário para cópia de contexto
 OUTPUT_DIR_BASE = PROJECT_ROOT / "llm_outputs"
 CONTEXT_GENERATION_SCRIPT = PROJECT_ROOT / "scripts" / "generate_context.py"
 MANIFEST_DATA_DIR = PROJECT_ROOT / "scripts" / "data"
