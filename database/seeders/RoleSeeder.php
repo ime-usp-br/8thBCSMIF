@@ -20,14 +20,9 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Create roles for local authentication
         Role::firstOrCreate(['name' => 'usp_user', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'external_user', 'guard_name' => 'web']);
-
-        // Add other roles if needed, for example:
-        // Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     }
 }
