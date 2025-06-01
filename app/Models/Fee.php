@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Event $event The event this fee is associated with.
  *
- * @use HasFactory<FeeFactory>
+ * @method static \Database\Factories\FeeFactory factory($count = null, $state = [])
  */
 class Fee extends Model
 {

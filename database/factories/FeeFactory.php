@@ -26,7 +26,7 @@ class FeeFactory extends Factory
     public function definition(): array
     {
         return [
-            'event_code' => fn () => Event::factory()->create()->code, // Garante que um Evento é criado e seu código é usado
+            'event_code' => fn () => Event::factory()->create()->code,
             'participant_category' => $this->faker->randomElement(['undergrad_student', 'grad_student', 'professor_abe', 'professor_non_abe_professional']),
             'type' => $this->faker->randomElement(['in-person', 'online']),
             'period' => $this->faker->randomElement(['early', 'late']),
@@ -38,12 +38,50 @@ class FeeFactory extends Factory
     /**
      * Indicate that the fee is for a specific event code.
      */
-    public function forEvent(string $eventCode): Factory
+    public function forEvent(string $eventCode): static
     {
-        return $this->state(function (array $attributes) use ($eventCode) {
-            return [
-                'event_code' => $eventCode,
-            ];
-        });
+        return $this->state(fn (array $attributes) => [
+            'event_code' => $eventCode,
+        ]);
+    }
+
+    /**
+     * Indicate that the fee is for a specific participant category.
+     */
+    public function forParticipantCategory(string $category): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'participant_category' => $category,
+        ]);
+    }
+
+    /**
+     * Indicate that the fee is for a specific type of participation.
+     */
+    public function forType(string $type): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => $type,
+        ]);
+    }
+
+    /**
+     * Indicate that the fee is for a specific registration period.
+     */
+    public function forPeriod(string $period): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'period' => $period,
+        ]);
+    }
+
+    /**
+     * Indicate that this fee is a discounted price for main event participants.
+     */
+    public function withDiscountForMainEventParticipant(bool $isDiscounted = true): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_discount_for_main_event_participant' => $isDiscounted,
+        ]);
     }
 }

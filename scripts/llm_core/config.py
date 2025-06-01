@@ -100,6 +100,8 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
             "context_llm/code/{latest_dir_name}/phpunit_test_results.txt",  # Opcional, pode não existir
             "context_llm/code/{latest_dir_name}/phpstan_analysis.txt",  # Opcional
             "context_llm/code/{latest_dir_name}/dusk_test_results.txt",  # Opcional
+            "docs/descricao_evento.md",
+            "docs/formulario_inscricao.md",
         ],
     },
     "commit-mesage": {
