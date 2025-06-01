@@ -86,7 +86,7 @@ This workflow leverages Python scripts for heavy LLM tasks while Claude Code orc
 ```bash
 resolve-ac -i <ISSUE> -a <AC> -op -sc
 # -op: Output prompt only (for Google AI Studio)
-# -sc: LLM selects relevant context files
+# -sc: LLM selects relevant context files (REQUIRED for Gemini free tier context window)
 # Result: Copies context to context_llm/temp/ + shows prompt
 ```
 
@@ -107,7 +107,7 @@ analyze-ac -i <ISSUE> -a <AC> -sc
 
 **If AC accepted:**
 ```bash
-commit-mesage [-i <ISSUE>] -g  # Generate commit message
+commit-mesage [-i <ISSUE>] -sc  # Generate commit message (use -sc for context limits)
 # Then: git commit, git push
 # Move to next AC
 ```
@@ -142,6 +142,33 @@ copy-sc             # python3 scripts/copy_selected_context.py
 - `-sc`: Enable context selection
 
 **Context Generation**: Use `context-generate --stages <stage_list>` for selective context collection.
+
+### ⚠️ Critical: Always Use -sc Flag
+
+**ALWAYS use `-sc` flag with LLM tasks** due to Gemini free tier context window limitations. The `-sc` flag enables context selection by LLM, ensuring only relevant files are included in the prompt.
+
+### Post-Implementation Quality Checks
+
+**MANDATORY:** After every `resolve-ac` implementation, run ALL quality checks before validation:
+
+```bash
+# Run all quality checks in sequence
+vendor/bin/pint                     # PSR-12 formatting
+vendor/bin/phpstan analyse          # Static analysis  
+php artisan test                    # PHPUnit tests
+php artisan dusk                    # Browser tests
+pytest -v --live                    # Python tests
+```
+
+**ALL tests must pass** before proceeding to `analyze-ac` validation. This ensures code quality and prevents integration issues.
+
+### Workflow Lessons Learned
+
+**Context Generation:** After creating new files, run `context-generate` to ensure fresh context includes new files for `analyze-ac` validation.
+
+**Interactive Scripts:** Use `echo ""` or `printf "y\ny\ny\n"` for auto-confirming script prompts, but be prepared to wait for API quota rotations (up to 7 keys).
+
+**Commit Messages:** When scripts fail to generate appropriate commit messages, create manual messages focused on the specific AC implemented, without Claude Code references.
 
 ## Code Quality Standards
 
