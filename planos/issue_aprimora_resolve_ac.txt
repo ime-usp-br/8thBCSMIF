@@ -1,0 +1,60 @@
+TITLE: [DevTools][Feature] Aprimorar `resolve-ac` com `-op -sc` para pré-seleção e cópia de contexto para diretório temporário
+TYPE: feature
+LABELS: devtools,python,llm,context-selection,feature,todo,resolve-ac
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE:
+FEATURE_MOTIVATION:
+A tarefa `resolve-ac` é crítica e demanda o uso de LLMs mais capazes, que geralmente possuem janelas de contexto menores ou custos associados ao tamanho do input. O contexto completo gerado por `generate_context.py` já excede os limites práticos para estes modelos. Para permitir o uso manual da saída do prompt de `resolve-ac` (via `-op`) com estas LLMs de alta capacidade (ex: através do AI Studio), é necessário um passo intermediário que não apenas selecione um subconjunto relevante de arquivos de contexto, mas também os disponibilize de forma organizada em um diretório temporário para fácil upload ou referência manual.
+
+FEATURE_DESCRIPTION:
+Modificar o fluxo da tarefa `resolve-ac` no script `scripts/tasks/llm_task_resolve_ac.py` (e potencialmente no dispatcher `scripts/llm_interact.py` e no core de contexto) para que, quando as flags `--only-prompt` (`-op`) e `--select-context` (`-sc`) forem usadas em conjunto:
+1.  A chamada à LLM para seleção preliminar de contexto (a "selector LLM") seja executada normalmente, utilizando o manifesto do projeto.
+2.  Após a selector LLM retornar a lista de arquivos relevantes e o usuário confirmar/modificar essa lista (se a interação não for pulada com `-y`), o sistema deve:
+    a.  Identificar os arquivos "essenciais" definidos para a tarefa `resolve-ac` no `core_config.ESSENTIAL_FILES_MAP`.
+    b.  Combinar a lista de arquivos essenciais com a lista de arquivos selecionados pela LLM (e confirmados/modificados pelo usuário), garantindo uma lista final única de arquivos.
+    c.  Definir um diretório temporário, por exemplo, `context_llm/temp/`.
+    d.  **Limpar** o conteúdo preexistente do diretório temporário.
+    e.  **Copiar** todos os arquivos da lista final (essenciais + selecionados) do projeto para o diretório temporário, **preservando sua estrutura de diretórios relativa à raiz do projeto**.
+3.  Finalmente, o prompt que seria exibido pela flag `-op` (o prompt final para a LLM principal da tarefa `resolve-ac`) deve ser gerado e exibido, idealmente refletindo que seu contexto seria construído a partir dos arquivos agora presentes no diretório temporário. O usuário será informado sobre os arquivos copiados.
+
+PROPOSED_SOLUTION:
+1.  **Modificar `scripts/tasks/llm_task_resolve_ac.py` (e/ou `scripts/llm_interact.py` se a lógica de flags for centralizada):**
+    *   Na função `main_resolve_ac` (ou onde o fluxo de `-op` e `-sc` é tratado), adicionar uma condição para verificar se ambas as flags estão ativas para a task `resolve-ac`.
+2.  **Lógica de Seleção e Identificação de Arquivos:**
+    *   Manter a execução da chamada à selector LLM quando `-sc` está ativo.
+    *   Após obter `final_selected_files_for_context` (a lista de arquivos da selector LLM, possivelmente modificada pelo usuário), chamar `core_context.get_essential_files_for_task("resolve-ac", ...)` para obter os caminhos absolutos dos arquivos essenciais.
+    *   Converter os caminhos dos arquivos selecionados para absolutos e uni-los com os essenciais, removendo duplicatas.
+3.  **Gerenciamento do Diretório Temporário:**
+    *   Definir um caminho para o diretório temporário em `scripts/llm_core/config.py` (ex: `TEMP_CONTEXT_COPY_DIR = PROJECT_ROOT / "context_llm" / "temp"`).
+    *   Adicionar `context_llm/temp/` ao arquivo `.gitignore` do projeto.
+    *   Em `scripts/llm_core/io_utils.py` (ou uma nova função em `context.py`), criar uma função `prepare_temp_context_directory(target_dir: Path, files_to_copy: List[Path], project_root: Path, verbose: bool)`:
+        *   Esta função deve primeiro limpar o `target_dir` (ex: `shutil.rmtree(target_dir)` se existir, seguido de `target_dir.mkdir(parents=True, exist_ok=True)`).
+        *   Para cada arquivo em `files_to_copy` (que devem ser caminhos absolutos ou relativos ao `project_root`):
+            *   Calcular o caminho de destino dentro de `target_dir` preservando a estrutura relativa ao `project_root`. Ex: se `project_root/app/Models/User.php` deve ser copiado para `target_dir`, o destino será `target_dir/app/Models/User.php`.
+            *   Criar os subdiretórios necessários dentro de `target_dir`.
+            *   Copiar o arquivo (`shutil.copy2`).
+        *   Logar as ações de limpeza e cópia (especialmente em modo `verbose`).
+4.  **Integração no Fluxo `-op -sc` para `resolve-ac`:**
+    *   Após a seleção e obtenção da lista final de arquivos, chamar a nova função `prepare_temp_context_directory`.
+    *   Informar ao usuário que os arquivos selecionados e essenciais foram copiados para o diretório temporário.
+    *   O prompt exibido por `-op` deve ser o prompt que a LLM principal da task `resolve-ac` receberia. **Importante:** O conteúdo *real* deste prompt, para ser útil manualmente no AI Studio, agora viria dos arquivos no `context_llm/temp/`. O script pode montar este prompt "virtualmente" para exibição, mesmo que a lógica padrão de `prepare_context_parts` não leia diretamente de `context_llm/temp/` para a chamada API real (a menos que isso também seja alterado). O foco principal é a cópia dos arquivos para o diretório temporário.
+5.  **Considerações para o prompt exibido por `-op`:**
+    *   Se `-op` é usado com `-sc`, o prompt final exibido deve ser construído usando o *conteúdo* dos arquivos que foram copiados para `context_llm/temp/`. Isso significa que `core_context.prepare_context_parts` precisaria de um modo ou parâmetro para carregar de um diretório alternativo ou de uma lista de arquivos específica já presente no sistema de arquivos (no caso, `context_llm/temp/`).
+
+ACCEPTANCE_CRITERIA:
+- [ ] **AC1:** Quando `llm_task_resolve_ac.py` (ou `llm_interact.py resolve-ac`) é executado com as flags `--only-prompt` e `--select-context` simultaneamente:
+    - [ ] **AC1.1:** A chamada à LLM para seleção preliminar de contexto é realizada.
+    - [ ] **AC1.2:** O usuário é (opcionalmente, se `-y` não for usado) consultado para confirmar/modificar a lista de arquivos sugerida pela selector LLM.
+- [ ] **AC2:** A lista final de arquivos para cópia é a união (sem duplicatas) dos arquivos essenciais para "resolve-ac" e dos arquivos confirmados da seleção preliminar.
+- [ ] **AC3:** O diretório `context_llm/temp/` é definido em `core_config.py` e adicionado ao `.gitignore` global.
+- [ ] **AC4:** Antes da cópia, o conteúdo do diretório `context_llm/temp/` é completamente removido.
+- [ ] **AC5:** Todos os arquivos da lista final (AC2) são copiados para `context_llm/temp/`, preservando sua estrutura de diretórios relativa à raiz do projeto.
+    - Ex: `app/Services/MyService.php` é copiado para `context_llm/temp/app/Services/MyService.php`.
+- [ ] **AC6:** O usuário é informado (via console output) sobre quais arquivos foram copiados para `context_llm/temp/` e o caminho do diretório.
+- [ ] **AC7:** A flag `--only-prompt`, quando usada com `--select-context` para `resolve-ac`, exibe o prompt final que seria usado pela LLM principal, e este prompt deve ser construído a partir do conteúdo dos arquivos que foram copiados para `context_llm/temp/`.
+- [ ] **AC8:** Se as flags `-op` e `-sc` não forem usadas juntas, ou se a task não for `resolve-ac` (mesmo com `-op -sc`), o comportamento de cópia para `context_llm/temp/` **NÃO** é acionado (o comportamento existente de `-op` e `-sc` para outras tasks ou combinações é mantido).
+- [ ] **AC9:** Tratamento de erro adequado é implementado (ex: falha ao limpar diretório, falha ao copiar arquivos).
+- [ ] **AC10:** Código Python adere aos padrões de qualidade do projeto (PEP 8, typing).
+- [ ] **AC11:** Documentação do script (`README.md` ou `docs/guia_de_desenvolvimento.md`) é atualizada para explicar a nova funcionalidade combinada das flags `-op -sc` para a task `resolve-ac`.
+- [ ] **AC12:** (Opcional, mas recomendado) Testes unitários/integração para a nova lógica de cópia de arquivos e limpeza do diretório temporário.
