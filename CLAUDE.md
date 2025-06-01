@@ -70,15 +70,78 @@ Critical environment variables:
 - **Dusk:** Requires `.env.dusk.local` with separate test database and `APP_URL` pointing to test server
 - Browser tests need Chrome/Chromium installed
 
-## Development Scripts
+## Development Scripts & Workflows
 
-Python automation scripts in `scripts/` directory:
-- **create_issue.py**: GitHub issue management automation
-- **generate_context.py**: LLM context generation with selective execution (`--stages`)
-- **llm_interact.py**: LLM task dispatcher for development assistance
-- **run_tests.py**: Test execution automation
+### Proven Development Workflow
 
-For LLM-assisted development, use `scripts/tasks/llm_task_resolve_ac.py` with `--only-prompt -op` and `--select-context -sc` flags to copy selected context files to `context_llm/temp/` for external LLM usage.
+This workflow leverages Python scripts for heavy LLM tasks while Claude Code orchestrates the process:
+
+#### 1. Issue Discovery
+```bash
+# Check GitHub Projects/Issues to find current in-progress issue
+# Identify next AC (Acceptance Criteria) to resolve
+```
+
+#### 2. Generate Solution Prompt
+```bash
+resolve-ac -i <ISSUE> -a <AC> -op -sc
+# -op: Output prompt only (for Google AI Studio)
+# -sc: LLM selects relevant context files
+# Result: Copies context to context_llm/temp/ + shows prompt
+```
+
+#### 3. External LLM Execution
+- Copy prompt to Google AI Studio (Gemini 2.5 Pro free tier)
+- Apply generated code changes manually to project
+
+#### 4. Validation Loop
+```bash
+analyze-ac -i <ISSUE> -a <AC> -sc
+# Checks if AC requirements are met
+```
+
+**If AC not accepted:**
+- Use analyze-ac output as observation
+- Re-run: `resolve-ac -i <ISSUE> -a <AC> -op -sc -o "<analyze_output>"`
+- Repeat until AC passes
+
+**If AC accepted:**
+```bash
+commit-mesage [-i <ISSUE>] -g  # Generate commit message
+# Then: git commit, git push
+# Move to next AC
+```
+
+### Direct Task Scripts (via ~/.bashrc aliases)
+
+```bash
+# Primary workflow tasks
+analyze-ac          # python3 scripts/tasks/llm_task_analyze_ac.py
+resolve-ac          # python3 scripts/tasks/llm_task_resolve_ac.py  
+commit-mesage       # python3 scripts/tasks/llm_task_commit_mesage.py
+create-pr           # python3 scripts/tasks/llm_task_create_pr.py
+
+# Support utilities  
+issue-create        # python3 scripts/create_issue.py
+context-generate    # python3 scripts/generate_context.py
+copy-sc             # python3 scripts/copy_selected_context.py
+```
+
+### Key Script Options
+
+**resolve-ac**: Generate implementation code
+- `-i <issue>`: Issue number (required)
+- `-a <ac>`: AC number (required)  
+- `-op`: Only output prompt (for external LLM)
+- `-sc`: Enable context selection by LLM
+- `-o "<text>"`: Additional observation/feedback
+
+**analyze-ac**: Validate AC completion
+- `-i <issue>`: Issue number (required)
+- `-a <ac>`: Specific AC to check (optional)
+- `-sc`: Enable context selection
+
+**Context Generation**: Use `context-generate --stages <stage_list>` for selective context collection.
 
 ## Code Quality Standards
 
