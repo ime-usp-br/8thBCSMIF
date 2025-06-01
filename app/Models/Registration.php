@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon; // For date type hints in PHPDoc
@@ -54,6 +55,9 @@ use Illuminate\Support\Carbon; // For date type hints in PHPDoc
  */
 class Registration extends Model
 {
+    /** @use HasFactory<\Database\Factories\RegistrationFactory> */
+    use HasFactory;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -108,19 +112,16 @@ class Registration extends Model
     protected function casts(): array
     {
         return [
-            // dates
             'date_of_birth' => 'date',
             'passport_expiry_date' => 'date',
             'arrival_date' => 'date',
             'departure_date' => 'date',
             'payment_uploaded_at' => 'datetime',
             'invoice_sent_at' => 'datetime',
-            // booleans
             'is_abe_member' => 'boolean',
             'needs_transport_from_gru' => 'boolean',
             'needs_transport_from_usp' => 'boolean',
             'requires_visa_letter' => 'boolean',
-            // decimal
             'calculated_fee' => 'decimal:2',
         ];
     }
