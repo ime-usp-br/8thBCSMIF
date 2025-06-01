@@ -1,7 +1,7 @@
 # Padrões de Código e Boas Práticas
 
 **Versão:** 0.1.0<br>
-**Data:** 2025-05-29
+**Data:** 2025-05-31
 
 Manter um código limpo, consistente e fácil de entender é crucial para a manutenabilidade e evolução de qualquer projeto. Este starter kit adota e **REQUER** a aderência às seguintes práticas e padrões:
 
@@ -219,7 +219,12 @@ public function processOrder(Request $request)
     *   **Scripts de Tarefa Individuais:** Localizados em `scripts/tasks/`, podem ser executados diretamente.
         Ex: `python scripts/tasks/llm_task_resolve_ac.py --issue 123 --ac 1 [outros_argumentos_comuns...]`
     *   **Funcionalidades Comuns:** As funcionalidades centrais (configuração, parsing de argumentos comuns, carregamento de contexto, interação com API, I/O) estão em `scripts/llm_core/`. Incluem: pré-injeção de arquivos essenciais no contexto da LLM seletora; gerenciamento proativo de limites de tokens e RPM da API Gemini (cálculo dinâmico de `MAX_INPUT_TOKENS_PER_CALL`, redução de contexto por sumário/truncamento e rate limiter de chamadas); e melhorias na experiência do usuário ao selecionar contexto interativamente.
-    *   **Argumentos Comuns:** Use `-h` ou `--help` em qualquer script de tarefa ou no dispatcher para ver as opções comuns e específicas da tarefa. Destacam-se: `--issue`, `--ac`, `--observation`, `--two-stage` (fluxo com meta-prompt), `--select-context` (para seleção interativa de contexto, agora com exibição de contagem de tokens e tratamento de arquivos ausentes/truncados), `--web-search` (com tool calling), `--generate-context` (para acionar o script de geração de contexto), etc.
+    *   **Argumentos Comuns:** Use `-h` ou `--help` em qualquer script de tarefa ou no dispatcher para ver as opções comuns e específicas da tarefa. Destacam-se: `--issue`, `--ac`, `--observation`, `--two-stage` (fluxo com meta-prompt), `--select-context` (`-sc`, para seleção interativa de contexto, agora com exibição de contagem de tokens e tratamento de arquivos ausentes/truncados), `--only-prompt` (`-op`, para exibir o prompt final sem chamar a LLM principal), `--web-search` (com tool calling), `--generate-context` (para acionar o script de geração de contexto), etc.
+    *   **Funcionalidade Especial para `resolve-ac` com `--only-prompt` e `--select-context`:** Quando as flags `-op` e `-sc` são usadas juntas especificamente para a tarefa `resolve-ac`, o sistema realiza uma etapa adicional para facilitar o uso manual do prompt com LLMs externas (como o Google AI Studio). Após a seleção preliminar de contexto pela LLM e a confirmação/modificação pelo usuário:
+        1.  O diretório `context_llm/temp/` é limpo.
+        2.  Uma lista final de arquivos (arquivos essenciais para `resolve-ac` + arquivos selecionados) é preparada.
+        3.  Todos os arquivos desta lista final são copiados diretamente para `context_llm/temp/`, **sem preservar sua estrutura de diretórios original e com suas extensões alteradas para `.txt`** (ex: `app/Services/MyService.php` torna-se `context_llm/temp/MyService.txt`).
+        4.  O usuário é informado sobre os arquivos copiados e o prompt final exibido por `-op` é construído para refletir o uso destes arquivos copiados, facilitando a sua utilização como anexos em interfaces de LLM externas.
     * Requer `google-genai`, `python-dotenv`, `tqdm` e uma `GEMINI_API_KEY` válida no arquivo `.env`.
 
 ## Uso de Termos RFC 2119 na Documentação
