@@ -1,7 +1,7 @@
 # Site de Inscrições do 8th BCSMIF
 
 **Versão:** 0.1.0<br>
-**Data:** 2025-05-30
+**Data:** 2025-05-31
 
 [![Status da Build](https://github.com/ime-usp-br/8thBCSMIF/actions/workflows/laravel.yml/badge.svg)](https://github.com/ime-usp-br/8thBCSMIF/actions/workflows/laravel.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -172,7 +172,7 @@ Este projeto utiliza as ferramentas de qualidade e desenvolvimento herdadas do L
 *   **Scripts Python (`scripts/`):**
     *   `create_issue.py`: Para automação de criação/edição de Issues no GitHub.
     *   `generate_context.py`: Para coletar contexto do projeto para LLMs (com execução seletiva via `--stages`).
-    *   `llm_interact.py` (dispatcher) e `scripts/tasks/llm_task_*.py` (tarefas individuais): Para interações com a API Gemini, auxiliando em diversas tarefas de desenvolvimento.
+    *   `llm_interact.py` (dispatcher) e `scripts/tasks/llm_task_*.py` (tarefas individuais): Para interações com a API Gemini, auxiliando em diversas tarefas de desenvolvimento. Uma funcionalidade notável para a tarefa `resolve-ac` é que, ao usar as flags `--only-prompt` (`-op`) e `--select-context` (`-sc`) juntas, os arquivos de contexto selecionados (essenciais + escolhidos pela LLM) são copiados para `context_llm/temp/` (sem estrutura de diretórios e com extensão `.txt`), e o prompt final exibido é construído para referenciar esses arquivos, facilitando o uso manual com LLMs externas como o Google AI Studio.
 
 ## 9. Testes
 

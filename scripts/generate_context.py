@@ -76,7 +76,7 @@ TIMESTAMP_MANIFEST_REGEX = r"^\d{8}_\d{6}_manifest\.json$"
 TIMESTAMP_DIR_REGEX = (
     r"^\d{8}_\d{6}$"  # Regex para validar nomes de diretório de timestamp
 )
-ARTISAN_FILE= BASE_DIR / "artisan"
+ARTISAN_FILE = BASE_DIR / "artisan"
 
 PHPUNIT_OUTPUT_FILE_NAME = "phpunit_test_results.txt"
 DUSK_OUTPUT_FILE_NAME = "dusk_test_results.txt"

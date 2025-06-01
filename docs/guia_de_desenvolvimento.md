@@ -1,7 +1,7 @@
 # Guia de Estratégia de Desenvolvimento - Laravel 12 USP Starter Kit
 
 **Versão:** 0.1.0<br>
-**Data:** 2025-05-29
+**Data:** 2025-05-31
 
 ## 1. Introdução
 
@@ -284,7 +284,12 @@ A chave é a rastreabilidade via Issues e commits vinculados.
     *   **Scripts de Tarefa Individuais:** Localizados em `scripts/tasks/`, podem ser executados diretamente.
         Ex: `python scripts/tasks/llm_task_resolve_ac.py --issue 123 --ac 1 [outros_argumentos_comuns...]`
     *   **Funcionalidades Comuns:** As funcionalidades centrais (configuração, parsing de argumentos comuns, carregamento de contexto, interação com API, I/O) estão em `scripts/llm_core/`. Elas incluem: aprimorada seleção de contexto com pré-injeção de arquivos essenciais (AC1.1-1.3); gerenciamento proativo de limites de tokens e RPM da API Gemini (AC2.1-2.3), com cálculo dinâmico de `MAX_INPUT_TOKENS_PER_CALL`, estratégias de redução de contexto (substituição por sumário e truncamento), e um rate limiter interno; e melhorias significativas na experiência do usuário ao interagir com a seleção de contexto (AC3.1-3.4, AC4.1, AC5.1).
-    *   **Argumentos Comuns:** Use `-h` ou `--help` em qualquer script de tarefa ou no dispatcher para ver as opções comuns e específicas da tarefa. Destacam-se: `--issue` (para especificar uma Issue do GitHub), `--ac` (para critérios de aceite), `--observation` (feedback adicional para a LLM), `--two-stage` (habilita um fluxo com meta-prompt para gerar o prompt final), `--select-context` (permite a seleção interativa de arquivos de contexto, aprimorada com informações detalhadas e tratamento de arquivos ausentes), `--web-search` (ativa a ferramenta de busca para a LLM), `--generate-context` (para acionar a geração de contexto inicial), entre outros.
+    *   **Argumentos Comuns:** Use `-h` ou `--help` em qualquer script de tarefa ou no dispatcher para ver as opções comuns e específicas da tarefa. Destacam-se: `--issue` (para especificar uma Issue do GitHub), `--ac` (para critérios de aceite), `--observation` (feedback adicional para a LLM), `--two-stage` (habilita um fluxo com meta-prompt para gerar o prompt final), `--select-context` (`-sc`, permite a seleção interativa de arquivos de contexto, aprimorada com informações detalhadas e tratamento de arquivos ausentes), `--only-prompt` (`-op`, para exibir o prompt final sem chamar a LLM principal), `--web-search` (ativa a ferramenta de busca para a LLM), `--generate-context` (para acionar a geração de contexto inicial), entre outros.
+    *   **Funcionalidade Especial para `resolve-ac` com `--only-prompt` e `--select-context`:** Quando as flags `-op` e `-sc` são usadas juntas especificamente para a tarefa `resolve-ac`, o sistema realiza uma etapa adicional para facilitar o uso manual do prompt com LLMs externas (como o Google AI Studio). Após a seleção preliminar de contexto pela LLM e a confirmação/modificação pelo usuário:
+        1.  O diretório `context_llm/temp/` é limpo.
+        2.  Uma lista final de arquivos (arquivos essenciais para `resolve-ac` + arquivos selecionados) é preparada.
+        3.  Todos os arquivos desta lista final são copiados diretamente para `context_llm/temp/`, **sem preservar sua estrutura de diretórios original e com suas extensões alteradas para `.txt`** (ex: `app/Services/MyService.php` torna-se `context_llm/temp/MyService.txt`).
+        4.  O usuário é informado sobre os arquivos copiados e o prompt final exibido por `-op` é construído para refletir o uso destes arquivos copiados, facilitando a sua utilização como anexos em interfaces de LLM externas.
     * Requer `google-genai`, `python-dotenv`, `tqdm` e uma `GEMINI_API_KEY` válida no arquivo `.env`.
 
 ## 9. Testes Automatizados
