@@ -5,7 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany; // Added for BelongsToMany relationship
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Carbon; // For date type hints in PHPDoc
 
 /**
@@ -142,7 +143,7 @@ class Registration extends Model
     /**
      * The events that this registration is associated with.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Event>
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Event, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
      */
     public function events(): BelongsToMany
     {

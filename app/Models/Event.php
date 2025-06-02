@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
  * Represents an event or workshop in the 8th BCSMIF application.
@@ -20,6 +22,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $is_main_conference Indicates if this is the main conference event.
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Registration> $registrations
+ * @property-read int|null $registrations_count
  */
 class Event extends Model
 {
@@ -57,5 +61,24 @@ class Event extends Model
             'registration_deadline_late' => 'date',
             'is_main_conference' => 'boolean',
         ];
+    }
+
+    /**
+     * The registrations that belong to the event.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Registration, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     */
+    public function registrations(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Registration::class,
+            'event_registration', // Pivot table name
+            'event_code',         // Foreign key on pivot table for Event model
+            'registration_id',    // Foreign key on pivot table for Registration model
+            'code',               // Parent key on Event model (it's 'code')
+            'id'                  // Related key on Registration model (default: id)
+        )
+            ->withPivot('price_at_registration')
+            ->withTimestamps();
     }
 }
