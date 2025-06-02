@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Carbon; // For date type hints in PHPDoc
 
 /**
@@ -52,6 +54,8 @@ use Illuminate\Support\Carbon; // For date type hints in PHPDoc
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read \App\Models\User $user
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Event> $events
+ * @property-read int|null $events_count
  */
 class Registration extends Model
 {
@@ -134,5 +138,24 @@ class Registration extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * The events that this registration is associated with.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Event, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     */
+    public function events(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Event::class,
+            'event_registration', // Pivot table name
+            'registration_id',    // Foreign key on pivot table for Registration model
+            'event_code',         // Foreign key on pivot table for Event model
+            'id',                 // Parent key on Registration model (default: id)
+            'code'                // Related key on Event model (default: id, but here it's 'code')
+        )
+            ->withPivot('price_at_registration')
+            ->withTimestamps();
     }
 }

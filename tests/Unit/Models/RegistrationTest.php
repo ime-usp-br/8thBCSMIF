@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Models;
 
+use App\Models\Event;
 use App\Models\Registration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -209,5 +210,59 @@ class RegistrationTest extends TestCase
                 $this->assertEquals($value, $registration->{$key});
             }
         }
+    }
+
+    #[Test]
+    public function registration_can_have_events_associated_with_pivot_data(): void
+    {
+        $registration = Registration::factory()->create();
+        $event = Event::factory()->create();
+        $price = 200.50;
+
+        $registration->events()->attach($event->code, ['price_at_registration' => $price]);
+
+        $this->assertCount(1, $registration->events);
+        $this->assertTrue($registration->events->contains($event));
+
+        $pivotData = $registration->events->first()->pivot;
+        $this->assertEquals($price, (float) $pivotData->price_at_registration);
+        $this->assertInstanceOf(Carbon::class, $pivotData->created_at);
+        $this->assertInstanceOf(Carbon::class, $pivotData->updated_at);
+    }
+
+    #[Test]
+    public function registration_can_have_multiple_events_associated(): void
+    {
+        $registration = Registration::factory()->create();
+        $events = Event::factory()->count(2)->create();
+        $prices = [100.00, 50.75];
+
+        $attachData = [];
+        foreach ($events as $index => $event) {
+            $attachData[$event->code] = ['price_at_registration' => $prices[$index]];
+        }
+        $registration->events()->attach($attachData);
+
+        $this->assertCount(2, $registration->events);
+        foreach ($events as $index => $event) {
+            $this->assertTrue($registration->events->contains($event));
+            $retrievedEvent = $registration->events()->where('events.code', $event->code)->first();
+            $this->assertEquals($prices[$index], (float) $retrievedEvent->pivot->price_at_registration);
+        }
+    }
+
+    #[Test]
+    public function event_can_be_detached_from_registration(): void
+    {
+        $registration = Registration::factory()->create();
+        $event = Event::factory()->create();
+
+        $registration->events()->attach($event->code, ['price_at_registration' => 75.00]);
+        $this->assertCount(1, $registration->events);
+
+        $registration->events()->detach($event->code);
+        $registration->refresh();
+
+        $this->assertCount(0, $registration->events);
     }
 }

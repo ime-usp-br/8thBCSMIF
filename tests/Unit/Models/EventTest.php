@@ -3,18 +3,20 @@
 namespace Tests\Unit\Models;
 
 use App\Models\Event;
+use App\Models\Registration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use PHPUnit\Framework\Attributes\Test; // Importa o atributo Test
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
  * Testes unitários para o Model Event.
- *
- * Verifica os casts de atributos e qualquer lógica de modelo customizada.
- * O AC8 da Issue #2 requer testes para casts e accessors/mutators simples.
- * Atualmente, apenas casts estão implementados no Model Event.
  */
+#[CoversClass(Event::class)]
+#[Group('model')]
+#[Group('event-model')]
 class EventTest extends TestCase
 {
     use RefreshDatabase;
@@ -109,7 +111,6 @@ class EventTest extends TestCase
 
     /**
      * Testa se todos os campos definidos em $fillable podem ser atribuídos em massa.
-     * Isso é testado indiretamente pela factory, mas um teste explícito pode ser útil.
      */
     #[Test]
     public function all_fillable_attributes_can_be_mass_assigned(): void
@@ -117,8 +118,6 @@ class EventTest extends TestCase
         $fillableAttributes = (new Event)->getFillable();
         $testData = [];
 
-        // Gera dados de teste com base nos atributos fillable
-        // Adapta a lógica para os tipos esperados de cada campo
         foreach ($fillableAttributes as $attribute) {
             match ($attribute) {
                 'code' => $testData[$attribute] = 'TESTCODE123',
@@ -130,7 +129,6 @@ class EventTest extends TestCase
                 default => $testData[$attribute] = 'test_value'
             };
         }
-        // Trata o caso de registration_deadline_late ser nullable
         if (in_array('registration_deadline_late', $fillableAttributes)) {
             $testData['registration_deadline_late'] = null;
         }
@@ -142,11 +140,64 @@ class EventTest extends TestCase
             if ($attribute === 'registration_deadline_late' && $testData[$attribute] === null) {
                 $this->assertNull($event->{$attribute});
             } elseif (in_array($attribute, ['start_date', 'end_date', 'registration_deadline_early', 'registration_deadline_late'])) {
-                // Comparação de datas como objetos Carbon
                 $this->assertEquals(Carbon::parse($testData[$attribute])->toDateString(), $event->{$attribute}->toDateString());
             } else {
                 $this->assertEquals($testData[$attribute], $event->{$attribute});
             }
         }
+    }
+
+    #[Test]
+    public function event_can_have_registrations_associated_with_pivot_data(): void
+    {
+        $event = Event::factory()->create();
+        $registration = Registration::factory()->create();
+        $price = 150.75;
+
+        $event->registrations()->attach($registration->id, ['price_at_registration' => $price]);
+
+        $this->assertCount(1, $event->registrations);
+        $this->assertTrue($event->registrations->contains($registration));
+
+        $pivotData = $event->registrations->first()->pivot;
+        $this->assertEquals($price, (float) $pivotData->price_at_registration);
+        $this->assertInstanceOf(Carbon::class, $pivotData->created_at);
+        $this->assertInstanceOf(Carbon::class, $pivotData->updated_at);
+    }
+
+    #[Test]
+    public function event_can_have_multiple_registrations_associated(): void
+    {
+        $event = Event::factory()->create();
+        $registrations = Registration::factory()->count(3)->create();
+        $prices = [99.00, 120.50, 75.25];
+
+        $attachData = [];
+        foreach ($registrations as $index => $registration) {
+            $attachData[$registration->id] = ['price_at_registration' => $prices[$index]];
+        }
+        $event->registrations()->attach($attachData);
+
+        $this->assertCount(3, $event->registrations);
+        foreach ($registrations as $index => $registration) {
+            $this->assertTrue($event->registrations->contains($registration));
+            $retrievedRegistration = $event->registrations()->where('registrations.id', $registration->id)->first();
+            $this->assertEquals($prices[$index], (float) $retrievedRegistration->pivot->price_at_registration);
+        }
+    }
+
+    #[Test]
+    public function registration_can_be_detached_from_event(): void
+    {
+        $event = Event::factory()->create();
+        $registration = Registration::factory()->create();
+
+        $event->registrations()->attach($registration->id, ['price_at_registration' => 50.00]);
+        $this->assertCount(1, $event->registrations);
+
+        $event->registrations()->detach($registration->id);
+        $event->refresh();
+
+        $this->assertCount(0, $event->registrations);
     }
 }
