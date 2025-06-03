@@ -97,6 +97,8 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
         "static": [
             "docs/guia_de_desenvolvimento.md",
             "docs/padroes_codigo_boas_praticas.md",
+            "context_llm/code/{latest_dir_name}/git_diff_cached.txt",
+            "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
             "context_llm/code/{latest_dir_name}/phpunit_test_results.txt",  # Opcional, pode não existir
             "context_llm/code/{latest_dir_name}/phpstan_analysis.txt",  # Opcional
             "context_llm/code/{latest_dir_name}/dusk_test_results.txt",  # Opcional
@@ -110,9 +112,12 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
         },
         "static": [
             "context_llm/code/{latest_dir_name}/git_diff_cached.txt",
+            "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
             "context_llm/code/{latest_dir_name}/git_log.txt",
             "docs/guia_de_desenvolvimento.md",
             "docs/padroes_codigo_boas_praticas.md",
+            "docs/descricao_evento.md",
+            "docs/formulario_inscricao.md",
         ],
     },
     "analyze-ac": {
@@ -120,8 +125,12 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
             "issue": "context_llm/code/{latest_dir_name}/github_issue_{issue}_details.json",
         },
         "static": [
+            "context_llm/code/{latest_dir_name}/git_diff_cached.txt",
+            "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
             "docs/guia_de_desenvolvimento.md",
             "docs/padroes_codigo_boas_praticas.md",
+            "docs/descricao_evento.md",
+            "docs/formulario_inscricao.md",
         ],
     },
     "create-pr": {
@@ -129,10 +138,11 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
             "issue": "context_llm/code/{latest_dir_name}/github_issue_{issue}_details.json",
         },
         "static": [
-            "context_llm/code/{latest_dir_name}/git_diff_cached.txt",
             "context_llm/code/{latest_dir_name}/git_log.txt",
             "docs/guia_de_desenvolvimento.md",
             "docs/padroes_codigo_boas_praticas.md",
+            "docs/descricao_evento.md",
+            "docs/formulario_inscricao.md",
         ],
     },
     "update-doc": {
@@ -143,24 +153,33 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
         "static": [
             "docs/versionamento_documentacao.md",
             "docs/padroes_codigo_boas_praticas.md",
+            "docs/descricao_evento.md",
+            "docs/formulario_inscricao.md",
             "CHANGELOG.md",
             "context_llm/code/{latest_dir_name}/git_diff_cached.txt",  # Diff da issue
+            "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
         ],
     },
     "fix-artisan-test": {
         "static": [
+            "context_llm/code/{latest_dir_name}/git_diff_cached.txt",
+            "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
             "context_llm/code/{latest_dir_name}/phpunit_test_results.txt",
             "docs/padroes_codigo_boas_praticas.md",
         ]
     },
     "fix-artisan-dusk": {
         "static": [
+            "context_llm/code/{latest_dir_name}/git_diff_cached.txt",
+            "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
             "context_llm/code/{latest_dir_name}/dusk_test_results.txt",
             "docs/padroes_codigo_boas_praticas.md",
         ]
     },
     "fix-phpstan": {
         "static": [
+            "context_llm/code/{latest_dir_name}/git_diff_cached.txt",
+            "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
             "context_llm/code/{latest_dir_name}/phpstan_analysis.txt",
             "docs/padroes_codigo_boas_praticas.md",
         ]
@@ -171,9 +190,11 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
             "issue": "context_llm/code/{latest_dir_name}/github_issue_{issue}_details.json",
         },
         "static": [
+            "context_llm/code/{latest_dir_name}/git_diff_cached.txt",
+            "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
             "docs/guia_de_desenvolvimento.md",
             "docs/padroes_codigo_boas_praticas.md",
-            ".github/workflows/laravel.yml",  # Opcional
+            ".github/workflows/laravel.yml",
         ],
     },
     "review-issue": {
@@ -186,7 +207,8 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
             "docs/padroes_codigo_boas_praticas.md",
             "context_llm/code/{latest_dir_name}/git_log.txt",
             "context_llm/code/{latest_dir_name}/gh_pr_list.txt",
-            "context_llm/code/{latest_dir_name}/20250529_085817_manifest.json",  # Exemplo, precisa ser dinâmico se for usado assim
+            "docs/descricao_evento.md",
+            "docs/formulario_inscricao.md",
         ],
     },
 }
