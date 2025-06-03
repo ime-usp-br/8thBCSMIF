@@ -102,6 +102,7 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
             "context_llm/code/{latest_dir_name}/phpunit_test_results.txt",  # Opcional, pode não existir
             "context_llm/code/{latest_dir_name}/phpstan_analysis.txt",  # Opcional
             "context_llm/code/{latest_dir_name}/dusk_test_results.txt",  # Opcional
+            "context_llm/code/{latest_dir_name}/project_tree_L3.txt",
             "docs/descricao_evento.md",
             "docs/formulario_inscricao.md",
         ],
@@ -114,6 +115,7 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
             "context_llm/code/{latest_dir_name}/git_diff_cached.txt",
             "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
             "context_llm/code/{latest_dir_name}/git_log.txt",
+            "context_llm/code/{latest_dir_name}/project_tree_L3.txt",
             "docs/guia_de_desenvolvimento.md",
             "docs/padroes_codigo_boas_praticas.md",
             "docs/descricao_evento.md",
@@ -127,6 +129,7 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
         "static": [
             "context_llm/code/{latest_dir_name}/git_diff_cached.txt",
             "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
+            "context_llm/code/{latest_dir_name}/project_tree_L3.txt",
             "docs/guia_de_desenvolvimento.md",
             "docs/padroes_codigo_boas_praticas.md",
             "docs/descricao_evento.md",
@@ -139,6 +142,7 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
         },
         "static": [
             "context_llm/code/{latest_dir_name}/git_log.txt",
+            "context_llm/code/{latest_dir_name}/project_tree_L3.txt",
             "docs/guia_de_desenvolvimento.md",
             "docs/padroes_codigo_boas_praticas.md",
             "docs/descricao_evento.md",
@@ -158,6 +162,7 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
             "CHANGELOG.md",
             "context_llm/code/{latest_dir_name}/git_diff_cached.txt",  # Diff da issue
             "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
+            "context_llm/code/{latest_dir_name}/project_tree_L3.txt",
         ],
     },
     "fix-artisan-test": {
@@ -165,6 +170,7 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
             "context_llm/code/{latest_dir_name}/git_diff_cached.txt",
             "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
             "context_llm/code/{latest_dir_name}/phpunit_test_results.txt",
+            "context_llm/code/{latest_dir_name}/project_tree_L3.txt",
             "docs/padroes_codigo_boas_praticas.md",
         ]
     },
@@ -173,6 +179,7 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
             "context_llm/code/{latest_dir_name}/git_diff_cached.txt",
             "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
             "context_llm/code/{latest_dir_name}/dusk_test_results.txt",
+            "context_llm/code/{latest_dir_name}/project_tree_L3.txt",
             "docs/padroes_codigo_boas_praticas.md",
         ]
     },
@@ -181,6 +188,7 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
             "context_llm/code/{latest_dir_name}/git_diff_cached.txt",
             "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
             "context_llm/code/{latest_dir_name}/phpstan_analysis.txt",
+            "context_llm/code/{latest_dir_name}/project_tree_L3.txt",
             "docs/padroes_codigo_boas_praticas.md",
         ]
     },
@@ -192,6 +200,7 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
         "static": [
             "context_llm/code/{latest_dir_name}/git_diff_cached.txt",
             "context_llm/code/{latest_dir_name}/git_diff_unstaged.txt",
+            "context_llm/code/{latest_dir_name}/project_tree_L3.txt",
             "docs/guia_de_desenvolvimento.md",
             "docs/padroes_codigo_boas_praticas.md",
             ".github/workflows/laravel.yml",
@@ -207,6 +216,7 @@ ESSENTIAL_FILES_MAP: Dict[str, Dict[str, Any]] = {
             "docs/padroes_codigo_boas_praticas.md",
             "context_llm/code/{latest_dir_name}/git_log.txt",
             "context_llm/code/{latest_dir_name}/gh_pr_list.txt",
+            "context_llm/code/{latest_dir_name}/project_tree_L3.txt",
             "docs/descricao_evento.md",
             "docs/formulario_inscricao.md",
         ],
