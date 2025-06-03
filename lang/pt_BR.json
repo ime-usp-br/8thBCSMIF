@@ -81,6 +81,8 @@
     "Export": "Exportar",
     "Export :name": "Exportar :name",
     "Failed Dependency": "Dependência Com Falha",
+    "fees.event_not_found": "Evento não encontrado",
+    "fees.fee_config_not_found": "Configuração de taxa não encontrada para esta combinação.",
     "File": "Arquivo",
     "Files": "arquivos",
     "Forbidden": "Proibido",
