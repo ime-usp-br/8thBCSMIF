@@ -23,6 +23,8 @@ class StoreRegistrationRequest extends FormRequest
      */
     public function rules(): array
     {
+        $isBrazilianDocument = $this->input('document_country_origin') === 'Brasil';
+
         return [
             // Personal Information
             'full_name' => ['required', 'string', 'max:255'],
@@ -32,10 +34,30 @@ class StoreRegistrationRequest extends FormRequest
 
             // Identification Details
             'document_country_origin' => ['required', 'string', 'max:255'],
-            'cpf' => ['nullable', 'string', 'max:14'], // Basic validation, specific format/logic in AC2
-            'rg_number' => ['nullable', 'string', 'max:20'], // Basic validation, specific logic in AC2
-            'passport_number' => ['nullable', 'string', 'max:50'], // Basic validation, specific logic in AC2
-            'passport_expiry_date' => ['nullable', 'date'], // Basic validation, specific logic in AC2
+            'cpf' => [
+                'nullable',
+                'string',
+                'max:14',
+                Rule::requiredIf($isBrazilianDocument),
+            ],
+            'rg_number' => [
+                'nullable',
+                'string',
+                'max:20',
+                Rule::requiredIf($isBrazilianDocument),
+            ],
+            'passport_number' => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::requiredIf(!$isBrazilianDocument),
+            ],
+            'passport_expiry_date' => [
+                'nullable',
+                'date',
+                Rule::requiredIf(!$isBrazilianDocument && $this->filled('passport_number')),
+                'after_or_equal:today',
+            ],
 
             // Contact Information
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255'],
@@ -72,12 +94,9 @@ class StoreRegistrationRequest extends FormRequest
             // Visa Support
             'requires_visa_letter' => ['boolean'],
 
-            // USP Identification (as per Issue #7 proposal, even if not in formulario_inscricao.md)
+            // USP Identification
             'sou_da_usp' => ['boolean'],
-            // AC3 specifies `required_if` for codpes, which will be added in that AC.
-            // For AC1, prepare with basic rules.
-            // The custom closure rule for Replicado validation will be added in AC4/AC5.
-            'codpes' => ['nullable', 'numeric', 'digits_between:6,8'],
+            'codpes' => ['nullable', 'numeric', 'digits_between:6,8'], // AC3 will add required_if
 
             // Declaration
             'confirm_information_accuracy' => ['accepted'],
@@ -108,6 +127,12 @@ class StoreRegistrationRequest extends FormRequest
             'confirm_information_accuracy.accepted' => __('validation.custom.registration.confirm_information_accuracy_accepted'),
             'confirm_data_processing_consent.accepted' => __('validation.custom.registration.confirm_data_processing_consent_accepted'),
             'departure_date.after_or_equal' => __('validation.custom.registration.departure_date_after_or_equal_arrival_date'),
+            // Messages for AC2 conditional fields (required_if)
+            'cpf.required' => __('validation.custom.registration.cpf_required_if_brazil'),
+            'rg_number.required' => __('validation.custom.registration.rg_number_required_if_brazil'),
+            'passport_number.required' => __('validation.custom.registration.passport_number_required_if_not_brazil'),
+            'passport_expiry_date.required' => __('validation.custom.registration.passport_expiry_date_required_if_not_brazil'),
+            'passport_expiry_date.after_or_equal' => __('validation.custom.registration.passport_expiry_date_after_or_equal_today'),
         ];
     }
 

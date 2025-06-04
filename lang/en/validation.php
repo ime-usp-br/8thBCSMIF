@@ -1,8 +1,18 @@
 <?php
 
-declare(strict_types=1);
-
 return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validation Language Lines
+    |--------------------------------------------------------------------------
+    |
+    | The following language lines contain the default error messages used by
+    | the validator class. Some of these rules have multiple versions such
+    | as the size rules. Feel free to tweak each of these messages here.
+    |
+    */
+
     'accepted' => 'The :attribute field must be accepted.',
     'accepted_if' => 'The :attribute field must be accepted when :other is :value.',
     'active_url' => 'The :attribute field must be a valid URL.',
@@ -23,7 +33,7 @@ return [
     ],
     'boolean' => 'The :attribute field must be true or false.',
     'can' => 'The :attribute field contains an unauthorized value.',
-    'confirmed' => 'The :attribute field confirmation does not match.',
+    'confirmed' => 'The :attribute confirmation does not match.',
     'contains' => 'The :attribute field is missing a required value.',
     'current_password' => 'The password is incorrect.',
     'date' => 'The :attribute field must be a valid date.',
@@ -121,8 +131,6 @@ return [
     'present_with_all' => 'The :attribute field must be present when :values are present.',
     'prohibited' => 'The :attribute field is prohibited.',
     'prohibited_if' => 'The :attribute field is prohibited when :other is :value.',
-    'prohibited_if_accepted' => 'The :attribute field is prohibited when :other is accepted.',
-    'prohibited_if_declined' => 'The :attribute field is prohibited when :other is declined.',
     'prohibited_unless' => 'The :attribute field is prohibited unless :other is in :values.',
     'prohibits' => 'The :attribute field prohibits :other from being present.',
     'regex' => 'The :attribute field format is invalid.',
@@ -146,11 +154,11 @@ return [
     'starts_with' => 'The :attribute field must start with one of the following: :values.',
     'string' => 'The :attribute field must be a string.',
     'timezone' => 'The :attribute field must be a valid timezone.',
-    'ulid' => 'The :attribute field must be a valid ULID.',
     'unique' => 'The :attribute has already been taken.',
     'uploaded' => 'The :attribute failed to upload.',
     'uppercase' => 'The :attribute field must be uppercase.',
     'url' => 'The :attribute field must be a valid URL.',
+    'ulid' => 'The :attribute field must be a valid ULID.',
     'uuid' => 'The :attribute field must be a valid UUID.',
 
     /*
@@ -188,6 +196,11 @@ return [
             'confirm_information_accuracy_accepted' => 'You must confirm that the information provided is accurate.',
             'confirm_data_processing_consent_accepted' => 'You must consent to the processing of your data.',
             'departure_date_after_or_equal_arrival_date' => 'The departure date must be after or equal to the arrival date.',
+            'cpf_required_if_brazil' => 'The CPF is required if the document country of origin is Brazil.',
+            'rg_number_required_if_brazil' => 'The RG Number is required if the document country of origin is Brazil.',
+            'passport_number_required_if_not_brazil' => 'The Passport Number is required if the document country of origin is not Brazil.',
+            'passport_expiry_date_required_if_not_brazil' => 'The Passport Expiry Date is required if the document country of origin is not Brazil and a passport number is provided.',
+            'passport_expiry_date_after_or_equal_today' => 'The passport expiry date must be a date after or equal to today.',
         ],
     ],
 
@@ -207,25 +220,15 @@ return [
         'affiliate_url' => 'affiliate URL',
         'age' => 'age',
         'amount' => 'amount',
-        'announcement' => 'announcement',
         'area' => 'area',
-        'audience_prize' => 'audience prize',
-        'audience_winner' => 'audience winner',
         'available' => 'available',
         'birthday' => 'birthday',
         'body' => 'body',
         'city' => 'city',
-        'company' => 'company',
-        'compilation' => 'compilation',
-        'concept' => 'concept',
-        'conditions' => 'conditions',
         'content' => 'content',
-        'contest' => 'contest',
         'country' => 'country',
-        'cover' => 'cover',
         'created_at' => 'created at',
         'creator' => 'creator',
-        'currency' => 'currency',
         'current_password' => 'current password',
         'customer' => 'customer',
         'date' => 'date',
@@ -251,15 +254,20 @@ return [
         'image_main' => 'main image',
         'image_mobile' => 'mobile image',
         'images' => 'images',
-        'is_audience_winner' => 'is audience winner',
-        'is_hidden' => 'is hidden',
-        'is_subscribed' => 'is subscribed',
-        'is_visible' => 'is visible',
-        'is_winner' => 'is winner',
+        'is_audience_ محدود' => 'is audience limited',
+        'is_notify' => 'is notify',
+        'is_promote' => 'is promote',
+        'is_recurring' => 'is recurring',
+        'is_removable' => 'is removable',
+        'is_special' => 'is special',
+        'is_sticky' => 'is sticky',
+        'is_text_notify' => 'is text notify',
+        'is_unique' => 'is unique',
+        'is_vital' => 'is vital',
         'items' => 'items',
-        'key' => 'key',
         'last_name' => 'last name',
         'lesson' => 'lesson',
+        'license_number' => 'license number',
         'line_address_1' => 'line address 1',
         'line_address_2' => 'line address 2',
         'login' => 'login',
@@ -314,36 +322,43 @@ return [
         'tags' => 'tags',
         'teacher' => 'teacher',
         'terms' => 'terms',
-        'test_description' => 'test description',
-        'test_locale' => 'test locale',
-        'test_name' => 'test name',
-        'text' => 'text',
+        'text_notify' => 'text notify',
+        'theme' => 'theme',
+        'thing_id' => 'thing ID',
+        'thoroughfare' => 'thoroughfare',
         'time' => 'time',
         'title' => 'title',
-        'type' => 'type',
+        'ŢĶauth_token' => 'token',
         'updated_at' => 'updated at',
         'user' => 'user',
         'username' => 'username',
         'value' => 'value',
-        'winner' => 'winner',
-        'work' => 'work',
+        'vehicle' => 'vehicle',
+        'version' => 'version',
+        'video' => 'video',
+        'view_count' => 'view count',
+        'website' => 'website',
+        'week' => 'week',
         'year' => 'year',
         'codpes' => 'USP Number (codpes)',
         'sou_da_usp' => 'I\'m from USP',
-        // Registration Form Attributes
+        // Registration Form Attributes (from StoreRegistrationRequest attributes method, using JSON keys for translation)
         'full_name' => 'Full Name',
         'nationality' => 'Nationality',
+        // 'date_of_birth' => 'Date of Birth', // Already exists
+        // 'gender' => 'Gender', // Already exists
         'document_country_origin' => 'Document Country of Origin',
         'cpf' => 'CPF',
         'rg_number' => 'RG Number',
         'passport_number' => 'Passport Number',
         'passport_expiry_date' => 'Passport Expiry Date',
+        // 'email' => 'Email', // Already exists
         'phone_number' => 'Phone Number',
         'address_street' => 'Street Address',
-        'address_city' => 'City',
+        // 'address_city' => 'City', // Already exists (as 'city')
         'address_state_province' => 'State/Province',
         'address_country' => 'Country of Residence',
-        'address_postal_code' => 'Postal Code',
+        // 'address_postal_code' => 'Postal Code', // Already exists (as 'postal_code')
         'affiliation' => 'Affiliation',
         'position' => 'Position',
         'is_abe_member' => 'ABE Member',
@@ -360,6 +375,8 @@ return [
         'emergency_contact_relationship' => 'Emergency Contact Relationship',
         'emergency_contact_phone' => 'Emergency Contact Phone',
         'requires_visa_letter' => 'Visa Invitation Letter Requirement',
+        // 'sou_da_usp' => 'USP Affiliation Declaration', // Already exists
+        // 'codpes' => 'USP Number (codpes)', // Already exists
         'confirm_information_accuracy' => 'Information Accuracy Confirmation',
         'confirm_data_processing_consent' => 'Data Processing Consent',
     ],
