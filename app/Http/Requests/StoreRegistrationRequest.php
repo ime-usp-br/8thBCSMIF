@@ -50,12 +50,12 @@ class StoreRegistrationRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:50',
-                Rule::requiredIf(!$isBrazilianDocument),
+                Rule::requiredIf(! $isBrazilianDocument),
             ],
             'passport_expiry_date' => [
                 'nullable',
                 'date',
-                Rule::requiredIf(!$isBrazilianDocument && $this->filled('passport_number')),
+                Rule::requiredIf(! $isBrazilianDocument && $this->filled('passport_number')),
                 'after_or_equal:today',
             ],
 
