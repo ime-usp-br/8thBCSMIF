@@ -160,11 +160,85 @@ class FeeCalculationServiceTest extends TestCase
         $result = $this->service->calculateFees(
             'professor_abe',
             [$this->mainConferenceCode],
-            Carbon::parse('2025-08-10'), // Early
+            Carbon::parse('2025-08-10'), // Early: Before 2025-08-15
             'in-person'
         );
         $this->assertEquals(1200.00, $result['details'][0]['calculated_price']);
         $this->assertEquals(1200.00, $result['total_fee']);
+    }
+
+    #[Test]
+    public function it_correctly_determines_early_period_on_exact_deadline_date(): void
+    {
+        // Main conference event (BCSMIF2025) has registration_deadline_early = 2025-08-15 from setUp
+        Fee::factory()->create([
+            'event_code' => $this->mainConferenceCode,
+            'participant_category' => 'professor_abe',
+            'type' => 'in-person',
+            'period' => 'early', // This fee is for 'early' period
+            'price' => 1250.00, // Different price to distinguish
+            'is_discount_for_main_event_participant' => false,
+        ]);
+        Fee::factory()->create([
+            'event_code' => $this->mainConferenceCode,
+            'participant_category' => 'professor_abe',
+            'type' => 'in-person',
+            'period' => 'late', // This fee is for 'late' period
+            'price' => 1450.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        // Registration date IS EXACTLY ON the early deadline
+        $result = $this->service->calculateFees(
+            'professor_abe',
+            [$this->mainConferenceCode],
+            Carbon::parse('2025-08-15'), // Exactly on early deadline (2025-08-15)
+            'in-person'
+        );
+        $this->assertCount(1, $result['details']);
+        $this->assertEquals(1250.00, $result['details'][0]['calculated_price']); // Should pick the 'early' fee
+        $this->assertEquals(1250.00, $result['total_fee']);
+        $this->assertArrayNotHasKey('error', $result['details'][0]);
+    }
+
+    #[Test]
+    public function it_determines_late_period_if_event_has_no_early_deadline(): void
+    {
+        $eventNoEarlyDeadlineCode = 'EVENT_NO_EARLY';
+        Event::factory()->create([
+            'code' => $eventNoEarlyDeadlineCode,
+            'name' => 'Event Without Early Deadline',
+            'registration_deadline_early' => null, // Explicitly null
+        ]);
+
+        Fee::factory()->create([
+            'event_code' => $eventNoEarlyDeadlineCode,
+            'participant_category' => 'professor_abe',
+            'type' => 'in-person',
+            'period' => 'late', // Only late fee defined for this test
+            'price' => 1500.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+        Fee::factory()->create([ // ensure early fee is not picked even if it exists by mistake
+            'event_code' => $eventNoEarlyDeadlineCode,
+            'participant_category' => 'professor_abe',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 100.00, // much cheaper
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $result = $this->service->calculateFees(
+            'professor_abe',
+            [$eventNoEarlyDeadlineCode],
+            Carbon::parse('2025-07-01'), // Any date, as there's no early deadline, period should be 'late'
+            'in-person'
+        );
+
+        $this->assertCount(1, $result['details']);
+        $this->assertEquals(1500.00, $result['details'][0]['calculated_price']); // Should pick 'late' fee
+        $this->assertArrayNotHasKey('error', $result['details'][0]);
+        $this->assertEquals($eventNoEarlyDeadlineCode, $result['details'][0]['event_code']);
     }
 
     #[Test]
@@ -182,7 +256,7 @@ class FeeCalculationServiceTest extends TestCase
         $result = $this->service->calculateFees(
             'professor_abe',
             [$this->mainConferenceCode],
-            Carbon::parse('2025-08-20'), // Late
+            Carbon::parse('2025-08-20'), // Late: After 2025-08-15
             'in-person'
         );
         $this->assertEquals(1400.00, $result['details'][0]['calculated_price']);
