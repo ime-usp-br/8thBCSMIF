@@ -79,6 +79,8 @@
     "Export": "Export",
     "Export :name": "Export :name",
     "Failed Dependency": "Failed Dependency",
+    "fees.event_not_found": "Event not found",
+    "fees.fee_config_not_found": "Fee configuration not found for this combination.",
     "File": "File",
     "Files": "Files",
     "Forbidden": "Forbidden",

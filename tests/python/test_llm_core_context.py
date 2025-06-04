@@ -631,6 +631,9 @@ def test_get_essential_files_for_task_resolve_ac(tmp_path: Path, monkeypatch):
         f"context_llm/code/{latest_dir}/dusk_test_results.txt",
         "docs/descricao_evento.md",             # Added
         "docs/formulario_inscricao.md",         # Added
+        f"context_llm/code/{latest_dir}/git_diff_cached.txt",
+        f"context_llm/code/{latest_dir}/git_diff_unstaged.txt",
+        f"context_llm/code/{latest_dir}/project_tree_L3.txt",
     }
     assert essential_paths_relative_str == expected_paths_str
 
