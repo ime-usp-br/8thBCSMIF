@@ -266,6 +266,8 @@ Be prepared to wait for API quota rotations (up to 7 keys) when using external L
 
 **GitHub Integration Workflow:**
 - Use `gh api` for programmatic issue comments with analysis results
+- **CRITICAL:** Always post the EXACT output from `analyze-ac` script as issue comment
+- Use file-based approach for complex messages: `gh api repos/:owner/:repo/issues/N/comments -F body=@/tmp/comment.txt`
 - Include commit hash in validation comments for traceability
 - Edit issue body directly using `gh issue edit` to update AC status
 - Mark completed ACs with `[x]` checkbox syntax
@@ -324,6 +326,13 @@ When executing autonomous AC implementation cycles, document any interruptions e
 - `printf "y\ny\ny\n"` automation worked perfectly for all validation scripts
 - Context generation before validation is critical for accurate analysis
 - Real-time documentation of solutions during implementation improves future cycles
+
+**Interruption #2 - GitHub Comment Formatting Issues:**
+- **Context:** Complex messages with code blocks and special characters fail when passed directly to `gh api`
+- **Problem:** Shell escaping issues with backticks, backslashes, and multi-line content
+- **Solution:** Use file-based approach: save content to `/tmp/comment.txt` and use `-F body=@/tmp/comment.txt`
+- **Learning:** Always post EXACT `analyze-ac` output for consistent validation documentation
+- **Implementation:** Create temp file, use `-F` flag, ensures accurate content delivery
 
 ## Code Quality Standards
 
