@@ -333,6 +333,7 @@ When executing autonomous AC implementation cycles, document any interruptions e
 - **Solution:** Use file-based approach: save content to `/tmp/comment.txt` and use `-F body=@/tmp/comment.txt`
 - **Learning:** Always post EXACT `analyze-ac` output for consistent validation documentation
 - **Implementation:** Create temp file, use `-F` flag, ensures accurate content delivery
+- **Additional Issue:** HEREDOC delimiter appears in comment ("EOF < /dev/null") - ensure clean file content
 
 ## Code Quality Standards
 
