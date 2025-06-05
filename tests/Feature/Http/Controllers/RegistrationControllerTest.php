@@ -637,4 +637,62 @@ class RegistrationControllerTest extends TestCase
             'event_code' => $event->code,
         ]);
     }
+
+    #[Test]
+    public function new_registration_notification_includes_payment_instructions_for_brazilian_users(): void
+    {
+        // AC3: Test that Brazilian users with fee > 0 receive payment instructions
+        $user = User::factory()->create(['email' => 'brasileiro@example.com']);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'full_name' => 'João Silva',
+            'document_country_origin' => 'BR',
+            'calculated_fee' => 600.00,
+            'payment_status' => 'pending_payment',
+        ]);
+
+        // Create the mailable and render its content
+        $mailable = new \App\Mail\NewRegistrationNotification($registration);
+        $renderedContent = $mailable->render();
+
+        // AC3: Verify payment instructions are included for Brazilian users
+        $this->assertStringContainsString('Instruções para Pagamento', $renderedContent);
+        $this->assertStringContainsString('Santander', $renderedContent);
+        $this->assertStringContainsString('0658', $renderedContent);
+        $this->assertStringContainsString('13006798-9', $renderedContent);
+        $this->assertStringContainsString('Associação Brasileira de Estatística', $renderedContent);
+        $this->assertStringContainsString('56.572.456/0001-80', $renderedContent);
+        $this->assertStringContainsString('Como enviar o comprovante', $renderedContent);
+
+        // Should NOT contain international invoice message for Brazilian users
+        $this->assertStringNotContainsString('invoice com detalhes para pagamento internacional', $renderedContent);
+    }
+
+    #[Test]
+    public function new_registration_notification_includes_invoice_message_for_international_users(): void
+    {
+        // AC4: Test that international users receive invoice message instead of payment instructions
+        $user = User::factory()->create(['email' => 'international@example.com']);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'full_name' => 'John Doe',
+            'document_country_origin' => 'US',
+            'calculated_fee' => 600.00,
+            'payment_status' => 'pending_payment',
+        ]);
+
+        // Create the mailable and render its content
+        $mailable = new \App\Mail\NewRegistrationNotification($registration);
+        $renderedContent = $mailable->render();
+
+        // AC4: Verify international invoice message is included
+        $this->assertStringContainsString('invoice com detalhes para pagamento internacional será enviada', $renderedContent);
+
+        // Should NOT contain Brazilian payment instructions for international users
+        $this->assertStringNotContainsString('Instruções para Pagamento', $renderedContent);
+        $this->assertStringNotContainsString('Santander', $renderedContent);
+        $this->assertStringNotContainsString('Como enviar o comprovante', $renderedContent);
+    }
 }
