@@ -164,9 +164,25 @@ pytest -v --live                    # Python tests
 
 ### Workflow Lessons Learned
 
-**Context Generation:** After creating new files, run `context-generate` to ensure fresh context includes new files for `analyze-ac` validation.
+**CRITICAL: Always Follow the Established Workflow** - Even for "simple" changes, ALWAYS use `resolve-ac` first rather than implementing directly. The workflow exists to ensure consistency and proper validation.
 
-**Interactive Scripts:** Use `echo ""` or `printf "y\ny\ny\n"` for auto-confirming script prompts, but be prepared to wait for API quota rotations (up to 7 keys).
+**Context Generation is MANDATORY Before Validation** - ALWAYS run `context-generate --stages git` (or appropriate stages) before `analyze-ac` to ensure the LLM has access to recent changes. This is critical for accurate validation.
+
+**Complete Test Coverage Required** - When implementing ACs, ensure tests cover ALL scenarios mentioned in the acceptance criteria. Partial test coverage will cause `analyze-ac` to fail validation.
+
+**Validation Before Declaration** - Never declare an AC as "completed" until `analyze-ac` confirms it passes. Implementation alone is insufficient without proper validation.
+
+**Interactive Scripts:** Always use `printf "y\ny\ny\n"` for auto-confirming script prompts in `analyze-ac`, `resolve-ac`, and other LLM tasks. This is essential for:
+- Context selection confirmation
+- Final response acceptance
+- Response saving confirmation
+Be prepared to wait for API quota rotations (up to 7 keys) when using external LLM services.
+
+**Test Implementation Best Practices:**
+- Use existing events/data when possible rather than creating fake entities
+- Mock services appropriately to test specific conditions (e.g., zero fees)
+- Add explicit assertions for the exact behavior being tested
+- Update existing tests to include new assertion requirements
 
 **Commit Messages:** When scripts fail to generate appropriate commit messages, create manual messages focused on the specific AC implemented, without Claude Code references.
 

@@ -132,7 +132,7 @@ class RegistrationControllerTest extends TestCase
             'participation_format' => $validData['participation_format'],
             'document_country_origin' => $validData['document_country_origin'],
             'cpf' => $validData['cpf'],
-            // payment_status will be checked in AC9 tests
+            'payment_status' => 'pending_payment', // AC9: non-zero fee should result in pending_payment
         ]);
 
         // Verify some nullable fields are correctly stored if provided
@@ -231,5 +231,50 @@ class RegistrationControllerTest extends TestCase
 
         $response = $this->post(route('event-registrations.store'), []);
         $response->assertRedirect(route('verification.notice'));
+    }
+
+    #[Test]
+    public function store_sets_payment_status_to_free_when_calculated_fee_is_zero(): void
+    {
+        // AC9: Test that payment_status is 'free' when calculated_fee is zero
+        $user = User::factory()->create();
+        $user->markEmailAsVerified();
+        $this->actingAs($user);
+
+        // Use existing event but mock FeeCalculationService to return zero fee
+        $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
+        $event = Event::where('code', $mainConferenceCode)->firstOrFail();
+
+        // Mock FeeCalculationService to return zero fee
+        $mockFeeService = \Mockery::mock(FeeCalculationService::class);
+        $mockFeeService->shouldReceive('calculateFees')->andReturn([
+            'total_fee' => 0.00,
+            'details' => [
+                [
+                    'event_code' => $event->code,
+                    'calculated_price' => 0.00,
+                ],
+            ],
+        ]);
+        $this->app->instance(FeeCalculationService::class, $mockFeeService);
+
+        $validData = $this->getValidRegistrationData($user, [
+            'selected_event_codes' => [$event->code],
+            'position' => 'undergrad_student',
+        ]);
+
+        $response = $this->post(route('event-registrations.store'), $validData);
+        $response->assertOk();
+
+        $registrationId = $response->json('registration_id');
+        $this->assertNotNull($registrationId);
+
+        // AC9: Assert that payment_status is 'free' when calculated_fee is zero
+        $this->assertDatabaseHas('registrations', [
+            'id' => $registrationId,
+            'user_id' => $user->id,
+            'calculated_fee' => 0.00,
+            'payment_status' => 'free',
+        ]);
     }
 }

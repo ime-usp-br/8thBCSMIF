@@ -56,10 +56,15 @@ class RegistrationController extends Controller
             Carbon::now(),
             $participationFormatForFeeCalc
         );
+        $user = $request->user();
+        if (! $user) {
+            throw new \RuntimeException('User must be authenticated to create registration.');
+        }
+
         Log::info('Fee calculation completed for registration.', [
             'participant_category' => $participantCategory,
             'fee_data' => $feeData,
-            'user_id' => $request->user()->id,
+            'user_id' => $user->id,
         ]);
 
         // --- AC8: Create and save Registration model ---
@@ -68,7 +73,7 @@ class RegistrationController extends Controller
         $registrationPayload = array_merge(
             $validatedData,
             [
-                'user_id' => $request->user()->id,
+                'user_id' => $user->id,
                 'registration_category_snapshot' => $participantCategory,
                 'calculated_fee' => $feeData['total_fee'],
                 // payment_status will be handled by AC9.
@@ -81,15 +86,15 @@ class RegistrationController extends Controller
 
         Log::info('Registration created successfully.', [
             'registration_id' => $registration->id,
-            'user_id' => $request->user()->id,
+            'user_id' => $user->id,
             'calculated_fee' => $registration->calculated_fee,
             'category_snapshot' => $registration->registration_category_snapshot,
         ]);
 
-        // --- Placeholder for AC9: Set payment_status ---
-        // $paymentStatus = ($feeData['total_fee'] == 0) ? 'free' : 'pending_payment';
-        // $registration->update(['payment_status' => $paymentStatus]);
-        // Log::info('Payment status set for registration.', ['registration_id' => $registration->id, 'payment_status' => $paymentStatus]);
+        // --- AC9: Set payment_status based on calculated_fee ---
+        $paymentStatus = ($feeData['total_fee'] == 0) ? 'free' : 'pending_payment';
+        $registration->update(['payment_status' => $paymentStatus]);
+        Log::info('Payment status set for registration.', ['registration_id' => $registration->id, 'payment_status' => $paymentStatus]);
 
         // --- Placeholder for AC10: Sync events ---
         // $eventSyncData = [];
