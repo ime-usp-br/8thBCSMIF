@@ -1,48 +1,48 @@
 <x-mail::message>
-# Confirmação de Inscrição - 8th BCSMIF
+# {{ __('Registration Confirmation - 8th BCSMIF') }}
 
-Olá {{ $registration->full_name }},
+{{ __('Hello') }} {{ $registration->full_name }},
 
-Agradecemos sua inscrição para o 8º Congresso Brasileiro de Modelagem Estatística em Finanças e Seguros (8th BCSMIF)!
+{{ __('Thank you for registering for the 8th Brazilian Congress on Statistical Modeling in Insurance and Finance (8th BCSMIF)!') }}
 
-## Resumo da sua Inscrição
+## {{ __('Registration Summary') }}
 
-**Eventos Selecionados:**
+**{{ __('Selected Events') }}:**
 @foreach($registration->events as $event)
 - {{ $event->name }}: R$ {{ number_format((float) $event->pivot->price_at_registration, 2, ',', '.') }}
 @endforeach
 
-**Valor Total:** R$ {{ number_format((float) $registration->calculated_fee, 2, ',', '.') }}
+**{{ __('Total Amount') }}:** R$ {{ number_format((float) $registration->calculated_fee, 2, ',', '.') }}
 
 @if($registration->calculated_fee > 0)
-**Status do Pagamento:** {{ ucfirst(str_replace('_', ' ', $registration->payment_status)) }}
+**{{ __('Payment Status') }}:** {{ ucfirst(str_replace('_', ' ', $registration->payment_status)) }}
 
 @if($registration->document_country_origin === 'BR' || $registration->document_country_origin === 'Brazil')
-## Instruções para Pagamento
+## {{ __('Payment Instructions') }}
 
-Por favor, efetue o pagamento via transferência bancária ou PIX para os dados abaixo:
+{{ __('Please make payment via bank transfer or PIX to the details below:') }}
 
-**Dados Bancários:**
-- **Banco:** Santander
-- **Agência:** 0658
-- **Conta Corrente:** 13006798-9
-- **Favorecido:** Associação Brasileira de Estatística
-- **CNPJ:** 56.572.456/0001-80
+**{{ __('Bank Details') }}:**
+- **{{ __('Bank') }}:** Santander
+- **{{ __('Branch') }}:** 0658
+- **{{ __('Account') }}:** 13006798-9
+- **{{ __('Beneficiary') }}:** Associação Brasileira de Estatística
+- **{{ __('CNPJ') }}:** 56.572.456/0001-80
 
-**Como enviar o comprovante:**
-Após efetuar o pagamento, acesse sua conta no sistema e envie o comprovante de pagamento. Seu status será atualizado assim que a confirmação for processada.
+**{{ __('How to send proof of payment') }}:**
+{{ __('After making payment, access your account in the system and upload the payment proof. Your status will be updated once confirmation is processed.') }}
 @else
-**Informação sobre Invoice:**
-Uma invoice com detalhes para pagamento internacional será enviada em breve para seu e-mail.
+**{{ __('Invoice Information') }}:**
+{{ __('An invoice with details for international payment will be sent to your email shortly.') }}
 @endif
 @else
-**Status do Pagamento:** Isento de taxa
+**{{ __('Payment Status') }}:** {{ __('Fee exempt') }}
 @endif
 
-## Próximos Passos
+## {{ __('Next Steps') }}
 
-Mantenha este e-mail para seus registros. Entraremos em contato em breve com mais informações sobre o evento.
+{{ __('Keep this email for your records. We will contact you soon with more information about the event.') }}
 
-Atenciosamente,<br>
-Organização do {{ config('app.name') }}
+{{ __('Best regards') }},<br>
+{{ __('Organization of') }} {{ config('app.name') }}
 </x-mail::message>

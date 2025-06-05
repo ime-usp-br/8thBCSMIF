@@ -29,7 +29,7 @@ class NewRegistrationNotification extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Confirmação de Inscrição - 8th BCSMIF',
+            subject: __('Registration Confirmation - 8th BCSMIF'),
         );
     }
 
