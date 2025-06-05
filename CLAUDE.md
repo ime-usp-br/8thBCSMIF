@@ -74,43 +74,60 @@ Critical environment variables:
 
 ### Proven Development Workflow
 
-This workflow leverages Python scripts for heavy LLM tasks while Claude Code orchestrates the process:
+#### Claude Pro Subscription Workflow (Recommended)
 
-#### 1. Issue Discovery
-```bash
-# Check GitHub Projects/Issues to find current in-progress issue
-# Identify next AC (Acceptance Criteria) to resolve
-```
+With Claude Pro subscription, Claude Code can execute complete AC implementation cycles autonomously:
 
-#### 2. Generate Solution Prompt
+#### 1. Issue Discovery & Analysis
+- Read issue details: `gh issue view <ISSUE_NUMBER>`
+- Identify specific AC (Acceptance Criteria) to implement
+- Analyze current codebase state and requirements
+
+#### 2. Implementation Cycle
+- Create TodoWrite workflow for task tracking
+- Implement required changes following established patterns
+- Run mandatory quality checks:
+  ```bash
+  vendor/bin/pint                     # PSR-12 formatting
+  vendor/bin/phpstan analyse          # Static analysis  
+  php artisan test                    # PHPUnit tests
+  pytest -v --live                    # Python tests (if applicable)
+  ```
+
+#### 3. Validation & Completion
+- Run context update: `context-generate --stages git`
+- Execute validation:
+  ```bash
+  printf "y\ny\ny\n" | python3 scripts/tasks/llm_task_analyze_ac.py -i <ISSUE> -a <AC> -sc
+  ```
+- If validation fails: Address issues and repeat cycle
+- If validation passes: Proceed to commit and documentation
+
+#### 4. Commit & Documentation Cycle
+- Stage changes: `git add .`
+- Analyze commit patterns: `git log --oneline -10`
+- Create commit message following project conventions (NO AI tool references)
+- Commit and push to current branch
+- Add validation comment to GitHub issue via `gh api`
+- Update issue body to mark AC as complete `[x]`
+
+#### Alternative: External LLM Workflow (Fallback)
+
+For cases requiring external LLM usage (complex analysis, API quota limits):
+
+#### 1. Generate Solution Context
 ```bash
 resolve-ac -i <ISSUE> -a <AC> -op -sc
-# -op: Output prompt only (for Google AI Studio)
-# -sc: LLM selects relevant context files (REQUIRED for Gemini free tier context window)
+# -op: Output prompt only (for external LLM)
+# -sc: LLM selects relevant context files
 # Result: Copies context to context_llm/temp/ + shows prompt
 ```
 
-#### 3. External LLM Execution
+#### 2. External LLM Execution
 - Copy prompt to Google AI Studio (Gemini 2.5 Pro free tier)
 - Apply generated code changes manually to project
 
-#### 4. Validation Loop
-```bash
-analyze-ac -i <ISSUE> -a <AC> -sc
-# Checks if AC requirements are met
-```
-
-**If AC not accepted:**
-- Use analyze-ac output as observation
-- Re-run: `resolve-ac -i <ISSUE> -a <AC> -op -sc -o "<analyze_output>"`
-- Repeat until AC passes
-
-**If AC accepted:**
-```bash
-commit-mesage [-i <ISSUE>] -sc  # Generate commit message (use -sc for context limits)
-# Then: git commit, git push
-# Move to next AC
-```
+#### 3. Follow same validation loop as above
 
 ### Direct Task Scripts (via ~/.bashrc aliases)
 
@@ -143,9 +160,30 @@ copy-sc             # python3 scripts/copy_selected_context.py
 
 **Context Generation**: Use `context-generate --stages <stage_list>` for selective context collection.
 
-### ⚠️ Critical: Always Use -sc Flag
+### Context Selection Strategy
 
-**ALWAYS use `-sc` flag with LLM tasks** due to Gemini free tier context window limitations. The `-sc` flag enables context selection by LLM, ensuring only relevant files are included in the prompt.
+**For External LLM Scripts (Gemini):** Always use `-sc` flag due to free tier context window limitations. The `-sc` flag enables context selection by LLM, ensuring only relevant files are included in the prompt.
+
+**For Claude Code Direct Implementation:** No context limitations with Claude Pro subscription. Claude Code can access the entire codebase as needed for comprehensive understanding and implementation.
+
+### Claude Pro Workflow Advantages
+
+**Streamlined Process:**
+- Single interface for issue analysis, implementation, and validation
+- No manual prompt copying or external LLM context switching
+- Integrated access to all development tools (git, testing, linting)
+
+**Enhanced Capabilities:**
+- Full codebase context without artificial limitations
+- Direct file system access for comprehensive analysis
+- Integrated quality checks and validation in single session
+- TodoWrite workflow for transparent task tracking
+
+**Improved Reliability:**
+- No API quota rotations or rate limiting delays
+- Consistent model performance and availability
+- Integrated error handling and iterative refinement
+- Direct GitHub integration for issue management
 
 ### Post-Implementation Quality Checks
 
@@ -184,7 +222,54 @@ Be prepared to wait for API quota rotations (up to 7 keys) when using external L
 - Add explicit assertions for the exact behavior being tested
 - Update existing tests to include new assertion requirements
 
-**Commit Messages:** When scripts fail to generate appropriate commit messages, create manual messages focused on the specific AC implemented, without Claude Code references.
+**Commit Message Standards:**
+- Analyze recent commit patterns with `git log --oneline -10` for consistency
+- Follow project conventions and established patterns
+- Focus on the specific AC/feature implemented
+- NEVER include AI tool references ("Generated with Claude Code", etc.)
+- Use HEREDOC format for multi-line commit messages
+- Include relevant issue references (#XX) where appropriate
+
+### Advanced Workflow: Complete AC Implementation & Validation Cycle
+
+**Post-Implementation Workflow Best Practices:**
+
+**Stage and Commit Changes:**
+- Stage all changes: `git add .`
+- Analyze commit patterns: `git log --oneline -10` for consistency
+- Create descriptive commit messages following project conventions
+- CRITICAL: Never include AI tool references in commit messages
+- Use HEREDOC format for multi-line commits to ensure proper formatting
+- Commit and push to current branch immediately after validation
+
+**Context Update for Validation:**
+- MANDATORY: Run `context-generate --stages git` after any code changes
+- This ensures LLM validation tools have access to latest changes including:
+  - Updated source code
+  - New test files
+  - Recent commit history
+  - Current repository state
+
+**Automated Validation Execution:**
+- Use `printf "y\ny\ny\n"` for fully automated script execution
+- This handles all interactive prompts in sequence:
+  - Context file selection confirmation
+  - Final response acceptance
+  - Response saving confirmation
+- Essential for uninterrupted validation workflow
+
+**GitHub Integration Workflow:**
+- Use `gh api` for programmatic issue comments with analysis results
+- Include commit hash in validation comments for traceability
+- Edit issue body directly using `gh issue edit` to update AC status
+- Mark completed ACs with `[x]` checkbox syntax
+- Maintain clear audit trail of completion through comments
+
+**Complete Documentation Cycle:**
+- Capture validation results for issue tracking
+- Update project documentation with lessons learned
+- Document both successful patterns and common pitfalls
+- Ensure knowledge transfer for future implementations
 
 ## Code Quality Standards
 
