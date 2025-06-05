@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use App\Events\NewRegistrationCreated;
 use App\Models\Event;
 use App\Models\Registration;
 use App\Models\User;
@@ -10,6 +11,7 @@ use Database\Seeders\FeesTableSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Event as EventFacade;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -79,6 +81,8 @@ class RegistrationControllerTest extends TestCase
     #[Test]
     public function store_validates_calculates_fee_and_creates_registration_successfully(): void
     {
+        EventFacade::fake(); // AC11: Mock events to verify dispatch
+
         $user = User::factory()->create();
         $user->markEmailAsVerified();
         $this->actingAs($user);
@@ -160,6 +164,11 @@ class RegistrationControllerTest extends TestCase
         $this->assertCount(1, $associatedEvents);
         $this->assertEquals($event->code, $associatedEvents->first()->code);
         $this->assertEquals(600.00, $associatedEvents->first()->pivot->price_at_registration);
+
+        // AC11: Verify NewRegistrationCreated event was dispatched
+        EventFacade::assertDispatched(NewRegistrationCreated::class, function ($event) use ($registrationId) {
+            return $event->registration->id === $registrationId;
+        });
 
         Carbon::setTestNow(); // Reset Carbon mock
     }
@@ -346,5 +355,40 @@ class RegistrationControllerTest extends TestCase
         $this->assertNotNull($workshopEventPivot->pivot->price_at_registration);
         $this->assertIsNumeric($mainEventPivot->pivot->price_at_registration);
         $this->assertIsNumeric($workshopEventPivot->pivot->price_at_registration);
+    }
+
+    #[Test]
+    public function store_dispatches_new_registration_created_event(): void
+    {
+        // AC11: Test that NewRegistrationCreated event is dispatched with correct registration
+        EventFacade::fake();
+
+        $user = User::factory()->create();
+        $user->markEmailAsVerified();
+        $this->actingAs($user);
+
+        $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
+        $event = Event::where('code', $mainConferenceCode)->firstOrFail();
+
+        $validData = $this->getValidRegistrationData($user, [
+            'selected_event_codes' => [$event->code],
+            'position' => 'grad_student',
+        ]);
+
+        $response = $this->post(route('event-registrations.store'), $validData);
+        $response->assertOk();
+
+        $registrationId = $response->json('registration_id');
+        $this->assertNotNull($registrationId);
+
+        // AC11: Verify NewRegistrationCreated event was dispatched exactly once
+        EventFacade::assertDispatched(NewRegistrationCreated::class, 1);
+
+        // AC11: Verify the event contains the correct registration data
+        EventFacade::assertDispatched(NewRegistrationCreated::class, function ($event) use ($registrationId, $user) {
+            return $event->registration->id === $registrationId
+                && $event->registration->user_id === $user->id
+                && $event->registration instanceof Registration;
+        });
     }
 }

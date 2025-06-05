@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\NewRegistrationCreated;
 use App\Http\Requests\StoreRegistrationRequest;
 use App\Models\Registration;
 use App\Services\FeeCalculationService;
@@ -108,9 +109,9 @@ class RegistrationController extends Controller
             Log::info('Events synced for registration.', ['registration_id' => $registration->id, 'synced_events' => array_keys($eventSyncData)]);
         }
 
-        // --- Placeholder for AC11: Dispatch event/notification (Issue #23) ---
-        // event(new \App\Events\NewRegistrationCreated($registration)); // Define event NewRegistrationCreated
-        // Log::info('NewRegistrationCreated event dispatched.', ['registration_id' => $registration->id]);
+        // --- AC11: Dispatch event/notification ---
+        event(new NewRegistrationCreated($registration));
+        Log::info('NewRegistrationCreated event dispatched.', ['registration_id' => $registration->id]);
 
         // --- Response: For ACs 6, 7, 8, this JSON response is intermediate. AC12 will implement a redirect. ---
         return response()->json([
