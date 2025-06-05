@@ -229,11 +229,20 @@ Be prepared to wait for API quota rotations (up to 7 keys) when using external L
 - **Best Practice**: Prefer dependency injection in controller constructors/methods over `app()` calls for better testability
 
 **Commit Message Standards:**
-- Analyze recent commit patterns with `git log --oneline -10` for consistency
-- Follow project conventions and established patterns
+- **CRITICAL:** Use `git log -5` (NOT `git log --oneline`) to see FULL commit message format
+- `--oneline` flag only shows first line, missing the complete multi-line structure
+- Follow project's bullet-point format:
+  ```
+  tipo(escopo): Descrição principal (#issue)
+  
+  - Bullet point describing specific change 1
+  - Bullet point describing specific change 2
+  - Bullet point describing specific change 3
+  - Final line indicating which AC is fulfilled (if applicable)
+  ```
 - Focus on the specific AC/feature implemented
 - NEVER include AI tool references ("Generated with Claude Code", etc.)
-- Use HEREDOC format for multi-line commit messages
+- Use HEREDOC format for multi-line commit messages to ensure proper formatting
 - Include relevant issue references (#XX) where appropriate
 
 ### Advanced Workflow: Complete AC Implementation & Validation Cycle
@@ -242,7 +251,7 @@ Be prepared to wait for API quota rotations (up to 7 keys) when using external L
 
 **Stage and Commit Changes:**
 - Stage all changes: `git add .`
-- Analyze commit patterns: `git log --oneline -10` for consistency
+- **CRITICAL:** Analyze commit patterns: `git log -5` (NOT `--oneline`) to see full message structure
 - Create descriptive commit messages following project conventions
 - CRITICAL: Never include AI tool references in commit messages
 - Use HEREDOC format for multi-line commits to ensure proper formatting
@@ -327,7 +336,19 @@ When executing autonomous AC implementation cycles, document any interruptions e
 - Context generation before validation is critical for accurate analysis
 - Real-time documentation of solutions during implementation improves future cycles
 
-**Interruption #2 - GitHub Comment Formatting Issues:**
+**Interruption #2 - Git Commit Message Format Analysis:**
+- **Context:** Using `git log --oneline` to analyze commit patterns for consistency
+- **Problem:** `--oneline` flag only shows first line of commits, missing the complete multi-line structure with bullet points that the project follows
+- **Root Cause:** Misunderstanding of git log flags led to incomplete pattern analysis and incorrect commit format
+- **Solution:** Always use `git log -5` (or similar) to see FULL commit message structure including:
+  - Main line: `tipo(escopo): Descrição principal (#issue)`
+  - Blank line
+  - Bullet points with specific changes: `- Description of change`
+  - Optional final line indicating AC fulfillment
+- **Learning:** Proper commit format analysis requires seeing the complete message structure, not just the summary line
+- **Implementation:** Updated CLAUDE.md to emphasize using `git log -5` and document the exact bullet-point format expected
+
+**Interruption #3 - GitHub Comment Formatting Issues:**
 - **Context:** Complex messages with code blocks and special characters fail when passed directly to `gh api`
 - **Problem:** Shell escaping issues with backticks, backslashes, and multi-line content
 - **Solution:** Use file-based approach: save content to `/tmp/comment.txt` and use `-F body=@/tmp/comment.txt`
