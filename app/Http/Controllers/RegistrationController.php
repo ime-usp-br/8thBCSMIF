@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRegistrationRequest;
+use App\Models\Registration;
 use App\Services\FeeCalculationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
@@ -14,99 +15,104 @@ class RegistrationController extends Controller
      * Store a newly created registration in storage.
      *
      * This method handles the incoming registration request, validates the data
-     * using StoreRegistrationRequest, and then (in future ACs) will proceed
-     * to calculate fees, save the registration, and notify the user.
-     * For AC6, it primarily ensures that StoreRegistrationRequest is used for validation.
-     * For AC7, it calculates the fee using FeeCalculationService.
+     * using StoreRegistrationRequest, calculates fees, saves the registration,
+     * and prepares for subsequent steps like payment status update and event syncing.
      */
     public function store(StoreRegistrationRequest $request): JsonResponse
     {
-        // AC6: Ensure StoreRegistrationRequest is used for validation.
-        // The $request object is already validated at this point if this method is reached.
         $validatedData = $request->validated();
-
         Log::info('Registration data validated successfully through StoreRegistrationRequest.', $validatedData);
 
-        // --- AC7: Calculate Fee using FeeCalculationService ---
+        // --- Determine Participant Category for Fee Calculation ---
         /** @var string $position */
         $position = $validatedData['position'];
-        // 'is_abe_member' is validated and cast to boolean by StoreRegistrationRequest's 'boolean' rule.
-        // If the field is not present in the request, it might not be in $validatedData.
-        // Default to false if not present.
         /** @var bool $isAbeMember */
         $isAbeMember = $validatedData['is_abe_member'] ?? false;
 
-        $participantCategory = '';
-        switch ($position) {
-            case 'undergrad_student':
-                $participantCategory = 'undergrad_student';
-                break;
-            case 'grad_student':
-                $participantCategory = 'grad_student';
-                break;
-            case 'professor':
-                $participantCategory = $isAbeMember ? 'professor_abe' : 'professor_non_abe_professional';
-                break;
-            case 'professional':
-            case 'researcher':
-                // Map 'other' to 'professor_non_abe_professional' as a general fallback.
-                // This aligns with the structure of FeesTableSeeder where this category
-                // often serves as a catch-all for non-student, non-ABE-member professors.
-                // If 'other' requires distinct fee configurations, FeesTableSeeder and this mapping
-                // would need to be updated accordingly.
-            case 'other':
-                $participantCategory = 'professor_non_abe_professional';
-                break;
-            default:
-                // This case should ideally not be reached if 'position' validation is exhaustive
-                // and only allows predefined values.
-                Log::warning(
-                    "Unhandled position during participant category mapping. Defaulting to 'professor_non_abe_professional'.",
-                    ['position_value' => $position] // Structured logging for PHPStan
-                );
-                $participantCategory = 'professor_non_abe_professional'; // Fallback to a known category
+        $participantCategory = match ($position) {
+            'undergrad_student' => 'undergrad_student',
+            'grad_student' => 'grad_student',
+            'professor' => $isAbeMember ? 'professor_abe' : 'professor_non_abe_professional',
+            'professional', 'researcher', 'other' => 'professor_non_abe_professional',
+            default => 'professor_non_abe_professional', // Fallback
+        };
+        if ($position === 'other' || ! in_array($position, ['undergrad_student', 'grad_student', 'professor', 'professional', 'researcher'])) {
+            Log::warning(
+                "Unhandled or 'other' position during participant category mapping. Defaulting to 'professor_non_abe_professional'.",
+                ['position_value' => $position]
+            );
         }
 
-        // Resolve FeeCalculationService from the container.
-        // Its dependencies (Event, Fee models) will be auto-resolved by Laravel's service container.
+        // --- AC7: Calculate Fee using FeeCalculationService ---
         $feeCalculationService = app(FeeCalculationService::class);
-
-        // Prepare parameters for FeeCalculationService with explicit types for PHPStan
         /** @var list<string> $eventCodesForFeeCalc */
-        // StoreRegistrationRequest validates selected_event_codes as an array (list) of strings.
         $eventCodesForFeeCalc = $validatedData['selected_event_codes'];
-
         /** @var string $participationFormatForFeeCalc */
-        // StoreRegistrationRequest validates participation_format as a string.
         $participationFormatForFeeCalc = $validatedData['participation_format'];
 
         $feeData = $feeCalculationService->calculateFees(
             $participantCategory,
             $eventCodesForFeeCalc,
-            Carbon::now(), // Use current date for registration date
+            Carbon::now(),
             $participationFormatForFeeCalc
         );
-
         Log::info('Fee calculation completed for registration.', [
             'participant_category' => $participantCategory,
             'fee_data' => $feeData,
-            'user_id' => auth()->id(), // Log user context
+            'user_id' => $request->user()->id,
         ]);
-        // --- End AC7 ---
 
-        // Placeholder for subsequent ACs (AC8-AC12) which will handle:
-        // - Creating and saving Registration model (AC8)
-        // - Setting payment_status (AC9)
-        // - Syncing events (AC10)
-        // - Dispatching notifications/events (AC11 - covered by Issue #23)
-        // - Redirecting with success message (AC12)
+        // --- AC8: Create and save Registration model ---
+        // Prepare data for Registration creation. Eloquent's create method will only use
+        // attributes that are fillable in the Registration model from $validatedData.
+        $registrationPayload = array_merge(
+            $validatedData,
+            [
+                'user_id' => $request->user()->id,
+                'registration_category_snapshot' => $participantCategory,
+                'calculated_fee' => $feeData['total_fee'],
+                // payment_status will be handled by AC9.
+                // Other fields like payment_proof_path, payment_uploaded_at, invoice_sent_at, notes
+                // will be null/default on creation or handled by other processes.
+            ]
+        );
 
-        // For AC7, return feeData along with validatedData.
-        // This response will be replaced by a RedirectResponse in AC12.
+        $registration = Registration::create($registrationPayload);
+
+        Log::info('Registration created successfully.', [
+            'registration_id' => $registration->id,
+            'user_id' => $request->user()->id,
+            'calculated_fee' => $registration->calculated_fee,
+            'category_snapshot' => $registration->registration_category_snapshot,
+        ]);
+
+        // --- Placeholder for AC9: Set payment_status ---
+        // $paymentStatus = ($feeData['total_fee'] == 0) ? 'free' : 'pending_payment';
+        // $registration->update(['payment_status' => $paymentStatus]);
+        // Log::info('Payment status set for registration.', ['registration_id' => $registration->id, 'payment_status' => $paymentStatus]);
+
+        // --- Placeholder for AC10: Sync events ---
+        // $eventSyncData = [];
+        // foreach ($feeData['details'] as $eventDetail) {
+        //     if (!isset($eventDetail['error'])) { // Only sync valid events with prices
+        //         $eventSyncData[$eventDetail['event_code']] = ['price_at_registration' => $eventDetail['calculated_price']];
+        //     }
+        // }
+        // if (!empty($eventSyncData)) {
+        //     $registration->events()->sync($eventSyncData);
+        //     Log::info('Events synced for registration.', ['registration_id' => $registration->id, 'synced_events' => array_keys($eventSyncData)]);
+        // }
+
+        // --- Placeholder for AC11: Dispatch event/notification (Issue #23) ---
+        // event(new \App\Events\NewRegistrationCreated($registration)); // Define event NewRegistrationCreated
+        // Log::info('NewRegistrationCreated event dispatched.', ['registration_id' => $registration->id]);
+
+        // --- Response: For ACs 6, 7, 8, this JSON response is intermediate. AC12 will implement a redirect. ---
         return response()->json([
-            'message' => __('registrations.validation_successful'),
+            'message' => __('registrations.validation_successful'), // Keeping this message for now, AC12 will handle final user message
+            'registration_id' => $registration->id, // Added for AC8 and use by AC10
             'data' => $validatedData,
-            'fee_data' => $feeData, // Added for AC7 verification
+            'fee_data' => $feeData,
         ]);
     }
 }

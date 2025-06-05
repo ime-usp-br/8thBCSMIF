@@ -3,6 +3,7 @@
 namespace Tests\Feature\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\Registration;
 use App\Models\User;
 use Database\Seeders\EventsTableSeeder;
 use Database\Seeders\FeesTableSeeder;
@@ -76,7 +77,7 @@ class RegistrationControllerTest extends TestCase
     }
 
     #[Test]
-    public function store_uses_store_registration_request_succeeds_and_calls_fee_service_with_valid_data(): void
+    public function store_validates_calculates_fee_and_creates_registration_successfully(): void
     {
         $user = User::factory()->create();
         $user->markEmailAsVerified();
@@ -85,7 +86,6 @@ class RegistrationControllerTest extends TestCase
         $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
         $event = Event::where('code', $mainConferenceCode)->firstOrFail();
 
-        // Simulate registration during early bird period for predictable fees
         $earlyBirdDate = Carbon::parse($event->registration_deadline_early)->subDay();
         Carbon::setTestNow($earlyBirdDate);
 
@@ -100,25 +100,53 @@ class RegistrationControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonPath('message', __('registrations.validation_successful'));
-        $response->assertJsonPath('data.full_name', $user->name);
-        $response->assertJsonPath('data.email', $user->email);
 
-        // AC7: Assert fee_data structure is present
+        // AC7: Assert fee_data structure and content
         $response->assertJsonStructure([
             'message',
+            'registration_id', // Added for AC8
             'data',
             'fee_data' => [
                 'details',
                 'total_fee',
             ],
         ]);
-
-        // Example: Assert specific fee for grad_student, in-person, BCSMIF2025, early bird
-        // This fee is 600.00 according to FeesTableSeeder
-        // Use assertEquals for numeric comparison to avoid strict type issues (int 600 vs float 600.0)
         $this->assertEquals(600.00, $response->json('fee_data.total_fee'));
         $this->assertEquals($mainConferenceCode, $response->json('fee_data.details.0.event_code'));
         $this->assertEquals(600.00, $response->json('fee_data.details.0.calculated_price'));
+
+        // AC8: Assert registration_id is present and registration is in database
+        $registrationId = $response->json('registration_id');
+        $this->assertNotNull($registrationId);
+        $this->assertIsInt($registrationId);
+
+        $this->assertDatabaseHas('registrations', [
+            'id' => $registrationId,
+            'user_id' => $user->id,
+            'full_name' => $validData['full_name'],
+            'email' => $validData['email'],
+            'registration_category_snapshot' => 'grad_student', // based on 'position' => 'grad_student'
+            'calculated_fee' => 600.00, // Expected fee from FeesTableSeeder for this setup
+            'position' => $validData['position'],
+            'is_abe_member' => $validData['is_abe_member'],
+            'participation_format' => $validData['participation_format'],
+            'document_country_origin' => $validData['document_country_origin'],
+            'cpf' => $validData['cpf'],
+            // payment_status will be checked in AC9 tests
+        ]);
+
+        // Verify some nullable fields are correctly stored if provided
+        $this->assertDatabaseHas('registrations', [
+            'id' => $registrationId,
+            'nationality' => $validData['nationality'],
+            'date_of_birth' => Carbon::parse($validData['date_of_birth'])->format('Y-m-d H:i:s'),
+        ]);
+
+        $registration = Registration::find($registrationId);
+        $this->assertNotNull($registration);
+        // Check boolean casts (example)
+        $this->assertFalse($registration->is_abe_member); // From $validData
+        $this->assertFalse($registration->needs_transport_from_gru); // From $validData
 
         Carbon::setTestNow(); // Reset Carbon mock
     }
@@ -154,37 +182,38 @@ class RegistrationControllerTest extends TestCase
     }
 
     #[Test]
-    public function store_fails_for_usp_user_if_codpes_is_required_but_missing(): void
+    public function store_fails_for_usp_user_if_codpes_is_required_but_missing_or_invalid(): void
     {
         $user = User::factory()->create(['email' => 'testusp@usp.br']); // USP Email
         $user->markEmailAsVerified();
         $this->actingAs($user);
 
-        // StoreRegistrationRequest's current 'codpes' rule (nullable) doesn't use required_if for 'sou_da_usp'.
-        // This test relies on the default behavior of StoreRegistrationRequest as provided.
-        // If AC3 were fully implemented in StoreRegistrationRequest.php, this test would be different.
-        // For now, if sou_da_usp is true, and codpes is missing, it should pass IF codpes is nullable.
-        // If StoreRegistrationRequest.php were updated for AC3 to make codpes required_if(sou_da_usp,true),
-        // then this test would expect a validation error for codpes.
+        // StoreRegistrationRequest currently makes `codpes` nullable.
+        // For this test, we rely on the `numeric` and `digits_between` rules from StoreRegistrationRequest
+        // for 'codpes' when 'sou_da_usp' is true and an invalid 'codpes' is provided.
+        // The livewire component `register.blade.php` has `Rule::requiredIf($this->sou_da_usp)` for `codpes`.
+        // However, `StoreRegistrationRequest` itself doesn't have this explicit required_if for `codpes`
+        // based on `sou_da_usp`. If it did, this test would need to check for `codpes.required`.
+        // Currently, the validation will pass if `codpes` is null, even if `sou_da_usp` is true.
+        // We test for an *invalid* non-null `codpes` to trigger other rules.
 
-        // Let's test the current StoreRegistrationRequest behavior.
-        // It has `Rule::requiredIf($this->sou_da_usp)` inside the registration component,
-        // but StoreRegistrationRequest.php currently doesn't have this 'required_if' for codpes.
-
-        // Scenario: User marks 'sou_da_usp' as true, but doesn't provide codpes.
-        // The current StoreRegistrationRequest.php has 'codpes' as ['nullable', 'numeric', 'digits_between:6,8']
-        // So, it should NOT fail for missing codpes unless a required_if is active.
-        // For this test to be meaningful to current StoreRegistrationRequest, we'll assume a scenario where
-        // 'sou_da_usp' is true and a non-numeric 'codpes' is sent, to trigger a 'numeric' rule violation.
         $invalidData = $this->getValidRegistrationData($user, [
             'sou_da_usp' => true,
-            'codpes' => 'ABC', // Invalid (non-numeric)
+            'codpes' => 'ABCDEFG', // Invalid (non-numeric)
         ]);
 
         $response = $this->post(route('event-registrations.store'), $invalidData);
 
         $response->assertStatus(302);
         $response->assertSessionHasErrors(['codpes' => __('validation.custom.registration.codpes_numeric')]);
+
+        $invalidDataShort = $this->getValidRegistrationData($user, [
+            'sou_da_usp' => true,
+            'codpes' => '123', // Invalid (too short)
+        ]);
+        $responseShort = $this->post(route('event-registrations.store'), $invalidDataShort);
+        $responseShort->assertStatus(302);
+        $responseShort->assertSessionHasErrors(['codpes' => __('validation.custom.registration.codpes_digits_between', ['min' => 6, 'max' => 8])]);
     }
 
     #[Test]
