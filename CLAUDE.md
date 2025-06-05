@@ -54,6 +54,8 @@ gh api repos/:owner/:repo/issues/<ISSUE>/comments -F body=@/tmp/comment.txt
 ```
 - Use EXATAMENTE o output do analyze-ac
 - Inclua hash do commit para rastreabilidade
+- **🔴 CRÍTICO:** NUNCA use HEREDOC para criar /tmp/comment.txt (causa "EOF < /dev/null" no GitHub)
+- **OBRIGATÓRIO:** Verificar conteúdo com `cat /tmp/comment.txt` antes do `gh api`
 
 ---
 
@@ -403,13 +405,18 @@ When executing autonomous AC implementation cycles, document any interruptions e
 - **Learning:** Proper commit format analysis requires seeing the complete message structure, not just the summary line
 - **Implementation:** Updated CLAUDE.md to emphasize using `git log -5` and document the exact bullet-point format expected
 
-**Interruption #3 - GitHub Comment Formatting Issues:**
+**Interruption #3 - GitHub Comment Formatting Issues (CRÍTICO - RECORRENTE):**
 - **Context:** Complex messages with code blocks and special characters fail when passed directly to `gh api`
 - **Problem:** Shell escaping issues with backticks, backslashes, and multi-line content
 - **Solution:** Use file-based approach: save content to `/tmp/comment.txt` and use `-F body=@/tmp/comment.txt`
 - **Learning:** Always post EXACT `analyze-ac` output for consistent validation documentation
 - **Implementation:** Create temp file, use `-F` flag, ensures accurate content delivery
-- **Additional Issue:** HEREDOC delimiter appears in comment ("EOF < /dev/null") - ensure clean file content
+- **🔴 CRITICAL RECURRING ISSUE:** HEREDOC delimiter ("EOF < /dev/null") ALWAYS appears in GitHub comments
+- **🔴 MANDATORY FIX:** NEVER use HEREDOC for /tmp/comment.txt creation. Use alternative methods:
+  - Use `echo "content" > /tmp/comment.txt` for simple content
+  - Use `cat > /tmp/comment.txt` followed by content and manual EOF
+  - ALWAYS verify file content with `cat /tmp/comment.txt` before `gh api` call
+  - **ZERO TOLERANCE:** Any HEREDOC artifacts in GitHub comments is unacceptable
 
 ## Code Quality Standards
 
