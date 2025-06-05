@@ -457,6 +457,62 @@ When executing autonomous AC implementation cycles, document any interruptions e
 - All new code must include appropriate tests
 - Follow Laravel conventions and existing codebase patterns
 
+## Internationalization (i18n) Standards
+
+**MANDATORY:** All user-facing text, logs, and communications MUST use Laravel's localization system:
+
+### Required Localization Practices
+
+**1. User Interface Text:**
+- ALL strings displayed to users MUST use `__()` function
+- Store translation keys in `lang/en.json` and `lang/pt_BR.json`
+- Use descriptive English keys as default: `__('Payment Proof Uploaded - 8th BCSMIF')`
+
+**2. Email Templates:**
+- Subject lines MUST be localized: `subject: __('Payment Proof Uploaded - 8th BCSMIF')`
+- All email content MUST use `__()` functions for text elements
+- Maintain consistency between coordinator and user templates
+
+**3. Log Messages:**
+- Application logs MUST use localized messages
+- Error messages shown to users MUST be translatable
+- Debug/internal logs may use English but prefer localization when user-visible
+
+**4. Exception Messages:**
+- User-facing exception messages MUST be localized
+- Use translation keys for consistent error messaging
+- Provide meaningful context in translation keys
+
+**5. Validation Messages:**
+- Custom validation messages MUST be localized
+- Follow Laravel's validation translation patterns
+- Store in appropriate `lang/{locale}/validation.php` files
+
+**6. Translation Key Standards:**
+- Use English as the key language for consistency
+- Keys should be descriptive and self-documenting
+- Maintain alphabetical order in JSON files
+- Group related translations logically
+
+**Example Implementation:**
+```php
+// ✅ CORRECT - Localized
+return new Envelope(
+    subject: __('Payment Proof Uploaded - 8th BCSMIF'),
+);
+
+// ❌ INCORRECT - Hardcoded
+return new Envelope(
+    subject: 'Comprovante de Pagamento Enviado - 8th BCSMIF',
+);
+```
+
+**Translation Files:**
+- `lang/en.json`: English translations (base language)
+- `lang/pt_BR.json`: Portuguese (Brazil) translations
+- Maintain parity between all language files
+- Add new keys to ALL supported languages simultaneously
+
 ## Integration Guidelines
 
 When working with USP-specific features:
