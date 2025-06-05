@@ -17,7 +17,8 @@ class NewRegistrationNotification extends Mailable
      * Create a new message instance.
      */
     public function __construct(
-        public Registration $registration
+        public Registration $registration,
+        public bool $forCoordinator = false
     ) {
         //
     }
@@ -37,8 +38,12 @@ class NewRegistrationNotification extends Mailable
      */
     public function content(): Content
     {
+        $template = $this->forCoordinator
+            ? 'emails.registration.new-coordinator'
+            : 'emails.registration.new';
+
         return new Content(
-            markdown: 'emails.registration.new',
+            markdown: $template,
         );
     }
 
