@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Exceptions\ReplicadoServiceException;
+use App\Services\ReplicadoService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -96,7 +98,30 @@ class StoreRegistrationRequest extends FormRequest
 
             // USP Identification
             'sou_da_usp' => ['boolean'],
-            'codpes' => ['nullable', 'numeric', 'digits_between:6,8'], // AC3 will add required_if
+            'codpes' => [
+                'nullable',
+                'numeric',
+                'digits_between:6,8',
+                Rule::requiredIf($this->boolean('sou_da_usp')),
+                Rule::when($this->boolean('sou_da_usp') && $this->filled('codpes'), function () {
+                    return [
+                        function (string $attribute, mixed $value, \Closure $fail) {
+                            try {
+                                $replicadoService = app(ReplicadoService::class);
+                                $codpes = is_numeric($value) ? (int) $value : 0;
+                                $email = $this->string('email');
+                                $isValid = $replicadoService->validarNuspEmail($codpes, $email);
+
+                                if (! $isValid) {
+                                    $fail(__('validation.custom.codpes.replicado_validation_failed'));
+                                }
+                            } catch (ReplicadoServiceException $e) {
+                                $fail(__('validation.custom.codpes.replicado_service_unavailable'));
+                            }
+                        },
+                    ];
+                }),
+            ],
 
             // Declaration
             'confirm_information_accuracy' => ['accepted'],
@@ -122,6 +147,7 @@ class StoreRegistrationRequest extends FormRequest
             'selected_event_codes.*.exists' => __('validation.custom.registration.selected_event_code_invalid'),
             'participation_format.required' => __('validation.custom.registration.participation_format_required'),
             'other_dietary_restrictions.required_if' => __('validation.custom.registration.other_dietary_restrictions_required_if'),
+            'codpes.required' => __('validation.custom.registration.codpes_required_if_usp'),
             'codpes.numeric' => __('validation.custom.registration.codpes_numeric'),
             'codpes.digits_between' => __('validation.custom.registration.codpes_digits_between'),
             'confirm_information_accuracy.accepted' => __('validation.custom.registration.confirm_information_accuracy_accepted'),

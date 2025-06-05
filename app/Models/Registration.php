@@ -126,6 +126,7 @@ class Registration extends Model
             'needs_transport_from_gru' => 'boolean',
             'needs_transport_from_usp' => 'boolean',
             'requires_visa_letter' => 'boolean',
+            'sou_da_usp' => 'boolean',
             'calculated_fee' => 'decimal:2',
         ];
     }

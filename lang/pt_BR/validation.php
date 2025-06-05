@@ -340,6 +340,7 @@ return [
             'address_country_required' => 'O país de residência é obrigatório.',
             'codpes_digits_between' => 'O Número USP (codpes) deve ter entre :min e :max dígitos.',
             'codpes_numeric' => 'O Número USP (codpes) deve ser um número.',
+            'codpes_required_if_usp' => 'O Número USP (codpes) é obrigatório para usuários USP.',
             'confirm_data_processing_consent_accepted' => 'Você deve consentir com o processamento dos seus dados.',
             'confirm_information_accuracy_accepted' => 'Você deve confirmar que as informações fornecidas são precisas.',
             'cpf_required_if_brazil' => 'O CPF é obrigatório se o país de origem do documento for Brasil.',

@@ -3,9 +3,11 @@
 namespace Tests\Feature\Http\Controllers;
 
 use App\Events\NewRegistrationCreated;
+use App\Exceptions\ReplicadoServiceException;
 use App\Models\Event;
 use App\Models\Registration;
 use App\Models\User;
+use App\Services\ReplicadoService;
 use Database\Seeders\EventsTableSeeder;
 use Database\Seeders\FeesTableSeeder;
 use Database\Seeders\RoleSeeder;
@@ -420,6 +422,219 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $user->id,
             'full_name' => $validData['full_name'],
             'email' => $validData['email'],
+        ]);
+    }
+
+    #[Test]
+    public function store_succeeds_for_usp_user_with_valid_replicado_validation(): void
+    {
+        // AC14: Test successful registration for USP user with Replicado validation OK
+        $user = User::factory()->create(['email' => 'testusp@usp.br']);
+        $user->markEmailAsVerified();
+        $this->actingAs($user);
+
+        // Mock ReplicadoService to return success
+        $mockReplicado = \Mockery::mock(ReplicadoService::class);
+        $mockReplicado->shouldReceive('validarNuspEmail')
+            ->with('1234567', 'testusp@usp.br')
+            ->andReturn(true);
+        $this->app->instance(ReplicadoService::class, $mockReplicado);
+
+        $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
+        $event = Event::where('code', $mainConferenceCode)->firstOrFail();
+
+        $validData = $this->getValidRegistrationData($user, [
+            'selected_event_codes' => [$event->code],
+            'email' => 'testusp@usp.br',
+            'sou_da_usp' => true,
+            'codpes' => '1234567',
+        ]);
+
+        $response = $this->post(route('event-registrations.store'), $validData);
+
+        // AC14: Verify successful redirect and registration creation
+        $response->assertRedirect(route('dashboard'));
+        $response->assertSessionHas('success', __('registrations.created_successfully'));
+
+        $this->assertDatabaseHas('registrations', [
+            'user_id' => $user->id,
+            'email' => 'testusp@usp.br',
+            'full_name' => $validData['full_name'],
+        ]);
+    }
+
+    #[Test]
+    public function store_fails_for_usp_user_with_replicado_validation_failure(): void
+    {
+        // AC14: Test failed registration for USP user with Replicado validation failure
+        $user = User::factory()->create(['email' => 'testusp@usp.br']);
+        $user->markEmailAsVerified();
+        $this->actingAs($user);
+
+        // Mock ReplicadoService to return validation failure
+        $mockReplicado = \Mockery::mock(ReplicadoService::class);
+        $mockReplicado->shouldReceive('validarNuspEmail')
+            ->with('1234567', 'testusp@usp.br')
+            ->andReturn(false);
+        $this->app->instance(ReplicadoService::class, $mockReplicado);
+
+        $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
+        $event = Event::where('code', $mainConferenceCode)->firstOrFail();
+
+        $invalidData = $this->getValidRegistrationData($user, [
+            'selected_event_codes' => [$event->code],
+            'email' => 'testusp@usp.br',
+            'sou_da_usp' => true,
+            'codpes' => '1234567',
+        ]);
+
+        $response = $this->post(route('event-registrations.store'), $invalidData);
+
+        // AC14: Verify validation failure and redirect
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors(['codpes' => __('validation.custom.codpes.replicado_validation_failed')]);
+
+        // AC14: Verify no registration was created
+        $this->assertDatabaseMissing('registrations', [
+            'user_id' => $user->id,
+            'email' => 'testusp@usp.br',
+        ]);
+    }
+
+    #[Test]
+    public function store_fails_for_usp_user_with_replicado_service_unavailable(): void
+    {
+        // AC14: Test failed registration for USP user with ReplicadoService exception
+        $user = User::factory()->create(['email' => 'testusp@usp.br']);
+        $user->markEmailAsVerified();
+        $this->actingAs($user);
+
+        // Mock ReplicadoService to throw exception
+        $mockReplicado = \Mockery::mock(ReplicadoService::class);
+        $mockReplicado->shouldReceive('validarNuspEmail')
+            ->with('1234567', 'testusp@usp.br')
+            ->andThrow(new ReplicadoServiceException('Service unavailable'));
+        $this->app->instance(ReplicadoService::class, $mockReplicado);
+
+        $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
+        $event = Event::where('code', $mainConferenceCode)->firstOrFail();
+
+        $invalidData = $this->getValidRegistrationData($user, [
+            'selected_event_codes' => [$event->code],
+            'email' => 'testusp@usp.br',
+            'sou_da_usp' => true,
+            'codpes' => '1234567',
+        ]);
+
+        $response = $this->post(route('event-registrations.store'), $invalidData);
+
+        // AC14: Verify validation failure due to service exception
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors(['codpes' => __('validation.custom.codpes.replicado_service_unavailable')]);
+
+        // AC14: Verify no registration was created
+        $this->assertDatabaseMissing('registrations', [
+            'user_id' => $user->id,
+            'email' => 'testusp@usp.br',
+        ]);
+    }
+
+    #[Test]
+    public function store_validates_all_required_fields(): void
+    {
+        // AC14: Test validation of all fields in StoreRegistrationRequest
+        $user = User::factory()->create();
+        $user->markEmailAsVerified();
+        $this->actingAs($user);
+
+        // Test with completely empty data
+        $response = $this->post(route('event-registrations.store'), []);
+
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors([
+            'full_name',
+            'document_country_origin',
+            'email',
+            'address_country',
+            'position',
+            'selected_event_codes',
+            'participation_format',
+            'confirm_information_accuracy',
+            'confirm_data_processing_consent',
+        ]);
+    }
+
+    #[Test]
+    public function store_validates_conditional_document_fields(): void
+    {
+        // AC14: Test conditional validation for CPF/RG vs Passport
+        $user = User::factory()->create();
+        $user->markEmailAsVerified();
+        $this->actingAs($user);
+
+        // Test Brasil document without CPF
+        $invalidBrazilData = $this->getValidRegistrationData($user, [
+            'document_country_origin' => 'Brasil',
+            'cpf' => null,
+            'rg_number' => null,
+            'passport_number' => null,
+        ]);
+
+        $response = $this->post(route('event-registrations.store'), $invalidBrazilData);
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors(['cpf']);
+
+        // Test international document without passport
+        $invalidInternationalData = $this->getValidRegistrationData($user, [
+            'document_country_origin' => 'United States',
+            'cpf' => null,
+            'rg_number' => null,
+            'passport_number' => null,
+        ]);
+
+        $response = $this->post(route('event-registrations.store'), $invalidInternationalData);
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors(['passport_number']);
+    }
+
+    #[Test]
+    public function store_creates_registration_for_non_usp_user_successfully(): void
+    {
+        // AC14: Test successful registration for non-USP user (explicit test)
+        $user = User::factory()->create(['email' => 'regular@example.com']);
+        $user->markEmailAsVerified();
+        $this->actingAs($user);
+
+        $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
+        $event = Event::where('code', $mainConferenceCode)->firstOrFail();
+
+        $validData = $this->getValidRegistrationData($user, [
+            'selected_event_codes' => [$event->code],
+            'email' => 'regular@example.com',
+            'sou_da_usp' => false,
+            'codpes' => null,
+        ]);
+
+        $response = $this->post(route('event-registrations.store'), $validData);
+
+        // AC14: Verify successful creation
+        $response->assertRedirect(route('dashboard'));
+        $response->assertSessionHas('success', __('registrations.created_successfully'));
+
+        $registration = Registration::where('user_id', $user->id)->latest()->first();
+        $this->assertNotNull($registration);
+        $this->assertEquals('regular@example.com', $registration->email);
+        $this->assertNull($registration->user->codpes); // Non-USP user should not have codpes
+
+        // AC14: Verify fee calculation and event association
+        $this->assertNotNull($registration->calculated_fee);
+        $this->assertGreaterThan(0, $registration->calculated_fee);
+        $this->assertEquals('pending_payment', $registration->payment_status);
+
+        // Verify event association
+        $this->assertDatabaseHas('event_registration', [
+            'registration_id' => $registration->id,
+            'event_code' => $event->code,
         ]);
     }
 }
