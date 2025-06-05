@@ -5,8 +5,10 @@ namespace Tests\Feature\Http\Controllers;
 use App\Models\Event;
 use App\Models\User;
 use Database\Seeders\EventsTableSeeder;
+use Database\Seeders\FeesTableSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -24,6 +26,7 @@ class RegistrationControllerTest extends TestCase
         parent::setUp();
         $this->seed(RoleSeeder::class);
         $this->seed(EventsTableSeeder::class); // Ensures event codes exist for validation
+        $this->seed(FeesTableSeeder::class); // Ensures fees exist for FeeCalculationService (AC7)
     }
 
     /**
@@ -51,12 +54,12 @@ class RegistrationControllerTest extends TestCase
             'address_country' => 'Brasil',
             'address_postal_code' => '01000-000',
             'affiliation' => 'University of Example',
-            'position' => 'grad_student',
-            'is_abe_member' => false,
+            'position' => 'grad_student', // Default position for fee calculation
+            'is_abe_member' => false,      // Default ABE status
             'arrival_date' => '2025-09-28',
             'departure_date' => '2025-10-03',
             'selected_event_codes' => [$event->code],
-            'participation_format' => 'in-person',
+            'participation_format' => 'in-person', // Default participation format
             'needs_transport_from_gru' => false,
             'needs_transport_from_usp' => false,
             'dietary_restrictions' => 'none',
@@ -73,13 +76,25 @@ class RegistrationControllerTest extends TestCase
     }
 
     #[Test]
-    public function store_uses_store_registration_request_and_succeeds_with_valid_data(): void
+    public function store_uses_store_registration_request_succeeds_and_calls_fee_service_with_valid_data(): void
     {
         $user = User::factory()->create();
         $user->markEmailAsVerified();
         $this->actingAs($user);
 
-        $validData = $this->getValidRegistrationData($user);
+        $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
+        $event = Event::where('code', $mainConferenceCode)->firstOrFail();
+
+        // Simulate registration during early bird period for predictable fees
+        $earlyBirdDate = Carbon::parse($event->registration_deadline_early)->subDay();
+        Carbon::setTestNow($earlyBirdDate);
+
+        $validData = $this->getValidRegistrationData($user, [
+            'selected_event_codes' => [$event->code],
+            'position' => 'grad_student',
+            'is_abe_member' => false,
+            'participation_format' => 'in-person',
+        ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
@@ -87,6 +102,25 @@ class RegistrationControllerTest extends TestCase
         $response->assertJsonPath('message', __('registrations.validation_successful'));
         $response->assertJsonPath('data.full_name', $user->name);
         $response->assertJsonPath('data.email', $user->email);
+
+        // AC7: Assert fee_data structure is present
+        $response->assertJsonStructure([
+            'message',
+            'data',
+            'fee_data' => [
+                'details',
+                'total_fee',
+            ],
+        ]);
+
+        // Example: Assert specific fee for grad_student, in-person, BCSMIF2025, early bird
+        // This fee is 600.00 according to FeesTableSeeder
+        // Use assertEquals for numeric comparison to avoid strict type issues (int 600 vs float 600.0)
+        $this->assertEquals(600.00, $response->json('fee_data.total_fee'));
+        $this->assertEquals($mainConferenceCode, $response->json('fee_data.details.0.event_code'));
+        $this->assertEquals(600.00, $response->json('fee_data.details.0.calculated_price'));
+
+        Carbon::setTestNow(); // Reset Carbon mock
     }
 
     #[Test]
