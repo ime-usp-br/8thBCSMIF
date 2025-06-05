@@ -49,10 +49,30 @@ git push                            # ANTES do comentário GitHub
 ```
 
 ### 6. **Documentação GitHub**
+
+#### **🔴 PASSO CRÍTICO: Verificar Padrão de Comentários ANTES de Elaborar**
+```bash
+# SEMPRE verificar comentários existentes para manter padrão
+gh api repos/:owner/:repo/issues/<ISSUE>/comments
+
+# Se for AC1 e não houver comentários, verificar issues fechadas semelhantes
+gh issue list --state closed --label feature --limit 5
+gh api repos/:owner/:repo/issues/<ISSUE_FECHADA>/comments
+```
+
+#### **Formato Obrigatório do Comentário:**
+- **Título:** `## Conclusão sobre o Critério de Aceite X (ACX) da Issue #Y`
+- **Critério:** Citar exatamente o texto do AC
+- **Análise:** Seções numeradas explicando implementação detalhada
+- **Conclusão:** "O Critério de Aceite X (ACX) foi **Atendido**."
+- **Rodapé:** `---\n**Validação realizada no commit:** <hash>`
+
+#### **Submissão do Comentário:**
 ```bash
 gh api repos/:owner/:repo/issues/<ISSUE>/comments -F body=@/tmp/comment.txt
 ```
-- Use EXATAMENTE o output do analyze-ac
+- Use EXATAMENTE o output do analyze-ac como base
+- Adapte ao formato padrão observado nos comentários existentes
 - Inclua hash do commit para rastreabilidade
 - **🔴 CRÍTICO:** NUNCA use HEREDOC para criar /tmp/comment.txt (causa "EOF < /dev/null" no GitHub)
 - **OBRIGATÓRIO:** Verificar conteúdo com `cat /tmp/comment.txt` antes do `gh api`
@@ -417,6 +437,18 @@ When executing autonomous AC implementation cycles, document any interruptions e
   - Use `cat > /tmp/comment.txt` followed by content and manual EOF
   - ALWAYS verify file content with `cat /tmp/comment.txt` before `gh api` call
   - **ZERO TOLERANCE:** Any HEREDOC artifacts in GitHub comments is unacceptable
+
+**Interruption #4 - Padrão de Comentários GitHub Inconsistente (CRÍTICO - RECORRENTE):**
+- **Context:** Formatação de comentários de validação AC sem verificar padrão existente na issue
+- **Problem:** Comentários com formatação inconsistente quebram padrão estabelecido no projeto
+- **Root Cause:** Não verificar comentários existentes antes de elaborar novos comentários
+- **Solution:** SEMPRE executar `gh api repos/:owner/:repo/issues/<ISSUE>/comments` antes de criar comentário
+- **For AC1:** Se não houver comentários na issue atual, verificar issues fechadas similares com `gh issue list --state closed --label feature`
+- **Mandatory Format:** 
+  - Título: `## Conclusão sobre o Critério de Aceite X (ACX) da Issue #Y`
+  - Estrutura: Critério → Análise (numerada) → Conclusão → Rodapé com commit
+- **Learning:** Padrão de comentários é parte crítica da documentação do projeto
+- **Implementation:** Verificação obrigatória de comentários existentes no workflow
 
 ## Code Quality Standards
 
