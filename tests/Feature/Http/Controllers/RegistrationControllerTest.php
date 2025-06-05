@@ -102,25 +102,12 @@ class RegistrationControllerTest extends TestCase
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        $response->assertOk();
-        $response->assertJsonPath('message', __('registrations.validation_successful'));
+        // AC12: Assert redirect to dashboard with success message
+        $response->assertRedirect(route('dashboard'));
+        $response->assertSessionHas('success', __('registrations.created_successfully'));
 
-        // AC7: Assert fee_data structure and content
-        $response->assertJsonStructure([
-            'message',
-            'registration_id', // Added for AC8
-            'data',
-            'fee_data' => [
-                'details',
-                'total_fee',
-            ],
-        ]);
-        $this->assertEquals(600.00, $response->json('fee_data.total_fee'));
-        $this->assertEquals($mainConferenceCode, $response->json('fee_data.details.0.event_code'));
-        $this->assertEquals(600.00, $response->json('fee_data.details.0.calculated_price'));
-
-        // AC8: Assert registration_id is present and registration is in database
-        $registrationId = $response->json('registration_id');
+        // AC8: Find the registration that was created (since we no longer get registration_id from JSON)
+        $registrationId = Registration::where('user_id', $user->id)->latest()->first()->id;
         $this->assertNotNull($registrationId);
         $this->assertIsInt($registrationId);
 
@@ -286,9 +273,13 @@ class RegistrationControllerTest extends TestCase
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
-        $response->assertOk();
 
-        $registrationId = $response->json('registration_id');
+        // AC12: Assert redirect to dashboard with success message
+        $response->assertRedirect(route('dashboard'));
+        $response->assertSessionHas('success', __('registrations.created_successfully'));
+
+        // Find the registration that was created
+        $registrationId = Registration::where('user_id', $user->id)->latest()->first()->id;
         $this->assertNotNull($registrationId);
 
         // AC9: Assert that payment_status is 'free' when calculated_fee is zero
@@ -320,9 +311,13 @@ class RegistrationControllerTest extends TestCase
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
-        $response->assertOk();
 
-        $registrationId = $response->json('registration_id');
+        // AC12: Assert redirect to dashboard with success message
+        $response->assertRedirect(route('dashboard'));
+        $response->assertSessionHas('success', __('registrations.created_successfully'));
+
+        // Find the registration that was created
+        $registrationId = Registration::where('user_id', $user->id)->latest()->first()->id;
         $this->assertNotNull($registrationId);
 
         // AC10: Verify both events are associated with prices in pivot table
@@ -376,9 +371,13 @@ class RegistrationControllerTest extends TestCase
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
-        $response->assertOk();
 
-        $registrationId = $response->json('registration_id');
+        // AC12: Assert redirect to dashboard with success message
+        $response->assertRedirect(route('dashboard'));
+        $response->assertSessionHas('success', __('registrations.created_successfully'));
+
+        // Find the registration that was created
+        $registrationId = Registration::where('user_id', $user->id)->latest()->first()->id;
         $this->assertNotNull($registrationId);
 
         // AC11: Verify NewRegistrationCreated event was dispatched exactly once
@@ -390,5 +389,37 @@ class RegistrationControllerTest extends TestCase
                 && $event->registration->user_id === $user->id
                 && $event->registration instanceof Registration;
         });
+    }
+
+    #[Test]
+    public function store_redirects_to_dashboard_with_success_message(): void
+    {
+        // AC12: Test that successful registration redirects to dashboard with success message
+        $user = User::factory()->create();
+        $user->markEmailAsVerified();
+        $this->actingAs($user);
+
+        $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
+        $event = Event::where('code', $mainConferenceCode)->firstOrFail();
+
+        $validData = $this->getValidRegistrationData($user, [
+            'selected_event_codes' => [$event->code],
+            'position' => 'grad_student',
+        ]);
+
+        $response = $this->post(route('event-registrations.store'), $validData);
+
+        // AC12: Verify redirect to dashboard
+        $response->assertRedirect(route('dashboard'));
+
+        // AC12: Verify success message in session
+        $response->assertSessionHas('success', __('registrations.created_successfully'));
+
+        // AC12: Verify registration was actually created
+        $this->assertDatabaseHas('registrations', [
+            'user_id' => $user->id,
+            'full_name' => $validData['full_name'],
+            'email' => $validData['email'],
+        ]);
     }
 }

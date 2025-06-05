@@ -6,7 +6,7 @@ use App\Events\NewRegistrationCreated;
 use App\Http\Requests\StoreRegistrationRequest;
 use App\Models\Registration;
 use App\Services\FeeCalculationService;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -19,7 +19,7 @@ class RegistrationController extends Controller
      * using StoreRegistrationRequest, calculates fees, saves the registration,
      * and prepares for subsequent steps like payment status update and event syncing.
      */
-    public function store(StoreRegistrationRequest $request): JsonResponse
+    public function store(StoreRegistrationRequest $request): RedirectResponse
     {
         $validatedData = $request->validated();
         Log::info('Registration data validated successfully through StoreRegistrationRequest.', $validatedData);
@@ -113,12 +113,7 @@ class RegistrationController extends Controller
         event(new NewRegistrationCreated($registration));
         Log::info('NewRegistrationCreated event dispatched.', ['registration_id' => $registration->id]);
 
-        // --- Response: For ACs 6, 7, 8, this JSON response is intermediate. AC12 will implement a redirect. ---
-        return response()->json([
-            'message' => __('registrations.validation_successful'), // Keeping this message for now, AC12 will handle final user message
-            'registration_id' => $registration->id, // Added for AC8 and use by AC10
-            'data' => $validatedData,
-            'fee_data' => $feeData,
-        ]);
+        // --- AC12: Redirect to dashboard with success message ---
+        return redirect()->route('dashboard')->with('success', __('registrations.created_successfully'));
     }
 }
