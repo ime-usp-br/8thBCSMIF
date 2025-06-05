@@ -96,17 +96,17 @@ class RegistrationController extends Controller
         $registration->update(['payment_status' => $paymentStatus]);
         Log::info('Payment status set for registration.', ['registration_id' => $registration->id, 'payment_status' => $paymentStatus]);
 
-        // --- Placeholder for AC10: Sync events ---
-        // $eventSyncData = [];
-        // foreach ($feeData['details'] as $eventDetail) {
-        //     if (!isset($eventDetail['error'])) { // Only sync valid events with prices
-        //         $eventSyncData[$eventDetail['event_code']] = ['price_at_registration' => $eventDetail['calculated_price']];
-        //     }
-        // }
-        // if (!empty($eventSyncData)) {
-        //     $registration->events()->sync($eventSyncData);
-        //     Log::info('Events synced for registration.', ['registration_id' => $registration->id, 'synced_events' => array_keys($eventSyncData)]);
-        // }
+        // --- AC10: Sync events with price_at_registration ---
+        $eventSyncData = [];
+        foreach ($feeData['details'] as $eventDetail) {
+            if (! isset($eventDetail['error'])) { // Only sync valid events with prices
+                $eventSyncData[$eventDetail['event_code']] = ['price_at_registration' => $eventDetail['calculated_price']];
+            }
+        }
+        if (! empty($eventSyncData)) {
+            $registration->events()->sync($eventSyncData);
+            Log::info('Events synced for registration.', ['registration_id' => $registration->id, 'synced_events' => array_keys($eventSyncData)]);
+        }
 
         // --- Placeholder for AC11: Dispatch event/notification (Issue #23) ---
         // event(new \App\Events\NewRegistrationCreated($registration)); // Define event NewRegistrationCreated
