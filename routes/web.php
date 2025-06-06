@@ -18,4 +18,9 @@ Route::post('/event-registrations', [RegistrationController::class, 'store'])
     ->middleware(['auth', 'verified'])
     ->name('event-registrations.store');
 
+// Route for uploading payment proof
+Route::post('/event-registrations/{registration}/upload-proof', [RegistrationController::class, 'uploadProof'])
+    ->middleware(['auth', 'verified'])
+    ->name('event-registrations.upload-proof');
+
 require __DIR__.'/auth.php';

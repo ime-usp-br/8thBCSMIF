@@ -349,5 +349,12 @@
     "Sending registration notifications": "Sending registration notifications",
     "User registration notification sent": "User registration notification sent",
     "Coordinator registration notification sent": "Coordinator registration notification sent",
-    "Coordinator email not configured - coordinator notification not sent": "Coordinator email not configured - coordinator notification not sent"
+    "Coordinator email not configured - coordinator notification not sent": "Coordinator email not configured - coordinator notification not sent",
+    "Payment proof uploaded successfully": "Payment proof uploaded successfully",
+    "Proof upload notification sent to coordinator": "Proof upload notification sent to coordinator",
+    "Failed to upload payment proof": "Failed to upload payment proof",
+    "You are not authorized to upload proof for this registration.": "You are not authorized to upload proof for this registration.",
+    "Payment proof can only be uploaded for registrations pending payment.": "Payment proof can only be uploaded for registrations pending payment.",
+    "Payment proof uploaded successfully. The coordinator will review your submission.": "Payment proof uploaded successfully. The coordinator will review your submission.",
+    "Failed to upload payment proof. Please try again.": "Failed to upload payment proof. Please try again."
 }

@@ -382,5 +382,12 @@
     "Sending registration notifications": "Enviando notificações de inscrição",
     "User registration notification sent": "Notificação de inscrição enviada ao usuário",
     "Coordinator registration notification sent": "Notificação de inscrição enviada ao coordenador",
-    "Coordinator email not configured - coordinator notification not sent": "Email do coordenador não configurado - notificação do coordenador não enviada"
+    "Coordinator email not configured - coordinator notification not sent": "Email do coordenador não configurado - notificação do coordenador não enviada",
+    "Payment proof uploaded successfully": "Comprovante de pagamento enviado com sucesso",
+    "Proof upload notification sent to coordinator": "Notificação de envio de comprovante enviada ao coordenador",
+    "Failed to upload payment proof": "Falha ao enviar comprovante de pagamento",
+    "You are not authorized to upload proof for this registration.": "Você não está autorizado a enviar comprovante para esta inscrição.",
+    "Payment proof can only be uploaded for registrations pending payment.": "O comprovante de pagamento só pode ser enviado para inscrições pendentes de pagamento.",
+    "Payment proof uploaded successfully. The coordinator will review your submission.": "Comprovante de pagamento enviado com sucesso. O coordenador revisará sua submissão.",
+    "Failed to upload payment proof. Please try again.": "Falha ao enviar comprovante de pagamento. Tente novamente."
 }
