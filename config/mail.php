@@ -115,4 +115,17 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Coordinator Email
+    |--------------------------------------------------------------------------
+    |
+    | This email address will be used to send notifications to the event
+    | coordinator when new registrations are created or payment proofs
+    | are uploaded.
+    |
+    */
+
+    'coordinator_email' => env('COORDINATOR_EMAIL'),
+
 ];

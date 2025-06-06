@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Events\NewRegistrationCreated;
 use App\Http\Requests\StoreRegistrationRequest;
+use App\Mail\ProofUploadedNotification;
 use App\Models\Registration;
 use App\Services\FeeCalculationService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class RegistrationController extends Controller
 {
@@ -115,5 +119,80 @@ class RegistrationController extends Controller
 
         // --- AC12: Redirect to dashboard with success message ---
         return redirect()->route('dashboard')->with('success', __('registrations.created_successfully'));
+    }
+
+    /**
+     * Upload payment proof for a registration.
+     *
+     * Handles the upload of payment proof files for Brazilian participants,
+     * updates the registration status, and dispatches notification to coordinator.
+     */
+    public function uploadProof(Request $request, Registration $registration): RedirectResponse
+    {
+        // Validate that user owns this registration
+        if ($registration->user_id !== $request->user()?->id) {
+            abort(403, __('You are not authorized to upload proof for this registration.'));
+        }
+
+        // Validate that registration is in correct status for proof upload
+        if ($registration->payment_status !== 'pending_payment') {
+            return redirect()->back()->with('error', __('Payment proof can only be uploaded for registrations pending payment.'));
+        }
+
+        // Validate uploaded file
+        $request->validate([
+            'payment_proof' => [
+                'required',
+                'file',
+                'mimes:jpg,jpeg,png,pdf',
+                'max:5120', // 5MB max
+            ],
+        ]);
+
+        try {
+            // Store the uploaded file
+            $uploadedFile = $request->file('payment_proof');
+            if (! $uploadedFile instanceof \Illuminate\Http\UploadedFile) {
+                throw new \RuntimeException('No file was uploaded.');
+            }
+
+            $path = $uploadedFile->store('payment-proofs', 'private');
+
+            // Update registration with proof details
+            $registration->update([
+                'payment_proof_path' => $path,
+                'payment_uploaded_at' => Carbon::now(),
+                'payment_status' => 'pending_br_proof_approval',
+            ]);
+
+            $user = $request->user();
+            Log::info(__('Payment proof uploaded successfully'), [
+                'registration_id' => $registration->id,
+                'file_path' => $path,
+                'user_id' => $user->id,
+            ]);
+
+            // Dispatch ProofUploadedNotification to coordinator
+            $coordinatorEmail = ProofUploadedNotification::getCoordinatorEmail();
+            if ($coordinatorEmail) {
+                Mail::to($coordinatorEmail)->send(new ProofUploadedNotification($registration));
+                Log::info(__('Proof upload notification sent to coordinator'), [
+                    'registration_id' => $registration->id,
+                    'coordinator_email' => $coordinatorEmail,
+                ]);
+            }
+
+            return redirect()->back()->with('success', __('Payment proof uploaded successfully. The coordinator will review your submission.'));
+
+        } catch (\Exception $e) {
+            $user = $request->user();
+            Log::error(__('Failed to upload payment proof'), [
+                'registration_id' => $registration->id,
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+            ]);
+
+            return redirect()->back()->with('error', __('Failed to upload payment proof. Please try again.'));
+        }
     }
 }

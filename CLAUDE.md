@@ -2,6 +2,83 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🔄 WORKFLOW SEQUENCE (OBRIGATÓRIO)
+
+**SEMPRE siga esta sequência exata para implementar qualquer AC (Acceptance Criteria):**
+
+### 1. **Análise e Planejamento**
+- Use `TodoWrite` para planejar as tarefas
+- Leia a issue completa: `gh issue view <ISSUE_NUMBER>`
+- Identifique o AC específico a implementar
+- Analise dependências e padrões existentes no código
+
+### 2. **Implementação**
+- Implemente as mudanças seguindo padrões do projeto
+- **SEMPRE** adicione testes que comprovem a funcionalidade (mesmo que o AC não exija explicitamente)
+- Siga convenções de código existentes
+
+### 3. **Quality Checks (OBRIGATÓRIOS)**
+```bash
+vendor/bin/pint                     # PSR-12 formatting
+vendor/bin/phpstan analyse          # Static analysis  
+php artisan test                    # PHPUnit tests
+pytest -v --live                    # Python tests (se aplicável)
+```
+
+### 4. **Validação (CRÍTICO)**
+```bash
+git add .
+python3 scripts/generate_context.py --stages git
+printf "y\ny\ny\n" | python3 scripts/tasks/llm_task_analyze_ac.py -i <ISSUE> -a <AC> -sc
+```
+**⚠️ SÓ AVANCE SE analyze-ac APROVAR! Caso contrário, atenda as exigências.**
+
+### 5. **Commit & Documentação**
+```bash
+git log -5                          # Analise formato (NÃO use --oneline)
+git commit -m "$(cat <<'EOF'
+tipo(escopo): Descrição principal (#issue)
+
+- Bullet point com mudança específica 1
+- Bullet point com mudança específica 2
+- Bullet point com mudança específica 3
+- Atende ACX: Descrição do critério atendido
+EOF
+)"
+git push                            # ANTES do comentário GitHub
+```
+
+### 6. **Documentação GitHub**
+
+#### **🔴 PASSO CRÍTICO: Verificar Padrão de Comentários ANTES de Elaborar**
+```bash
+# SEMPRE verificar comentários existentes para manter padrão
+gh api repos/:owner/:repo/issues/<ISSUE>/comments
+
+# Se for AC1 e não houver comentários, verificar issues fechadas semelhantes
+gh issue list --state closed --label feature --limit 5
+gh api repos/:owner/:repo/issues/<ISSUE_FECHADA>/comments
+```
+
+#### **Formato Obrigatório do Comentário:**
+- **Título:** `## Conclusão sobre o Critério de Aceite X (ACX) da Issue #Y`
+- **Critério:** Citar exatamente o texto do AC
+- **Análise:** Seções numeradas explicando implementação detalhada
+- **Conclusão:** "O Critério de Aceite X (ACX) foi **Atendido**."
+- **Rodapé:** `---\n**Validação realizada no commit:** <hash>`
+
+#### **Submissão do Comentário:**
+```bash
+gh api repos/:owner/:repo/issues/<ISSUE>/comments -F body=@/tmp/comment.txt
+```
+- Use EXATAMENTE o output do analyze-ac como base
+- Adapte ao formato padrão observado nos comentários existentes
+- Inclua hash do commit para rastreabilidade
+- **🔴 CRÍTICO:** NUNCA use HEREDOC para criar /tmp/comment.txt (causa "EOF < /dev/null" no GitHub)
+- **OBRIGATÓRIO:** Verificar conteúdo com `cat /tmp/comment.txt` antes do `gh api`
+
+---
+
 ## Project Overview
 
 This is a Laravel 12 application for the 8th Brazilian Conference on Statistical Modeling in Insurance and Finance (8th BCSMIF) registration system. It's built on the Laravel 12 USP Starter Kit and integrates with USP's authentication and data systems.
@@ -348,13 +425,31 @@ When executing autonomous AC implementation cycles, document any interruptions e
 - **Learning:** Proper commit format analysis requires seeing the complete message structure, not just the summary line
 - **Implementation:** Updated CLAUDE.md to emphasize using `git log -5` and document the exact bullet-point format expected
 
-**Interruption #3 - GitHub Comment Formatting Issues:**
+**Interruption #3 - GitHub Comment Formatting Issues (CRÍTICO - RECORRENTE):**
 - **Context:** Complex messages with code blocks and special characters fail when passed directly to `gh api`
 - **Problem:** Shell escaping issues with backticks, backslashes, and multi-line content
 - **Solution:** Use file-based approach: save content to `/tmp/comment.txt` and use `-F body=@/tmp/comment.txt`
 - **Learning:** Always post EXACT `analyze-ac` output for consistent validation documentation
 - **Implementation:** Create temp file, use `-F` flag, ensures accurate content delivery
-- **Additional Issue:** HEREDOC delimiter appears in comment ("EOF < /dev/null") - ensure clean file content
+- **🔴 CRITICAL RECURRING ISSUE:** HEREDOC delimiter ("EOF < /dev/null") ALWAYS appears in GitHub comments
+- **🔴 MANDATORY FIX:** NEVER use HEREDOC for /tmp/comment.txt creation. Use alternative methods:
+  - **✅ WORKING SOLUTION:** Use `cp llm_outputs/analyze-ac/[timestamp].txt /tmp/comment.txt` to copy exact analyze-ac output
+  - Add footer with `echo "" >> /tmp/comment.txt && echo "---" >> /tmp/comment.txt && echo "**Validação realizada no commit:** [hash]" >> /tmp/comment.txt`
+  - AVOID: Complex shell escaping, printf with backticks, HEREDOC (causes "EOF < /dev/null")
+  - ALWAYS verify file content with `cat /tmp/comment.txt` before `gh api` call
+  - **ZERO TOLERANCE:** Any HEREDOC artifacts in GitHub comments is unacceptable
+
+**Interruption #4 - Padrão de Comentários GitHub Inconsistente (CRÍTICO - RECORRENTE):**
+- **Context:** Formatação de comentários de validação AC sem verificar padrão existente na issue
+- **Problem:** Comentários com formatação inconsistente quebram padrão estabelecido no projeto
+- **Root Cause:** Não verificar comentários existentes antes de elaborar novos comentários
+- **Solution:** SEMPRE executar `gh api repos/:owner/:repo/issues/<ISSUE>/comments` antes de criar comentário
+- **For AC1:** Se não houver comentários na issue atual, verificar issues fechadas similares com `gh issue list --state closed --label feature`
+- **Mandatory Format:** 
+  - Título: `## Conclusão sobre o Critério de Aceite X (ACX) da Issue #Y`
+  - Estrutura: Critério → Análise (numerada) → Conclusão → Rodapé com commit
+- **Learning:** Padrão de comentários é parte crítica da documentação do projeto
+- **Implementation:** Verificação obrigatória de comentários existentes no workflow
 
 ## Code Quality Standards
 
@@ -362,6 +457,62 @@ When executing autonomous AC implementation cycles, document any interruptions e
 - **Level 9** PHPStan analysis
 - All new code must include appropriate tests
 - Follow Laravel conventions and existing codebase patterns
+
+## Internationalization (i18n) Standards
+
+**MANDATORY:** All user-facing text, logs, and communications MUST use Laravel's localization system:
+
+### Required Localization Practices
+
+**1. User Interface Text:**
+- ALL strings displayed to users MUST use `__()` function
+- Store translation keys in `lang/en.json` and `lang/pt_BR.json`
+- Use descriptive English keys as default: `__('Payment Proof Uploaded - 8th BCSMIF')`
+
+**2. Email Templates:**
+- Subject lines MUST be localized: `subject: __('Payment Proof Uploaded - 8th BCSMIF')`
+- All email content MUST use `__()` functions for text elements
+- Maintain consistency between coordinator and user templates
+
+**3. Log Messages:**
+- Application logs MUST use localized messages
+- Error messages shown to users MUST be translatable
+- Debug/internal logs may use English but prefer localization when user-visible
+
+**4. Exception Messages:**
+- User-facing exception messages MUST be localized
+- Use translation keys for consistent error messaging
+- Provide meaningful context in translation keys
+
+**5. Validation Messages:**
+- Custom validation messages MUST be localized
+- Follow Laravel's validation translation patterns
+- Store in appropriate `lang/{locale}/validation.php` files
+
+**6. Translation Key Standards:**
+- Use English as the key language for consistency
+- Keys should be descriptive and self-documenting
+- Maintain alphabetical order in JSON files
+- Group related translations logically
+
+**Example Implementation:**
+```php
+// ✅ CORRECT - Localized
+return new Envelope(
+    subject: __('Payment Proof Uploaded - 8th BCSMIF'),
+);
+
+// ❌ INCORRECT - Hardcoded
+return new Envelope(
+    subject: 'Comprovante de Pagamento Enviado - 8th BCSMIF',
+);
+```
+
+**Translation Files:**
+- `lang/en.json`: English translations (base language)
+- `lang/pt_BR.json`: Portuguese (Brazil) translations
+- Maintain parity between all language files
+- Add new keys to ALL supported languages simultaneously
 
 ## Integration Guidelines
 
