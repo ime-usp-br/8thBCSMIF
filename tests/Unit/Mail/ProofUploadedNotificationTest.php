@@ -116,4 +116,55 @@ class ProofUploadedNotificationTest extends TestCase
         // Verifica que contém botão para visualizar comprovante
         $this->assertStringContainsString(__('Visualizar Comprovante no Painel Admin'), $rendered);
     }
+
+    #[Test]
+    public function envelope_includes_coordinator_email_when_configured(): void
+    {
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create(['user_id' => $user->id]);
+
+        $mailable = new ProofUploadedNotification($registration);
+        $envelope = $mailable->envelope();
+
+        $this->assertInstanceOf(Envelope::class, $envelope);
+        $this->assertNotEmpty($envelope->to);
+        $this->assertEquals('coordinator@example.com', $envelope->to[0]->address);
+    }
+
+    #[Test]
+    public function envelope_does_not_include_coordinator_email_when_config_is_null(): void
+    {
+        config(['mail.coordinator_email' => null]);
+
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create(['user_id' => $user->id]);
+
+        $mailable = new ProofUploadedNotification($registration);
+        $envelope = $mailable->envelope();
+
+        $this->assertInstanceOf(Envelope::class, $envelope);
+        $this->assertEmpty($envelope->to);
+    }
+
+    #[Test]
+    public function get_coordinator_email_returns_configured_email(): void
+    {
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $coordinatorEmail = ProofUploadedNotification::getCoordinatorEmail();
+
+        $this->assertEquals('coordinator@example.com', $coordinatorEmail);
+    }
+
+    #[Test]
+    public function get_coordinator_email_returns_null_when_not_configured(): void
+    {
+        config(['mail.coordinator_email' => null]);
+
+        $coordinatorEmail = ProofUploadedNotification::getCoordinatorEmail();
+
+        $this->assertNull($coordinatorEmail);
+    }
 }

@@ -11,6 +11,7 @@ use Database\Seeders\FeesTableSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -121,5 +122,71 @@ class NewRegistrationNotificationTest extends TestCase
 
         $this->assertStringContainsString(__('Não informado'), $rendered);
         $this->assertStringContainsString(__('Não informada'), $rendered);
+    }
+
+    #[Test]
+    public function envelope_includes_coordinator_email_when_for_coordinator_is_true(): void
+    {
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create(['user_id' => $user->id]);
+
+        $mailable = new NewRegistrationNotification($registration, forCoordinator: true);
+        $envelope = $mailable->envelope();
+
+        $this->assertInstanceOf(Envelope::class, $envelope);
+        $this->assertNotEmpty($envelope->to);
+        $this->assertEquals('coordinator@example.com', $envelope->to[0]->address);
+    }
+
+    #[Test]
+    public function envelope_does_not_include_coordinator_email_when_for_coordinator_is_false(): void
+    {
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create(['user_id' => $user->id]);
+
+        $mailable = new NewRegistrationNotification($registration, forCoordinator: false);
+        $envelope = $mailable->envelope();
+
+        $this->assertInstanceOf(Envelope::class, $envelope);
+        $this->assertEmpty($envelope->to);
+    }
+
+    #[Test]
+    public function envelope_does_not_include_coordinator_email_when_config_is_null(): void
+    {
+        config(['mail.coordinator_email' => null]);
+
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create(['user_id' => $user->id]);
+
+        $mailable = new NewRegistrationNotification($registration, forCoordinator: true);
+        $envelope = $mailable->envelope();
+
+        $this->assertInstanceOf(Envelope::class, $envelope);
+        $this->assertEmpty($envelope->to);
+    }
+
+    #[Test]
+    public function get_coordinator_email_returns_configured_email(): void
+    {
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $coordinatorEmail = NewRegistrationNotification::getCoordinatorEmail();
+
+        $this->assertEquals('coordinator@example.com', $coordinatorEmail);
+    }
+
+    #[Test]
+    public function get_coordinator_email_returns_null_when_not_configured(): void
+    {
+        config(['mail.coordinator_email' => null]);
+
+        $coordinatorEmail = NewRegistrationNotification::getCoordinatorEmail();
+
+        $this->assertNull($coordinatorEmail);
     }
 }
