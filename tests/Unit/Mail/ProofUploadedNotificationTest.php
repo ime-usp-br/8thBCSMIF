@@ -81,4 +81,39 @@ class ProofUploadedNotificationTest extends TestCase
         $this->assertIsArray($attachments);
         $this->assertEmpty($attachments);
     }
+
+    #[Test]
+    public function proof_uploaded_view_contains_correct_content(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'user@example.com',
+        ]);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'full_name' => 'João Silva',
+            'cpf' => '12345678901',
+            'document_country_origin' => 'BR',
+            'calculated_fee' => '150.00',
+            'payment_uploaded_at' => now(),
+        ]);
+
+        $mailable = new ProofUploadedNotification($registration);
+        $rendered = $mailable->render();
+
+        // Verifica que contém informações do participante
+        $this->assertStringContainsString('João Silva', $rendered);
+        $this->assertStringContainsString('user@example.com', $rendered);
+        $this->assertStringContainsString('#'.$registration->id, $rendered);
+
+        // Verifica que contém link para o painel admin
+        $adminUrl = config('app.url').'/admin/registrations/'.$registration->id;
+        $this->assertStringContainsString($adminUrl, $rendered);
+
+        // Verifica que contém texto sobre o upload
+        $this->assertStringContainsString(__('anexou um comprovante de pagamento'), $rendered);
+
+        // Verifica que contém botão para visualizar comprovante
+        $this->assertStringContainsString(__('Visualizar Comprovante no Painel Admin'), $rendered);
+    }
 }
