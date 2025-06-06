@@ -17,6 +17,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event as EventFacade;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -516,6 +517,45 @@ class RegistrationControllerTest extends TestCase
     }
 
     #[Test]
+    public function upload_proof_policy_grants_access_to_registration_owner(): void
+    {
+        // AC3: Test that RegistrationPolicy uploadProof method grants access to registration owner
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+        ]);
+
+        // Test that the policy allows access for the owner
+        $this->assertTrue(
+            Gate::allows('uploadProof', $registration),
+            'Policy should allow upload proof for registration owner'
+        );
+    }
+
+    #[Test]
+    public function upload_proof_policy_denies_access_to_non_owner(): void
+    {
+        // AC3: Test that RegistrationPolicy uploadProof method denies access to non-owner
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $this->actingAs($otherUser);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $owner->id,
+            'payment_status' => 'pending_payment',
+        ]);
+
+        // Test that the policy denies access for non-owner
+        $this->assertFalse(
+            Gate::allows('uploadProof', $registration),
+            'Policy should deny upload proof for non-owner'
+        );
+    }
+
+    #[Test]
     public function upload_proof_requires_pending_payment_status(): void
     {
         Mail::fake();
@@ -570,6 +610,186 @@ class RegistrationControllerTest extends TestCase
             ['payment_proof' => $largeFile]
         );
         $response->assertSessionHasErrors(['payment_proof']);
+    }
+
+    #[Test]
+    public function ac11_comprehensive_upload_proof_feature_tests_using_storage_fake(): void
+    {
+        // AC11: Testes de Feature (PHPUnit) usando Storage::fake('private') e UploadedFile::fake() cobrem:
+        // - Upload bem-sucedido de um arquivo válido.
+        // - Falha no upload de arquivo com tipo/tamanho inválido.
+        // - Tentativa de upload por usuário não autorizado.
+        // - Verificação dos dados atualizados no banco e do arquivo armazenado (fake).
+
+        Mail::fake();
+        Storage::fake('private');
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        // Setup users and registration
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $registration = Registration::factory()->create([
+            'user_id' => $owner->id,
+            'payment_status' => 'pending_payment',
+            'calculated_fee' => 500.00,
+        ]);
+
+        // Test 1: Upload bem-sucedido de um arquivo válido
+        $this->actingAs($owner);
+        $validFile = UploadedFile::fake()->image('payment_proof.jpg', 800, 600);
+
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration),
+            ['payment_proof' => $validFile]
+        );
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success', __('Payment proof uploaded successfully. The coordinator will review your submission.'));
+
+        // Verificação dos dados atualizados no banco
+        $registration->refresh();
+        $this->assertNotNull($registration->payment_proof_path);
+        $this->assertNotNull($registration->payment_uploaded_at);
+        $this->assertEquals('pending_br_proof_approval', $registration->payment_status);
+
+        // Verificação do arquivo armazenado (fake)
+        Storage::disk('private')->assertExists($registration->payment_proof_path);
+        $this->assertStringStartsWith("proofs/{$registration->id}/", $registration->payment_proof_path);
+
+        // Test notification dispatch
+        Mail::assertSent(ProofUploadedNotification::class, function ($mail) use ($registration) {
+            return $mail->registration->id === $registration->id;
+        });
+
+        // Test 2: Falha no upload de arquivo com tipo inválido
+        $registration2 = Registration::factory()->create([
+            'user_id' => $owner->id,
+            'payment_status' => 'pending_payment',
+        ]);
+
+        $invalidTypeFile = UploadedFile::fake()->create('document.txt', 100);
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration2),
+            ['payment_proof' => $invalidTypeFile]
+        );
+        $response->assertSessionHasErrors(['payment_proof']);
+
+        // Test 3: Falha no upload de arquivo com tamanho inválido
+        $registration3 = Registration::factory()->create([
+            'user_id' => $owner->id,
+            'payment_status' => 'pending_payment',
+        ]);
+
+        $largeSizeFile = UploadedFile::fake()->create('large.jpg', 6000); // Over 5MB
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration3),
+            ['payment_proof' => $largeSizeFile]
+        );
+        $response->assertSessionHasErrors(['payment_proof']);
+
+        // Test 4: Tentativa de upload por usuário não autorizado
+        $this->actingAs($otherUser);
+        $registration4 = Registration::factory()->create([
+            'user_id' => $owner->id,
+            'payment_status' => 'pending_payment',
+        ]);
+
+        $unauthorizedFile = UploadedFile::fake()->image('unauthorized.jpg');
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration4),
+            ['payment_proof' => $unauthorizedFile]
+        );
+        $response->assertForbidden();
+
+        // Verify no changes occurred for unauthorized attempt
+        $registration4->refresh();
+        $this->assertNull($registration4->payment_proof_path);
+        $this->assertNull($registration4->payment_uploaded_at);
+        $this->assertEquals('pending_payment', $registration4->payment_status);
+    }
+
+    #[Test]
+    public function upload_proof_accepts_valid_file_types_and_sizes(): void
+    {
+        // AC4: Test that valid file types (PDF, JPG, PNG) and sizes (≤5MB) are accepted
+        Mail::fake();
+        Storage::fake('private');
+
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        // Test valid JPG file
+        $registration1 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+        ]);
+        $jpgFile = UploadedFile::fake()->image('proof.jpg', 800, 600);
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration1),
+            ['payment_proof' => $jpgFile]
+        );
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $response->assertSessionHasNoErrors();
+
+        // Test valid PNG file
+        $registration2 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+        ]);
+        $pngFile = UploadedFile::fake()->image('proof.png', 800, 600);
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration2),
+            ['payment_proof' => $pngFile]
+        );
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $response->assertSessionHasNoErrors();
+
+        // Test valid PDF file
+        $registration3 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+        ]);
+        $pdfFile = UploadedFile::fake()->create('proof.pdf', 1000, 'application/pdf');
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration3),
+            ['payment_proof' => $pdfFile]
+        );
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $response->assertSessionHasNoErrors();
+
+        // Test valid JPEG file (alternative extension)
+        $registration4 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+        ]);
+        $jpegFile = UploadedFile::fake()->image('proof.jpeg', 800, 600);
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration4),
+            ['payment_proof' => $jpegFile]
+        );
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $response->assertSessionHasNoErrors();
+
+        // Test file at maximum size limit (5MB = 5120KB)
+        $registration5 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+        ]);
+        $maxSizeFile = UploadedFile::fake()->image('max_size.jpg', 2000, 2000)->size(5120);
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration5),
+            ['payment_proof' => $maxSizeFile]
+        );
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $response->assertSessionHasNoErrors();
     }
 
     #[Test]
@@ -1038,6 +1258,64 @@ class RegistrationControllerTest extends TestCase
 
             return false;
         });
+    }
+
+    #[Test]
+    public function upload_proof_sanitizes_filename_and_generates_unique_name(): void
+    {
+        // AC6: Test that uploaded file names are sanitized and made unique
+        Mail::fake();
+        Storage::fake('private');
+
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+            'calculated_fee' => 500.00,
+        ]);
+
+        // Create a file with special characters and spaces that need sanitization
+        $unsafeFilename = 'My Payment Proof (special)! & file.jpg';
+        $uploadedFile = UploadedFile::fake()->image($unsafeFilename, 800, 600);
+
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration),
+            ['payment_proof' => $uploadedFile]
+        );
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        // Verify the registration was updated
+        $registration->refresh();
+        $this->assertNotNull($registration->payment_proof_path);
+
+        // AC6: Verify filename is sanitized and contains timestamp for uniqueness
+        $storedPath = $registration->payment_proof_path;
+        $this->assertStringStartsWith("proofs/{$registration->id}/", $storedPath);
+
+        // Extract the filename from the path
+        $filename = basename($storedPath);
+
+        // AC6: Verify the filename follows the expected pattern: timestamp_sanitized-name.extension
+        $this->assertMatchesRegularExpression('/^\d+_my-payment-proof-special-file\.jpg$/', $filename);
+
+        // Verify the file exists in storage
+        Storage::disk('private')->assertExists($storedPath);
+
+        // AC6: Verify that the filename is unique by checking it contains a timestamp
+        $this->assertMatchesRegularExpression('/^\d+_/', $filename, 'Filename should start with timestamp for uniqueness');
+
+        // AC6: Verify that special characters were properly sanitized
+        $this->assertStringNotContainsString(' ', $filename, 'Filename should not contain spaces');
+        $this->assertStringNotContainsString('(', $filename, 'Filename should not contain parentheses');
+        $this->assertStringNotContainsString(')', $filename, 'Filename should not contain parentheses');
+        $this->assertStringNotContainsString('!', $filename, 'Filename should not contain exclamation marks');
+        $this->assertStringNotContainsString('&', $filename, 'Filename should not contain ampersands');
     }
 
     #[Test]

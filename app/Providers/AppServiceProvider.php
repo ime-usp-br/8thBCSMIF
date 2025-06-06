@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Registration;
+use App\Policies\RegistrationPolicy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -28,5 +31,7 @@ class AppServiceProvider extends ServiceProvider
                 ->numbers()
                 ->symbols();
         });
+
+        Gate::policy(Registration::class, RegistrationPolicy::class);
     }
 }
