@@ -4,6 +4,7 @@ namespace Tests\Feature\Http\Controllers;
 
 use App\Events\NewRegistrationCreated;
 use App\Exceptions\ReplicadoServiceException;
+use App\Mail\NewRegistrationNotification;
 use App\Models\Event;
 use App\Models\Registration;
 use App\Models\User;
@@ -14,6 +15,7 @@ use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event as EventFacade;
+use Illuminate\Support\Facades\Mail;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -694,5 +696,54 @@ class RegistrationControllerTest extends TestCase
         $this->assertStringNotContainsString('Instruções para Pagamento', $renderedContent);
         $this->assertStringNotContainsString('Santander', $renderedContent);
         $this->assertStringNotContainsString('Como enviar o comprovante', $renderedContent);
+    }
+
+    #[Test]
+    public function new_registration_notification_is_sent_to_user_and_coordinator_after_registration_creation(): void
+    {
+        // AC9: Test that NewRegistrationNotification is dispatched correctly in the registration flow
+        Mail::fake();
+
+        // Set up coordinator email for testing
+        config(['mail.coordinator_email' => 'coordinator@bcsmif.com']);
+
+        $user = User::factory()->create(['email' => 'participant@example.com']);
+        $user->markEmailAsVerified();
+        $this->actingAs($user);
+
+        $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
+        $event = Event::where('code', $mainConferenceCode)->firstOrFail();
+
+        $validData = $this->getValidRegistrationData($user, [
+            'selected_event_codes' => [$event->code],
+            'position' => 'grad_student',
+            'email' => 'participant@example.com',
+        ]);
+
+        $response = $this->post(route('event-registrations.store'), $validData);
+
+        // Verify successful registration
+        $response->assertRedirect(route('dashboard'));
+        $response->assertSessionHas('success', __('registrations.created_successfully'));
+
+        $registration = Registration::where('user_id', $user->id)->latest()->first();
+        $this->assertNotNull($registration);
+
+        // AC9: Verify NewRegistrationNotification is sent to the user
+        Mail::assertSent(NewRegistrationNotification::class, function ($mail) use ($registration) {
+            return $mail->registration->id === $registration->id
+                && $mail->forCoordinator === false
+                && $mail->hasTo('participant@example.com');
+        });
+
+        // AC9: Verify NewRegistrationNotification is sent to the coordinator
+        Mail::assertSent(NewRegistrationNotification::class, function ($mail) use ($registration) {
+            return $mail->registration->id === $registration->id
+                && $mail->forCoordinator === true
+                && $mail->hasTo('coordinator@bcsmif.com');
+        });
+
+        // AC9: Verify exactly 2 notifications were sent (user + coordinator)
+        Mail::assertSent(NewRegistrationNotification::class, 2);
     }
 }

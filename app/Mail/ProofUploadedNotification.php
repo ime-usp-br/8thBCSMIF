@@ -67,6 +67,7 @@ class ProofUploadedNotification extends Mailable
     public static function getCoordinatorEmail(): ?string
     {
         $email = config('mail.coordinator_email');
+
         return is_string($email) ? $email : null;
     }
 }

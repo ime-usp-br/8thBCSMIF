@@ -345,5 +345,9 @@
     "Next Steps": "Next Steps",
     "Keep this email for your records. We will contact you soon with more information about the event.": "Keep this email for your records. We will contact you soon with more information about the event.",
     "Best regards": "Best regards",
-    "Organization of": "Organization of"
+    "Organization of": "Organization of",
+    "Sending registration notifications": "Sending registration notifications",
+    "User registration notification sent": "User registration notification sent",
+    "Coordinator registration notification sent": "Coordinator registration notification sent",
+    "Coordinator email not configured - coordinator notification not sent": "Coordinator email not configured - coordinator notification not sent"
 }

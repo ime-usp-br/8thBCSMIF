@@ -378,5 +378,9 @@
     "Next Steps": "Próximos Passos",
     "Keep this email for your records. We will contact you soon with more information about the event.": "Mantenha este e-mail para seus registros. Entraremos em contato em breve com mais informações sobre o evento.",
     "Best regards": "Atenciosamente",
-    "Organization of": "Organização do"
+    "Organization of": "Organização do",
+    "Sending registration notifications": "Enviando notificações de inscrição",
+    "User registration notification sent": "Notificação de inscrição enviada ao usuário",
+    "Coordinator registration notification sent": "Notificação de inscrição enviada ao coordenador",
+    "Coordinator email not configured - coordinator notification not sent": "Email do coordenador não configurado - notificação do coordenador não enviada"
 }
