@@ -433,8 +433,9 @@ When executing autonomous AC implementation cycles, document any interruptions e
 - **Implementation:** Create temp file, use `-F` flag, ensures accurate content delivery
 - **🔴 CRITICAL RECURRING ISSUE:** HEREDOC delimiter ("EOF < /dev/null") ALWAYS appears in GitHub comments
 - **🔴 MANDATORY FIX:** NEVER use HEREDOC for /tmp/comment.txt creation. Use alternative methods:
-  - Use `echo "content" > /tmp/comment.txt` for simple content
-  - Use `cat > /tmp/comment.txt` followed by content and manual EOF
+  - **✅ WORKING SOLUTION:** Use `cp llm_outputs/analyze-ac/[timestamp].txt /tmp/comment.txt` to copy exact analyze-ac output
+  - Add footer with `echo "" >> /tmp/comment.txt && echo "---" >> /tmp/comment.txt && echo "**Validação realizada no commit:** [hash]" >> /tmp/comment.txt`
+  - AVOID: Complex shell escaping, printf with backticks, HEREDOC (causes "EOF < /dev/null")
   - ALWAYS verify file content with `cat /tmp/comment.txt` before `gh api` call
   - **ZERO TOLERANCE:** Any HEREDOC artifacts in GitHub comments is unacceptable
 
