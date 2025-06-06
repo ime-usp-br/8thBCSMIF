@@ -613,6 +613,103 @@ class RegistrationControllerTest extends TestCase
     }
 
     #[Test]
+    public function ac11_comprehensive_upload_proof_feature_tests_using_storage_fake(): void
+    {
+        // AC11: Testes de Feature (PHPUnit) usando Storage::fake('private') e UploadedFile::fake() cobrem:
+        // - Upload bem-sucedido de um arquivo válido.
+        // - Falha no upload de arquivo com tipo/tamanho inválido.
+        // - Tentativa de upload por usuário não autorizado.
+        // - Verificação dos dados atualizados no banco e do arquivo armazenado (fake).
+
+        Mail::fake();
+        Storage::fake('private');
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        // Setup users and registration
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $registration = Registration::factory()->create([
+            'user_id' => $owner->id,
+            'payment_status' => 'pending_payment',
+            'calculated_fee' => 500.00,
+        ]);
+
+        // Test 1: Upload bem-sucedido de um arquivo válido
+        $this->actingAs($owner);
+        $validFile = UploadedFile::fake()->image('payment_proof.jpg', 800, 600);
+
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration),
+            ['payment_proof' => $validFile]
+        );
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success', __('Payment proof uploaded successfully. The coordinator will review your submission.'));
+
+        // Verificação dos dados atualizados no banco
+        $registration->refresh();
+        $this->assertNotNull($registration->payment_proof_path);
+        $this->assertNotNull($registration->payment_uploaded_at);
+        $this->assertEquals('pending_br_proof_approval', $registration->payment_status);
+
+        // Verificação do arquivo armazenado (fake)
+        Storage::disk('private')->assertExists($registration->payment_proof_path);
+        $this->assertStringStartsWith("proofs/{$registration->id}/", $registration->payment_proof_path);
+
+        // Test notification dispatch
+        Mail::assertSent(ProofUploadedNotification::class, function ($mail) use ($registration) {
+            return $mail->registration->id === $registration->id;
+        });
+
+        // Test 2: Falha no upload de arquivo com tipo inválido
+        $registration2 = Registration::factory()->create([
+            'user_id' => $owner->id,
+            'payment_status' => 'pending_payment',
+        ]);
+
+        $invalidTypeFile = UploadedFile::fake()->create('document.txt', 100);
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration2),
+            ['payment_proof' => $invalidTypeFile]
+        );
+        $response->assertSessionHasErrors(['payment_proof']);
+
+        // Test 3: Falha no upload de arquivo com tamanho inválido
+        $registration3 = Registration::factory()->create([
+            'user_id' => $owner->id,
+            'payment_status' => 'pending_payment',
+        ]);
+
+        $largeSizeFile = UploadedFile::fake()->create('large.jpg', 6000); // Over 5MB
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration3),
+            ['payment_proof' => $largeSizeFile]
+        );
+        $response->assertSessionHasErrors(['payment_proof']);
+
+        // Test 4: Tentativa de upload por usuário não autorizado
+        $this->actingAs($otherUser);
+        $registration4 = Registration::factory()->create([
+            'user_id' => $owner->id,
+            'payment_status' => 'pending_payment',
+        ]);
+
+        $unauthorizedFile = UploadedFile::fake()->image('unauthorized.jpg');
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration4),
+            ['payment_proof' => $unauthorizedFile]
+        );
+        $response->assertForbidden();
+
+        // Verify no changes occurred for unauthorized attempt
+        $registration4->refresh();
+        $this->assertNull($registration4->payment_proof_path);
+        $this->assertNull($registration4->payment_uploaded_at);
+        $this->assertEquals('pending_payment', $registration4->payment_status);
+    }
+
+    #[Test]
     public function upload_proof_accepts_valid_file_types_and_sizes(): void
     {
         // AC4: Test that valid file types (PDF, JPG, PNG) and sizes (≤5MB) are accepted
