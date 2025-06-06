@@ -613,6 +613,89 @@ class RegistrationControllerTest extends TestCase
     }
 
     #[Test]
+    public function upload_proof_accepts_valid_file_types_and_sizes(): void
+    {
+        // AC4: Test that valid file types (PDF, JPG, PNG) and sizes (≤5MB) are accepted
+        Mail::fake();
+        Storage::fake('private');
+
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        // Test valid JPG file
+        $registration1 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+        ]);
+        $jpgFile = UploadedFile::fake()->image('proof.jpg', 800, 600);
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration1),
+            ['payment_proof' => $jpgFile]
+        );
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $response->assertSessionHasNoErrors();
+
+        // Test valid PNG file
+        $registration2 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+        ]);
+        $pngFile = UploadedFile::fake()->image('proof.png', 800, 600);
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration2),
+            ['payment_proof' => $pngFile]
+        );
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $response->assertSessionHasNoErrors();
+
+        // Test valid PDF file
+        $registration3 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+        ]);
+        $pdfFile = UploadedFile::fake()->create('proof.pdf', 1000, 'application/pdf');
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration3),
+            ['payment_proof' => $pdfFile]
+        );
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $response->assertSessionHasNoErrors();
+
+        // Test valid JPEG file (alternative extension)
+        $registration4 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+        ]);
+        $jpegFile = UploadedFile::fake()->image('proof.jpeg', 800, 600);
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration4),
+            ['payment_proof' => $jpegFile]
+        );
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $response->assertSessionHasNoErrors();
+
+        // Test file at maximum size limit (5MB = 5120KB)
+        $registration5 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+        ]);
+        $maxSizeFile = UploadedFile::fake()->image('max_size.jpg', 2000, 2000)->size(5120);
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration5),
+            ['payment_proof' => $maxSizeFile]
+        );
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $response->assertSessionHasNoErrors();
+    }
+
+    #[Test]
     public function store_succeeds_for_usp_user_with_valid_replicado_validation(): void
     {
         // AC14: Test successful registration for USP user with Replicado validation OK
