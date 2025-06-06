@@ -155,7 +155,7 @@ class RegistrationController extends Controller
                 throw new \RuntimeException('No file was uploaded.');
             }
 
-            $path = $uploadedFile->store('payment-proofs', 'private');
+            $path = $uploadedFile->store("proofs/{$registration->id}", 'private');
 
             // Update registration with proof details
             $registration->update([
