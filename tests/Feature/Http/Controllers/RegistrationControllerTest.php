@@ -891,4 +891,197 @@ class RegistrationControllerTest extends TestCase
         // AC9: Verify exactly 2 notifications were sent (user + coordinator)
         Mail::assertSent(NewRegistrationNotification::class, 2);
     }
+
+    #[Test]
+    public function new_registration_notification_includes_correct_payment_instructions_for_brazilian_user(): void
+    {
+        // AC12: Test that NewRegistrationNotification includes correct payment instructions for Brazilian users
+        Mail::fake();
+
+        config(['mail.coordinator_email' => 'coordinator@bcsmif.com']);
+
+        $user = User::factory()->create(['email' => 'brazilian@example.com']);
+        $user->markEmailAsVerified();
+        $this->actingAs($user);
+
+        $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
+        $event = Event::where('code', $mainConferenceCode)->firstOrFail();
+
+        $validData = $this->getValidRegistrationData($user, [
+            'selected_event_codes' => [$event->code],
+            'position' => 'grad_student',
+            'email' => 'brazilian@example.com',
+            'document_country_origin' => 'BR', // Brazilian user
+        ]);
+
+        $response = $this->post(route('event-registrations.store'), $validData);
+
+        $response->assertRedirect(route('dashboard'));
+        $registration = Registration::where('user_id', $user->id)->latest()->first();
+        $this->assertNotNull($registration);
+
+        // AC12: Verify NewRegistrationNotification content for Brazilian user includes payment instructions
+        Mail::assertSent(NewRegistrationNotification::class, function ($mail) use ($registration) {
+            if ($mail->registration->id === $registration->id && $mail->forCoordinator === false) {
+                $content = $mail->render();
+
+                // Verify Brazilian payment instructions are included
+                $this->assertStringContainsString(__('Bank Transfer Information:'), $content);
+                $this->assertStringContainsString(__('Bank:'), $content);
+                $this->assertStringContainsString(__('Agency:'), $content);
+                $this->assertStringContainsString(__('Account:'), $content);
+                $this->assertStringContainsString(__('PIX Key:'), $content);
+                $this->assertStringContainsString(__('how to send the payment proof'), $content);
+
+                // Verify user and registration data
+                $this->assertStringContainsString($registration->full_name, $content);
+                $this->assertStringContainsString('R$ '.number_format($registration->calculated_fee, 2, ',', '.'), $content);
+
+                return true;
+            }
+
+            return false;
+        });
+    }
+
+    #[Test]
+    public function new_registration_notification_includes_correct_payment_instructions_for_international_user(): void
+    {
+        // AC12: Test that NewRegistrationNotification includes correct payment instructions for international users
+        Mail::fake();
+
+        config(['mail.coordinator_email' => 'coordinator@bcsmif.com']);
+
+        $user = User::factory()->create(['email' => 'international@example.com']);
+        $user->markEmailAsVerified();
+        $this->actingAs($user);
+
+        $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
+        $event = Event::where('code', $mainConferenceCode)->firstOrFail();
+
+        $validData = $this->getValidRegistrationData($user, [
+            'selected_event_codes' => [$event->code],
+            'position' => 'grad_student',
+            'email' => 'international@example.com',
+            'document_country_origin' => 'US', // International user
+        ]);
+
+        $response = $this->post(route('event-registrations.store'), $validData);
+
+        $response->assertRedirect(route('dashboard'));
+        $registration = Registration::where('user_id', $user->id)->latest()->first();
+        $this->assertNotNull($registration);
+
+        // AC12: Verify NewRegistrationNotification content for international user includes invoice information
+        Mail::assertSent(NewRegistrationNotification::class, function ($mail) use ($registration) {
+            if ($mail->registration->id === $registration->id && $mail->forCoordinator === false) {
+                $content = $mail->render();
+
+                // Verify international payment instructions are included
+                $this->assertStringContainsString(__('invoice will be sent'), $content);
+                $this->assertStringContainsString(__('detailed payment instructions'), $content);
+
+                // Verify user and registration data
+                $this->assertStringContainsString($registration->full_name, $content);
+                $this->assertStringContainsString('US$ '.number_format($registration->calculated_fee, 2), $content);
+
+                return true;
+            }
+
+            return false;
+        });
+    }
+
+    #[Test]
+    public function new_registration_notification_coordinator_version_contains_admin_link(): void
+    {
+        // AC12: Test that NewRegistrationNotification coordinator version contains correct admin link
+        Mail::fake();
+
+        config(['mail.coordinator_email' => 'coordinator@bcsmif.com']);
+
+        $user = User::factory()->create(['email' => 'test@example.com']);
+        $user->markEmailAsVerified();
+        $this->actingAs($user);
+
+        $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
+        $event = Event::where('code', $mainConferenceCode)->firstOrFail();
+
+        $validData = $this->getValidRegistrationData($user, [
+            'selected_event_codes' => [$event->code],
+            'position' => 'grad_student',
+        ]);
+
+        $response = $this->post(route('event-registrations.store'), $validData);
+
+        $response->assertRedirect(route('dashboard'));
+        $registration = Registration::where('user_id', $user->id)->latest()->first();
+        $this->assertNotNull($registration);
+
+        // AC12: Verify NewRegistrationNotification coordinator version contains admin panel link
+        Mail::assertSent(NewRegistrationNotification::class, function ($mail) use ($registration) {
+            if ($mail->registration->id === $registration->id && $mail->forCoordinator === true) {
+                $content = $mail->render();
+
+                // Verify coordinator-specific content
+                $adminUrl = config('app.url').'/admin/registrations/'.$registration->id;
+                $this->assertStringContainsString($adminUrl, $content);
+                $this->assertStringContainsString(__('Ver Inscrição no Painel Admin'), $content);
+                $this->assertStringContainsString('#'.$registration->id, $content);
+
+                // Verify registration details for coordinator
+                $this->assertStringContainsString($registration->full_name, $content);
+                $this->assertStringContainsString($user->email, $content);
+
+                return true;
+            }
+
+            return false;
+        });
+    }
+
+    #[Test]
+    public function proof_uploaded_notification_coordinator_version_contains_correct_link(): void
+    {
+        // AC12: Test that ProofUploadedNotification contains correct admin link for coordinator
+        Mail::fake();
+        Storage::fake('private');
+
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+            'calculated_fee' => 500.00,
+        ]);
+
+        $uploadedFile = UploadedFile::fake()->image('payment_proof.jpg', 800, 600);
+
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration),
+            ['payment_proof' => $uploadedFile]
+        );
+
+        $response->assertRedirect();
+
+        // AC12: Verify ProofUploadedNotification contains correct link for admin visualization
+        Mail::assertSent(ProofUploadedNotification::class, function ($mail) use ($registration) {
+            $content = $mail->render();
+
+            // Verify admin link is correct
+            $adminUrl = config('app.url').'/admin/registrations/'.$registration->id;
+            $this->assertStringContainsString($adminUrl, $content);
+            $this->assertStringContainsString(__('Visualizar Comprovante no Painel Admin'), $content);
+
+            // Verify registration and user information
+            $this->assertStringContainsString('#'.$registration->id, $content);
+            $this->assertStringContainsString($registration->full_name, $content);
+            $this->assertStringContainsString($registration->user->email, $content);
+
+            return $mail->registration->id === $registration->id;
+        });
+    }
 }
