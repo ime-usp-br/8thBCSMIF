@@ -10,6 +10,7 @@ use App\Services\FeeCalculationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -130,9 +131,7 @@ class RegistrationController extends Controller
     public function uploadProof(Request $request, Registration $registration): RedirectResponse
     {
         // Validate that user owns this registration
-        if ($registration->user_id !== $request->user()?->id) {
-            abort(403, __('You are not authorized to upload proof for this registration.'));
-        }
+        Gate::authorize('uploadProof', $registration);
 
         // Validate that registration is in correct status for proof upload
         if ($registration->payment_status !== 'pending_payment') {
@@ -169,7 +168,7 @@ class RegistrationController extends Controller
             Log::info(__('Payment proof uploaded successfully'), [
                 'registration_id' => $registration->id,
                 'file_path' => $path,
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
             ]);
 
             // Dispatch ProofUploadedNotification to coordinator
@@ -189,7 +188,7 @@ class RegistrationController extends Controller
             Log::error(__('Failed to upload payment proof'), [
                 'registration_id' => $registration->id,
                 'error' => $e->getMessage(),
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
             ]);
 
             return redirect()->back()->with('error', __('Failed to upload payment proof. Please try again.'));

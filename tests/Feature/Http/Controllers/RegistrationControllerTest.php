@@ -17,6 +17,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event as EventFacade;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -513,6 +514,45 @@ class RegistrationControllerTest extends TestCase
         );
 
         $response->assertForbidden();
+    }
+
+    #[Test]
+    public function upload_proof_policy_grants_access_to_registration_owner(): void
+    {
+        // AC3: Test that RegistrationPolicy uploadProof method grants access to registration owner
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+        ]);
+
+        // Test that the policy allows access for the owner
+        $this->assertTrue(
+            Gate::allows('uploadProof', $registration),
+            'Policy should allow upload proof for registration owner'
+        );
+    }
+
+    #[Test]
+    public function upload_proof_policy_denies_access_to_non_owner(): void
+    {
+        // AC3: Test that RegistrationPolicy uploadProof method denies access to non-owner
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $this->actingAs($otherUser);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $owner->id,
+            'payment_status' => 'pending_payment',
+        ]);
+
+        // Test that the policy denies access for non-owner
+        $this->assertFalse(
+            Gate::allows('uploadProof', $registration),
+            'Policy should deny upload proof for non-owner'
+        );
     }
 
     #[Test]
