@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class RegistrationController extends Controller
 {
@@ -149,13 +150,19 @@ class RegistrationController extends Controller
         ]);
 
         try {
-            // Store the uploaded file
+            // Store the uploaded file with sanitized filename
             $uploadedFile = $request->file('payment_proof');
             if (! $uploadedFile instanceof \Illuminate\Http\UploadedFile) {
                 throw new \RuntimeException('No file was uploaded.');
             }
 
-            $path = $uploadedFile->store("proofs/{$registration->id}", 'private');
+            // AC6: Generate sanitized and unique filename
+            $originalName = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $extension = $uploadedFile->getClientOriginalExtension();
+            $sanitizedName = Str::slug($originalName);
+            $filename = time().'_'.$sanitizedName.'.'.$extension;
+
+            $path = $uploadedFile->storeAs("proofs/{$registration->id}", $filename, 'private');
 
             // Update registration with proof details
             $registration->update([

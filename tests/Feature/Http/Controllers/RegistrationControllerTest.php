@@ -1164,6 +1164,64 @@ class RegistrationControllerTest extends TestCase
     }
 
     #[Test]
+    public function upload_proof_sanitizes_filename_and_generates_unique_name(): void
+    {
+        // AC6: Test that uploaded file names are sanitized and made unique
+        Mail::fake();
+        Storage::fake('private');
+
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+            'calculated_fee' => 500.00,
+        ]);
+
+        // Create a file with special characters and spaces that need sanitization
+        $unsafeFilename = 'My Payment Proof (special)! & file.jpg';
+        $uploadedFile = UploadedFile::fake()->image($unsafeFilename, 800, 600);
+
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration),
+            ['payment_proof' => $uploadedFile]
+        );
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        // Verify the registration was updated
+        $registration->refresh();
+        $this->assertNotNull($registration->payment_proof_path);
+
+        // AC6: Verify filename is sanitized and contains timestamp for uniqueness
+        $storedPath = $registration->payment_proof_path;
+        $this->assertStringStartsWith("proofs/{$registration->id}/", $storedPath);
+
+        // Extract the filename from the path
+        $filename = basename($storedPath);
+
+        // AC6: Verify the filename follows the expected pattern: timestamp_sanitized-name.extension
+        $this->assertMatchesRegularExpression('/^\d+_my-payment-proof-special-file\.jpg$/', $filename);
+
+        // Verify the file exists in storage
+        Storage::disk('private')->assertExists($storedPath);
+
+        // AC6: Verify that the filename is unique by checking it contains a timestamp
+        $this->assertMatchesRegularExpression('/^\d+_/', $filename, 'Filename should start with timestamp for uniqueness');
+
+        // AC6: Verify that special characters were properly sanitized
+        $this->assertStringNotContainsString(' ', $filename, 'Filename should not contain spaces');
+        $this->assertStringNotContainsString('(', $filename, 'Filename should not contain parentheses');
+        $this->assertStringNotContainsString(')', $filename, 'Filename should not contain parentheses');
+        $this->assertStringNotContainsString('!', $filename, 'Filename should not contain exclamation marks');
+        $this->assertStringNotContainsString('&', $filename, 'Filename should not contain ampersands');
+    }
+
+    #[Test]
     public function proof_uploaded_notification_coordinator_version_contains_correct_link(): void
     {
         // AC12: Test that ProofUploadedNotification contains correct admin link for coordinator
