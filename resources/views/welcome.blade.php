@@ -79,16 +79,22 @@
                     <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                         <div class="flex flex-wrap gap-4">
                             @guest
-                                <a href="{{ route('register') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition duration-150 ease-in-out">
-                                    Register for the Conference
+                                <a href="{{ route('workshops') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md transition duration-150 ease-in-out">
+                                    📋 Workshops
                                 </a>
-                                <a href="{{ route('login') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-md transition duration-150 ease-in-out">
-                                    Login
+                                <a href="{{ route('login.local') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-md transition duration-150 ease-in-out">
+                                    🔐 Login
                                 </a>
                             @endguest
                             @auth
+                                <a href="{{ route('register') }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition duration-150 ease-in-out">
+                                    ✅ Register for the Conference
+                                </a>
+                                <a href="{{ route('workshops') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md transition duration-150 ease-in-out">
+                                    📋 Workshops
+                                </a>
                                 <a href="{{ route('dashboard') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition duration-150 ease-in-out">
-                                    Access Dashboard
+                                    🏠 Access Dashboard
                                 </a>
                             @endauth
                         </div>
