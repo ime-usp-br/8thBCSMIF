@@ -7,6 +7,8 @@ Route::view('/', 'welcome');
 
 Route::view('workshops', 'workshops')->name('workshops');
 
+Route::view('fees', 'fees')->name('fees');
+
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
