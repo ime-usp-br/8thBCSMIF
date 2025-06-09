@@ -216,7 +216,7 @@ new class extends Component {
         ];
 
         // Redirect to store route with form data
-        return redirect()->route('event-registrations.store')->withInput($registrationData);
+        $this->redirect(route('event-registrations.store'), navigate: true);
     }
 }; ?>
 
