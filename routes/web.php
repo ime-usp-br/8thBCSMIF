@@ -4,10 +4,9 @@ use App\Http\Controllers\RegistrationController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
-
 Route::view('workshops', 'workshops')->name('workshops');
-
 Route::view('fees', 'fees')->name('fees');
+Route::view('payment-info', 'payment-info')->name('payment-info');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])

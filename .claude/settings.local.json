@@ -9,7 +9,8 @@
       "Bash(pytest:*)",
       "Bash(python3 scripts/tasks/llm_task_analyze_ac.py:*)",
       "Bash(python3 scripts/generate_context.py:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(curl:*)"
     ],
     "deny": []
   }
