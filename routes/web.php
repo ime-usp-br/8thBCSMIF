@@ -16,6 +16,11 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
+// Route for the event registration form
+Route::view('register-event', 'livewire.registration-form')
+    ->middleware(['auth', 'verified'])
+    ->name('register-event');
+
 // Route for storing a new event registration
 Route::post('/event-registrations', [RegistrationController::class, 'store'])
     ->middleware(['auth', 'verified'])
