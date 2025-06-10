@@ -265,19 +265,22 @@ new #[Layout('layouts.app')] class extends Component {
     }
 }; ?>
 
-<div>
-    <div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="p-6 text-gray-900 dark:text-gray-100">
-                <h1 class="text-2xl font-bold mb-6">{{ __('8th BCSMIF Registration Form') }}</h1>
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-5xl mx-auto py-4 px-3 sm:py-6 sm:px-6 lg:py-8 lg:px-8">
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-lg sm:rounded-xl border border-gray-200 dark:border-gray-700">
+            <div class="px-4 py-6 sm:p-8 text-gray-900 dark:text-gray-100">
+                <div class="text-center mb-8">
+                    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">{{ __('8th BCSMIF Registration Form') }}</h1>
+                    <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">{{ __('Please fill out all required information to register for the conference') }}</p>
+                </div>
 
                 <form action="{{ route('event-registrations.store') }}" method="POST" class="space-y-8" wire:submit="validateAndSubmit">
                     @csrf
                     {{-- Personal Information --}}
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
-                        <h2 class="text-lg font-semibold mb-4">{{ __('1. Personal Information') }}</h2>
+                        <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('1. Personal Information') }}</h2>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
                             <div>
                                 <x-input-label for="full_name" :value="__('Full Name')" />
                                 <x-text-input wire:model="full_name" id="full_name" class="block mt-1 w-full" type="text" required />
@@ -298,21 +301,21 @@ new #[Layout('layouts.app')] class extends Component {
 
                             <div>
                                 <x-input-label :value="__('Gender')" />
-                                <div class="mt-2 space-y-2">
-                                    <label class="inline-flex items-center">
-                                        <input wire:model.live="gender" type="radio" value="male" name="gender" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                <div class="mt-2 space-y-2 sm:space-y-3">
+                                    <label class="flex items-center">
+                                        <input wire:model.live="gender" type="radio" value="male" name="gender" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('Male') }}</span>
                                     </label>
-                                    <label class="inline-flex items-center">
-                                        <input wire:model.live="gender" type="radio" value="female" name="gender" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <label class="flex items-center">
+                                        <input wire:model.live="gender" type="radio" value="female" name="gender" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('Female') }}</span>
                                     </label>
-                                    <label class="inline-flex items-center">
-                                        <input wire:model.live="gender" type="radio" value="other" name="gender" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <label class="flex items-center">
+                                        <input wire:model.live="gender" type="radio" value="other" name="gender" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('Other') }}</span>
                                     </label>
-                                    <label class="inline-flex items-center">
-                                        <input wire:model.live="gender" type="radio" value="prefer_not_to_say" name="gender" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <label class="flex items-center">
+                                        <input wire:model.live="gender" type="radio" value="prefer_not_to_say" name="gender" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('Prefer not to say') }}</span>
                                     </label>
                                 </div>
@@ -329,12 +332,12 @@ new #[Layout('layouts.app')] class extends Component {
 
                     {{-- Identification Details --}}
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
-                        <h2 class="text-lg font-semibold mb-4">{{ __('2. Identification Details') }}</h2>
+                        <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('2. Identification Details') }}</h2>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="md:col-span-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
+                            <div class="sm:col-span-2">
                                 <x-input-label for="document_country_origin" :value="__('Country of residence')" />
-                                <select wire:model.live="document_country_origin" id="document_country_origin" class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm block mt-1 w-full" required>
+                                <select wire:model.live="document_country_origin" id="document_country_origin" class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-usp-blue-pri dark:focus:border-usp-blue-sec focus:ring-usp-blue-pri dark:focus:ring-usp-blue-sec rounded-md shadow-sm block mt-1 w-full" required>
                                     @foreach($countries as $code => $name)
                                         <option value="{{ $code }}">{{ $name }}</option>
                                     @endforeach
@@ -372,9 +375,9 @@ new #[Layout('layouts.app')] class extends Component {
 
                     {{-- Contact Information --}}
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
-                        <h2 class="text-lg font-semibold mb-4">{{ __('3. Contact Information') }}</h2>
+                        <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('3. Contact Information') }}</h2>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
                             <div>
                                 <x-input-label for="email" :value="__('Email')" />
                                 <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" required />
@@ -387,7 +390,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <x-input-error :messages="$errors->get('phone_number')" class="mt-2" />
                             </div>
 
-                            <div class="md:col-span-2">
+                            <div class="sm:col-span-2">
                                 <x-input-label for="address_street" :value="__('Street Address')" />
                                 <x-text-input wire:model="address_street" id="address_street" class="block mt-1 w-full" type="text" required />
                                 <x-input-error :messages="$errors->get('address_street')" class="mt-2" />
@@ -407,7 +410,7 @@ new #[Layout('layouts.app')] class extends Component {
 
                             <div>
                                 <x-input-label for="address_country" :value="__('Country')" />
-                                <select wire:model="address_country" id="address_country" class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm block mt-1 w-full" required>
+                                <select wire:model="address_country" id="address_country" class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-usp-blue-pri dark:focus:border-usp-blue-sec focus:ring-usp-blue-pri dark:focus:ring-usp-blue-sec rounded-md shadow-sm block mt-1 w-full" required>
                                     @foreach($countries as $code => $name)
                                         <option value="{{ $code }}">{{ $name }}</option>
                                     @endforeach
@@ -425,10 +428,10 @@ new #[Layout('layouts.app')] class extends Component {
 
                     {{-- Professional Details --}}
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
-                        <h2 class="text-lg font-semibold mb-4">{{ __('4. Professional Details') }}</h2>
+                        <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('4. Professional Details') }}</h2>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="md:col-span-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
+                            <div class="sm:col-span-2">
                                 <x-input-label for="affiliation" :value="__('Affiliation (University/Organization)')" />
                                 <x-text-input wire:model="affiliation" id="affiliation" class="block mt-1 w-full" type="text" required />
                                 <x-input-error :messages="$errors->get('affiliation')" class="mt-2" />
@@ -436,29 +439,29 @@ new #[Layout('layouts.app')] class extends Component {
 
                             <div>
                                 <x-input-label :value="__('Position')" />
-                                <div class="mt-2 space-y-2">
+                                <div class="mt-2 space-y-2 sm:space-y-3">
                                     <label class="flex items-center">
-                                        <input wire:model.live="position" type="radio" value="undergraduate_student" name="position" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="position" type="radio" value="undergraduate_student" name="position" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('Undergraduate Student') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="position" type="radio" value="graduate_student" name="position" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="position" type="radio" value="graduate_student" name="position" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('Graduate Student') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="position" type="radio" value="researcher" name="position" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="position" type="radio" value="researcher" name="position" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('Researcher') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="position" type="radio" value="professor" name="position" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="position" type="radio" value="professor" name="position" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('Professor') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="position" type="radio" value="professional" name="position" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="position" type="radio" value="professional" name="position" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('Professional') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="position" type="radio" value="other" name="position" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="position" type="radio" value="other" name="position" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('Other') }}</span>
                                     </label>
                                 </div>
@@ -473,13 +476,13 @@ new #[Layout('layouts.app')] class extends Component {
 
                             <div>
                                 <x-input-label :value="__('ABE affiliation')" />
-                                <div class="mt-2 space-y-2">
+                                <div class="mt-2 space-y-2 sm:space-y-3">
                                     <label class="flex items-center">
-                                        <input wire:model.live="is_abe_member" type="radio" value="yes" name="is_abe_member" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="is_abe_member" type="radio" value="yes" name="is_abe_member" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('Yes') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="is_abe_member" type="radio" value="no" name="is_abe_member" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="is_abe_member" type="radio" value="no" name="is_abe_member" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('No') }}</span>
                                     </label>
                                 </div>
@@ -490,9 +493,9 @@ new #[Layout('layouts.app')] class extends Component {
 
                     {{-- Event Participation --}}
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
-                        <h2 class="text-lg font-semibold mb-4">{{ __('5. Event Participation') }}</h2>
+                        <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('5. Event Participation') }}</h2>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
                             <div>
                                 <x-input-label for="arrival_date" :value="__('Arrival Date')" />
                                 <x-text-input wire:model="arrival_date" id="arrival_date" class="block mt-1 w-full" type="date" required />
@@ -505,12 +508,12 @@ new #[Layout('layouts.app')] class extends Component {
                                 <x-input-error :messages="$errors->get('departure_date')" class="mt-2" />
                             </div>
 
-                            <div class="md:col-span-2">
+                            <div class="sm:col-span-2">
                                 <x-input-label :value="__('Which events would you like to register for?')" />
-                                <div class="mt-2 space-y-2">
+                                <div class="mt-2 space-y-2 sm:space-y-3">
                                     @foreach($available_events as $code => $name)
                                         <label class="flex items-center">
-                                            <input wire:model.live="selected_event_codes" type="checkbox" value="{{ $code }}" name="selected_event_codes[]" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                            <input wire:model.live="selected_event_codes" type="checkbox" value="{{ $code }}" name="selected_event_codes[]" class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                             <span class="ml-2">{{ $name }}</span>
                                         </label>
                                     @endforeach
@@ -520,13 +523,13 @@ new #[Layout('layouts.app')] class extends Component {
 
                             <div>
                                 <x-input-label :value="__('Participation format')" />
-                                <div class="mt-2 space-y-2">
+                                <div class="mt-2 space-y-2 sm:space-y-3">
                                     <label class="flex items-center">
-                                        <input wire:model.live="participation_format" type="radio" value="in-person" name="participation_format" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="participation_format" type="radio" value="in-person" name="participation_format" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('In-person') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="participation_format" type="radio" value="online" name="participation_format" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="participation_format" type="radio" value="online" name="participation_format" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('Online') }}</span>
                                     </label>
                                 </div>
@@ -535,13 +538,13 @@ new #[Layout('layouts.app')] class extends Component {
 
                             <div>
                                 <x-input-label :value="__('Transportation')" />
-                                <div class="mt-2 space-y-2">
+                                <div class="mt-2 space-y-2 sm:space-y-3">
                                     <label class="flex items-center">
-                                        <input wire:model="needs_transport_from_gru" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model="needs_transport_from_gru" type="checkbox" class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('I need transportation from GRU Airport to Maresias and back.') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model="needs_transport_from_usp" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model="needs_transport_from_usp" type="checkbox" class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('I need transportation from USP to Maresias and back.') }}</span>
                                     </label>
                                 </div>
@@ -552,18 +555,18 @@ new #[Layout('layouts.app')] class extends Component {
                     {{-- Fee Display --}}
                     @if(!empty($fee_details))
                         <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
-                            <h2 class="text-lg font-semibold mb-4">{{ __('Registration Fees') }}</h2>
-                            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                            <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('Registration Fees') }}</h2>
+                            <div class="bg-gradient-to-r from-usp-blue-sec/10 to-usp-yellow/10 dark:from-gray-700 dark:to-gray-600 p-4 sm:p-6 rounded-xl border-l-4 border-usp-blue-pri">
                                 @foreach($fee_details as $detail)
-                                    <div class="flex justify-between py-2">
-                                        <span>{{ $detail['event_name'] }}</span>
-                                        <span>R$ {{ number_format($detail['calculated_price'], 2, ',', '.') }}</span>
+                                    <div class="flex flex-col sm:flex-row sm:justify-between py-2 space-y-1 sm:space-y-0">
+                                        <span class="font-medium text-gray-700 dark:text-gray-300">{{ $detail['event_name'] }}</span>
+                                        <span class="font-semibold text-usp-blue-pri dark:text-usp-blue-sec">R$ {{ number_format($detail['calculated_price'], 2, ',', '.') }}</span>
                                     </div>
                                 @endforeach
                                 <hr class="my-2">
-                                <div class="flex justify-between font-bold text-lg">
-                                    <span>{{ __('Total') }}</span>
-                                    <span>R$ {{ number_format($total_fee, 2, ',', '.') }}</span>
+                                <div class="flex flex-col sm:flex-row sm:justify-between font-bold text-lg pt-2 space-y-1 sm:space-y-0">
+                                    <span class="text-gray-900 dark:text-gray-100">{{ __('Total') }}</span>
+                                    <span class="text-xl text-usp-blue-pri dark:text-usp-yellow">R$ {{ number_format($total_fee, 2, ',', '.') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -571,29 +574,29 @@ new #[Layout('layouts.app')] class extends Component {
 
                     {{-- Dietary Restrictions --}}
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
-                        <h2 class="text-lg font-semibold mb-4">{{ __('6. Dietary Restrictions') }}</h2>
+                        <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('6. Dietary Restrictions') }}</h2>
                         
                         <div>
                             <x-input-label :value="__('Dietary Restrictions')" />
-                            <div class="mt-2 space-y-2">
+                            <div class="mt-2 space-y-2 sm:space-y-3">
                                 <label class="flex items-center">
-                                    <input wire:model.live="dietary_restrictions" type="radio" value="none" name="dietary_restrictions" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <input wire:model.live="dietary_restrictions" type="radio" value="none" name="dietary_restrictions" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                     <span class="ml-2">{{ __('None') }}</span>
                                 </label>
                                 <label class="flex items-center">
-                                    <input wire:model.live="dietary_restrictions" type="radio" value="vegetarian" name="dietary_restrictions" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <input wire:model.live="dietary_restrictions" type="radio" value="vegetarian" name="dietary_restrictions" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                     <span class="ml-2">{{ __('Vegetarian') }}</span>
                                 </label>
                                 <label class="flex items-center">
-                                    <input wire:model.live="dietary_restrictions" type="radio" value="vegan" name="dietary_restrictions" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <input wire:model.live="dietary_restrictions" type="radio" value="vegan" name="dietary_restrictions" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                     <span class="ml-2">{{ __('Vegan') }}</span>
                                 </label>
                                 <label class="flex items-center">
-                                    <input wire:model.live="dietary_restrictions" type="radio" value="gluten_free" name="dietary_restrictions" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <input wire:model.live="dietary_restrictions" type="radio" value="gluten_free" name="dietary_restrictions" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                     <span class="ml-2">{{ __('Gluten-Free') }}</span>
                                 </label>
                                 <label class="flex items-center">
-                                    <input wire:model.live="dietary_restrictions" type="radio" value="other" name="dietary_restrictions" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <input wire:model.live="dietary_restrictions" type="radio" value="other" name="dietary_restrictions" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                     <span class="ml-2">{{ __('Other') }}</span>
                                 </label>
                             </div>
@@ -609,9 +612,9 @@ new #[Layout('layouts.app')] class extends Component {
 
                     {{-- Emergency Contact --}}
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
-                        <h2 class="text-lg font-semibold mb-4">{{ __('7. Emergency Contact') }}</h2>
+                        <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('7. Emergency Contact') }}</h2>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
                             <div>
                                 <x-input-label for="emergency_contact_name" :value="__('Name')" />
                                 <x-text-input wire:model="emergency_contact_name" id="emergency_contact_name" class="block mt-1 w-full" type="text" required />
@@ -624,7 +627,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <x-input-error :messages="$errors->get('emergency_contact_relationship')" class="mt-2" />
                             </div>
 
-                            <div class="md:col-span-2">
+                            <div class="sm:col-span-2">
                                 <x-input-label for="emergency_contact_phone" :value="__('Phone Number')" />
                                 <x-text-input wire:model="emergency_contact_phone" id="emergency_contact_phone" class="block mt-1 w-full" type="tel" placeholder="+55 11 987654321" required />
                                 <x-input-error :messages="$errors->get('emergency_contact_phone')" class="mt-2" />
@@ -635,18 +638,18 @@ new #[Layout('layouts.app')] class extends Component {
                     {{-- Visa Support --}}
                     @if($document_country_origin !== 'BR')
                         <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
-                            <h2 class="text-lg font-semibold mb-4">{{ __('8. Visa Support') }}</h2>
+                            <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('8. Visa Support') }}</h2>
                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ __('(For international participants only)') }}</p>
                             
                             <div>
                                 <x-input-label :value="__('Do you require an invitation letter to get a Brazilian visa?')" />
-                                <div class="mt-2 space-y-2">
+                                <div class="mt-2 space-y-2 sm:space-y-3">
                                     <label class="flex items-center">
-                                        <input wire:model="requires_visa_letter" type="radio" value="yes" name="requires_visa_letter" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model="requires_visa_letter" type="radio" value="yes" name="requires_visa_letter" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('Yes') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model="requires_visa_letter" type="radio" value="no" name="requires_visa_letter" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model="requires_visa_letter" type="radio" value="no" name="requires_visa_letter" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
                                         <span class="ml-2">{{ __('No') }}</span>
                                     </label>
                                 </div>
@@ -657,17 +660,17 @@ new #[Layout('layouts.app')] class extends Component {
 
                     {{-- Declaration --}}
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
-                        <h2 class="text-lg font-semibold mb-4">{{ __('9. Declaration') }}</h2>
+                        <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('9. Declaration') }}</h2>
                         
                         <div class="space-y-4">
                             <label class="flex items-start">
-                                <input wire:model="confirm_information" type="checkbox" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 mt-1">
+                                <input wire:model="confirm_information" type="checkbox" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri mt-1">
                                 <span class="ml-2">{{ __('I confirm that the information provided is accurate.') }}</span>
                             </label>
                             <x-input-error :messages="$errors->get('confirm_information')" class="mt-2" />
 
                             <label class="flex items-start">
-                                <input wire:model="consent_data_processing" type="checkbox" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 mt-1">
+                                <input wire:model="consent_data_processing" type="checkbox" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri mt-1">
                                 <span class="ml-2">{{ __('I consent to the processing of my data for event logistics.') }}</span>
                             </label>
                             <x-input-error :messages="$errors->get('consent_data_processing')" class="mt-2" />
@@ -709,8 +712,11 @@ new #[Layout('layouts.app')] class extends Component {
                     <input type="hidden" name="requires_visa_letter" value="{{ $requires_visa_letter === 'yes' ? 1 : 0 }}">
 
                     {{-- Submit Button --}}
-                    <div class="flex justify-end">
-                        <x-primary-button type="submit" class="px-8 py-3">
+                    <div class="flex flex-col sm:flex-row justify-center sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
+                        <button type="button" onclick="window.history.back()" class="w-full sm:w-auto px-6 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                            {{ __('Cancel') }}
+                        </button>
+                        <x-primary-button type="submit" class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-usp-blue-pri to-usp-blue-sec hover:from-usp-blue-sec hover:to-usp-blue-pri text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
                             {{ __('Submit Registration') }}
                         </x-primary-button>
                     </div>
