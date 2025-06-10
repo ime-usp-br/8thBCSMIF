@@ -107,4 +107,94 @@ class RegistrationFormTest extends DuskTestCase
             $browser->assertValue('@email-input', $user->email);
         });
     }
+
+    /**
+     * AC2: Teste Dusk verifica a lógica de exibição condicional dos campos de Identificação
+     * (CPF/RG para Brasil, Passaporte para outros) e se a validação frontend correspondente é acionada.
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('registration-form')]
+    public function registration_form_shows_conditional_identification_fields_for_brazilian_users(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/register-event')
+                ->waitForText(__('Registration Form'));
+
+            // AC2: Initially should show BR fields (CPF/RG) since BR is default
+            $browser->assertVisible('@cpf-input')
+                ->assertVisible('@rg-number-input')
+                ->assertMissing('input[name="passport_number"]')
+                ->assertMissing('input[name="passport_expiry_date"]');
+
+            // AC2: Change to international country and verify passport fields appear
+            $browser->select('@document-country-origin-select', 'US')
+                ->waitUntilMissing('@cpf-input')
+                ->waitUntilMissing('@rg-number-input')
+                ->waitFor('#passport_number')
+                ->waitFor('#passport_expiry_date')
+                ->assertVisible('#passport_number')
+                ->assertVisible('#passport_expiry_date');
+
+            // AC2: Change back to Brazil and verify CPF/RG fields reappear
+            $browser->select('@document-country-origin-select', 'BR')
+                ->waitFor('@cpf-input')
+                ->waitFor('@rg-number-input')
+                ->waitUntilMissing('#passport_number')
+                ->waitUntilMissing('#passport_expiry_date')
+                ->assertVisible('@cpf-input')
+                ->assertVisible('@rg-number-input');
+        });
+    }
+
+    /**
+     * AC2: Teste Dusk verifica a validação frontend dos campos condicionais de identificação
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('registration-form')]
+    public function registration_form_validates_conditional_identification_fields(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/register-event')
+                ->waitForText(__('Registration Form'));
+
+            // AC2: Test that Brazilian fields are required when BR is selected
+            $browser->select('@document-country-origin-select', 'BR')
+                ->waitFor('@cpf-input')
+                ->waitFor('@rg-number-input');
+
+            // AC2: Verify CPF field has required attribute when Brazilian
+            $browser->assertAttribute('@cpf-input', 'required', 'true')
+                ->assertAttribute('@rg-number-input', 'required', 'true');
+
+            // AC2: Test that passport fields are required when international country is selected
+            $browser->select('@document-country-origin-select', 'US')
+                ->waitFor('#passport_number')
+                ->waitFor('#passport_expiry_date');
+
+            // AC2: Verify passport fields have required attribute when international
+            $browser->assertAttribute('#passport_number', 'required', 'true')
+                ->assertAttribute('#passport_expiry_date', 'required', 'true');
+
+            // AC2: Switch back to Brazil and verify CPF/RG are required again
+            $browser->select('@document-country-origin-select', 'BR')
+                ->waitFor('@cpf-input')
+                ->waitFor('@rg-number-input')
+                ->assertAttribute('@cpf-input', 'required', 'true')
+                ->assertAttribute('@rg-number-input', 'required', 'true');
+        });
+    }
 }
