@@ -101,10 +101,6 @@ This is a Laravel 12 application for the 8th Brazilian Conference on Statistical
 ## Essential Development Commands
 
 ### Laravel/PHP Commands
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 ```bash
 # Development server
 php artisan serve
@@ -129,20 +125,12 @@ php artisan pail                    # Log monitoring
 ```
 
 ### Frontend Commands
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 ```bash
 npm run dev                         # Development build with HMR
 npm run build                       # Production build
 ```
 
 ### Unified Development
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 ```bash
 composer run dev                    # Starts all services (Laravel server, queue, logs, Vite)
 ```
@@ -150,10 +138,6 @@ composer run dev                    # Starts all services (Laravel server, queue
 ## Environment Configuration
 
 Critical environment variables:
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - **USP Senha Única:** `SENHAUNICA_CALLBACK`, `SENHAUNICA_KEY`, `SENHAUNICA_SECRET`
 - **USP Replicado:** `REPLICADO_HOST`, `REPLICADO_PORT`, `REPLICADO_DATABASE`, `REPLICADO_USERNAME`, `REPLICADO_PASSWORD`, `REPLICADO_CODUND`, `REPLICADO_CODBAS`
 
@@ -172,26 +156,14 @@ Critical environment variables:
 With Claude Pro subscription, Claude Code can execute complete AC implementation cycles autonomously:
 
 #### 1. Issue Discovery & Analysis
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Read issue details: `gh issue view <ISSUE_NUMBER>`
 - Identify specific AC (Acceptance Criteria) to implement
 - Analyze current codebase state and requirements
 
 #### 2. Implementation Cycle
-<<<<<<< Updated upstream
-
 - Create TodoWrite workflow for task tracking
 - Implement required changes following established patterns
 - Run mandatory quality checks:
-
-=======
-- Create TodoWrite workflow for task tracking
-- Implement required changes following established patterns
-- Run mandatory quality checks:
->>>>>>> Stashed changes
   ```bash
   vendor/bin/pint                     # PSR-12 formatting
   vendor/bin/phpstan analyse          # Static analysis  
@@ -200,34 +172,17 @@ With Claude Pro subscription, Claude Code can execute complete AC implementation
   ```
 
 #### 3. Validation & Completion
-<<<<<<< Updated upstream
-
-- Run context update: `context-generate --stages git`
-- Execute validation:
-
-  ```bash
-  printf "y\ny\ny\n" | python3 scripts/tasks/llm_task_analyze_ac.py -i <ISSUE> -a <AC> -sc
-  ```
-
-=======
 - Run context update: `context-generate --stages git`
 - Execute validation:
   ```bash
   printf "y\ny\ny\n" | python3 scripts/tasks/llm_task_analyze_ac.py -i <ISSUE> -a <AC> -sc
   ```
->>>>>>> Stashed changes
 - If validation fails: Address issues and repeat cycle
 - If validation passes: Proceed to commit and documentation
 
 #### 4. Commit & Documentation Cycle
-<<<<<<< Updated upstream
-
-- Stage changes: `git add .`
-- Analyze commit patterns: `git log -5` (NOT `--oneline`)
-=======
 - Stage changes: `git add .`
 - Analyze commit patterns: `git log --oneline -10`
->>>>>>> Stashed changes
 - Create commit message following project conventions (NO AI tool references)
 - Commit and push to current branch
 - Add validation comment to GitHub issue via `gh api`
@@ -238,25 +193,14 @@ With Claude Pro subscription, Claude Code can execute complete AC implementation
 For cases requiring external LLM usage (complex analysis, API quota limits):
 
 #### 1. Generate Solution Context
-<<<<<<< Updated upstream
-
 ```bash
 resolve-ac -i <ISSUE> -a <AC> -op -sc
-
-=======
-```bash
-resolve-ac -i <ISSUE> -a <AC> -op -sc
->>>>>>> Stashed changes
 # -op: Output prompt only (for external LLM)
 # -sc: LLM selects relevant context files
 # Result: Copies context to context_llm/temp/ + shows prompt
 ```
 
 #### 2. External LLM Execution
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Copy prompt to Google AI Studio (Gemini 2.5 Pro free tier)
 - Apply generated code changes manually to project
 
@@ -280,10 +224,6 @@ copy-sc             # python3 scripts/copy_selected_context.py
 ### Key Script Options
 
 **resolve-ac**: Generate implementation code
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - `-i <issue>`: Issue number (required)
 - `-a <ac>`: AC number (required)  
 - `-op`: Only output prompt (for external LLM)
@@ -291,10 +231,6 @@ copy-sc             # python3 scripts/copy_selected_context.py
 - `-o "<text>"`: Additional observation/feedback
 
 **analyze-ac**: Validate AC completion
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - `-i <issue>`: Issue number (required)
 - `-a <ac>`: Specific AC to check (optional)
 - `-sc`: Enable context selection
@@ -310,29 +246,17 @@ copy-sc             # python3 scripts/copy_selected_context.py
 ### Claude Pro Workflow Advantages
 
 **Streamlined Process:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Single interface for issue analysis, implementation, and validation
 - No manual prompt copying or external LLM context switching
 - Integrated access to all development tools (git, testing, linting)
 
 **Enhanced Capabilities:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Full codebase context without artificial limitations
 - Direct file system access for comprehensive analysis
 - Integrated quality checks and validation in single session
 - TodoWrite workflow for transparent task tracking
 
 **Improved Reliability:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - No API quota rotations or rate limiting delays
 - Consistent model performance and availability
 - Integrated error handling and iterative refinement
@@ -364,51 +288,27 @@ pytest -v --live                    # Python tests
 **Validation Before Declaration** - Never declare an AC as "completed" until `analyze-ac` confirms it passes. Implementation alone is insufficient without proper validation.
 
 **Interactive Scripts:** Always use `printf "y\ny\ny\n"` for auto-confirming script prompts in `analyze-ac`, `resolve-ac`, and other LLM tasks. This is essential for:
-<<<<<<< Updated upstream
-
-- Context selection confirmation
-- Final response acceptance
-- Response saving confirmation
-
-Be prepared to wait for API quota rotations (up to 7 keys) when using external LLM services.
-
-**Test Implementation Best Practices:**
-
-=======
 - Context selection confirmation
 - Final response acceptance
 - Response saving confirmation
 Be prepared to wait for API quota rotations (up to 7 keys) when using external LLM services.
 
 **Test Implementation Best Practices:**
->>>>>>> Stashed changes
 - Use existing events/data when possible rather than creating fake entities
 - Mock services appropriately to test specific conditions (e.g., zero fees)
 - Add explicit assertions for the exact behavior being tested
 - Update existing tests to include new assertion requirements
 
 **Mock Implementation Issues & Solutions:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - **Problem**: Mocks may not work when services are instantiated via `app()` helper in controllers
 - **Solution**: Focus tests on the primary functionality being validated rather than forcing complex mocks
 - **Alternative**: When mocking fails, use real services and validate the core behavior (e.g., database associations, relationships)
 - **Best Practice**: Prefer dependency injection in controller constructors/methods over `app()` calls for better testability
 
 **Commit Message Standards:**
-<<<<<<< Updated upstream
-
 - **CRITICAL:** Use `git log -5` (NOT `git log --oneline`) to see FULL commit message format
 - `--oneline` flag only shows first line, missing the complete multi-line structure
 - Follow project's bullet-point format:
-
-=======
-- **CRITICAL:** Use `git log -5` (NOT `git log --oneline`) to see FULL commit message format
-- `--oneline` flag only shows first line, missing the complete multi-line structure
-- Follow project's bullet-point format:
->>>>>>> Stashed changes
   ```
   tipo(escopo): Descrição principal (#issue)
   
@@ -417,10 +317,6 @@ Be prepared to wait for API quota rotations (up to 7 keys) when using external L
   - Bullet point describing specific change 3
   - Final line indicating which AC is fulfilled (if applicable)
   ```
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Focus on the specific AC/feature implemented
 - NEVER include AI tool references ("Generated with Claude Code", etc.)
 - Use HEREDOC format for multi-line commit messages to ensure proper formatting
@@ -431,10 +327,6 @@ Be prepared to wait for API quota rotations (up to 7 keys) when using external L
 **Post-Implementation Workflow Best Practices:**
 
 **Stage and Commit Changes:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Stage all changes: `git add .`
 - **CRITICAL:** Analyze commit patterns: `git log -5` (NOT `--oneline`) to see full message structure
 - Create descriptive commit messages following project conventions
@@ -443,10 +335,6 @@ Be prepared to wait for API quota rotations (up to 7 keys) when using external L
 - Commit and push to current branch immediately after validation
 
 **Context Update for Validation:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - MANDATORY: Run `context-generate --stages git` after any code changes
 - This ensures LLM validation tools have access to latest changes including:
   - Updated source code
@@ -455,10 +343,6 @@ Be prepared to wait for API quota rotations (up to 7 keys) when using external L
   - Current repository state
 
 **Automated Validation Execution:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Use `printf "y\ny\ny\n"` for fully automated script execution
 - This handles all interactive prompts in sequence:
   - Context file selection confirmation
@@ -467,10 +351,6 @@ Be prepared to wait for API quota rotations (up to 7 keys) when using external L
 - Essential for uninterrupted validation workflow
 
 **GitHub Integration Workflow:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Use `gh api` for programmatic issue comments with analysis results
 - **CRITICAL:** Always post the EXACT output from `analyze-ac` script as issue comment
 - Use file-based approach for complex messages: `gh api repos/:owner/:repo/issues/N/comments -F body=@/tmp/comment.txt`
@@ -480,10 +360,6 @@ Be prepared to wait for API quota rotations (up to 7 keys) when using external L
 - Maintain clear audit trail of completion through comments
 
 **Complete Documentation Cycle:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Capture validation results for issue tracking
 - Update project documentation with lessons learned
 - Document both successful patterns and common pitfalls
@@ -492,46 +368,26 @@ Be prepared to wait for API quota rotations (up to 7 keys) when using external L
 ### Autonomous Workflow Interruption Handling
 
 **Interruption Identification & Resolution:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 When executing autonomous AC implementation cycles, document any interruptions encountered and their solutions for continuous workflow improvement.
 
 **Common Interruption Patterns:**
 
 **🔴 Critical Interruptions (Must Fix Immediately):**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Mock failures due to service instantiation patterns (`app()` vs dependency injection)
 - Test database configuration issues
 - Missing dependencies or relationship configurations
 
 **🟡 Quality Interruptions (Address During Implementation):**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - PHPStan warnings about null safety
 - Code formatting inconsistencies
 - Test assertion specificity improvements
 
 **🟢 Process Interruptions (Workflow Optimizations):**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Context selection and API quota management
 - Validation script automation improvements
 - Git workflow optimizations
 
 **Resolution Documentation Process:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 1. **Identify**: Note exact error/interruption and context
 2. **Solve**: Implement pragmatic solution focused on AC completion
 3. **Document**: Add solution pattern to CLAUDE.md for future reference
@@ -540,20 +396,12 @@ When executing autonomous AC implementation cycles, document any interruptions e
 ### Workflow Lessons Learned
 
 **Successful Patterns:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Autonomous execution of full cycle (discovery → implementation → validation → commit)
 - Effective use of existing placeholder code that just needed activation
 - Quality checks integration working seamlessly
 - GitHub API integration for automated issue management
 
 **Interruption #1 - Mock Service Issues:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - **Context**: FeeCalculationService mock not applied due to `app()` instantiation in controller
 - **Problem**: Test expecting specific mock values but real service returning different results
 - **Solution**: Adapted test to validate core functionality (pivot table associations) without forcing mock
@@ -561,19 +409,11 @@ When executing autonomous AC implementation cycles, document any interruptions e
 - **Future Prevention**: Consider dependency injection patterns for better testability
 
 **Process Optimizations Identified:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - `printf "y\ny\ny\n"` automation worked perfectly for all validation scripts
 - Context generation before validation is critical for accurate analysis
 - Real-time documentation of solutions during implementation improves future cycles
 
 **Interruption #2 - Git Commit Message Format Analysis:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - **Context:** Using `git log --oneline` to analyze commit patterns for consistency
 - **Problem:** `--oneline` flag only shows first line of commits, missing the complete multi-line structure with bullet points that the project follows
 - **Root Cause:** Misunderstanding of git log flags led to incomplete pattern analysis and incorrect commit format
@@ -586,10 +426,6 @@ When executing autonomous AC implementation cycles, document any interruptions e
 - **Implementation:** Updated CLAUDE.md to emphasize using `git log -5` and document the exact bullet-point format expected
 
 **Interruption #3 - GitHub Comment Formatting Issues (CRÍTICO - RECORRENTE):**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - **Context:** Complex messages with code blocks and special characters fail when passed directly to `gh api`
 - **Problem:** Shell escaping issues with backticks, backslashes, and multi-line content
 - **Solution:** Use file-based approach: save content to `/tmp/comment.txt` and use `-F body=@/tmp/comment.txt`
@@ -604,10 +440,6 @@ When executing autonomous AC implementation cycles, document any interruptions e
   - **ZERO TOLERANCE:** Any HEREDOC artifacts in GitHub comments is unacceptable
 
 **Interruption #4 - Padrão de Comentários GitHub Inconsistente (CRÍTICO - RECORRENTE):**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - **Context:** Formatação de comentários de validação AC sem verificar padrão existente na issue
 - **Problem:** Comentários com formatação inconsistente quebram padrão estabelecido no projeto
 - **Root Cause:** Não verificar comentários existentes antes de elaborar novos comentários
@@ -633,65 +465,37 @@ When executing autonomous AC implementation cycles, document any interruptions e
 ### Required Localization Practices
 
 **1. User Interface Text:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - ALL strings displayed to users MUST use `__()` function
 - Store translation keys in `lang/en.json` and `lang/pt_BR.json`
 - Use descriptive English keys as default: `__('Payment Proof Uploaded - 8th BCSMIF')`
 
 **2. Email Templates:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Subject lines MUST be localized: `subject: __('Payment Proof Uploaded - 8th BCSMIF')`
 - All email content MUST use `__()` functions for text elements
 - Maintain consistency between coordinator and user templates
 
 **3. Log Messages:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Application logs MUST use localized messages
 - Error messages shown to users MUST be translatable
 - Debug/internal logs may use English but prefer localization when user-visible
 
 **4. Exception Messages:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - User-facing exception messages MUST be localized
 - Use translation keys for consistent error messaging
 - Provide meaningful context in translation keys
 
 **5. Validation Messages:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Custom validation messages MUST be localized
 - Follow Laravel's validation translation patterns
 - Store in appropriate `lang/{locale}/validation.php` files
 
 **6. Translation Key Standards:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Use English as the key language for consistency
 - Keys should be descriptive and self-documenting
 - Maintain alphabetical order in JSON files
 - Group related translations logically
 
 **Example Implementation:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 ```php
 // ✅ CORRECT - Localized
 return new Envelope(
@@ -705,10 +509,6 @@ return new Envelope(
 ```
 
 **Translation Files:**
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - `lang/en.json`: English translations (base language)
 - `lang/pt_BR.json`: Portuguese (Brazil) translations
 - Maintain parity between all language files
@@ -717,10 +517,6 @@ return new Envelope(
 ## Integration Guidelines
 
 When working with USP-specific features:
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 - Use `ReplicadoService::validarNuspEmail()` for USP user validation
 - Leverage `HasSenhaunica` trait for authentication flows
 - Test with both USP and non-USP users scenarios
