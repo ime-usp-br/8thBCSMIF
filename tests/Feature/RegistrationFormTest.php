@@ -364,6 +364,22 @@ class RegistrationFormTest extends TestCase
             ->assertSee('id="departure_date"', false);
     }
 
+    public function test_passport_expiry_date_uses_html5_date_type_for_international_users(): void
+    {
+        $user = User::factory()->create();
+
+        $component = Volt::test('registration-form')
+            ->actingAs($user)
+            ->set('document_country_origin', 'US');
+
+        $response = $this->actingAs($user)->get('/register-event');
+
+        $response->assertSee('id="passport_expiry_date"', false);
+
+        // Verify the passport expiry date field is rendered when international user
+        $component->assertSee('Passport Expiry Date');
+    }
+
     public function test_form_has_proper_html5_validation_attributes(): void
     {
         $user = User::factory()->create();
