@@ -10,7 +10,8 @@
       "Bash(python3 scripts/tasks/llm_task_analyze_ac.py:*)",
       "Bash(python3 scripts/generate_context.py:*)",
       "Bash(grep:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(php artisan:*)"
     ],
     "deny": []
   }
