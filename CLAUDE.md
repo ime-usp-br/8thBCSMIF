@@ -55,9 +55,12 @@ git push                            # ANTES do comentário GitHub
 # SEMPRE verificar comentários existentes para manter padrão
 gh api repos/:owner/:repo/issues/<ISSUE>/comments
 
-# Se for AC1 e não houver comentários, verificar issues fechadas semelhantes
-gh issue list --state closed --label feature --limit 5
-gh api repos/:owner/:repo/issues/<ISSUE_FECHADA>/comments
+# Se houver menos de 3 comentários na issue atual, verificar issues fechadas similares
+COMMENT_COUNT=$(gh api repos/:owner/:repo/issues/<ISSUE>/comments | jq length)
+if [ "$COMMENT_COUNT" -lt 3 ]; then
+    gh issue list --state closed --label feature --limit 5
+    gh api repos/:owner/:repo/issues/<ISSUE_FECHADA>/comments
+fi
 ```
 
 #### **Formato Obrigatório do Comentário:**
@@ -65,17 +68,50 @@ gh api repos/:owner/:repo/issues/<ISSUE_FECHADA>/comments
 - **Critério:** Citar exatamente o texto do AC
 - **Análise:** Seções numeradas explicando implementação detalhada
 - **Conclusão:** "O Critério de Aceite X (ACX) foi **Atendido**."
-- **Rodapé:** `---\n**Validação realizada no commit:** <hash>`
+- **Rodapé:** `---\n**Validação realizada no commit:** [hash](link)`
+
+#### **Processo de Criação do Comentário:**
+1. **Analisar padrão existente:** Observe formatação, estrutura e estilo dos comentários
+2. **Reformatar saída do analyze-ac:** NÃO copie diretamente - adapte o conteúdo ao padrão observado
+3. **Manter consistência:** Use exatamente o mesmo formato dos demais comentários
+4. **Incluir rastreabilidade:** Link do commit no formato `[hash](url)`
 
 #### **Submissão do Comentário:**
 ```bash
+# Criar comentário formatado manualmente baseado no analyze-ac
+cat > /tmp/comment.txt << 'EOF'
+## Conclusão sobre o Critério de Aceite X (ACX) da Issue #Y
+
+**Critério de Aceite (ACX):** "Texto exato do critério"
+
+**Análise:**
+
+1. [Reformular primeira análise do analyze-ac seguindo padrão observado]
+2. [Reformular segunda análise do analyze-ac seguindo padrão observado]
+...
+
+**Conclusão:**
+
+O Critério de Aceite X (ACX) foi **Atendido**.
+EOF
+
+# Adicionar rodapé com link do commit
+echo "---" >> /tmp/comment.txt
+echo "**Validação realizada no commit:** [hash](https://github.com/owner/repo/commit/hash)" >> /tmp/comment.txt
+
+# Verificar antes de enviar
+cat /tmp/comment.txt
+
+# Submeter comentário
 gh api repos/:owner/:repo/issues/<ISSUE>/comments -F body=@/tmp/comment.txt
 ```
-- Use EXATAMENTE o output do analyze-ac como base
-- Adapte ao formato padrão observado nos comentários existentes
-- Inclua hash do commit para rastreabilidade
-- **🔴 CRÍTICO:** NUNCA use HEREDOC para criar /tmp/comment.txt (causa "EOF < /dev/null" no GitHub)
-- **OBRIGATÓRIO:** Verificar conteúdo com `cat /tmp/comment.txt` antes do `gh api`
+
+#### **Diretrizes Críticas:**
+- **🔴 REFORMATAR, NÃO COPIAR:** Adapte o conteúdo do analyze-ac ao padrão observado
+- **🔴 CONSISTÊNCIA ABSOLUTA:** Mantenha exatamente o mesmo formato dos comentários existentes
+- **🔴 VERIFICAÇÃO OBRIGATÓRIA:** Se < 3 comentários na issue atual, consulte issues fechadas
+- **🔴 ZERO HEREDOC:** NUNCA use HEREDOC em /tmp/comment.txt (causa "EOF < /dev/null")
+- **🔴 SEMPRE VERIFICAR:** Use `cat /tmp/comment.txt` antes do `gh api`
 
 ---
 
@@ -442,14 +478,30 @@ When executing autonomous AC implementation cycles, document any interruptions e
 **Interruption #4 - Padrão de Comentários GitHub Inconsistente (CRÍTICO - RECORRENTE):**
 - **Context:** Formatação de comentários de validação AC sem verificar padrão existente na issue
 - **Problem:** Comentários com formatação inconsistente quebram padrão estabelecido no projeto
-- **Root Cause:** Não verificar comentários existentes antes de elaborar novos comentários
-- **Solution:** SEMPRE executar `gh api repos/:owner/:repo/issues/<ISSUE>/comments` antes de criar comentário
-- **For AC1:** Se não houver comentários na issue atual, verificar issues fechadas similares com `gh issue list --state closed --label feature`
-- **Mandatory Format:** 
-  - Título: `## Conclusão sobre o Critério de Aceite X (ACX) da Issue #Y`
-  - Estrutura: Critério → Análise (numerada) → Conclusão → Rodapé com commit
-- **Learning:** Padrão de comentários é parte crítica da documentação do projeto
-- **Implementation:** Verificação obrigatória de comentários existentes no workflow
+- **Root Cause:** Copiar diretamente output do analyze-ac ao invés de reformatar seguindo padrão observado
+- **Critical Issues Identified:**
+  1. **Cópia Direta:** Usar output do analyze-ac "as-is" ignora padrão estabelecido
+  2. **Verificação Insuficiente:** Não consultar issues fechadas quando < 3 comentários na atual
+  3. **Inconsistência de Links:** Formato de commit hash variando entre comentários
+- **Solution:** 
+  ```bash
+  # 1. Verificar comentários existentes primeiro
+  COMMENT_COUNT=$(gh api repos/:owner/:repo/issues/<ISSUE>/comments | jq length)
+  if [ "$COMMENT_COUNT" -lt 3 ]; then
+      gh issue list --state closed --label feature --limit 5
+      gh api repos/:owner/:repo/issues/<ISSUE_FECHADA>/comments
+  fi
+  
+  # 2. Reformatar analyze-ac seguindo padrão observado (NÃO copiar diretamente)
+  # 3. Usar formato consistente de commit: [hash](url)
+  ```
+- **Mandatory Process:** 
+  1. Analisar padrão dos comentários existentes
+  2. Reformatar conteúdo do analyze-ac seguindo este padrão 
+  3. Manter estrutura: Critério → Análise (numerada) → Conclusão → Rodapé com commit
+  4. Verificar com `cat /tmp/comment.txt` antes de submeter
+- **Learning:** Padrão de comentários é parte crítica da documentação - consistência é obrigatória
+- **Zero Tolerance:** Qualquer comentário que não siga o padrão estabelecido é inaceitável
 
 ## Code Quality Standards
 
