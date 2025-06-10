@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\RegistrationController;
 use Illuminate\Support\Facades\Route;
+use Livewire\Volt\Volt;
 
 Route::view('/', 'welcome');
 Route::view('workshops', 'workshops')->name('workshops');
@@ -17,7 +18,7 @@ Route::view('profile', 'profile')
     ->name('profile');
 
 // Route for the event registration form
-Route::view('register-event', 'livewire.registration-form')
+Volt::route('register-event', 'registration-form')
     ->middleware(['auth', 'verified'])
     ->name('register-event');
 

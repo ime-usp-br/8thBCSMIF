@@ -3,9 +3,10 @@
 use App\Models\Event;
 use App\Services\FeeCalculationService;
 use Illuminate\Support\Carbon;
+use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new class extends Component {
+new #[Layout('layouts.app')] class extends Component {
     // Personal Information
     public string $full_name = '';
     public string $nationality = '';

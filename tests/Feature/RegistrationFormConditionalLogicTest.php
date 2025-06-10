@@ -25,10 +25,10 @@ class RegistrationFormConditionalLogicTest extends TestCase
     public function cpf_and_rg_fields_are_shown_for_brazilian_participants(): void
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
-        
+
         $component = Livewire::test('registration-form')
             ->set('document_country_origin', 'BR');
-            
+
         $component->assertSee(__('CPF'))
             ->assertSee(__('RG (ID) Number'))
             ->assertDontSee(__('Passport Number'))
