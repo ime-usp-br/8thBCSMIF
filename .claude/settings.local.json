@@ -11,7 +11,9 @@
       "Bash(python3 scripts/generate_context.py:*)",
       "Bash(grep:*)",
       "Bash(curl:*)",
-      "Bash(php artisan:*)"
+      "Bash(php artisan:*)",
+      "Bash(cp:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

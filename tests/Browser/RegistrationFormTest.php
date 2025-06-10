@@ -197,4 +197,172 @@ class RegistrationFormTest extends DuskTestCase
                 ->assertAttribute('@rg-number-input', 'required', 'true');
         });
     }
+
+    /**
+     * AC3: Teste Dusk verifica a lógica de exibição condicional do campo "Outro" para Gênero,
+     * Cargo/Posição e Restrições Alimentares, e se a validação frontend correspondente é acionada.
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('registration-form')]
+    public function registration_form_shows_other_gender_field_conditionally(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/register-event')
+                ->waitForText(__('Registration Form'));
+
+            // AC3: Initially, other gender field should not be visible
+            $browser->assertMissing('input[wire\\:model="other_gender"]');
+
+            // AC3: Select 'Other' gender option
+            $browser->click('@gender-other')
+                ->waitFor('input[wire\\:model="other_gender"]')
+                ->assertVisible('input[wire\\:model="other_gender"]')
+                ->assertAttribute('input[wire\\:model="other_gender"]', 'required', 'true')
+                ->assertAttribute('input[wire\\:model="other_gender"]', 'placeholder', __('Please specify'));
+
+            // AC3: Select different gender option and verify other field disappears
+            $browser->click('@gender-male')
+                ->waitUntilMissing('input[wire\\:model="other_gender"]')
+                ->assertMissing('input[wire\\:model="other_gender"]');
+
+            // AC3: Select 'Other' again to verify it reappears
+            $browser->click('@gender-other')
+                ->waitFor('input[wire\\:model="other_gender"]')
+                ->assertVisible('input[wire\\:model="other_gender"]');
+        });
+    }
+
+    /**
+     * AC3: Teste Dusk verifica a lógica de exibição condicional do campo "Outro" para Posição
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('registration-form')]
+    public function registration_form_shows_other_position_field_conditionally(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/register-event')
+                ->waitForText(__('Registration Form'));
+
+            // AC3: Initially, other position field should not be visible
+            $browser->assertMissing('input[wire\\:model="other_position"]');
+
+            // AC3: Select 'Other' position option
+            $browser->click('@position-other')
+                ->waitFor('input[wire\\:model="other_position"]')
+                ->assertVisible('input[wire\\:model="other_position"]')
+                ->assertAttribute('input[wire\\:model="other_position"]', 'required', 'true')
+                ->assertAttribute('input[wire\\:model="other_position"]', 'placeholder', __('Please specify'));
+
+            // AC3: Select different position option and verify other field disappears
+            $browser->click('@position-professor')
+                ->waitUntilMissing('input[wire\\:model="other_position"]')
+                ->assertMissing('input[wire\\:model="other_position"]');
+
+            // AC3: Select 'Other' again to verify it reappears
+            $browser->click('@position-other')
+                ->waitFor('input[wire\\:model="other_position"]')
+                ->assertVisible('input[wire\\:model="other_position"]');
+        });
+    }
+
+    /**
+     * AC3: Teste Dusk verifica a lógica de exibição condicional do campo "Outro" para Restrições Alimentares
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('registration-form')]
+    public function registration_form_shows_other_dietary_restrictions_field_conditionally(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/register-event')
+                ->waitForText(__('Registration Form'));
+
+            // AC3: Initially, other dietary restrictions field should not be visible
+            $browser->assertMissing('input[wire\\:model="other_dietary_restrictions"]');
+
+            // AC3: Select 'Other' dietary restrictions option
+            $browser->click('@dietary-restrictions-other')
+                ->waitFor('input[wire\\:model="other_dietary_restrictions"]')
+                ->assertVisible('input[wire\\:model="other_dietary_restrictions"]')
+                ->assertAttribute('input[wire\\:model="other_dietary_restrictions"]', 'required', 'true')
+                ->assertAttribute('input[wire\\:model="other_dietary_restrictions"]', 'placeholder', __('Please specify'));
+
+            // AC3: Select different dietary restrictions option and verify other field disappears
+            $browser->click('@dietary-restrictions-vegetarian')
+                ->waitUntilMissing('input[wire\\:model="other_dietary_restrictions"]')
+                ->assertMissing('input[wire\\:model="other_dietary_restrictions"]');
+
+            // AC3: Select 'Other' again to verify it reappears
+            $browser->click('@dietary-restrictions-other')
+                ->waitFor('input[wire\\:model="other_dietary_restrictions"]')
+                ->assertVisible('input[wire\\:model="other_dietary_restrictions"]');
+        });
+    }
+
+    /**
+     * AC3: Teste Dusk verifica validação frontend dos campos "Outro" quando são obrigatórios
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('registration-form')]
+    public function registration_form_validates_other_fields_when_required(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/register-event')
+                ->waitForText(__('Registration Form'));
+
+            // AC3: Test all three "Other" fields become required when selected
+
+            // Gender "Other" field
+            $browser->click('@gender-other')
+                ->waitFor('input[wire\\:model="other_gender"]')
+                ->assertAttribute('input[wire\\:model="other_gender"]', 'required', 'true');
+
+            // Position "Other" field
+            $browser->click('@position-other')
+                ->waitFor('input[wire\\:model="other_position"]')
+                ->assertAttribute('input[wire\\:model="other_position"]', 'required', 'true');
+
+            // Dietary Restrictions "Other" field
+            $browser->click('@dietary-restrictions-other')
+                ->waitFor('input[wire\\:model="other_dietary_restrictions"]')
+                ->assertAttribute('input[wire\\:model="other_dietary_restrictions"]', 'required', 'true');
+
+            // AC3: Test that the "Other" fields can be filled with valid values
+            $browser->type('input[wire\\:model="other_gender"]', 'Non-binary')
+                ->type('input[wire\\:model="other_position"]', 'Data Scientist')
+                ->type('input[wire\\:model="other_dietary_restrictions"]', 'Lactose intolerant');
+
+            // AC3: Verify values are properly set
+            $browser->assertValue('input[wire\\:model="other_gender"]', 'Non-binary')
+                ->assertValue('input[wire\\:model="other_position"]', 'Data Scientist')
+                ->assertValue('input[wire\\:model="other_dietary_restrictions"]', 'Lactose intolerant');
+        });
+    }
 }
