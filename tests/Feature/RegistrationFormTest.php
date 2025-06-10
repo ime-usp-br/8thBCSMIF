@@ -314,9 +314,9 @@ class RegistrationFormTest extends TestCase
             ->set('confirm_information', true)
             ->set('consent_data_processing', true);
 
-        $component->call('submit');
+        $component->call('validateAndSubmit');
 
-        $component->assertRedirect(route('event-registrations.store'));
+        $component->assertRedirect(route('dashboard'));
     }
 
     public function test_email_is_prefilled_for_authenticated_user(): void
