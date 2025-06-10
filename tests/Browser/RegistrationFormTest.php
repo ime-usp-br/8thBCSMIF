@@ -365,4 +365,83 @@ class RegistrationFormTest extends DuskTestCase
                 ->assertValue('input[wire\\:model="other_dietary_restrictions"]', 'Lactose intolerant');
         });
     }
+
+    /**
+     * AC4: Teste Dusk simula o preenchimento e submissão bem-sucedida do formulário
+     * com dados válidos para um participante brasileiro e verifica o redirecionamento
+     * para a página de confirmação/dashboard com mensagem de sucesso.
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('registration-form')]
+    public function registration_form_submits_successfully_for_brazilian_participant(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'brazilian.user@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/register-event')
+                ->waitForText(__('Registration Form'));
+
+            // AC4: Fill all required fields for a Brazilian participant
+
+            // 1. Personal Information
+            $browser->type('@full-name-input', 'João Silva Santos')
+                ->type('@nationality-input', 'Brazilian')
+                ->type('@date-of-birth-input', '1990-05-15')
+                ->click('@gender-male');
+
+            // 2. Identification Details (Brazilian)
+            $browser->select('@document-country-origin-select', 'BR')
+                ->waitFor('@cpf-input')
+                ->waitFor('@rg-number-input')
+                ->type('@cpf-input', '123.456.789-00')
+                ->type('@rg-number-input', '12.345.678-9');
+
+            // 3. Contact Information
+            $browser->type('@phone-number-input', '+55 11 98765-4321')
+                ->type('@street-address-input', 'Rua das Flores, 123')
+                ->type('@city-input', 'São Paulo')
+                ->type('@state-province-input', 'SP')
+                ->select('@country-select', 'BR')
+                ->type('@postal-code-input', '01000-000');
+
+            // 4. Professional Details
+            $browser->type('@affiliation-input', 'Universidade de São Paulo')
+                ->click('@position-undergraduate')
+                ->click('@is-abe-member-no');
+
+            // 5. Event Participation
+            $browser->type('@arrival-date-input', '2025-09-28')
+                ->type('@departure-date-input', '2025-10-03')
+                ->check('@event-BCSMIF2025')
+                ->click('@participation-format-in-person');
+
+            // 6. Dietary Restrictions
+            $browser->click('@dietary-restrictions-none');
+
+            // 7. Emergency Contact
+            $browser->type('@emergency-contact-name-input', 'Maria Silva Santos')
+                ->type('@emergency-contact-relationship-input', 'Mãe')
+                ->type('@emergency-contact-phone-input', '+55 11 99999-8888');
+
+            // 8. Declaration
+            $browser->check('@confirm-information-checkbox')
+                ->check('@consent-data-processing-checkbox');
+
+            // AC4: Submit the form
+            $browser->click('@submit-registration-button')
+                ->waitForLocation('/dashboard', 10);
+
+            // AC4: Verify successful redirection to dashboard
+            $browser->assertPathIs('/dashboard');
+
+            // AC4: Verify success message is displayed
+            $browser->waitForText(__('registrations.created_successfully'))
+                ->assertSee(__('registrations.created_successfully'));
+        });
+    }
 }
