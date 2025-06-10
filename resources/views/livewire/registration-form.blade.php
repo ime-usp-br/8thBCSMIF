@@ -126,9 +126,9 @@ new #[Layout('layouts.app')] class extends Component {
         $participantCategory = match ($this->position) {
             'undergraduate_student' => 'undergrad_student',
             'graduate_student' => 'grad_student',
-            'researcher', 'professor' => $this->is_abe_member === 'yes' ? 'professor_abe' : 'professor_non_abe',
-            'professional' => 'professional',
-            default => 'professional'
+            'researcher', 'professor' => $this->is_abe_member === 'yes' ? 'professor_abe' : 'professor_non_abe_professional',
+            'professional' => 'professor_non_abe_professional',
+            default => 'professor_non_abe_professional'
         };
 
         $feeCalculationService = app(FeeCalculationService::class);

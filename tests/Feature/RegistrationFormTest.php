@@ -164,8 +164,14 @@ class RegistrationFormTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $component = Volt::test('registration-form')
-            ->actingAs($user)
+        $response = $this->actingAs($user)->get('/register-event');
+
+        $response
+            ->assertOk()
+            ->assertSeeVolt('registration-form');
+
+        // Test that the fee calculation functionality is available
+        $component = \Livewire\Livewire::test('registration-form')
             ->set('position', 'undergraduate_student')
             ->set('is_abe_member', 'no')
             ->set('participation_format', 'in-person')
