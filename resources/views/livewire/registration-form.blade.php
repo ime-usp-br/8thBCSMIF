@@ -255,25 +255,25 @@ new #[Layout('layouts.app')] class extends Component {
                                 <x-input-label :value="__('Gender')" />
                                 <div class="mt-2 space-y-2">
                                     <label class="inline-flex items-center">
-                                        <input wire:model.live="gender" type="radio" value="male" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="gender" type="radio" value="male" name="gender" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('Male') }}</span>
                                     </label>
                                     <label class="inline-flex items-center">
-                                        <input wire:model.live="gender" type="radio" value="female" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="gender" type="radio" value="female" name="gender" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('Female') }}</span>
                                     </label>
                                     <label class="inline-flex items-center">
-                                        <input wire:model.live="gender" type="radio" value="other" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="gender" type="radio" value="other" name="gender" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('Other') }}</span>
                                     </label>
                                     <label class="inline-flex items-center">
-                                        <input wire:model.live="gender" type="radio" value="prefer_not_to_say" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="gender" type="radio" value="prefer_not_to_say" name="gender" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('Prefer not to say') }}</span>
                                     </label>
                                 </div>
                                 @if($gender === 'other')
                                     <div class="mt-2">
-                                        <x-text-input wire:model="other_gender" placeholder="{{ __('Please specify') }}" class="block w-full" type="text" />
+                                        <x-text-input wire:model="other_gender" placeholder="{{ __('Please specify') }}" class="block w-full" type="text" required />
                                         <x-input-error :messages="$errors->get('other_gender')" class="mt-2" />
                                     </div>
                                 @endif
@@ -300,25 +300,25 @@ new #[Layout('layouts.app')] class extends Component {
                             @if($document_country_origin === 'BR')
                                 <div>
                                     <x-input-label for="cpf" :value="__('CPF')" />
-                                    <x-text-input wire:model="cpf" id="cpf" class="block mt-1 w-full" type="text" placeholder="000.000.000-00" />
+                                    <x-text-input wire:model="cpf" id="cpf" class="block mt-1 w-full" type="text" placeholder="000.000.000-00" required />
                                     <x-input-error :messages="$errors->get('cpf')" class="mt-2" />
                                 </div>
 
                                 <div>
                                     <x-input-label for="rg_number" :value="__('RG (ID) Number')" />
-                                    <x-text-input wire:model="rg_number" id="rg_number" class="block mt-1 w-full" type="text" />
+                                    <x-text-input wire:model="rg_number" id="rg_number" class="block mt-1 w-full" type="text" required />
                                     <x-input-error :messages="$errors->get('rg_number')" class="mt-2" />
                                 </div>
                             @else
                                 <div>
                                     <x-input-label for="passport_number" :value="__('Passport Number')" />
-                                    <x-text-input wire:model="passport_number" id="passport_number" class="block mt-1 w-full" type="text" />
+                                    <x-text-input wire:model="passport_number" id="passport_number" class="block mt-1 w-full" type="text" required />
                                     <x-input-error :messages="$errors->get('passport_number')" class="mt-2" />
                                 </div>
 
                                 <div>
                                     <x-input-label for="passport_expiry_date" :value="__('Passport Expiry Date')" />
-                                    <x-text-input wire:model="passport_expiry_date" id="passport_expiry_date" class="block mt-1 w-full" type="date" />
+                                    <x-text-input wire:model="passport_expiry_date" id="passport_expiry_date" class="block mt-1 w-full" type="date" required />
                                     <x-input-error :messages="$errors->get('passport_expiry_date')" class="mt-2" />
                                 </div>
                             @endif
@@ -393,33 +393,33 @@ new #[Layout('layouts.app')] class extends Component {
                                 <x-input-label :value="__('Position')" />
                                 <div class="mt-2 space-y-2">
                                     <label class="flex items-center">
-                                        <input wire:model.live="position" type="radio" value="undergraduate_student" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="position" type="radio" value="undergraduate_student" name="position" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('Undergraduate Student') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="position" type="radio" value="graduate_student" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="position" type="radio" value="graduate_student" name="position" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('Graduate Student') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="position" type="radio" value="researcher" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="position" type="radio" value="researcher" name="position" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('Researcher') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="position" type="radio" value="professor" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="position" type="radio" value="professor" name="position" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('Professor') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="position" type="radio" value="professional" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="position" type="radio" value="professional" name="position" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('Professional') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="position" type="radio" value="other" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="position" type="radio" value="other" name="position" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('Other') }}</span>
                                     </label>
                                 </div>
                                 @if($position === 'other')
                                     <div class="mt-2">
-                                        <x-text-input wire:model="other_position" placeholder="{{ __('Please specify') }}" class="block w-full" type="text" />
+                                        <x-text-input wire:model="other_position" placeholder="{{ __('Please specify') }}" class="block w-full" type="text" required />
                                         <x-input-error :messages="$errors->get('other_position')" class="mt-2" />
                                     </div>
                                 @endif
@@ -430,11 +430,11 @@ new #[Layout('layouts.app')] class extends Component {
                                 <x-input-label :value="__('ABE affiliation')" />
                                 <div class="mt-2 space-y-2">
                                     <label class="flex items-center">
-                                        <input wire:model.live="is_abe_member" type="radio" value="yes" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="is_abe_member" type="radio" value="yes" name="is_abe_member" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('Yes') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="is_abe_member" type="radio" value="no" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="is_abe_member" type="radio" value="no" name="is_abe_member" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('No') }}</span>
                                     </label>
                                 </div>
@@ -465,7 +465,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <div class="mt-2 space-y-2">
                                     @foreach($available_events as $code => $name)
                                         <label class="flex items-center">
-                                            <input wire:model.live="selected_event_codes" type="checkbox" value="{{ $code }}" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                            <input wire:model.live="selected_event_codes" type="checkbox" value="{{ $code }}" name="selected_event_codes[]" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                             <span class="ml-2">{{ $name }}</span>
                                         </label>
                                     @endforeach
@@ -477,11 +477,11 @@ new #[Layout('layouts.app')] class extends Component {
                                 <x-input-label :value="__('Participation format')" />
                                 <div class="mt-2 space-y-2">
                                     <label class="flex items-center">
-                                        <input wire:model.live="participation_format" type="radio" value="in-person" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="participation_format" type="radio" value="in-person" name="participation_format" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('In-person') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="participation_format" type="radio" value="online" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model.live="participation_format" type="radio" value="online" name="participation_format" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('Online') }}</span>
                                     </label>
                                 </div>
@@ -532,29 +532,29 @@ new #[Layout('layouts.app')] class extends Component {
                             <x-input-label :value="__('Dietary Restrictions')" />
                             <div class="mt-2 space-y-2">
                                 <label class="flex items-center">
-                                    <input wire:model.live="dietary_restrictions" type="radio" value="none" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <input wire:model.live="dietary_restrictions" type="radio" value="none" name="dietary_restrictions" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                     <span class="ml-2">{{ __('None') }}</span>
                                 </label>
                                 <label class="flex items-center">
-                                    <input wire:model.live="dietary_restrictions" type="radio" value="vegetarian" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <input wire:model.live="dietary_restrictions" type="radio" value="vegetarian" name="dietary_restrictions" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                     <span class="ml-2">{{ __('Vegetarian') }}</span>
                                 </label>
                                 <label class="flex items-center">
-                                    <input wire:model.live="dietary_restrictions" type="radio" value="vegan" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <input wire:model.live="dietary_restrictions" type="radio" value="vegan" name="dietary_restrictions" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                     <span class="ml-2">{{ __('Vegan') }}</span>
                                 </label>
                                 <label class="flex items-center">
-                                    <input wire:model.live="dietary_restrictions" type="radio" value="gluten_free" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <input wire:model.live="dietary_restrictions" type="radio" value="gluten_free" name="dietary_restrictions" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                     <span class="ml-2">{{ __('Gluten-Free') }}</span>
                                 </label>
                                 <label class="flex items-center">
-                                    <input wire:model.live="dietary_restrictions" type="radio" value="other" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    <input wire:model.live="dietary_restrictions" type="radio" value="other" name="dietary_restrictions" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                     <span class="ml-2">{{ __('Other') }}</span>
                                 </label>
                             </div>
                             @if($dietary_restrictions === 'other')
                                 <div class="mt-2">
-                                    <x-text-input wire:model="other_dietary_restrictions" placeholder="{{ __('Please specify') }}" class="block w-full" type="text" />
+                                    <x-text-input wire:model="other_dietary_restrictions" placeholder="{{ __('Please specify') }}" class="block w-full" type="text" required />
                                     <x-input-error :messages="$errors->get('other_dietary_restrictions')" class="mt-2" />
                                 </div>
                             @endif
@@ -597,11 +597,11 @@ new #[Layout('layouts.app')] class extends Component {
                                 <x-input-label :value="__('Do you require an invitation letter to get a Brazilian visa?')" />
                                 <div class="mt-2 space-y-2">
                                     <label class="flex items-center">
-                                        <input wire:model="requires_visa_letter" type="radio" value="yes" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model="requires_visa_letter" type="radio" value="yes" name="requires_visa_letter" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('Yes') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model="requires_visa_letter" type="radio" value="no" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <input wire:model="requires_visa_letter" type="radio" value="no" name="requires_visa_letter" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
                                         <span class="ml-2">{{ __('No') }}</span>
                                     </label>
                                 </div>
@@ -616,13 +616,13 @@ new #[Layout('layouts.app')] class extends Component {
                         
                         <div class="space-y-4">
                             <label class="flex items-start">
-                                <input wire:model="confirm_information" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 mt-1">
+                                <input wire:model="confirm_information" type="checkbox" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 mt-1">
                                 <span class="ml-2">{{ __('I confirm that the information provided is accurate.') }}</span>
                             </label>
                             <x-input-error :messages="$errors->get('confirm_information')" class="mt-2" />
 
                             <label class="flex items-start">
-                                <input wire:model="consent_data_processing" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 mt-1">
+                                <input wire:model="consent_data_processing" type="checkbox" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 mt-1">
                                 <span class="ml-2">{{ __('I consent to the processing of my data for event logistics.') }}</span>
                             </label>
                             <x-input-error :messages="$errors->get('consent_data_processing')" class="mt-2" />
