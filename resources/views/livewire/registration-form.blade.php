@@ -216,8 +216,52 @@ new #[Layout('layouts.app')] class extends Component {
             'requires_visa_letter' => $this->requires_visa_letter === 'yes',
         ];
 
-        // Redirect to store route with form data
-        $this->redirect(route('event-registrations.store'), navigate: true);
+        // AC7: Validation passed - allow natural form submission to RegistrationController@store
+        // Do not prevent default form submission, let it proceed naturally to POST route
+    }
+
+    public function validateAndSubmit(): void
+    {
+        // Perform Livewire validation first
+        $this->validate([
+            'full_name' => 'required|string|max:255',
+            'nationality' => 'required|string|max:255',
+            'date_of_birth' => 'required|date|before:today',
+            'gender' => 'required|string|in:male,female,other,prefer_not_to_say',
+            'other_gender' => 'required_if:gender,other|string|max:255',
+            'document_country_origin' => 'required|string|max:2',
+            'cpf' => 'required_if:document_country_origin,BR|nullable|string|max:20',
+            'rg_number' => 'required_if:document_country_origin,BR|nullable|string|max:20',
+            'passport_number' => 'required_unless:document_country_origin,BR|nullable|string|max:50',
+            'passport_expiry_date' => 'required_unless:document_country_origin,BR|nullable|date|after:today',
+            'email' => 'required|email|max:255',
+            'phone_number' => 'required|string|max:20',
+            'address_street' => 'required|string|max:255',
+            'address_city' => 'required|string|max:255',
+            'address_state_province' => 'required|string|max:255',
+            'address_country' => 'required|string|max:2',
+            'address_postal_code' => 'required|string|max:20',
+            'affiliation' => 'required|string|max:255',
+            'position' => 'required|string|in:undergraduate_student,graduate_student,researcher,professor,professional,other',
+            'other_position' => 'required_if:position,other|string|max:255',
+            'is_abe_member' => 'required|string|in:yes,no',
+            'arrival_date' => 'required|date|after_or_equal:today',
+            'departure_date' => 'required|date|after:arrival_date',
+            'selected_event_codes' => 'required|array|min:1',
+            'selected_event_codes.*' => 'exists:events,code',
+            'participation_format' => 'required|string|in:in-person,online',
+            'dietary_restrictions' => 'required|string|in:none,vegetarian,vegan,gluten_free,other',
+            'other_dietary_restrictions' => 'required_if:dietary_restrictions,other|string|max:255',
+            'emergency_contact_name' => 'required|string|max:255',
+            'emergency_contact_relationship' => 'required|string|max:255',
+            'emergency_contact_phone' => 'required|string|max:20',
+            'requires_visa_letter' => 'required_unless:document_country_origin,BR|string|in:yes,no',
+            'confirm_information' => 'required|accepted',
+            'consent_data_processing' => 'required|accepted',
+        ]);
+
+        // AC7: Validation passed - allow form to submit naturally to RegistrationController@store
+        // No need to prevent default, Livewire will let the form submit normally after validation
     }
 }; ?>
 
@@ -227,7 +271,8 @@ new #[Layout('layouts.app')] class extends Component {
             <div class="p-6 text-gray-900 dark:text-gray-100">
                 <h1 class="text-2xl font-bold mb-6">{{ __('8th BCSMIF Registration Form') }}</h1>
 
-                <form wire:submit="submit" class="space-y-8">
+                <form action="{{ route('event-registrations.store') }}" method="POST" class="space-y-8" wire:submit="validateAndSubmit">
+                    @csrf
                     {{-- Personal Information --}}
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
                         <h2 class="text-lg font-semibold mb-4">{{ __('1. Personal Information') }}</h2>
@@ -628,6 +673,40 @@ new #[Layout('layouts.app')] class extends Component {
                             <x-input-error :messages="$errors->get('consent_data_processing')" class="mt-2" />
                         </div>
                     </div>
+
+                    {{-- Hidden fields for form submission to RegistrationController --}}
+                    <input type="hidden" name="full_name" value="{{ $full_name }}">
+                    <input type="hidden" name="nationality" value="{{ $nationality }}">
+                    <input type="hidden" name="date_of_birth" value="{{ $date_of_birth }}">
+                    <input type="hidden" name="gender" value="{{ $gender === 'other' ? $other_gender : $gender }}">
+                    <input type="hidden" name="document_country_origin" value="{{ $document_country_origin }}">
+                    <input type="hidden" name="cpf" value="{{ $cpf }}">
+                    <input type="hidden" name="rg_number" value="{{ $rg_number }}">
+                    <input type="hidden" name="passport_number" value="{{ $passport_number }}">
+                    <input type="hidden" name="passport_expiry_date" value="{{ $passport_expiry_date }}">
+                    <input type="hidden" name="email" value="{{ $email }}">
+                    <input type="hidden" name="phone_number" value="{{ $phone_number }}">
+                    <input type="hidden" name="address_street" value="{{ $address_street }}">
+                    <input type="hidden" name="address_city" value="{{ $address_city }}">
+                    <input type="hidden" name="address_state_province" value="{{ $address_state_province }}">
+                    <input type="hidden" name="address_country" value="{{ $address_country }}">
+                    <input type="hidden" name="address_postal_code" value="{{ $address_postal_code }}">
+                    <input type="hidden" name="affiliation" value="{{ $affiliation }}">
+                    <input type="hidden" name="position" value="{{ $position === 'other' ? $other_position : $position }}">
+                    <input type="hidden" name="is_abe_member" value="{{ $is_abe_member === 'yes' ? 1 : 0 }}">
+                    <input type="hidden" name="arrival_date" value="{{ $arrival_date }}">
+                    <input type="hidden" name="departure_date" value="{{ $departure_date }}">
+                    @foreach($selected_event_codes as $eventCode)
+                        <input type="hidden" name="selected_event_codes[]" value="{{ $eventCode }}">
+                    @endforeach
+                    <input type="hidden" name="participation_format" value="{{ $participation_format }}">
+                    <input type="hidden" name="needs_transport_from_gru" value="{{ $needs_transport_from_gru ? 1 : 0 }}">
+                    <input type="hidden" name="needs_transport_from_usp" value="{{ $needs_transport_from_usp ? 1 : 0 }}">
+                    <input type="hidden" name="dietary_restrictions" value="{{ $dietary_restrictions === 'other' ? $other_dietary_restrictions : $dietary_restrictions }}">
+                    <input type="hidden" name="emergency_contact_name" value="{{ $emergency_contact_name }}">
+                    <input type="hidden" name="emergency_contact_relationship" value="{{ $emergency_contact_relationship }}">
+                    <input type="hidden" name="emergency_contact_phone" value="{{ $emergency_contact_phone }}">
+                    <input type="hidden" name="requires_visa_letter" value="{{ $requires_visa_letter === 'yes' ? 1 : 0 }}">
 
                     {{-- Submit Button --}}
                     <div class="flex justify-end">

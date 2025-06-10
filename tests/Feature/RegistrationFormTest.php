@@ -9,7 +9,6 @@ use Database\Seeders\FeesTableSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
-use Livewire\Volt\Volt;
 use Tests\TestCase;
 
 class RegistrationFormTest extends TestCase
@@ -530,5 +529,110 @@ class RegistrationFormTest extends TestCase
             ->call('submit');
 
         $component->assertHasErrors(['other_dietary_restrictions']);
+    }
+
+    /**
+     * Test AC7: Component submits data to RegistrationController@store
+     *
+     * This test validates that:
+     * 1. The form has correct action pointing to event-registrations.store route
+     * 2. The form includes all necessary hidden fields for data submission
+     * 3. The form can be submitted to create a new registration
+     */
+    public function test_ac7_component_submits_data_to_registration_controller(): void
+    {
+        $user = User::factory()->create();
+
+        // Test that form has correct action attribute
+        $response = $this->actingAs($user)->get('/register-event');
+
+        $response
+            ->assertOk()
+            ->assertSee('action="'.route('event-registrations.store').'"', false)
+            ->assertSee('method="POST"', false)
+            ->assertSee('name="_token"', false);
+
+        // Test that form includes hidden fields for data submission
+        $component = Livewire::test('registration-form')
+            ->set('full_name', 'Test User')
+            ->set('nationality', 'Brazilian')
+            ->set('date_of_birth', '1990-01-01')
+            ->set('gender', 'male')
+            ->set('document_country_origin', 'BR')
+            ->set('cpf', '123.456.789-00')
+            ->set('rg_number', '12.345.678-9')
+            ->set('email', 'test@example.com')
+            ->set('phone_number', '+55 11 987654321')
+            ->set('address_street', 'Test Street, 123')
+            ->set('address_city', 'São Paulo')
+            ->set('address_state_province', 'SP')
+            ->set('address_country', 'BR')
+            ->set('address_postal_code', '01000-000')
+            ->set('affiliation', 'Universidade de São Paulo')
+            ->set('position', 'undergraduate_student')
+            ->set('is_abe_member', 'no')
+            ->set('arrival_date', '2025-09-28')
+            ->set('departure_date', '2025-10-03')
+            ->set('selected_event_codes', ['BCSMIF2025'])
+            ->set('participation_format', 'in-person')
+            ->set('dietary_restrictions', 'none')
+            ->set('emergency_contact_name', 'Parent Name')
+            ->set('emergency_contact_relationship', 'Parent')
+            ->set('emergency_contact_phone', '+55 11 987654321')
+            ->set('confirm_information', true)
+            ->set('consent_data_processing', true);
+
+        // Verify hidden fields are rendered with correct values
+        $html = $component->get('html');
+        $this->assertStringContainsString('name="full_name" value="Test User"', $html);
+        $this->assertStringContainsString('name="email" value="test@example.com"', $html);
+        $this->assertStringContainsString('name="selected_event_codes[]" value="BCSMIF2025"', $html);
+
+        // Test actual form submission to RegistrationController@store
+        $validRegistrationData = [
+            'full_name' => 'Test User',
+            'nationality' => 'Brazilian',
+            'date_of_birth' => '1990-01-01',
+            'gender' => 'male',
+            'document_country_origin' => 'BR',
+            'cpf' => '123.456.789-00',
+            'rg_number' => '12.345.678-9',
+            'email' => 'test@example.com',
+            'phone_number' => '+55 11 987654321',
+            'address_street' => 'Test Street, 123',
+            'address_city' => 'São Paulo',
+            'address_state_province' => 'SP',
+            'address_country' => 'BR',
+            'address_postal_code' => '01000-000',
+            'affiliation' => 'Universidade de São Paulo',
+            'position' => 'undergraduate_student',
+            'is_abe_member' => false,
+            'arrival_date' => '2025-09-28',
+            'departure_date' => '2025-10-03',
+            'selected_event_codes' => ['BCSMIF2025'],
+            'participation_format' => 'in-person',
+            'needs_transport_from_gru' => false,
+            'needs_transport_from_usp' => false,
+            'dietary_restrictions' => 'none',
+            'emergency_contact_name' => 'Parent Name',
+            'emergency_contact_relationship' => 'Parent',
+            'emergency_contact_phone' => '+55 11 987654321',
+            'requires_visa_letter' => false,
+        ];
+
+        // Submit form data to the RegistrationController@store route
+        $response = $this->actingAs($user)
+            ->post(route('event-registrations.store'), $validRegistrationData);
+
+        // Verify submission was successful and resulted in registration creation
+        $response->assertRedirect(route('dashboard'));
+
+        // Verify a registration was actually created in the database
+        $this->assertDatabaseHas('registrations', [
+            'user_id' => $user->id,
+            'full_name' => 'Test User',
+            'email' => 'test@example.com',
+            'position' => 'undergraduate_student',
+        ]);
     }
 }
