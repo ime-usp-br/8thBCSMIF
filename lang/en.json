@@ -509,5 +509,15 @@
     "Peru": "Peru",
     "Uruguay": "Uruguay",
     "Venezuela": "Venezuela",
-    "Other": "Other"
+    "Other": "Other",
+    "My Registrations": "My Registrations",
+    "Registration": "Registration",
+    "Events": "Events",
+    "Total Fee": "Total Fee",
+    "No registrations found": "No registrations found",
+    "You have not registered for any events yet.": "You have not registered for any events yet.",
+    "Register for Event": "Register for Event",
+    "Pending payment": "Pending payment",
+    "Pending br proof approval": "Pending br proof approval",
+    "Approved": "Approved"
 }

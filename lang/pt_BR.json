@@ -540,5 +540,15 @@
     "Mexico": "México",
     "Peru": "Peru",
     "Uruguay": "Uruguai",
-    "Venezuela": "Venezuela"
+    "Venezuela": "Venezuela",
+    "My Registrations": "Minhas Inscrições",
+    "Registration": "Inscrição",
+    "Events": "Eventos",
+    "Total Fee": "Taxa Total",
+    "No registrations found": "Nenhuma inscrição encontrada",
+    "You have not registered for any events yet.": "Você ainda não se inscreveu em nenhum evento.",
+    "Register for Event": "Inscrever-se no Evento",
+    "Pending payment": "Pagamento pendente",
+    "Pending br proof approval": "Aguardando aprovação do comprovante",
+    "Approved": "Aprovado"
 }
