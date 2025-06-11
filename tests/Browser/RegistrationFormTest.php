@@ -444,4 +444,185 @@ class RegistrationFormTest extends DuskTestCase
             // (Success message verification would require dashboard message display implementation)
         });
     }
+
+    /**
+     * AC5: Teste Dusk simula o preenchimento e submissão bem-sucedida do formulário
+     * com dados válidos para um participante internacional (incluindo seleção de
+     * suporte a visto, se aplicável) e verifica o redirecionamento para a página
+     * de confirmação/dashboard com mensagem de sucesso.
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('registration-form')]
+    public function registration_form_submits_successfully_for_international_participant(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'international.user@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/register-event')
+                ->waitForText(__('Registration Form'));
+
+            // AC5: Fill all required fields for an international participant
+
+            // 1. Personal Information
+            $browser->type('@full-name-input', 'International Test User')
+                ->type('@nationality-input', 'American')
+                ->type('@date-of-birth-input', '01-01-1985')
+                ->click('@gender-female');
+
+            // 2. Identification Details (International - using passport)
+            $browser->select('@document-country-origin-select', 'US')
+                ->waitFor('#passport_number')
+                ->waitFor('#passport_expiry_date')
+                ->type('#passport_number', 'A12345678')
+                ->type('#passport_expiry_date', '01-01-2030');
+
+            // 3. Contact Information
+            $browser->type('@phone-number-input', '+1 555 123-4567')
+                ->type('@street-address-input', '123 Main Street')
+                ->type('@city-input', 'New York')
+                ->type('@state-province-input', 'NY')
+                ->select('@country-select', 'US')
+                ->type('@postal-code-input', '10001');
+
+            // 4. Professional Details
+            $browser->type('@affiliation-input', 'Columbia University')
+                ->click('@position-professor')
+                ->click('@is-abe-member-yes');
+
+            // 5. Event Participation
+            $browser->type('@arrival-date-input', '27-09-2025')
+                ->type('@departure-date-input', '04-10-2025')
+                ->check('@event-BCSMIF2025')
+                ->check('@event-RAA2025')
+                ->click('@participation-format-in-person');
+
+            // 6. Dietary Restrictions
+            $browser->click('@dietary-restrictions-vegetarian');
+
+            // 7. Emergency Contact
+            $browser->type('@emergency-contact-name-input', 'Emergency Contact')
+                ->type('@emergency-contact-relationship-input', 'Spouse')
+                ->type('@emergency-contact-phone-input', '+1 555 987-6543');
+
+            // 8. Visa Support (specific to international participants)
+            $browser->waitFor('@requires-visa-letter-yes')
+                ->assertVisible('@requires-visa-letter-yes')
+                ->assertVisible('@requires-visa-letter-no')
+                ->click('@requires-visa-letter-yes');
+
+            // 9. Declaration
+            $browser->check('@confirm-information-checkbox')
+                ->check('@consent-data-processing-checkbox');
+
+            // AC5: Submit the form and wait for processing
+            $browser->click('@submit-registration-button')
+                ->pause(3000) // Give time for Livewire validation and form submission
+                ->waitForLocation('/dashboard', 30);
+
+            // AC5: Verify successful redirection to dashboard
+            $browser->assertPathIs('/dashboard');
+
+            // AC5: Successful redirection confirms form submission worked for international participant
+            // (Success message verification would require dashboard message display implementation)
+        });
+    }
+
+    /**
+     * AC5: Teste Dusk simula o preenchimento e submissão bem-sucedida do formulário
+     * com dados válidos para um participante internacional que NÃO precisa de visto
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('registration-form')]
+    public function registration_form_submits_successfully_for_international_participant_without_visa(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'canadian.user@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/register-event')
+                ->waitForText(__('Registration Form'));
+
+            // AC5: Fill all required fields for an international participant (Canada - no visa needed)
+
+            // 1. Personal Information
+            $browser->type('@full-name-input', 'Canadian Test User')
+                ->type('@nationality-input', 'Canadian')
+                ->type('@date-of-birth-input', '15-06-1988')
+                ->click('@gender-other');
+
+            // Fill other gender field when "Other" is selected
+            $browser->waitFor('input[wire\\:model="other_gender"]')
+                ->type('input[wire\\:model="other_gender"]', 'Non-binary');
+
+            // 2. Identification Details (International - using passport)
+            $browser->select('@document-country-origin-select', 'CA')
+                ->waitFor('#passport_number')
+                ->waitFor('#passport_expiry_date')
+                ->type('#passport_number', 'CA987654321')
+                ->type('#passport_expiry_date', '15-12-2029');
+
+            // 3. Contact Information
+            $browser->type('@phone-number-input', '+1 416 555-0123')
+                ->type('@street-address-input', '456 Queen Street West')
+                ->type('@city-input', 'Toronto')
+                ->type('@state-province-input', 'ON')
+                ->select('@country-select', 'CA')
+                ->type('@postal-code-input', 'M5V 2A4');
+
+            // 4. Professional Details
+            $browser->type('@affiliation-input', 'University of Toronto')
+                ->click('@position-other');
+
+            // Fill other position field when "Other" is selected
+            $browser->waitFor('input[wire\\:model="other_position"]')
+                ->type('input[wire\\:model="other_position"]', 'Research Associate');
+
+            $browser->click('@is-abe-member-no');
+
+            // 5. Event Participation
+            $browser->type('@arrival-date-input', '26-09-2025')
+                ->type('@departure-date-input', '05-10-2025')
+                ->check('@event-WDA2025')
+                ->click('@participation-format-online');
+
+            // 6. Dietary Restrictions - select "Other" and specify
+            $browser->click('@dietary-restrictions-other');
+            $browser->waitFor('input[wire\\:model="other_dietary_restrictions"]')
+                ->type('input[wire\\:model="other_dietary_restrictions"]', 'Kosher');
+
+            // 7. Emergency Contact
+            $browser->type('@emergency-contact-name-input', 'Parent Contact')
+                ->type('@emergency-contact-relationship-input', 'Mother')
+                ->type('@emergency-contact-phone-input', '+1 416 555-9876');
+
+            // 8. Visa Support (specific to international participants) - NO visa needed
+            $browser->waitFor('@requires-visa-letter-no')
+                ->assertVisible('@requires-visa-letter-yes')
+                ->assertVisible('@requires-visa-letter-no')
+                ->click('@requires-visa-letter-no');
+
+            // 9. Declaration
+            $browser->check('@confirm-information-checkbox')
+                ->check('@consent-data-processing-checkbox');
+
+            // AC5: Submit the form and wait for processing
+            $browser->click('@submit-registration-button')
+                ->pause(3000) // Give time for Livewire validation and form submission
+                ->waitForLocation('/dashboard', 30);
+
+            // AC5: Verify successful redirection to dashboard
+            $browser->assertPathIs('/dashboard');
+
+            // AC5: Successful redirection confirms form submission worked for international participant
+        });
+    }
 }

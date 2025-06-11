@@ -646,11 +646,11 @@ new #[Layout('layouts.app')] class extends Component {
                                 <x-input-label :value="__('Do you require an invitation letter to get a Brazilian visa?')" />
                                 <div class="mt-2 space-y-2 sm:space-y-3">
                                     <label class="flex items-center">
-                                        <input wire:model="requires_visa_letter" type="radio" value="yes" name="requires_visa_letter" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
+                                        <input wire:model="requires_visa_letter" type="radio" value="yes" name="requires_visa_letter" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="requires-visa-letter-yes">
                                         <span class="ml-2">{{ __('Yes') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model="requires_visa_letter" type="radio" value="no" name="requires_visa_letter" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri">
+                                        <input wire:model="requires_visa_letter" type="radio" value="no" name="requires_visa_letter" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="requires-visa-letter-no">
                                         <span class="ml-2">{{ __('No') }}</span>
                                     </label>
                                 </div>
