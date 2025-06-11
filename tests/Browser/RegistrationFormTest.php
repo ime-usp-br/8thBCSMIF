@@ -625,4 +625,235 @@ class RegistrationFormTest extends DuskTestCase
             // AC5: Successful redirection confirms form submission worked for international participant
         });
     }
+
+    /**
+     * AC6: Testes Dusk verificam que a submissão do formulário com dados inválidos
+     * (campos obrigatórios faltando, formatos incorretos) exibe as mensagens de erro
+     * de validação frontend apropriadas (x-input-error).
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('registration-form')]
+    public function registration_form_shows_frontend_validation_errors_for_missing_required_fields(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/register-event')
+                ->waitForText(__('Registration Form'));
+
+            // AC6: Submit form with minimal data (missing most required fields)
+            $browser->click('@submit-registration-button')
+                ->pause(2000); // Wait for Livewire validation
+
+            // AC6: Verify frontend validation error messages are displayed using x-input-error
+
+            // Personal Information errors
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'full name']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'nationality']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'date of birth']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'gender']).'")');
+
+            // Contact Information errors
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'phone number']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'address street']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'address city']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'address state province']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'address postal code']).'")');
+
+            // Professional Details errors
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'affiliation']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'position']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'is abe member']).'")');
+
+            // Event Participation errors
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'arrival date']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'departure date']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'selected event codes']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'participation format']).'")');
+
+            // Emergency Contact errors
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'emergency contact name']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'emergency contact relationship']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'emergency contact phone']).'")');
+
+            // Declaration errors
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.accepted', ['attribute' => 'confirm information']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.accepted', ['attribute' => 'consent data processing']).'")');
+        });
+    }
+
+    /**
+     * AC6: Teste Dusk verifica mensagens de erro para campos condicionais obrigatórios
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('registration-form')]
+    public function registration_form_shows_frontend_validation_errors_for_conditional_required_fields(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/register-event')
+                ->waitForText(__('Registration Form'));
+
+            // AC6: Test Brazilian participant missing CPF/RG
+            $browser->select('@document-country-origin-select', 'BR')
+                ->waitFor('@cpf-input')
+                ->waitFor('@rg-number-input')
+                ->click('@submit-registration-button')
+                ->pause(2000); // Wait for Livewire validation
+
+            // AC6: Verify CPF and RG validation errors
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.required_if', ['attribute' => 'cpf', 'other' => 'document country origin', 'value' => 'BR']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required_if', ['attribute' => 'rg number', 'other' => 'document country origin', 'value' => 'BR']).'")');
+
+            // AC6: Test international participant missing passport
+            $browser->select('@document-country-origin-select', 'US')
+                ->waitFor('#passport_number')
+                ->waitFor('#passport_expiry_date')
+                ->click('@submit-registration-button')
+                ->pause(2000); // Wait for Livewire validation
+
+            // AC6: Verify passport validation errors
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.required_unless', ['attribute' => 'passport number', 'other' => 'document country origin', 'values' => 'BR']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required_unless', ['attribute' => 'passport expiry date', 'other' => 'document country origin', 'values' => 'BR']).'")');
+
+            // AC6: Test "Other" fields validation
+            $browser->click('@gender-other')
+                ->waitFor('input[wire\\:model="other_gender"]')
+                ->click('@position-other')
+                ->waitFor('input[wire\\:model="other_position"]')
+                ->click('@dietary-restrictions-other')
+                ->waitFor('input[wire\\:model="other_dietary_restrictions"]')
+                ->click('@submit-registration-button')
+                ->pause(2000); // Wait for Livewire validation
+
+            // AC6: Verify "Other" fields validation errors
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.required_if', ['attribute' => 'other gender', 'other' => 'gender', 'value' => 'other']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required_if', ['attribute' => 'other position', 'other' => 'position', 'value' => 'other']).'")')
+                ->assertPresent('.text-red-600:contains("'.__('validation.required_if', ['attribute' => 'other dietary restrictions', 'other' => 'dietary restrictions', 'value' => 'other']).'")');
+        });
+    }
+
+    /**
+     * AC6: Teste Dusk verifica mensagens de erro para formatos de dados incorretos
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('registration-form')]
+    public function registration_form_shows_frontend_validation_errors_for_incorrect_formats(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/register-event')
+                ->waitForText(__('Registration Form'));
+
+            // AC6: Fill form with incorrect data formats
+
+            // Invalid email format
+            $browser->clear('@email-input')
+                ->type('@email-input', 'invalid-email-format');
+
+            // Invalid date of birth (future date)
+            $browser->type('@date-of-birth-input', '01-01-2030');
+
+            // For international participant, invalid passport expiry (past date)
+            $browser->select('@document-country-origin-select', 'US')
+                ->waitFor('#passport_number')
+                ->waitFor('#passport_expiry_date')
+                ->type('#passport_expiry_date', '01-01-2020');
+
+            // Invalid arrival/departure dates (past dates and wrong order)
+            $browser->type('@arrival-date-input', '01-01-2020')
+                ->type('@departure-date-input', '01-01-2019');
+
+            // Submit form to trigger validation
+            $browser->click('@submit-registration-button')
+                ->pause(2000); // Wait for Livewire validation
+
+            // AC6: Verify format validation errors are displayed
+
+            // Email format error
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.email', ['attribute' => 'email']).'")');
+
+            // Date of birth error (future date)
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.before', ['attribute' => 'date of birth', 'date' => 'today']).'")');
+
+            // Passport expiry date error (past date)
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.after', ['attribute' => 'passport expiry date', 'date' => 'today']).'")');
+
+            // Arrival date error (past date)
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.after_or_equal', ['attribute' => 'arrival date', 'date' => 'today']).'")');
+
+            // Departure date error (before arrival date)
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.after', ['attribute' => 'departure date', 'date' => 'arrival date']).'")');
+        });
+    }
+
+    /**
+     * AC6: Teste Dusk verifica que mensagens de erro desaparecem quando dados válidos são inseridos
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('registration-form')]
+    public function registration_form_clears_frontend_validation_errors_when_valid_data_entered(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/register-event')
+                ->waitForText(__('Registration Form'));
+
+            // AC6: First, trigger validation errors by submitting empty form
+            $browser->click('@submit-registration-button')
+                ->pause(2000); // Wait for Livewire validation
+
+            // AC6: Verify errors are present
+            $browser->assertPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'full name']).'")');
+
+            // AC6: Fill in valid data and verify errors disappear
+            $browser->type('@full-name-input', 'Valid Name')
+                ->pause(1000) // Wait for Livewire to process
+                ->assertNotPresent('.text-red-600:contains("'.__('validation.required', ['attribute' => 'full name']).'")');
+
+            // AC6: Test email format correction
+            $browser->clear('@email-input')
+                ->type('@email-input', 'invalid-email')
+                ->click('@submit-registration-button')
+                ->pause(2000) // Wait for validation
+                ->assertPresent('.text-red-600:contains("'.__('validation.email', ['attribute' => 'email']).'")')
+                ->clear('@email-input')
+                ->type('@email-input', 'valid@example.com')
+                ->pause(1000) // Wait for Livewire to process
+                ->assertNotPresent('.text-red-600:contains("'.__('validation.email', ['attribute' => 'email']).'")');
+
+            // AC6: Test conditional field error clearing
+            $browser->click('@gender-other')
+                ->waitFor('input[wire\\:model="other_gender"]')
+                ->click('@submit-registration-button')
+                ->pause(2000) // Wait for validation
+                ->assertPresent('.text-red-600:contains("'.__('validation.required_if', ['attribute' => 'other gender', 'other' => 'gender', 'value' => 'other']).'")')
+                ->type('input[wire\\:model="other_gender"]', 'Non-binary')
+                ->pause(1000) // Wait for Livewire to process
+                ->assertNotPresent('.text-red-600:contains("'.__('validation.required_if', ['attribute' => 'other gender', 'other' => 'gender', 'value' => 'other']).'")');
+        });
+    }
 }
