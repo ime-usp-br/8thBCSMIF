@@ -1362,4 +1362,69 @@ class RegistrationControllerTest extends TestCase
             return $mail->registration->id === $registration->id;
         });
     }
+
+    #[Test]
+    public function upload_proof_shows_success_message_and_updates_status_to_pending_br_proof_approval_after_successful_upload(): void
+    {
+        // AC8: Test that after successful upload, user sees success message and status is updated to pending_br_proof_approval
+        Mail::fake();
+        Storage::fake('private');
+
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        // Create an event for the registration
+        $event = Event::where('code', 'BCSMIF2025')->firstOrFail();
+
+        // Create a registration with pending payment status and Brazilian document
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+            'document_country_origin' => 'Brasil',
+            'calculated_fee' => 500.00,
+        ]);
+
+        // Associate the event with the registration
+        $registration->events()->attach($event->code, ['price_at_registration' => 500.00]);
+
+        // Create a fake uploaded file
+        $uploadedFile = UploadedFile::fake()->image('payment_proof.jpg', 800, 600);
+
+        // AC8: Upload the proof
+        $response = $this->post(
+            route('event-registrations.upload-proof', $registration),
+            ['payment_proof' => $uploadedFile]
+        );
+
+        // AC8: Verify redirect back with success message
+        $response->assertRedirect();
+        $response->assertSessionHas('success', __('Payment proof uploaded successfully. The coordinator will review your submission.'));
+
+        // AC8: Verify registration status is updated to pending_br_proof_approval
+        $registration->refresh();
+        $this->assertEquals('pending_br_proof_approval', $registration->payment_status);
+        $this->assertNotNull($registration->payment_proof_path);
+        $this->assertNotNull($registration->payment_uploaded_at);
+
+        // AC8: Verify file was stored correctly
+        Storage::disk('private')->assertExists($registration->payment_proof_path);
+
+        // AC8: Verify notification was sent (additional verification)
+        Mail::assertSent(ProofUploadedNotification::class, function ($mail) use ($registration) {
+            return $mail->registration->id === $registration->id;
+        });
+
+        // AC8: Verify that the success message can be displayed on the UI
+        // (This simulates what would happen when user navigates back to my-registrations page)
+        $myRegistrationsResponse = $this->get(route('registrations.my'));
+        $myRegistrationsResponse->assertOk();
+
+        // The status should now show as pending_br_proof_approval in the UI
+        // This verifies that the UI properly reflects the updated status after reload
+        // Status is formatted according to: __(ucfirst(str_replace(['_', '-'], ' ', $registration->payment_status)))
+        $formattedStatus = __(ucfirst(str_replace(['_', '-'], ' ', 'pending_br_proof_approval')));
+        $myRegistrationsResponse->assertSee($formattedStatus);
+    }
 }
