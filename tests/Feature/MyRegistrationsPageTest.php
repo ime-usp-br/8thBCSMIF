@@ -171,4 +171,83 @@ class MyRegistrationsPageTest extends TestCase
         $response->assertDontSee(__('Registration').' #'.$registration2->id);
         $response->assertDontSee('R$ 200,00');
     }
+
+    /**
+     * Test that registration list displays all key information as required by AC3.
+     * This test specifically addresses AC3 requirements for Issue #13.
+     */
+    public function test_registration_list_displays_key_information(): void
+    {
+        // Create verified user
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create multiple events with descriptive names
+        $event1 = Event::factory()->create(['name' => 'Workshop on Risk Analysis']);
+        $event2 = Event::factory()->create(['name' => '8th BCSMIF Conference']);
+        $event3 = Event::factory()->create(['name' => 'Dependence Analysis Workshop']);
+
+        // Create registration with multiple events and different payment statuses
+        $registration1 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'calculated_fee' => 350.75,
+            'payment_status' => 'pending_payment',
+        ]);
+        $registration1->events()->attach($event1->code, ['price_at_registration' => 100.25]);
+        $registration1->events()->attach($event2->code, ['price_at_registration' => 200.50]);
+        $registration1->events()->attach($event3->code, ['price_at_registration' => 50.00]);
+
+        $registration2 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'calculated_fee' => 0.00,
+            'payment_status' => 'approved',
+        ]);
+        $registration2->events()->attach($event1->code, ['price_at_registration' => 0.00]);
+
+        $registration3 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'calculated_fee' => 150.00,
+            'payment_status' => 'pending_br_proof_approval',
+        ]);
+        $registration3->events()->attach($event2->code, ['price_at_registration' => 150.00]);
+
+        // Test the page displays all key information for each registration
+        $response = $this->actingAs($user)->get('/my-registrations');
+        $response->assertOk();
+
+        // AC3 Requirement 1: Registration ID for each registration
+        $response->assertSee(__('Registration').' #'.$registration1->id);
+        $response->assertSee(__('Registration').' #'.$registration2->id);
+        $response->assertSee(__('Registration').' #'.$registration3->id);
+
+        // AC3 Requirement 2: List of event names for each registration
+        // Registration 1 should show all three events (check each one individually)
+        $response->assertSee('Workshop on Risk Analysis');
+        $response->assertSee('8th BCSMIF Conference');
+        $response->assertSee('Dependence Analysis Workshop');
+
+        // AC3 Requirement 3: Total fee formatted correctly
+        $response->assertSee('R$ 350,75'); // Registration 1
+        $response->assertSee('R$ 0,00');   // Registration 2 (free)
+        $response->assertSee('R$ 150,00'); // Registration 3
+
+        // AC3 Requirement 4: Payment status formatted with proper styling
+        // Check for localized status text
+        $response->assertSee(__('Pending payment'));           // pending_payment
+        $response->assertSee(__('Approved'));                  // approved
+        $response->assertSee(__('Pending br proof approval')); // pending_br_proof_approval
+
+        // Verify status badges have correct CSS classes
+        $content = $response->getContent();
+
+        // Check for pending_payment styling (yellow)
+        $this->assertStringContainsString('bg-yellow-100 text-yellow-800', $content);
+
+        // Check for approved styling (green)
+        $this->assertStringContainsString('bg-green-100 text-green-800', $content);
+
+        // Check for pending_br_proof_approval styling (blue)
+        $this->assertStringContainsString('bg-blue-100 text-blue-800', $content);
+    }
 }
