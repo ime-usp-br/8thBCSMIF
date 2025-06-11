@@ -519,5 +519,16 @@
     "Register for Event": "Register for Event",
     "Pending payment": "Pending payment",
     "Pending br proof approval": "Pending br proof approval",
-    "Approved": "Approved"
+    "Approved": "Approved",
+    "Payment Proof Upload": "Payment Proof Upload",
+    "Payment Proof Document": "Payment Proof Document",
+    "Accepted formats: JPG, JPEG, PNG, PDF. Maximum size: 10MB.": "Accepted formats: JPG, JPEG, PNG, PDF. Maximum size: 10MB.",
+    "Upload Payment Proof": "Upload Payment Proof",
+    "Registration Details": "Registration Details",
+    "Personal Information": "Personal Information",
+    "Document Country": "Document Country",
+    "Events & Pricing": "Events & Pricing",
+    "Price at Registration": "Price at Registration",
+    "Hide Details": "Hide Details",
+    "View Details": "View Details"
 }

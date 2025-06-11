@@ -374,22 +374,22 @@ class MyRegistrationsPageTest extends TestCase
 
         // Verify the data structure that will be used in the detailed view
         $this->assertTrue($loadedRegistration->events->count() === 2);
-        
+
         // Get events by name to avoid order issues
         $workshopEvent = $loadedRegistration->events->firstWhere('name', 'Risk Analysis Workshop');
         $conferenceEvent = $loadedRegistration->events->firstWhere('name', '8th BCSMIF Main Conference');
-        
+
         $this->assertNotNull($workshopEvent);
         $this->assertNotNull($conferenceEvent);
         $this->assertEquals(80.25, $workshopEvent->pivot->price_at_registration);
         $this->assertEquals(100.50, $conferenceEvent->pivot->price_at_registration);
-        
+
         // Test that the page loads correctly with the registration data
         $response = $this->actingAs($user)->get('/my-registrations');
         $response->assertOk();
-        
+
         // Test that basic registration information is displayed (these are always visible)
-        $response->assertSee(__('Registration') . ' #' . $registration->id);
+        $response->assertSee(__('Registration').' #'.$registration->id);
         $response->assertSee('R$ 180,75'); // calculated_fee
     }
 
@@ -467,9 +467,9 @@ class MyRegistrationsPageTest extends TestCase
         $response = $this->actingAs($user)->get('/my-registrations');
         $response->assertOk();
         $response->assertSee(__('View Details'));
-        
+
         // Test that the registration card contains the basic required elements for AC5
-        $response->assertSee(__('Registration') . ' #' . $registration->id);
+        $response->assertSee(__('Registration').' #'.$registration->id);
         $response->assertSee('Test Event');
         $response->assertSee('R$ 100,00');
     }
