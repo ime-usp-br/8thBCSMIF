@@ -273,6 +273,81 @@ class MyRegistrationsTest extends DuskTestCase
     }
 
     /**
+     * AC5: Test Dusk verifies that when clicking to view registration details,
+     * the correct data is displayed, including all associated events and
+     * their respective price_at_registration values.
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('my-registrations')]
+    public function registration_details_display_correct_events_and_prices(): void
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create events for the registration
+        $event1 = Event::where('code', 'BCSMIF2025')->firstOrFail();
+        $event2 = Event::where('code', 'RAA2025')->firstOrFail();
+        $event3 = Event::where('code', 'WDA2025')->firstOrFail();
+
+        // Create a registration with multiple events and different prices
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'approved',
+            'calculated_fee' => 625.25,
+            'full_name' => 'John Doe Registration Test',
+            'email' => 'john.doe@example.com',
+            'nationality' => 'Brazilian',
+            'document_country_origin' => 'Brasil',
+        ]);
+
+        // Associate multiple events with different price_at_registration values
+        $registration->events()->attach($event1->code, ['price_at_registration' => 350.50]);
+        $registration->events()->attach($event2->code, ['price_at_registration' => 175.75]);
+        $registration->events()->attach($event3->code, ['price_at_registration' => 99.00]);
+
+        $this->browse(function (Browser $browser) use ($user, $registration, $event1, $event2, $event3) {
+            $browser->loginAs($user)
+                ->visit('/my-registrations')
+                ->waitForText(__('My Registrations'))
+                ->waitForText(__('Registration').' #'.$registration->id)
+
+                // Click to view registration details
+                ->click("button[wire\\:click='viewRegistration({$registration->id})']")
+                ->waitForText(__('Registration Details'))
+
+                // Verify personal information is displayed
+                ->assertSeeIn('.grid', __('Personal Information'))
+                ->assertSeeIn('.grid', __('Full Name').': John Doe Registration Test')
+                ->assertSeeIn('.grid', __('Email').': john.doe@example.com')
+                ->assertSeeIn('.grid', __('Nationality').': Brazilian')
+                ->assertSeeIn('.grid', __('Document Country').': Brasil')
+
+                // Verify Events & Pricing section is displayed
+                ->assertSeeIn('.grid', __('Events & Pricing'))
+
+                // Verify all three events are displayed with correct names
+                ->assertSeeIn('.grid', $event1->name)
+                ->assertSeeIn('.grid', $event2->name)
+                ->assertSeeIn('.grid', $event3->name)
+
+                // Verify each event shows its correct price_at_registration
+                ->assertSeeIn('.grid', __('Price at Registration').': R$ 350,50')
+                ->assertSeeIn('.grid', __('Price at Registration').': R$ 175,75')
+                ->assertSeeIn('.grid', __('Price at Registration').': R$ 99,00')
+
+                // Verify total calculated fee is displayed
+                ->assertSeeIn('.grid', __('Total Fee').': R$ 625,25')
+
+                // Verify that clicking the button again hides the details
+                ->click("button[wire\\:click='viewRegistration({$registration->id})']")
+                ->waitUntilMissing('.grid')
+                ->assertDontSee(__('Registration Details'));
+        });
+    }
+
+    /**
      * AC4: Test Dusk confirms that an authenticated user does NOT see
      * other user's registrations in their "My Registrations" list.
      */
