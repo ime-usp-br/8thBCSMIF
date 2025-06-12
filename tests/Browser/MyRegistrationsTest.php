@@ -271,4 +271,114 @@ class MyRegistrationsTest extends DuskTestCase
                 ->assertSee($event3->name);
         });
     }
+
+    /**
+     * AC4: Test Dusk confirms that an authenticated user does NOT see
+     * other user's registrations in their "My Registrations" list.
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('my-registrations')]
+    public function authenticated_user_does_not_see_other_users_registrations(): void
+    {
+        // Create two different users
+        $user1 = User::factory()->create([
+            'email_verified_at' => now(),
+            'name' => 'User One',
+            'email' => 'user1@example.com',
+        ]);
+
+        $user2 = User::factory()->create([
+            'email_verified_at' => now(),
+            'name' => 'User Two',
+            'email' => 'user2@example.com',
+        ]);
+
+        // Create events for the registrations
+        $event1 = Event::where('code', 'BCSMIF2025')->firstOrFail();
+        $event2 = Event::where('code', 'RAA2025')->firstOrFail();
+
+        // Create registrations for user1
+        $user1Registration1 = Registration::factory()->create([
+            'user_id' => $user1->id,
+            'payment_status' => 'pending_payment',
+            'calculated_fee' => 350.50,
+            'full_name' => 'User One Registration',
+        ]);
+
+        $user1Registration2 = Registration::factory()->create([
+            'user_id' => $user1->id,
+            'payment_status' => 'approved',
+            'calculated_fee' => 225.75,
+            'full_name' => 'User One Second Registration',
+        ]);
+
+        // Create registrations for user2 (different user)
+        $user2Registration1 = Registration::factory()->create([
+            'user_id' => $user2->id,
+            'payment_status' => 'pending_payment',
+            'calculated_fee' => 400.00,
+            'full_name' => 'User Two Registration',
+        ]);
+
+        $user2Registration2 = Registration::factory()->create([
+            'user_id' => $user2->id,
+            'payment_status' => 'pending_br_proof_approval',
+            'calculated_fee' => 150.00,
+            'full_name' => 'User Two Other Registration',
+        ]);
+
+        // Associate events with registrations
+        $user1Registration1->events()->attach($event1->code, ['price_at_registration' => 350.50]);
+        $user1Registration2->events()->attach($event2->code, ['price_at_registration' => 225.75]);
+        $user2Registration1->events()->attach($event1->code, ['price_at_registration' => 400.00]);
+        $user2Registration2->events()->attach($event2->code, ['price_at_registration' => 150.00]);
+
+        $this->browse(function (Browser $browser) use ($user1, $user2, $user1Registration1, $user1Registration2, $user2Registration1, $user2Registration2) {
+            // Login as user1 and verify they only see their own registrations
+            $browser->loginAs($user1)
+                ->visit('/my-registrations')
+                ->waitForText(__('My Registrations'))
+
+                // User1 should see their own registrations
+                ->assertSee(__('Registration').' #'.$user1Registration1->id)
+                ->assertSee(__('Registration').' #'.$user1Registration2->id)
+                ->assertSee('R$ 350,50')
+                ->assertSee('R$ 225,75')
+
+                // User1 should NOT see user2's registrations
+                ->assertDontSee(__('Registration').' #'.$user2Registration1->id)
+                ->assertDontSee(__('Registration').' #'.$user2Registration2->id)
+                ->assertDontSee('R$ 400,00')
+                ->assertDontSee('R$ 150,00')
+
+                // Logout user1
+                ->logout();
+
+            // Login as user2 and verify they only see their own registrations
+            $browser->loginAs($user2)
+                ->visit('/my-registrations')
+                ->waitForText(__('My Registrations'))
+
+                // User2 should see their own registrations
+                ->assertSee(__('Registration').' #'.$user2Registration1->id)
+                ->assertSee(__('Registration').' #'.$user2Registration2->id)
+                ->assertSee('R$ 400,00')
+                ->assertSee('R$ 150,00')
+
+                // User2 should NOT see user1's registrations
+                ->assertDontSee(__('Registration').' #'.$user1Registration1->id)
+                ->assertDontSee(__('Registration').' #'.$user1Registration2->id)
+                ->assertDontSee('R$ 350,50')
+                ->assertDontSee('R$ 225,75')
+
+                // Additional verification: Click on user2's first registration to view details
+                // and verify full_name is correctly shown (only user2's names)
+                ->click("button[wire\\:click='viewRegistration({$user2Registration1->id})']")
+                ->waitForText(__('Registration Details'))
+                ->assertSee('User Two Registration')
+                ->assertDontSee('User One Registration')
+                ->assertDontSee('User One Second Registration');
+        });
+    }
 }

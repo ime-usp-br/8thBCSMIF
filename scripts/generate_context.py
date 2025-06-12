@@ -914,7 +914,7 @@ def _run_dusk_tests_internal(output_dir: Path, step_num: int, total_steps: int):
             file=sys.stderr,
         )
     exit_code, _, stderr = run_command(
-        ARTISAN_CMD + ["dusk"], dusk_output_file, check=False, timeout=600
+        ARTISAN_CMD + ["dusk"], dusk_output_file, check=False, timeout=1200
     )
     try:
         with open(dusk_output_file, "a", encoding="utf-8") as f:
