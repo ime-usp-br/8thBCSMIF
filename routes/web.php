@@ -32,4 +32,9 @@ Route::post('/event-registrations/{registration}/upload-proof', [RegistrationCon
     ->middleware(['auth', 'verified'])
     ->name('event-registrations.upload-proof');
 
+// Route for my registrations page
+Volt::route('my-registrations', 'pages.my-registrations')
+    ->middleware(['auth', 'verified'])
+    ->name('registrations.my');
+
 require __DIR__.'/auth.php';
