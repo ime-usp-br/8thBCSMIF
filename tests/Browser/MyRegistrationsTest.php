@@ -161,4 +161,34 @@ class MyRegistrationsTest extends DuskTestCase
                 ->assertMissing('@upload-payment-proof-button');
         });
     }
+
+    /**
+     * AC2: Test that an authenticated user with no registrations sees
+     * the empty list message and a link to the registration page.
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('my-registrations')]
+    public function authenticated_user_with_no_registrations_sees_empty_state_message(): void
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Ensure user has no registrations (factory doesn't create any by default)
+        // But let's be explicit about it
+        $user->registrations()->delete();
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/my-registrations')
+                ->waitForText(__('My Registrations'))
+                ->assertSee(__('No registrations found'))
+                ->assertSee(__('You have not registered for any events yet.'))
+                ->assertSeeLink(__('Register for Event'))
+                ->click('a[href="'.route('register-event').'"]')
+                ->waitForLocation('/register-event')
+                ->assertPathIs('/register-event');
+        });
+    }
 }
