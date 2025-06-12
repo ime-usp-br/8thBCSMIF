@@ -191,4 +191,84 @@ class MyRegistrationsTest extends DuskTestCase
                 ->assertPathIs('/register-event');
         });
     }
+
+    /**
+     * AC3: Test that the "My Registrations" page correctly lists a test user's
+     * registrations (after creating some via factory), displaying key information
+     * like ID, event names, total fee and payment status.
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('my-registrations')]
+    public function my_registrations_page_lists_user_registrations_correctly(): void
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create events for the registrations
+        $event1 = Event::where('code', 'BCSMIF2025')->firstOrFail();
+        $event2 = Event::where('code', 'RAA2025')->firstOrFail();
+        $event3 = Event::where('code', 'WDA2025')->firstOrFail();
+
+        // Create multiple registrations with different scenarios for the user
+        $registration1 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+            'calculated_fee' => 350.50,
+            'full_name' => 'Test User One',
+        ]);
+
+        $registration2 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'approved',
+            'calculated_fee' => 275.75,
+            'full_name' => 'Test User One',
+        ]);
+
+        $registration3 = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_br_proof_approval',
+            'calculated_fee' => 125.00,
+            'full_name' => 'Test User One',
+        ]);
+
+        // Associate events with registrations using different price points
+        $registration1->events()->attach($event1->code, ['price_at_registration' => 350.50]);
+
+        $registration2->events()->attach($event2->code, ['price_at_registration' => 175.75]);
+        $registration2->events()->attach($event3->code, ['price_at_registration' => 100.00]);
+
+        $registration3->events()->attach($event3->code, ['price_at_registration' => 125.00]);
+
+        $this->browse(function (Browser $browser) use ($user, $registration1, $registration2, $registration3, $event1, $event2, $event3) {
+            $browser->loginAs($user)
+                ->visit('/my-registrations')
+                ->waitForText(__('My Registrations'))
+
+                // Verify all three registrations are displayed
+                ->assertSee(__('Registration').' #'.$registration1->id)
+                ->assertSee(__('Registration').' #'.$registration2->id)
+                ->assertSee(__('Registration').' #'.$registration3->id)
+
+                // Verify registration 1 details
+                ->assertSee($event1->name)
+                ->assertSee('R$ 350,50')
+                ->assertSee(__('Pending payment'))
+
+                // Verify registration 2 details (multiple events)
+                ->assertSee($event2->name)
+                ->assertSee('R$ 275,75')
+                ->assertSee(__('Approved'))
+
+                // Verify registration 3 details
+                ->assertSee('R$ 125,00')
+                ->assertSee(__('Pending br proof approval'))
+
+                // Verify that all event names appear somewhere on the page
+                ->assertSee($event1->name)
+                ->assertSee($event2->name)
+                ->assertSee($event3->name);
+        });
+    }
 }
