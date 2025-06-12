@@ -24,6 +24,23 @@ class MyRegistrationsTest extends DuskTestCase
     }
 
     /**
+     * AC1: Test that an unauthenticated user trying to access /my-registrations
+     * is redirected to the login page (/login/local).
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('my-registrations')]
+    public function unauthenticated_user_is_redirected_to_login(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $browser->logout()
+                ->visit('/my-registrations')
+                ->waitForLocation('/login/local')
+                ->assertPathIs('/login/local');
+        });
+    }
+
+    /**
      * Test that the payment proof upload form is displayed correctly for Brazilian users
      * with pending payment status.
      */
