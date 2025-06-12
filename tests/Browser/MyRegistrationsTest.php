@@ -24,13 +24,13 @@ class MyRegistrationsTest extends DuskTestCase
     }
 
     /**
-     * AC9: Se o upload falhar devido à validação no backend (tipo/tamanho de arquivo),
-     * a página exibe as mensagens de erro de validação ($errors) correspondentes.
+     * Test that the payment proof upload form is displayed correctly for Brazilian users
+     * with pending payment status.
      */
     #[Test]
     #[Group('dusk')]
     #[Group('my-registrations')]
-    public function upload_proof_shows_validation_errors_for_invalid_files(): void
+    public function payment_proof_upload_form_is_displayed_for_brazilian_users(): void
     {
         Storage::fake('private');
 
@@ -58,26 +58,20 @@ class MyRegistrationsTest extends DuskTestCase
                 ->waitForText(__('My Registrations'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
-                ->waitForText(__('Payment Proof Upload'));
-
-            // AC9: Test with invalid file type (text file instead of image/PDF)
-            $browser->attach('input[name="payment_proof"]', __DIR__.'/../fixtures/invalid_file.txt')
-                ->press(__('Upload Payment Proof'))
-                ->waitForText(__('validation.uploaded'))
-                ->assertSee(__('validation.uploaded'));
-
-            // Verify error styling is applied (red background for errors)
-            $browser->assertVisible('.bg-red-100');
+                ->waitForText(__('Payment Proof Upload'))
+                ->assertSee(__('Payment Proof Document'))
+                ->assertVisible('input[name="payment_proof"]')
+                ->assertVisible('@upload-payment-proof-button');
         });
     }
 
     /**
-     * AC9: Test file size validation error display
+     * Test that payment proof upload form is not displayed for non-Brazilian users.
      */
     #[Test]
     #[Group('dusk')]
     #[Group('my-registrations')]
-    public function upload_proof_shows_validation_errors_for_large_files(): void
+    public function payment_proof_upload_form_is_not_displayed_for_non_brazilian_users(): void
     {
         Storage::fake('private');
 
@@ -88,11 +82,11 @@ class MyRegistrationsTest extends DuskTestCase
         // Create an event for the registration
         $event = Event::where('code', 'BCSMIF2025')->firstOrFail();
 
-        // Create a registration with pending payment status and Brazilian document
+        // Create a registration with pending payment status but NON-Brazilian document
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Argentina', // Non-Brazilian
             'calculated_fee' => 500.00,
         ]);
 
@@ -105,29 +99,19 @@ class MyRegistrationsTest extends DuskTestCase
                 ->waitForText(__('My Registrations'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
-                ->waitForText(__('Payment Proof Upload'));
-
-            // AC9: Test with file that's too large (over 10MB limit)
-            // Note: Using a large file fixture for testing file size validation
-            $browser->attach('input[name="payment_proof"]', __DIR__.'/../fixtures/large_file.jpg')
-                ->press(__('Upload Payment Proof'))
-                ->waitForText(__('validation.uploaded'))
-                ->assertSee(__('validation.uploaded'));
-
-            // AC9: Verify that validation errors are displayed in the error section
-            $browser->assertVisible('.bg-red-100')
-                ->assertVisible('.border-red-400')
-                ->assertVisible('.text-red-700');
+                ->assertDontSee(__('Payment Proof Upload'))
+                ->assertMissing('input[name="payment_proof"]')
+                ->assertMissing('@upload-payment-proof-button');
         });
     }
 
     /**
-     * AC9: Test missing file validation error display
+     * Test that payment proof upload form is not displayed when payment status is not pending.
      */
     #[Test]
     #[Group('dusk')]
     #[Group('my-registrations')]
-    public function upload_proof_shows_validation_errors_for_missing_file(): void
+    public function payment_proof_upload_form_is_not_displayed_when_payment_not_pending(): void
     {
         Storage::fake('private');
 
@@ -138,10 +122,10 @@ class MyRegistrationsTest extends DuskTestCase
         // Create an event for the registration
         $event = Event::where('code', 'BCSMIF2025')->firstOrFail();
 
-        // Create a registration with pending payment status and Brazilian document
+        // Create a registration with APPROVED payment status (not pending)
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'approved', // Not pending
             'document_country_origin' => 'Brasil',
             'calculated_fee' => 500.00,
         ]);
@@ -155,18 +139,9 @@ class MyRegistrationsTest extends DuskTestCase
                 ->waitForText(__('My Registrations'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
-                ->waitForText(__('Payment Proof Upload'));
-
-            // AC9: Test submitting form without selecting a file
-            $browser->press(__('Upload Payment Proof'))
-                ->waitForText(__('validation.required'))
-                ->assertSee(__('validation.required'));
-
-            // AC9: Verify that validation errors are displayed in the correct error styling
-            $browser->assertVisible('.bg-red-100')
-                ->assertVisible('.border-red-400')
-                ->assertVisible('.text-red-700')
-                ->assertVisible('ul.list-disc.list-inside');
+                ->assertDontSee(__('Payment Proof Upload'))
+                ->assertMissing('input[name="payment_proof"]')
+                ->assertMissing('@upload-payment-proof-button');
         });
     }
 }

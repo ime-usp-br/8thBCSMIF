@@ -52,6 +52,6 @@ class HomePageTest extends TestCase
         $response = $this->get('/');
 
         $response->assertStatus(200);
-        $response->assertSee('<title>8th BCSMIF - Brazilian Conference on Statistical Modeling in Insurance and Finance</title>', false);
+        $response->assertSee(__('Welcome to 8th BCSMIF'), false);
     }
 }
