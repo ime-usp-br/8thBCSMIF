@@ -1,0 +1,2 @@
+This is an invalid file type for payment proof upload test.
+It should trigger a validation error because only jpg, jpeg, png, and pdf files are allowed.
