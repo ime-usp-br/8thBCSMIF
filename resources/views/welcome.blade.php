@@ -18,6 +18,9 @@
         {{-- Cabeçalho USP --}}
         <x-usp.header />
 
+        {{-- Navegação Pública --}}
+        <x-layout.public-navigation />
+
         {{-- Container Geral --}}
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
             

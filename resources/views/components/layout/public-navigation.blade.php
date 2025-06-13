@@ -20,10 +20,10 @@
                         {{ __('Workshops') }}
                     </x-nav-link>
                     <x-nav-link :href="route('fees')" :active="request()->routeIs('fees')">
-                        {{ __('Taxas') }}
+                        {{ __('Fees') }}
                     </x-nav-link>
                     <x-nav-link :href="route('payment-info')" :active="request()->routeIs('payment-info')">
-                        {{ __('Pagamento') }}
+                        {{ __('Payment') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -36,7 +36,7 @@
                             {{ __('Login') }}
                         </x-nav-link>
                         <x-nav-link :href="route('register-event')" :active="request()->routeIs('register-event')">
-                            {{ __('Inscrever-se') }}
+                            {{ __('Sign Up') }}
                         </x-nav-link>
                     </div>
                 @endguest
@@ -77,10 +77,10 @@
                 {{ __('Workshops') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('fees')" :active="request()->routeIs('fees')">
-                {{ __('Taxas') }}
+                {{ __('Fees') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('payment-info')" :active="request()->routeIs('payment-info')">
-                {{ __('Pagamento') }}
+                {{ __('Payment') }}
             </x-responsive-nav-link>
         </div>
 
@@ -92,7 +92,7 @@
                         {{ __('Login') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('register-event')" :active="request()->routeIs('register-event')">
-                        {{ __('Inscrever-se') }}
+                        {{ __('Sign Up') }}
                     </x-responsive-nav-link>
                 </div>
             </div>
