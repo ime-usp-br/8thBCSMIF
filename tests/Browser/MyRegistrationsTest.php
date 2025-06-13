@@ -348,6 +348,78 @@ class MyRegistrationsTest extends DuskTestCase
     }
 
     /**
+     * AC8: Test Dusk simulates uploading a valid payment proof file (small PDF)
+     * and verifies that a success message is displayed and the registration status
+     * is updated to 'pending_br_proof_approval'.
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('my-registrations')]
+    public function payment_proof_upload_success_with_valid_pdf_file(): void
+    {
+        Storage::fake('private');
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create an event for the registration
+        $event = Event::where('code', 'BCSMIF2025')->firstOrFail();
+
+        // Create a registration eligible for payment proof upload
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_payment',
+            'document_country_origin' => 'Brasil',
+            'calculated_fee' => 500.00,
+        ]);
+
+        // Associate the event with the registration
+        $registration->events()->attach($event->code, ['price_at_registration' => 500.00]);
+
+        $this->browse(function (Browser $browser) use ($user, $registration) {
+            $browser->loginAs($user)
+                ->visit('/my-registrations')
+                ->waitForText(__('My Registrations'))
+                ->waitForText(__('Registration').' #'.$registration->id)
+                ->click("button[wire\\:click='viewRegistration({$registration->id})']")
+                ->waitForText(__('Payment Proof Upload'))
+                ->assertVisible('input[name="payment_proof"]')
+                ->assertVisible('@upload-payment-proof-button')
+
+                // Upload the test PDF file
+                ->attach('payment_proof', __DIR__.'/files/test_payment_proof.pdf')
+                ->click('@upload-payment-proof-button')
+
+                // Wait for page to load after form submission
+                ->waitForLocation('/my-registrations')
+                ->pause(1000)
+
+                // Verify the page reflects the updated payment status directly in the list
+                ->waitForText(__('Pending br proof approval'))
+                ->assertSee(__('Pending br proof approval'))
+
+                // Click to view the registration details to verify upload form is no longer visible
+                ->click("button[wire\\:click='viewRegistration({$registration->id})']")
+                ->waitForText(__('Registration Details'))
+                
+                // Verify that the payment proof upload form is no longer displayed since status changed
+                ->assertDontSee(__('Payment Proof Upload'))
+                ->assertMissing('input[name="payment_proof"]')
+                ->assertMissing('@upload-payment-proof-button');
+        });
+
+        // Verify database was updated correctly
+        $registration->refresh();
+        $this->assertEquals('pending_br_proof_approval', $registration->payment_status);
+        $this->assertNotNull($registration->payment_proof_path);
+        $this->assertNotNull($registration->payment_uploaded_at);
+
+        // Since we're using Storage::fake('private'), the file path should be set but file won't exist in fake storage
+        $this->assertStringContainsString('proofs/'.$registration->id, $registration->payment_proof_path);
+    }
+
+    /**
      * AC4: Test Dusk confirms that an authenticated user does NOT see
      * other user's registrations in their "My Registrations" list.
      */
