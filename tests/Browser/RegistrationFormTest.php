@@ -391,7 +391,7 @@ class RegistrationFormTest extends DuskTestCase
             // 1. Personal Information
             $browser->type('@full-name-input', 'Test User')
                 ->type('@nationality-input', 'Brazilian')
-                ->type('@date-of-birth-input', '01-01-1990')
+                ->type('@date-of-birth-input', '01/31/1990')
                 ->click('@gender-male');
 
             // 2. Identification Details (Brazilian)
@@ -415,8 +415,8 @@ class RegistrationFormTest extends DuskTestCase
                 ->click('@is-abe-member-no');
 
             // 5. Event Participation
-            $browser->type('@arrival-date-input', '28-09-2025')
-                ->type('@departure-date-input', '03-10-2025')
+            $browser->type('@arrival-date-input', '09/28/2025')
+                ->type('@departure-date-input', '10/03/2025')
                 ->check('@event-BCSMIF2025')
                 ->click('@participation-format-in-person');
 
@@ -471,7 +471,7 @@ class RegistrationFormTest extends DuskTestCase
             // 1. Personal Information
             $browser->type('@full-name-input', 'International Test User')
                 ->type('@nationality-input', 'American')
-                ->type('@date-of-birth-input', '01-01-1985')
+                ->type('@date-of-birth-input', '01/31/1985')
                 ->click('@gender-female');
 
             // 2. Identification Details (International - using passport)
@@ -479,7 +479,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->waitFor('#passport_number')
                 ->waitFor('#passport_expiry_date')
                 ->type('#passport_number', 'A12345678')
-                ->type('#passport_expiry_date', '01-01-2030');
+                ->type('#passport_expiry_date', '01/31/2030');
 
             // 3. Contact Information
             $browser->type('@phone-number-input', '+1 555 123-4567')
@@ -495,8 +495,8 @@ class RegistrationFormTest extends DuskTestCase
                 ->click('@is-abe-member-yes');
 
             // 5. Event Participation
-            $browser->type('@arrival-date-input', '27-09-2025')
-                ->type('@departure-date-input', '04-10-2025')
+            $browser->type('@arrival-date-input', '09/27/2025')
+                ->type('@departure-date-input', '10/04/2025')
                 ->check('@event-BCSMIF2025')
                 ->check('@event-RAA2025')
                 ->click('@participation-format-in-person');
@@ -556,7 +556,7 @@ class RegistrationFormTest extends DuskTestCase
             // 1. Personal Information
             $browser->type('@full-name-input', 'Canadian Test User')
                 ->type('@nationality-input', 'Canadian')
-                ->type('@date-of-birth-input', '15-06-1988')
+                ->type('@date-of-birth-input', '06/15/1988')
                 ->click('@gender-other');
 
             // Fill other gender field when "Other" is selected
@@ -568,7 +568,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->waitFor('#passport_number')
                 ->waitFor('#passport_expiry_date')
                 ->type('#passport_number', 'CA987654321')
-                ->type('#passport_expiry_date', '15-12-2029');
+                ->type('#passport_expiry_date', '12/15/2029');
 
             // 3. Contact Information
             $browser->type('@phone-number-input', '+1 416 555-0123')
@@ -589,8 +589,8 @@ class RegistrationFormTest extends DuskTestCase
             $browser->click('@is-abe-member-no');
 
             // 5. Event Participation
-            $browser->type('@arrival-date-input', '26-09-2025')
-                ->type('@departure-date-input', '05-10-2025')
+            $browser->type('@arrival-date-input', '09/26/2025')
+                ->type('@departure-date-input', '10/05/2025')
                 ->check('@event-WDA2025')
                 ->click('@participation-format-online');
 
@@ -738,17 +738,17 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@email-input', 'invalid-email-format');
 
             // Invalid date of birth (future date)
-            $browser->type('@date-of-birth-input', '01-01-2030');
+            $browser->type('@date-of-birth-input', '01/31/2030');
 
             // For international participant, invalid passport expiry (past date)
             $browser->select('@document-country-origin-select', 'US')
                 ->waitFor('#passport_number')
                 ->waitFor('#passport_expiry_date')
-                ->type('#passport_expiry_date', '01-01-2020');
+                ->type('#passport_expiry_date', '01/31/2020');
 
             // Invalid arrival/departure dates (past dates and wrong order)
-            $browser->type('@arrival-date-input', '01-01-2020')
-                ->type('@departure-date-input', '01-01-2019');
+            $browser->type('@arrival-date-input', '01/31/2020')
+                ->type('@departure-date-input', '01/31/2019');
 
             // Submit form to trigger validation
             $browser->click('@submit-registration-button')
@@ -821,7 +821,7 @@ class RegistrationFormTest extends DuskTestCase
             // to trigger the "must select at least one event" business rule
             $browser->type('@full-name-input', 'Test User')
                 ->type('@nationality-input', 'Brazilian')
-                ->type('@date-of-birth-input', '01-01-1990')
+                ->type('@date-of-birth-input', '01/31/1990')
                 ->click('@gender-male')
                 ->select('@document-country-origin-select', 'BR')
                 ->waitFor('@cpf-input')
@@ -837,8 +837,8 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@affiliation-input', 'Universidade de São Paulo')
                 ->click('@position-undergraduate')
                 ->click('@is-abe-member-no')
-                ->type('@arrival-date-input', '28-09-2025')
-                ->type('@departure-date-input', '03-10-2025')
+                ->type('@arrival-date-input', '09/28/2025')
+                ->type('@departure-date-input', '10/03/2025')
                 ->click('@participation-format-in-person')
                 ->click('@dietary-restrictions-none')
                 ->type('@emergency-contact-name-input', 'Parent Name')
@@ -882,13 +882,13 @@ class RegistrationFormTest extends DuskTestCase
             // AC7: Fill form with minimal valid data but with invalid date combinations
             $browser->type('@full-name-input', 'Test User')
                 ->type('@nationality-input', 'Brazilian')
-                ->type('@date-of-birth-input', '01-01-1990')
+                ->type('@date-of-birth-input', '01/31/1990')
                 ->click('@gender-male')
                 ->select('@document-country-origin-select', 'US')
                 ->waitFor('#passport_number')
                 ->waitFor('#passport_expiry_date')
                 ->type('#passport_number', 'A12345678')
-                ->type('#passport_expiry_date', '01-01-2020') // AC7: Past passport expiry date
+                ->type('#passport_expiry_date', '01/31/2020') // AC7: Past passport expiry date
                 ->type('@phone-number-input', '+1 555 123-4567')
                 ->type('@street-address-input', '123 Main Street')
                 ->type('@city-input', 'New York')
@@ -898,8 +898,8 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@affiliation-input', 'Columbia University')
                 ->click('@position-professor')
                 ->click('@is-abe-member-yes')
-                ->type('@arrival-date-input', '03-10-2025') // AC7: Arrival after departure
-                ->type('@departure-date-input', '28-09-2025') // AC7: Departure before arrival
+                ->type('@arrival-date-input', '10/03/2025') // AC7: Arrival after departure
+                ->type('@departure-date-input', '09/28/2025') // AC7: Departure before arrival
                 ->check('@event-BCSMIF2025')
                 ->click('@participation-format-in-person')
                 ->click('@dietary-restrictions-vegetarian')
@@ -942,7 +942,7 @@ class RegistrationFormTest extends DuskTestCase
             // AC7: Fill form with minimal valid data but claim to be from USP without codpes
             $browser->type('@full-name-input', 'USP Test User')
                 ->type('@nationality-input', 'Brazilian')
-                ->type('@date-of-birth-input', '01-01-1990')
+                ->type('@date-of-birth-input', '01/31/1990')
                 ->click('@gender-male')
                 ->select('@document-country-origin-select', 'BR')
                 ->waitFor('@cpf-input')
@@ -958,8 +958,8 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@affiliation-input', 'Universidade de São Paulo')
                 ->click('@position-undergraduate')
                 ->click('@is-abe-member-no')
-                ->type('@arrival-date-input', '03-10-2025') // AC7: Invalid - arrival after departure
-                ->type('@departure-date-input', '28-09-2025') // AC7: Invalid - departure before arrival
+                ->type('@arrival-date-input', '10/03/2025') // AC7: Invalid - arrival after departure
+                ->type('@departure-date-input', '09/28/2025') // AC7: Invalid - departure before arrival
                 ->check('@event-BCSMIF2025')
                 ->click('@participation-format-in-person')
                 ->click('@dietary-restrictions-none')
@@ -1000,7 +1000,7 @@ class RegistrationFormTest extends DuskTestCase
             // AC7: Fill form with minimal valid data but with invalid codpes format
             $browser->type('@full-name-input', 'USP Test User')
                 ->type('@nationality-input', 'Brazilian')
-                ->type('@date-of-birth-input', '01-01-1990')
+                ->type('@date-of-birth-input', '01/31/1990')
                 ->click('@gender-male')
                 ->select('@document-country-origin-select', 'BR')
                 ->waitFor('@cpf-input')
@@ -1016,8 +1016,8 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@affiliation-input', 'Universidade de São Paulo')
                 ->click('@position-undergraduate')
                 ->click('@is-abe-member-no')
-                ->type('@arrival-date-input', '28-09-2025')
-                ->type('@departure-date-input', '03-10-2025')
+                ->type('@arrival-date-input', '09/28/2025')
+                ->type('@departure-date-input', '10/03/2025')
                 ->click('@participation-format-in-person')
                 ->click('@dietary-restrictions-none')
                 ->type('@emergency-contact-name-input', 'Parent Name')
@@ -1058,13 +1058,13 @@ class RegistrationFormTest extends DuskTestCase
             // AC7: First, submit form with invalid dates to trigger business rule validation
             $browser->type('@full-name-input', 'Test User')
                 ->type('@nationality-input', 'Brazilian')
-                ->type('@date-of-birth-input', '01-01-1990')
+                ->type('@date-of-birth-input', '01/31/1990')
                 ->click('@gender-male')
                 ->select('@document-country-origin-select', 'US')
                 ->waitFor('#passport_number')
                 ->waitFor('#passport_expiry_date')
                 ->type('#passport_number', 'A12345678')
-                ->type('#passport_expiry_date', '01-01-2020') // AC7: Invalid - past date
+                ->type('#passport_expiry_date', '01/31/2020') // AC7: Invalid - past date
                 ->type('@phone-number-input', '+1 555 123-4567')
                 ->type('@street-address-input', '123 Main Street')
                 ->type('@city-input', 'New York')
@@ -1074,8 +1074,8 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@affiliation-input', 'Columbia University')
                 ->click('@position-professor')
                 ->click('@is-abe-member-yes')
-                ->type('@arrival-date-input', '03-10-2025') // AC7: Invalid - after departure
-                ->type('@departure-date-input', '28-09-2025') // AC7: Invalid - before arrival
+                ->type('@arrival-date-input', '10/03/2025') // AC7: Invalid - after departure
+                ->type('@departure-date-input', '09/28/2025') // AC7: Invalid - before arrival
                 ->check('@event-BCSMIF2025')
                 ->click('@participation-format-in-person')
                 ->click('@dietary-restrictions-vegetarian')
@@ -1095,11 +1095,11 @@ class RegistrationFormTest extends DuskTestCase
 
             // AC7: Correct the business rule violations
             $browser->clear('#passport_expiry_date')
-                ->type('#passport_expiry_date', '01-01-2030') // AC7: Valid future date
+                ->type('#passport_expiry_date', '01/31/2030') // AC7: Valid future date
                 ->clear('@arrival-date-input')
-                ->type('@arrival-date-input', '27-09-2025') // AC7: Valid - before departure
+                ->type('@arrival-date-input', '09/27/2025') // AC7: Valid - before departure
                 ->clear('@departure-date-input')
-                ->type('@departure-date-input', '04-10-2025'); // AC7: Valid - after arrival
+                ->type('@departure-date-input', '10/04/2025'); // AC7: Valid - after arrival
 
             // AC7: Submit form again with corrected data
             $browser->click('@submit-registration-button')
