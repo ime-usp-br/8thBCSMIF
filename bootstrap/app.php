@@ -25,13 +25,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->redirectUsersTo(fn (Request $request) => route('dashboard'));
 
-        // Example of other common middleware configurations that might exist:
-        // $middleware->validateCsrfTokens(except: [
-        //     'stripe/*',
-        // ]);
-        // $middleware->alias([
-        //     'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
-        // ]);
+        // Register Spatie permission middleware aliases
+        $middleware->alias([
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // This is where custom exception handling might be configured.
