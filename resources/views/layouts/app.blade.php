@@ -20,7 +20,7 @@
             {{-- Inclui o cabeçalho USP --}}
             <x-usp.header />
 
-            <livewire:layout.navigation />
+            <x-layout.public-navigation />
 
             <!-- Page Heading -->
             <!-- @if (isset($header))

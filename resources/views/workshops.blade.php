@@ -210,39 +210,6 @@
                             </div>
                         </div>
                     </div>
-<<<<<<< Updated upstream
-
-                    {{-- Navigation Links --}}
-                    <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                        <div class="flex flex-wrap gap-4">
-                            <a href="{{ url('/') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-md transition duration-150 ease-in-out">
-                                🏠 Back to Home
-                            </a>
-                            @guest
-                                <a href="{{ route('login.local') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-md transition duration-150 ease-in-out">
-                                    🔐 Login
-                                </a>
-                            @endguest
-                            @auth
-                                <a href="{{ route('register') }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition duration-150 ease-in-out">
-                                    ✅ Register for the Conference
-                                </a>
-                                <a href="{{ route('dashboard') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition duration-150 ease-in-out">
-                                    🏠 Access Dashboard
-                                </a>
-                            @endauth
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            {{-- Rodapé padrão --}}
-            <footer class="py-8 text-center text-sm text-black dark:text-white/70 bg-gray-100 dark:bg-gray-900">
-                8th BCSMIF - Brazilian Conference on Statistical Modeling in Insurance and Finance
-            </footer>
-
-=======
                 </section>
 
                 {{-- Registration Call to Action --}}
@@ -284,7 +251,6 @@
                     </p>
                 </div>
             </footer>
->>>>>>> Stashed changes
         </div>
     </body>
 </html>
