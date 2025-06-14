@@ -163,7 +163,9 @@ class AuthenticationTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSeeVolt('layout.navigation');
+            ->assertSee(__('Dashboard'))
+            ->assertSee(__('My Registrations'))
+            ->assertSee($user->name);
     }
 
     #[Test]
@@ -173,13 +175,9 @@ class AuthenticationTest extends TestCase
 
         $this->actingAs($user);
 
-        $component = Volt::test('layout.navigation');
+        $response = $this->post(route('logout'));
 
-        $component->call('logout');
-
-        $component
-            ->assertHasNoErrors()
-            ->assertRedirect('/');
+        $response->assertRedirect('/');
 
         $this->assertGuest();
     }

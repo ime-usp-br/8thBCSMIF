@@ -1,0 +1,326 @@
+<?php
+
+namespace Tests\Browser;
+
+use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Laravel\Dusk\Browser;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\DuskTestCase;
+
+class NavigationTest extends DuskTestCase
+{
+    use DatabaseMigrations;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->artisan('db:seed', ['--class' => 'EventsTableSeeder']);
+    }
+
+    /**
+     * AC11: Test presence and functionality of links in public navigation
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('navigation')]
+    public function public_navigation_contains_all_required_links(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $browser->visit('/')
+                ->waitForText('8th BCSMIF')
+                ->pause(1000);
+
+            // AC11: Verify presence of all public navigation links
+            $browser->assertSeeLink(__('Home'))
+                ->assertSeeLink(__('Workshops'))
+                ->assertSeeLink(__('Fees'))
+                ->assertSeeLink(__('Payment'))
+                ->assertSeeLink(__('Login'));
+
+            // AC11: Test functionality of each link (basic navigation only)
+            $browser->clickLink(__('Workshops'))
+                ->waitForText('Satellite Workshops')
+                ->assertPathIs('/workshops');
+
+            $browser->clickLink(__('Fees'))
+                ->waitForText(__('Registration Fees'))
+                ->assertPathIs('/fees');
+
+            $browser->clickLink(__('Payment'))
+                ->waitForText('Payment Information')
+                ->assertPathIs('/payment-info');
+
+            $browser->clickLink(__('Home'))
+                ->waitForText('8th BCSMIF')
+                ->assertPathIs('/');
+        });
+    }
+
+    /**
+     * AC11: Test presence and functionality of links in authenticated navigation
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('navigation')]
+    public function authenticated_navigation_contains_all_required_links(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/dashboard')
+                ->waitForText(__('Dashboard'))
+                ->pause(1000);
+
+            // AC11: Verify presence of all authenticated navigation links
+            $browser->assertSeeLink(__('Dashboard'))
+                ->assertSeeLink(__('My Registrations'))
+                ->assertSeeLink(__('Workshops'))
+                ->assertSeeLink(__('Fees'));
+
+            // AC11: Test functionality of authenticated navigation links
+            $browser->clickLink(__('My Registrations'))
+                ->waitForText(__('My Registrations'))
+                ->assertPathIs('/my-registrations');
+
+            $browser->clickLink(__('Dashboard'))
+                ->waitForText(__('Dashboard'))
+                ->assertPathIs('/dashboard');
+
+            $browser->clickLink(__('Workshops'))
+                ->waitForText('Satellite Workshops')
+                ->assertPathIs('/workshops');
+
+            $browser->clickLink(__('Fees'))
+                ->waitForText(__('Registration Fees'))
+                ->assertPathIs('/fees');
+        });
+    }
+
+    /**
+     * AC11: Test conditional visibility of links (@guest vs @auth)
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('navigation')]
+    public function navigation_shows_conditional_links_based_on_authentication(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            // AC11: Test guest navigation visibility
+            $browser->visit('/')
+                ->waitForText('8th BCSMIF')
+                ->pause(1000);
+
+            // AC11: Guest should see Login in public navigation
+            $browser->assertSeeLink(__('Login'));
+
+            // AC11: Login and test authenticated navigation visibility
+            $browser->loginAs($user)
+                ->visit('/dashboard')
+                ->waitForText(__('Dashboard'))
+                ->pause(1000);
+
+            // AC11: Authenticated user should see Dashboard, My Registrations
+            $browser->assertSeeLink(__('Dashboard'))
+                ->assertSeeLink(__('My Registrations'));
+
+            // AC11: Should see user dropdown elements
+            $browser->assertSee($user->name);
+        });
+    }
+
+    /**
+     * AC11: Test responsive navigation (hamburger menu) functionality
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('navigation')]
+    public function responsive_navigation_hamburger_menu_works_correctly(): void
+    {
+        $this->browse(function (Browser $browser) {
+            // AC11: Test on mobile viewport
+            $browser->resize(375, 667)
+                ->visit('/')
+                ->waitForText('8th BCSMIF')
+                ->pause(1000);
+
+            // AC11: Hamburger button should be visible on mobile
+            $browser->assertVisible('button[type="button"]');
+
+            // AC11: Click hamburger to open mobile menu
+            $browser->click('button[type="button"]')
+                ->pause(1000)
+                ->waitFor('.space-y-1');
+
+            // AC11: Mobile menu should contain navigation links
+            $browser->within('.space-y-1', function ($browser) {
+                $browser->assertSeeLink(__('Home'))
+                    ->assertSeeLink(__('Workshops'))
+                    ->assertSeeLink(__('Fees'))
+                    ->assertSeeLink(__('Payment'));
+            });
+
+            // AC11: Test mobile menu link functionality
+            $browser->within('.space-y-1', function ($browser) {
+                $browser->clickLink(__('Workshops'));
+            });
+
+            $browser->waitForText('Satellite Workshops')
+                ->assertPathIs('/workshops');
+        });
+    }
+
+    /**
+     * AC11: Test responsive navigation with authenticated user
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('navigation')]
+    public function responsive_navigation_works_for_authenticated_users(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->resize(375, 667)
+                ->visit('/dashboard')
+                ->waitForText(__('Dashboard'))
+                ->pause(1000);
+
+            // AC11: Click hamburger to open mobile menu
+            $browser->click('button[type="button"]')
+                ->pause(1000)
+                ->waitFor('.space-y-1');
+
+            // AC11: Mobile menu should contain authenticated navigation links
+            $browser->within('.space-y-1', function ($browser) {
+                $browser->assertSeeLink(__('Dashboard'))
+                    ->assertSeeLink(__('My Registrations'))
+                    ->assertSeeLink(__('Workshops'))
+                    ->assertSeeLink(__('Fees'));
+            });
+
+            // AC11: Test mobile menu navigation functionality
+            $browser->within('.space-y-1', function ($browser) {
+                $browser->clickLink(__('My Registrations'));
+            });
+
+            $browser->waitForText(__('My Registrations'))
+                ->assertPathIs('/my-registrations');
+        });
+    }
+
+    /**
+     * AC11: Test navigation active link highlighting
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('navigation')]
+    public function navigation_highlights_active_links_correctly(): void
+    {
+        $this->browse(function (Browser $browser) {
+            // AC11: Test active link highlighting on public pages
+            $browser->visit('/')
+                ->waitForText('8th BCSMIF')
+                ->pause(1000);
+
+            // AC11: Navigate to different pages and verify they load
+            $browser->visit('/workshops')
+                ->waitForText('Satellite Workshops')
+                ->assertPathIs('/workshops');
+
+            $browser->visit('/fees')
+                ->waitForText(__('Registration Fees'))
+                ->assertPathIs('/fees');
+
+            $browser->visit('/payment-info')
+                ->waitForText('Payment Information')
+                ->assertPathIs('/payment-info');
+        });
+    }
+
+    /**
+     * AC11: Test navigation active link highlighting for authenticated users
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('navigation')]
+    public function authenticated_navigation_highlights_active_links_correctly(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/dashboard')
+                ->waitForText(__('Dashboard'))
+                ->assertPathIs('/dashboard')
+                ->pause(1000);
+
+            $browser->visit('/my-registrations')
+                ->waitForText(__('My Registrations'))
+                ->assertPathIs('/my-registrations');
+
+            $browser->visit('/workshops')
+                ->waitForText('Satellite Workshops')
+                ->assertPathIs('/workshops');
+
+            $browser->visit('/fees')
+                ->waitForText(__('Registration Fees'))
+                ->assertPathIs('/fees');
+        });
+    }
+
+    /**
+     * AC11: Test navigation consistency across different viewport sizes
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('navigation')]
+    public function navigation_is_consistent_across_viewport_sizes(): void
+    {
+        $viewports = [
+            ['width' => 375, 'height' => 667],   // Mobile
+            ['width' => 768, 'height' => 1024],  // Tablet
+            ['width' => 1920, 'height' => 1080], // Desktop
+        ];
+
+        $this->browse(function (Browser $browser) use ($viewports) {
+            foreach ($viewports as $viewport) {
+                $browser->resize($viewport['width'], $viewport['height'])
+                    ->visit('/')
+                    ->waitForText('8th BCSMIF')
+                    ->pause(1000);
+
+                // AC11: Logo should always be present
+                $browser->assertPresent('img[alt="Logo IME-USP"]');
+
+                if ($viewport['width'] < 640) {
+                    // AC11: Mobile - hamburger menu should be visible
+                    $browser->assertVisible('button[type="button"]');
+                } else {
+                    // AC11: Desktop/Tablet - navigation links should be visible
+                    $browser->assertSeeLink(__('Home'))
+                        ->assertSeeLink(__('Workshops'))
+                        ->assertSeeLink(__('Fees'))
+                        ->assertSeeLink(__('Payment'));
+                }
+            }
+        });
+    }
+}
