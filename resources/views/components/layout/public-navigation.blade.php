@@ -35,15 +35,15 @@
                         <x-nav-link :href="route('login.local')" :active="request()->routeIs('login.local')">
                             {{ __('Login') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('register-event')" :active="request()->routeIs('register-event')">
-                            {{ __('Sign Up') }}
-                        </x-nav-link>
                     </div>
                 @endguest
                 @auth
                     <div class="flex space-x-4">
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                             {{ __('Dashboard') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('register-event')" :active="request()->routeIs('register-event')">
+                            {{ __('Sign Up') }}
                         </x-nav-link>
                         <form method="POST" action="{{ route('logout') }}" class="inline">
                             @csrf
@@ -91,9 +91,6 @@
                     <x-responsive-nav-link :href="route('login.local')" :active="request()->routeIs('login.local')">
                         {{ __('Login') }}
                     </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('register-event')" :active="request()->routeIs('register-event')">
-                        {{ __('Sign Up') }}
-                    </x-responsive-nav-link>
                 </div>
             </div>
         @endguest
@@ -107,6 +104,9 @@
                 <div class="mt-3 space-y-1">
                     <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('register-event')" :active="request()->routeIs('register-event')">
+                        {{ __('Sign Up') }}
                     </x-responsive-nav-link>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
