@@ -28,6 +28,12 @@
 
     <div class="py-6 sm:py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {{-- Display success message --}}
+            @if(session('success'))
+                <div class="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                    {{ session('success') }}
+                </div>
+            @endif
             <!-- Back to List Button -->
             <div class="mb-6">
                 <a href="{{ route('admin.registrations.index') }}" 
@@ -472,7 +478,7 @@
                                     <h4 class="text-sm font-semibold text-gray-900">{{ __('Update Payment Status') }}</h4>
                                     <p class="text-sm text-gray-600 mt-1">{{ __('Change the payment status for this registration') }}</p>
                                 </div>
-                                <form method="POST" action="#" data-update-route="admin/registrations/{{ $registration->id }}/update-status" class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                                <form method="POST" action="{{ route('admin.registrations.update-status', $registration) }}" class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
                                     @csrf
                                     @method('PATCH')
                                     <div class="flex-1 min-w-0">

@@ -214,7 +214,7 @@ class RegistrationControllerTest extends TestCase
         $response->assertSee(__('Update Payment Status'));
         $response->assertSee('name="payment_status"', false);
         $response->assertSee('method="POST"', false);
-        $response->assertSee('data-update-route="admin/registrations/'.$registration->id.'/update-status"', false);
+        $response->assertSee('action="'.route('admin.registrations.update-status', $registration).'"', false);
         $response->assertSee(__('Update Status'));
     }
 
@@ -470,5 +470,48 @@ class RegistrationControllerTest extends TestCase
         // Verify the second update was also correctly applied
         $registration->refresh();
         $this->assertEquals('cancelled', $registration->payment_status);
+    }
+
+    /**
+     * AC6: Test that admin is redirected back to registration details page with success message after successful update
+     */
+    public function test_admin_update_status_redirects_to_show_with_success_message(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $registration = Registration::factory()->create(['payment_status' => 'pending_payment']);
+
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br',
+        ]);
+
+        // Verify redirect to the correct show page
+        $response->assertStatus(302);
+        $response->assertRedirect(route('admin.registrations.show', $registration));
+
+        // Verify success flash message is set
+        $response->assertSessionHas('success', __('Payment status updated successfully.'));
+    }
+
+    /**
+     * AC6: Test that the success message is displayed on the registration details page after redirect
+     */
+    public function test_admin_registration_show_displays_success_message_after_update(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $registration = Registration::factory()->create(['payment_status' => 'pending_payment']);
+
+        // Simulate the redirect with success message
+        $response = $this->actingAs($admin)
+            ->withSession(['success' => __('Payment status updated successfully.')])
+            ->get(route('admin.registrations.show', $registration));
+
+        $response->assertOk();
+        $response->assertViewIs('admin.registrations.show');
+
+        // Verify the success message is displayed in the view
+        $response->assertSee(__('Payment status updated successfully.'));
+        $response->assertSee('bg-green-100 border border-green-400 text-green-700', false);
     }
 }
