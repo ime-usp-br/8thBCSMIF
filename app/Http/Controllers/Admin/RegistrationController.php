@@ -58,8 +58,23 @@ class RegistrationController extends Controller
             ],
         ]);
 
+        // Store the old status for logging
+        $oldStatus = $registration->payment_status;
+        $newStatus = $validated['payment_status'];
+
+        // Create log entry with admin info, timestamps, and status change details
+        $user = $request->user();
+        $adminName = (!empty($user->name)) ? $user->name : ($user->email ?? 'Unknown Admin');
+        $timestamp = now()->format('Y-m-d H:i:s');
+        $logEntry = "[{$timestamp}] Payment status changed by {$adminName}: '{$oldStatus}' -> '{$newStatus}'";
+
+        // Append to existing notes or create new notes
+        $existingNotes = $registration->notes ? $registration->notes."\n" : '';
+        $updatedNotes = $existingNotes.$logEntry;
+
         $registration->update([
-            'payment_status' => $validated['payment_status'],
+            'payment_status' => $newStatus,
+            'notes' => $updatedNotes,
         ]);
 
         return redirect()->route('admin.registrations.show', $registration)

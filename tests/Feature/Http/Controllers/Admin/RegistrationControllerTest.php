@@ -594,4 +594,182 @@ class RegistrationControllerTest extends TestCase
             $response->assertSee($expectedLabel);
         }
     }
+
+    /**
+     * AC9: Test that status change log is recorded in the notes field
+     */
+    public function test_admin_update_status_creates_log_entry_in_notes(): void
+    {
+        $admin = User::factory()->create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+        ]);
+        $admin->assignRole('admin');
+
+        $registration = Registration::factory()->create([
+            'payment_status' => 'pending_payment',
+            'notes' => null,
+        ]);
+
+        // Update the payment status
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        // Verify the log entry was created in the notes field
+        $registration->refresh();
+        $this->assertNotNull($registration->notes);
+
+        // Verify log entry contains all required information
+        $this->assertStringContainsString('Payment status changed by Admin User', $registration->notes);
+        $this->assertStringContainsString("'pending_payment' -> 'paid_br'", $registration->notes);
+
+        // Verify timestamp format is present (YYYY-MM-DD HH:MM:SS format)
+        $this->assertMatchesRegularExpression('/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/', $registration->notes);
+    }
+
+    /**
+     * AC9: Test that multiple status changes append to existing notes
+     */
+    public function test_admin_update_status_appends_to_existing_notes(): void
+    {
+        $admin = User::factory()->create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+        ]);
+        $admin->assignRole('admin');
+
+        $registration = Registration::factory()->create([
+            'payment_status' => 'pending_payment',
+            'notes' => 'Initial note about registration',
+        ]);
+
+        // First status change
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'pending_br_proof_approval',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        $registration->refresh();
+        $firstNotes = $registration->notes;
+
+        // Verify original notes are preserved
+        $this->assertStringContainsString('Initial note about registration', $firstNotes);
+        $this->assertStringContainsString("'pending_payment' -> 'pending_br_proof_approval'", $firstNotes);
+
+        // Second status change
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        $registration->refresh();
+        $secondNotes = $registration->notes;
+
+        // Verify all notes are preserved and new log is appended
+        $this->assertStringContainsString('Initial note about registration', $secondNotes);
+        $this->assertStringContainsString("'pending_payment' -> 'pending_br_proof_approval'", $secondNotes);
+        $this->assertStringContainsString("'pending_br_proof_approval' -> 'paid_br'", $secondNotes);
+    }
+
+    /**
+     * AC9: Test that log entry includes admin name from user name field
+     */
+    public function test_admin_update_status_log_includes_admin_name(): void
+    {
+        $admin = User::factory()->create([
+            'name' => 'João Silva Admin',
+            'email' => 'joao.silva@usp.br',
+        ]);
+        $admin->assignRole('admin');
+
+        $registration = Registration::factory()->create([
+            'payment_status' => 'pending_payment',
+            'notes' => null,
+        ]);
+
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        $registration->refresh();
+        $this->assertStringContainsString('Payment status changed by João Silva Admin', $registration->notes);
+    }
+
+    /**
+     * AC9: Test that log entry falls back to email when name is not available
+     */
+    public function test_admin_update_status_log_falls_back_to_email_when_no_name(): void
+    {
+        $admin = User::factory()->create([
+            'name' => '',
+            'email' => 'admin@usp.br',
+        ]);
+        $admin->assignRole('admin');
+
+        $registration = Registration::factory()->create([
+            'payment_status' => 'pending_payment',
+            'notes' => null,
+        ]);
+
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        $registration->refresh();
+        $this->assertStringContainsString('Payment status changed by admin@usp.br', $registration->notes);
+    }
+
+    /**
+     * AC9: Test that log entry contains correct timestamp format
+     */
+    public function test_admin_update_status_log_contains_correct_timestamp_format(): void
+    {
+        $admin = User::factory()->create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+        ]);
+        $admin->assignRole('admin');
+
+        $registration = Registration::factory()->create([
+            'payment_status' => 'pending_payment',
+            'notes' => null,
+        ]);
+
+        $beforeTime = now();
+
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br',
+        ]);
+
+        $afterTime = now();
+
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        $registration->refresh();
+
+        // Extract timestamp from log entry
+        preg_match('/\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]/', $registration->notes, $matches);
+        $this->assertCount(2, $matches, 'Timestamp pattern not found in notes');
+
+        $logTimestamp = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $matches[1]);
+
+        // Verify timestamp is within reasonable range (between before and after the request)
+        $this->assertTrue($logTimestamp->greaterThanOrEqualTo($beforeTime->subSeconds(1)));
+        $this->assertTrue($logTimestamp->lessThanOrEqualTo($afterTime->addSeconds(1)));
+    }
 }
