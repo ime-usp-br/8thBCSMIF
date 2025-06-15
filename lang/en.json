@@ -547,5 +547,9 @@
     "Paid (International)": "Paid (International)",
     "Cancelled": "Cancelled",
     "Payment proof not found": "Payment proof not found",
-    "Payment proof file not found": "Payment proof file not found"
+    "Payment proof file not found": "Payment proof file not found",
+    "Filter by Event": "Filter by Event",
+    "All Events": "All Events",
+    "Filter by Payment Status": "Filter by Payment Status",
+    "All Statuses": "All Statuses"
 }

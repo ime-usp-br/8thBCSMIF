@@ -578,5 +578,9 @@
     "Paid (International)": "Pago (Internacional)",
     "Cancelled": "Cancelado",
     "Payment proof not found": "Comprovante de pagamento não encontrado",
-    "Payment proof file not found": "Arquivo do comprovante de pagamento não encontrado"
+    "Payment proof file not found": "Arquivo do comprovante de pagamento não encontrado",
+    "Filter by Event": "Filtrar por Evento",
+    "All Events": "Todos os Eventos",
+    "Filter by Payment Status": "Filtrar por Status de Pagamento",
+    "All Statuses": "Todos os Status"
 }

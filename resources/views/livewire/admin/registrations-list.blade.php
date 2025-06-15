@@ -5,6 +5,38 @@
                 {{ __('Registration List') }}
             </h3>
             
+            <!-- Filters Section -->
+            <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Event Filter -->
+                <div>
+                    <label for="filterEventCode" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ __('Filter by Event') }}
+                    </label>
+                    <select wire:model.live="filterEventCode" id="filterEventCode" 
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <option value="">{{ __('All Events') }}</option>
+                        <option value="BCSMIF2025">{{ __('8th BCSMIF') }}</option>
+                        <option value="RAA2025">{{ __('RAA2025') }}</option>
+                        <option value="WDA2025">{{ __('WDA2025') }}</option>
+                    </select>
+                </div>
+                
+                <!-- Payment Status Filter -->
+                <div>
+                    <label for="filterPaymentStatus" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ __('Filter by Payment Status') }}
+                    </label>
+                    <select wire:model.live="filterPaymentStatus" id="filterPaymentStatus" 
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <option value="">{{ __('All Statuses') }}</option>
+                        <option value="pending_payment">{{ __('Pending Payment') }}</option>
+                        <option value="paid_br">{{ __('Paid (BR)') }}</option>
+                        <option value="paid_int">{{ __('Paid (International)') }}</option>
+                        <option value="cancelled">{{ __('Cancelled') }}</option>
+                    </select>
+                </div>
+            </div>
+            
             @if($registrations->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
