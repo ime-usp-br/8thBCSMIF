@@ -353,7 +353,7 @@ class RegistrationsListTest extends TestCase
 
         // Apply event filter - should show filtered results on page 1
         $component->set('filterEventCode', 'BCSMIF2025');
-        
+
         // Verify we have filtered results (only 5 registrations with BCSMIF event should be visible)
         for ($i = 0; $i < 5; $i++) {
             $component->assertSee("User {$i}");
@@ -363,7 +363,7 @@ class RegistrationsListTest extends TestCase
 
         // Apply payment status filter
         $component->set('filterPaymentStatus', 'pending_payment');
-        
+
         // Verify combined filters work (BCSMIF event + pending payment)
         // Only users 0-4 have BCSMIF event, and 0-9 have pending payment, so 0-4 should be visible
         for ($i = 0; $i < 5; $i++) {
