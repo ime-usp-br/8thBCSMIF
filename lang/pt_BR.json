@@ -566,5 +566,17 @@
     "Fees": "Taxas",
     "Payment": "Pagamento",
     "Sign Up": "Inscrever-se",
-    "My Registrations": "Minhas Inscrições"
+    "My Registrations": "Minhas Inscrições",
+    "Registration Management": "Gerenciamento de Inscrições",
+    "Registration List": "Lista de Inscrições",
+    "Registration ID": "ID da Inscrição",
+    "Participant Name": "Nome do Participante",
+    "Participant Email": "Email do Participante",
+    "No events": "Nenhum evento",
+    "Pending Payment": "Pagamento Pendente",
+    "Paid (BR)": "Pago (BR)",
+    "Paid (International)": "Pago (Internacional)",
+    "Cancelled": "Cancelado",
+    "Payment proof not found": "Comprovante de pagamento não encontrado",
+    "Payment proof file not found": "Arquivo do comprovante de pagamento não encontrado"
 }

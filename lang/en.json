@@ -535,5 +535,17 @@
     "Fees": "Fees",
     "Payment": "Payment",
     "Sign Up": "Sign Up",
-    "My Registrations": "My Registrations"
+    "My Registrations": "My Registrations",
+    "Registration Management": "Registration Management",
+    "Registration List": "Registration List",
+    "Registration ID": "Registration ID",
+    "Participant Name": "Participant Name",
+    "Participant Email": "Participant Email",
+    "No events": "No events",
+    "Pending Payment": "Pending Payment",
+    "Paid (BR)": "Paid (BR)",
+    "Paid (International)": "Paid (International)",
+    "Cancelled": "Cancelled",
+    "Payment proof not found": "Payment proof not found",
+    "Payment proof file not found": "Payment proof file not found"
 }
