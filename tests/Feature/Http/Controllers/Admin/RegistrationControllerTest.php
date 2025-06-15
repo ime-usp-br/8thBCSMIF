@@ -431,4 +431,44 @@ class RegistrationControllerTest extends TestCase
             $this->assertEquals($status, $registration->payment_status);
         }
     }
+
+    /**
+     * AC5: Test that payment_status field is correctly updated in database after successful validation
+     */
+    public function test_admin_update_status_correctly_updates_payment_status_in_database(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        // Create registration with initial status
+        $registration = Registration::factory()->create(['payment_status' => 'pending_payment']);
+
+        // Verify initial status
+        $this->assertEquals('pending_payment', $registration->payment_status);
+
+        // Update to a different status
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br',
+        ]);
+
+        // Verify response success
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        // Verify the payment_status field was correctly updated in the database
+        $registration->refresh();
+        $this->assertEquals('paid_br', $registration->payment_status);
+
+        // Test another status change to ensure updates work consistently
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'cancelled',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        // Verify the second update was also correctly applied
+        $registration->refresh();
+        $this->assertEquals('cancelled', $registration->payment_status);
+    }
 }
