@@ -84,6 +84,61 @@ class RegistrationControllerTest extends TestCase
         $response->assertViewHas('registration', $registration);
     }
 
+    public function test_admin_registration_show_displays_events_with_price_at_registration(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $event1 = \App\Models\Event::factory()->create([
+            'code' => 'BCSMIF2025',
+            'name' => '8th BCSMIF Conference',
+        ]);
+        $event2 = \App\Models\Event::factory()->create([
+            'code' => 'RAA2025',
+            'name' => 'RAA Workshop 2025',
+        ]);
+
+        $registration = Registration::factory()->create([
+            'full_name' => 'Test User',
+            'calculated_fee' => 150.75,
+        ]);
+
+        $registration->events()->attach([
+            $event1->code => ['price_at_registration' => 100.50],
+            $event2->code => ['price_at_registration' => 50.25],
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.registrations.show', $registration));
+
+        $response->assertOk();
+        $response->assertViewIs('admin.registrations.show');
+        $response->assertViewHas('registration');
+
+        // Verify events data is available in the view
+        $viewRegistration = $response->viewData('registration');
+        $this->assertEquals(2, $viewRegistration->events->count());
+
+        // Verify events with price_at_registration
+        $events = $viewRegistration->events;
+        $bcsmifEvent = $events->where('code', 'BCSMIF2025')->first();
+        $raaEvent = $events->where('code', 'RAA2025')->first();
+
+        $this->assertNotNull($bcsmifEvent);
+        $this->assertEquals(100.50, $bcsmifEvent->pivot->price_at_registration);
+        $this->assertEquals('8th BCSMIF Conference', $bcsmifEvent->name);
+
+        $this->assertNotNull($raaEvent);
+        $this->assertEquals(50.25, $raaEvent->pivot->price_at_registration);
+        $this->assertEquals('RAA Workshop 2025', $raaEvent->name);
+
+        // Verify the view content contains the events and prices
+        $response->assertSee('8th BCSMIF Conference');
+        $response->assertSee('RAA Workshop 2025');
+        $response->assertSee('R$ 100,50');
+        $response->assertSee('R$ 50,25');
+        $response->assertSee('R$ 150,75'); // Total calculated fee
+    }
+
     public function test_admin_download_proof_requires_authentication(): void
     {
         $registration = Registration::factory()->create(['payment_proof_path' => 'test.pdf']);
