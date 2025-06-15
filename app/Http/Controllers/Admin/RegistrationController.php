@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -41,9 +42,27 @@ class RegistrationController extends Controller
 
     public function updateStatus(Request $request, Registration $registration): RedirectResponse
     {
-        // This method serves as the entry point for payment status updates.
-        // Full implementation will be completed in subsequent ACs (AC4-AC6).
+        /** @var array{payment_status: string} $validated */
+        $validated = $request->validate([
+            'payment_status' => [
+                'required',
+                Rule::in([
+                    'pending_payment',
+                    'pending_br_proof_approval',
+                    'paid_br',
+                    'invoice_sent_int',
+                    'paid_int',
+                    'free',
+                    'cancelled',
+                ]),
+            ],
+        ]);
 
-        return redirect()->route('admin.registrations.show', $registration);
+        $registration->update([
+            'payment_status' => $validated['payment_status'],
+        ]);
+
+        return redirect()->route('admin.registrations.show', $registration)
+            ->with('success', __('Payment status updated successfully.'));
     }
 }

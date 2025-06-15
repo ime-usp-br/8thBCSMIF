@@ -351,6 +351,7 @@
     "Coordinator registration notification sent": "Coordinator registration notification sent",
     "Coordinator email not configured - coordinator notification not sent": "Coordinator email not configured - coordinator notification not sent",
     "Payment proof uploaded successfully": "Payment proof uploaded successfully",
+    "Payment status updated successfully.": "Payment status updated successfully.",
     "Proof upload notification sent to coordinator": "Proof upload notification sent to coordinator",
     "Failed to upload payment proof": "Failed to upload payment proof",
     "You are not authorized to upload proof for this registration.": "You are not authorized to upload proof for this registration.",

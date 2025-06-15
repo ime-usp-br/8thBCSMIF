@@ -305,7 +305,9 @@ class RegistrationControllerTest extends TestCase
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
-        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration));
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br', // Provide valid payment_status to avoid validation errors
+        ]);
 
         // Should not return 404 (route exists) and should redirect (method exists)
         $response->assertStatus(302);
@@ -347,9 +349,86 @@ class RegistrationControllerTest extends TestCase
         $admin->assignRole('admin');
         $registration = Registration::factory()->create();
 
-        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration));
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br', // Provide valid payment_status to avoid validation errors
+        ]);
 
         $response->assertStatus(302);
         $response->assertRedirect(route('admin.registrations.show', $registration));
+    }
+
+    /**
+     * AC4: Test that updateStatus validates payment_status field is required
+     */
+    public function test_admin_update_status_validates_payment_status_required(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $registration = Registration::factory()->create(['payment_status' => 'pending_payment']);
+
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            // No payment_status provided
+        ]);
+
+        $response->assertSessionHasErrors('payment_status');
+        $response->assertStatus(302);
+    }
+
+    /**
+     * AC4: Test that updateStatus validates payment_status against allowed values
+     */
+    public function test_admin_update_status_validates_payment_status_allowed_values(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $registration = Registration::factory()->create(['payment_status' => 'pending_payment']);
+
+        // Test invalid payment status
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'invalid_status',
+        ]);
+
+        $response->assertSessionHasErrors('payment_status');
+        $response->assertStatus(302);
+
+        // Verify registration status was not changed
+        $registration->refresh();
+        $this->assertEquals('pending_payment', $registration->payment_status);
+    }
+
+    /**
+     * AC4: Test that updateStatus accepts all valid payment_status values
+     */
+    public function test_admin_update_status_accepts_all_valid_payment_status_values(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $validStatuses = [
+            'pending_payment',
+            'pending_br_proof_approval',
+            'paid_br',
+            'invoice_sent_int',
+            'paid_int',
+            'free',
+            'cancelled',
+        ];
+
+        foreach ($validStatuses as $status) {
+            $registration = Registration::factory()->create(['payment_status' => 'pending_payment']);
+
+            $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+                'payment_status' => $status,
+            ]);
+
+            $response->assertSessionHasNoErrors();
+            $response->assertStatus(302);
+            $response->assertRedirect(route('admin.registrations.show', $registration));
+            $response->assertSessionHas('success', __('Payment status updated successfully.'));
+
+            // Verify the status was actually updated in the database
+            $registration->refresh();
+            $this->assertEquals($status, $registration->payment_status);
+        }
     }
 }
