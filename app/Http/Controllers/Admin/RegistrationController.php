@@ -82,10 +82,14 @@ class RegistrationController extends Controller
 
         // Send email notification if requested, especially for confirmations
         $sendNotification = isset($validated['send_notification']) && $validated['send_notification'] === '1';
-        if ($sendNotification && $registration->user && $registration->user->email) {
-            Mail::to($registration->user->email)->send(
-                new PaymentStatusUpdatedNotification($registration, $oldStatus, $newStatus)
-            );
+        // @phpstan-ignore-next-line
+        if ($sendNotification && $registration->user) {
+            $userEmail = $registration->user->email;
+            if (! empty($userEmail)) {
+                Mail::to($userEmail)->send(
+                    new PaymentStatusUpdatedNotification($registration, $oldStatus, $newStatus)
+                );
+            }
         }
 
         return redirect()->route('admin.registrations.show', $registration)
