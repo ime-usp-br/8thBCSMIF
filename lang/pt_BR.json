@@ -603,5 +603,10 @@
     "All events combined": "Todos os eventos combinados",
     "Payment status and proof details": "Status de pagamento e detalhes do comprovante",
     "Download payment verification document": "Baixar documento de verificação de pagamento",
-    "Internal registration details and notes": "Detalhes internos de registro e observações"
+    "Internal registration details and notes": "Detalhes internos de registro e observações",
+    "Pending BR Proof Approval": "Aguardando Aprovação Comprovante BR",
+    "Invoice Sent (International)": "Fatura Enviada (Internacional)",
+    "Update Payment Status": "Atualizar Status de Pagamento",
+    "Change the payment status for this registration": "Alterar o status de pagamento desta inscrição",
+    "Update Status": "Atualizar Status"
 }

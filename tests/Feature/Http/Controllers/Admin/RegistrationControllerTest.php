@@ -198,4 +198,99 @@ class RegistrationControllerTest extends TestCase
         $response->assertOk();
         $response->assertHeader('Content-Type', 'application/pdf');
     }
+
+    /**
+     * AC2: Test that admin.registrations.show page displays payment status update form with dropdown
+     */
+    public function test_admin_registration_show_displays_payment_status_update_form(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $registration = Registration::factory()->create(['payment_status' => 'pending_payment']);
+
+        $response = $this->actingAs($admin)->get(route('admin.registrations.show', $registration));
+
+        $response->assertOk();
+        $response->assertSee(__('Update Payment Status'));
+        $response->assertSee('name="payment_status"', false);
+        $response->assertSee('method="POST"', false);
+        $response->assertSee('data-update-route="admin/registrations/'.$registration->id.'/update-status"', false);
+        $response->assertSee(__('Update Status'));
+    }
+
+    /**
+     * AC2: Test that payment status dropdown contains all required status options
+     */
+    public function test_admin_registration_show_dropdown_contains_all_required_status_options(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $registration = Registration::factory()->create(['payment_status' => 'pending_payment']);
+
+        $response = $this->actingAs($admin)->get(route('admin.registrations.show', $registration));
+
+        $response->assertOk();
+
+        // Verify all required status options are present in the dropdown
+        $response->assertSee('value="pending_payment"', false);
+        $response->assertSee('value="pending_br_proof_approval"', false);
+        $response->assertSee('value="paid_br"', false);
+        $response->assertSee('value="invoice_sent_int"', false);
+        $response->assertSee('value="paid_int"', false);
+        $response->assertSee('value="free"', false);
+        $response->assertSee('value="cancelled"', false);
+
+        // Verify label translations are present
+        $response->assertSee(__('Pending Payment'));
+        $response->assertSee(__('Pending BR Proof Approval'));
+        $response->assertSee(__('Paid (BR)'));
+        $response->assertSee(__('Invoice Sent (International)'));
+        $response->assertSee(__('Paid (International)'));
+        $response->assertSee(__('Free'));
+        $response->assertSee(__('Cancelled'));
+    }
+
+    /**
+     * AC2: Test that current payment status is pre-selected in dropdown
+     */
+    public function test_admin_registration_show_dropdown_preselects_current_status(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        // Test with different payment statuses
+        $testStatuses = ['pending_payment', 'paid_br', 'paid_int', 'cancelled'];
+
+        foreach ($testStatuses as $status) {
+            $registration = Registration::factory()->create(['payment_status' => $status]);
+
+            $response = $this->actingAs($admin)->get(route('admin.registrations.show', $registration));
+
+            $response->assertOk();
+            $response->assertSee('value="'.$status.'" selected', false);
+        }
+    }
+
+    /**
+     * AC2: Test that payment status form is responsive and follows Tailwind CSS styling
+     */
+    public function test_admin_registration_show_form_has_responsive_styling(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $registration = Registration::factory()->create(['payment_status' => 'pending_payment']);
+
+        $response = $this->actingAs($admin)->get(route('admin.registrations.show', $registration));
+
+        $response->assertOk();
+
+        // Verify responsive classes are present
+        $response->assertSee('flex flex-col sm:flex-row', false);
+        $response->assertSee('gap-3 items-stretch sm:items-center', false);
+
+        // Verify Tailwind CSS classes for form styling
+        $response->assertSee('border-gray-300 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri', false);
+        $response->assertSee('bg-usp-blue-pri hover:bg-usp-blue-pri/90', false);
+        $response->assertSee('rounded-md', false);
+    }
 }

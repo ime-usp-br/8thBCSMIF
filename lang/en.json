@@ -572,5 +572,10 @@
     "All events combined": "All events combined",
     "Payment status and proof details": "Payment status and proof details",
     "Download payment verification document": "Download payment verification document",
-    "Internal registration details and notes": "Internal registration details and notes"
+    "Internal registration details and notes": "Internal registration details and notes",
+    "Pending BR Proof Approval": "Pending BR Proof Approval",
+    "Invoice Sent (International)": "Invoice Sent (International)",
+    "Update Payment Status": "Update Payment Status",
+    "Change the payment status for this registration": "Change the payment status for this registration",
+    "Update Status": "Update Status"
 }
