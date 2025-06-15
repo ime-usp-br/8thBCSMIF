@@ -901,12 +901,17 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@arrival-date-input', '10/03/2025') // AC7: Arrival after departure
                 ->type('@departure-date-input', '09/28/2025') // AC7: Departure before arrival
                 ->check('@event-BCSMIF2025')
+                ->pause(1000) // Wait for Livewire to process event selection
                 ->click('@participation-format-in-person')
+                ->pause(1000) // Wait for Livewire to process participation format
                 ->click('@dietary-restrictions-vegetarian')
+                ->pause(500) // Wait for Livewire to process dietary selection
                 ->type('@emergency-contact-name-input', 'Emergency Contact')
                 ->type('@emergency-contact-relationship-input', 'Spouse')
                 ->type('@emergency-contact-phone-input', '+1 555 987-6543')
+                ->pause(500) // Wait for form updates
                 ->click('@requires-visa-letter-yes')
+                ->pause(500) // Wait for visa letter field to render
                 ->check('@confirm-information-checkbox')
                 ->check('@consent-data-processing-checkbox');
 

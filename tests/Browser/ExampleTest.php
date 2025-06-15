@@ -14,8 +14,8 @@ class ExampleTest extends DuskTestCase
     {
         $this->browse(function (Browser $browser) {
             $browser->visit('/')
-                    // Use o nome da aplicação que é mais estável
-                ->assertSee(config('app.name', 'Laravel'));
+                ->waitForText('8th BCSMIF')
+                ->assertSee('8th BCSMIF');
         });
     }
 }

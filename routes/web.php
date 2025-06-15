@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\RegistrationController as AdminRegistrationController;
 use App\Http\Controllers\RegistrationController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
@@ -36,5 +37,15 @@ Route::post('/event-registrations/{registration}/upload-proof', [RegistrationCon
 Volt::route('my-registrations', 'pages.my-registrations')
     ->middleware(['auth', 'verified'])
     ->name('registrations.my');
+
+// Admin routes for registration management
+Route::prefix('admin/registrations')
+    ->middleware(['auth', 'role:admin'])
+    ->name('admin.registrations.')
+    ->group(function () {
+        Route::get('/', [AdminRegistrationController::class, 'index'])->name('index');
+        Route::get('/{registration}', [AdminRegistrationController::class, 'show'])->name('show');
+        Route::get('/{registration}/download-proof', [AdminRegistrationController::class, 'downloadProof'])->name('download-proof');
+    });
 
 require __DIR__.'/auth.php';
