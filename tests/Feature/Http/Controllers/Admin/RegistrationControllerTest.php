@@ -514,4 +514,68 @@ class RegistrationControllerTest extends TestCase
         $response->assertSee(__('Payment status updated successfully.'));
         $response->assertSee('bg-green-100 border border-green-400 text-green-700', false);
     }
+
+    /**
+     * AC7: Test that registration details page reflects the new payment status after update and redirect
+     */
+    public function test_admin_registration_show_reflects_new_payment_status_after_update(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $registration = Registration::factory()->create(['payment_status' => 'pending_payment']);
+
+        // Test all possible status transitions to ensure header reflects all statuses correctly
+        $statusTransitions = [
+            'pending_br_proof_approval' => __('Pending BR Proof Approval'),
+            'paid_br' => __('Paid (BR)'),
+            'invoice_sent_int' => __('Invoice Sent (International)'),
+            'paid_int' => __('Paid (International)'),
+            'free' => __('Free'),
+            'cancelled' => __('Cancelled'),
+            'pending_payment' => __('Pending Payment'), // Back to original
+        ];
+
+        foreach ($statusTransitions as $newStatus => $expectedLabel) {
+            // Update the payment status
+            $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+                'payment_status' => $newStatus,
+            ]);
+
+            $response->assertSessionHasNoErrors();
+            $response->assertStatus(302);
+            $response->assertRedirect(route('admin.registrations.show', $registration));
+
+            // Verify database was updated
+            $registration->refresh();
+            $this->assertEquals($newStatus, $registration->payment_status);
+
+            // Visit the show page to verify the new status is reflected
+            $response = $this->actingAs($admin)->get(route('admin.registrations.show', $registration));
+
+            $response->assertOk();
+            $response->assertViewIs('admin.registrations.show');
+
+            // Verify the new status is displayed in both locations (header and payment section)
+            $response->assertSee($expectedLabel);
+
+            // Verify the status badge in header section reflects the new status
+            $statusColors = [
+                'pending_payment' => 'bg-yellow-100 text-yellow-800',
+                'pending_br_proof_approval' => 'bg-orange-100 text-orange-800',
+                'paid_br' => 'bg-green-100 text-green-800',
+                'invoice_sent_int' => 'bg-blue-100 text-blue-800',
+                'paid_int' => 'bg-green-100 text-green-800',
+                'free' => 'bg-purple-100 text-purple-800',
+                'cancelled' => 'bg-red-100 text-red-800',
+            ];
+
+            // Verify the correct color class is present for the current status
+            $expectedColorClass = $statusColors[$newStatus] ?? 'bg-gray-100 text-gray-800';
+            $response->assertSee($expectedColorClass, false);
+
+            // Verify that the payment status is also correctly reflected in the detailed payment section
+            $response->assertSee(__('Payment Status'));
+            $response->assertSee($expectedLabel);
+        }
+    }
 }

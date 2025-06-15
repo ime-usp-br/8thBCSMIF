@@ -8,14 +8,20 @@
                 @php
                     $statusColors = [
                         'pending_payment' => 'bg-yellow-100 text-yellow-800',
+                        'pending_br_proof_approval' => 'bg-orange-100 text-orange-800',
                         'paid_br' => 'bg-green-100 text-green-800',
+                        'invoice_sent_int' => 'bg-blue-100 text-blue-800',
                         'paid_int' => 'bg-green-100 text-green-800',
+                        'free' => 'bg-purple-100 text-purple-800',
                         'cancelled' => 'bg-red-100 text-red-800',
                     ];
                     $statusLabels = [
                         'pending_payment' => __('Pending Payment'),
+                        'pending_br_proof_approval' => __('Pending BR Proof Approval'),
                         'paid_br' => __('Paid (BR)'),
+                        'invoice_sent_int' => __('Invoice Sent (International)'),
                         'paid_int' => __('Paid (International)'),
+                        'free' => __('Free'),
                         'cancelled' => __('Cancelled'),
                     ];
                 @endphp
