@@ -293,4 +293,63 @@ class RegistrationControllerTest extends TestCase
         $response->assertSee('bg-usp-blue-pri hover:bg-usp-blue-pri/90', false);
         $response->assertSee('rounded-md', false);
     }
+
+    /**
+     * AC3: Test that PATCH route for update-status exists and is accessible to admin
+     */
+    public function test_admin_update_status_route_exists_and_requires_admin(): void
+    {
+        $registration = Registration::factory()->create();
+
+        // Test that route exists by checking it doesn't return 404
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration));
+
+        // Should not return 404 (route exists) and should redirect (method exists)
+        $response->assertStatus(302);
+        $response->assertRedirect(route('admin.registrations.show', $registration));
+    }
+
+    /**
+     * AC3: Test that update-status route requires authentication
+     */
+    public function test_admin_update_status_requires_authentication(): void
+    {
+        $registration = Registration::factory()->create();
+
+        $response = $this->patch(route('admin.registrations.update-status', $registration));
+
+        $response->assertRedirect(route('login.local'));
+    }
+
+    /**
+     * AC3: Test that update-status route requires admin role
+     */
+    public function test_admin_update_status_requires_admin_role(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('usp_user');
+        $registration = Registration::factory()->create();
+
+        $response = $this->actingAs($user)->patch(route('admin.registrations.update-status', $registration));
+
+        $response->assertStatus(403);
+    }
+
+    /**
+     * AC3: Test that updateStatus method in controller exists and can be called
+     */
+    public function test_admin_update_status_method_exists_and_redirects(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $registration = Registration::factory()->create();
+
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration));
+
+        $response->assertStatus(302);
+        $response->assertRedirect(route('admin.registrations.show', $registration));
+    }
 }

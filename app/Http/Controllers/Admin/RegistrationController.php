@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Registration;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -35,5 +37,13 @@ class RegistrationController extends Controller
         }
 
         return Storage::disk('private')->download($registration->payment_proof_path);
+    }
+
+    public function updateStatus(Request $request, Registration $registration): RedirectResponse
+    {
+        // This method serves as the entry point for payment status updates.
+        // Full implementation will be completed in subsequent ACs (AC4-AC6).
+
+        return redirect()->route('admin.registrations.show', $registration);
     }
 }

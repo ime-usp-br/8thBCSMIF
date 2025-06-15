@@ -46,6 +46,7 @@ Route::prefix('admin/registrations')
         Route::get('/', [AdminRegistrationController::class, 'index'])->name('index');
         Route::get('/{registration}', [AdminRegistrationController::class, 'show'])->name('show');
         Route::get('/{registration}/download-proof', [AdminRegistrationController::class, 'downloadProof'])->name('download-proof');
+        Route::patch('/{registration}/update-status', [AdminRegistrationController::class, 'updateStatus'])->name('update-status');
     });
 
 require __DIR__.'/auth.php';
