@@ -479,17 +479,18 @@
                         
                         <!-- Payment Status Update Form -->
                         <div class="mt-6 bg-gray-50 rounded-lg p-4 sm:p-6">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                                <div class="mb-4 sm:mb-0">
+                            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                                <div class="flex-shrink-0">
                                     <h4 class="text-sm font-semibold text-gray-900">{{ __('Update Payment Status') }}</h4>
                                     <p class="text-sm text-gray-600 mt-1">{{ __('Change the payment status for this registration') }}</p>
                                 </div>
-                                <form method="POST" action="{{ route('admin.registrations.update-status', $registration) }}" class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                                <form method="POST" action="{{ route('admin.registrations.update-status', $registration) }}" class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full lg:w-auto min-w-0 lg:min-w-96">
                                     @csrf
                                     @method('PATCH')
                                     <div class="flex-1 min-w-0">
+                                        <label for="payment_status" class="sr-only">{{ __('Payment Status') }}</label>
                                         <select name="payment_status" id="payment_status" 
-                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri text-sm">
+                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri text-sm transition-colors duration-200 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
                                             <option value="pending_payment" {{ $registration->payment_status === 'pending_payment' ? 'selected' : '' }}>
                                                 {{ __('Pending Payment') }}
                                             </option>
@@ -514,8 +515,8 @@
                                         </select>
                                     </div>
                                     <button type="submit" 
-                                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-usp-blue-pri hover:bg-usp-blue-pri/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-usp-blue-pri transition-colors duration-200">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-usp-blue-pri hover:bg-usp-blue-pri/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-usp-blue-pri transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
+                                        <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                         </svg>
                                         {{ __('Update Status') }}

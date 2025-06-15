@@ -272,7 +272,7 @@ class RegistrationControllerTest extends TestCase
     }
 
     /**
-     * AC2: Test that payment status form is responsive and follows Tailwind CSS styling
+     * AC8: Test that payment status form is responsive and follows Tailwind CSS styling across different screen sizes
      */
     public function test_admin_registration_show_form_has_responsive_styling(): void
     {
@@ -284,7 +284,15 @@ class RegistrationControllerTest extends TestCase
 
         $response->assertOk();
 
-        // Verify responsive classes are present
+        // Verify responsive classes are present for different screen sizes
+        $response->assertSee('flex flex-col lg:flex-row', false);
+        $response->assertSee('lg:items-start lg:justify-between', false);
+        $response->assertSee('gap-4', false);
+        $response->assertSee('flex-shrink-0', false);
+        $response->assertSee('w-full lg:w-auto', false);
+        $response->assertSee('lg:min-w-96', false);
+
+        // Verify form inner responsive classes
         $response->assertSee('flex flex-col sm:flex-row', false);
         $response->assertSee('gap-3 items-stretch sm:items-center', false);
 
@@ -292,6 +300,14 @@ class RegistrationControllerTest extends TestCase
         $response->assertSee('border-gray-300 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri', false);
         $response->assertSee('bg-usp-blue-pri hover:bg-usp-blue-pri/90', false);
         $response->assertSee('rounded-md', false);
+        $response->assertSee('transition-colors duration-200', false);
+
+        // Verify accessibility features
+        $response->assertSee('sr-only', false);
+        $response->assertSee('disabled:opacity-50 disabled:cursor-not-allowed', false);
+        $response->assertSee('whitespace-nowrap', false);
+        $response->assertSee('justify-center', false);
+        $response->assertSee('flex-shrink-0', false);
     }
 
     /**
