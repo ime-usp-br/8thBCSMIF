@@ -123,7 +123,7 @@ class AdminRegistrationTest extends DuskTestCase
                 ->assertSee('Test User 0')
                 ->assertSee('Test User 1')
                 ->assertSee('Test User 2')
-                
+
                 // Test that registration data is properly displayed
                 ->assertSee('R$ 350,50')
                 ->assertSee(__('Pending Payment'))
@@ -325,7 +325,7 @@ class AdminRegistrationTest extends DuskTestCase
 
                 // Test that Details links are present and correctly formed
                 ->assertSee(__('Details'))
-                
+
                 // Directly visit the details page to test it works
                 ->visit('/admin/registrations/'.$registration->id)
                 ->assertSee('John Doe Test')
