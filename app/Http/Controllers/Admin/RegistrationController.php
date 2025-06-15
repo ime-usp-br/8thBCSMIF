@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\PaymentStatusUpdatedNotification;
 use App\Models\Registration;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -42,7 +44,7 @@ class RegistrationController extends Controller
 
     public function updateStatus(Request $request, Registration $registration): RedirectResponse
     {
-        /** @var array{payment_status: string} $validated */
+        /** @var array{payment_status: string, send_notification?: string} $validated */
         $validated = $request->validate([
             'payment_status' => [
                 'required',
@@ -56,6 +58,7 @@ class RegistrationController extends Controller
                     'cancelled',
                 ]),
             ],
+            'send_notification' => ['nullable', 'string', 'in:1'],
         ]);
 
         // Store the old status for logging
@@ -64,7 +67,7 @@ class RegistrationController extends Controller
 
         // Create log entry with admin info, timestamps, and status change details
         $user = $request->user();
-        $adminName = (!empty($user->name)) ? $user->name : ($user->email ?? 'Unknown Admin');
+        $adminName = (! empty($user->name)) ? $user->name : ($user->email ?? 'Unknown Admin');
         $timestamp = now()->format('Y-m-d H:i:s');
         $logEntry = "[{$timestamp}] Payment status changed by {$adminName}: '{$oldStatus}' -> '{$newStatus}'";
 
@@ -76,6 +79,14 @@ class RegistrationController extends Controller
             'payment_status' => $newStatus,
             'notes' => $updatedNotes,
         ]);
+
+        // Send email notification if requested, especially for confirmations
+        $sendNotification = isset($validated['send_notification']) && $validated['send_notification'] === '1';
+        if ($sendNotification && $registration->user && $registration->user->email) {
+            Mail::to($registration->user->email)->send(
+                new PaymentStatusUpdatedNotification($registration, $oldStatus, $newStatus)
+            );
+        }
 
         return redirect()->route('admin.registrations.show', $registration)
             ->with('success', __('Payment status updated successfully.'));

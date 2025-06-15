@@ -2,10 +2,12 @@
 
 namespace Tests\Feature\Http\Controllers\Admin;
 
+use App\Mail\PaymentStatusUpdatedNotification;
 use App\Models\Registration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -771,5 +773,222 @@ class RegistrationControllerTest extends TestCase
         // Verify timestamp is within reasonable range (between before and after the request)
         $this->assertTrue($logTimestamp->greaterThanOrEqualTo($beforeTime->subSeconds(1)));
         $this->assertTrue($logTimestamp->lessThanOrEqualTo($afterTime->addSeconds(1)));
+    }
+
+    /**
+     * AC10: Test that payment status update form displays email notification checkbox
+     */
+    public function test_admin_registration_show_displays_email_notification_checkbox(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $registration = Registration::factory()->create(['payment_status' => 'pending_payment']);
+
+        $response = $this->actingAs($admin)->get(route('admin.registrations.show', $registration));
+
+        $response->assertOk();
+        $response->assertSee('name="send_notification"', false);
+        $response->assertSee('type="checkbox"', false);
+        $response->assertSee(__('Send email notification to participant'));
+        $response->assertSee('checked', false); // Should be checked by default
+    }
+
+    /**
+     * AC10: Test that email notification is sent when checkbox is checked
+     */
+    public function test_admin_update_status_sends_email_notification_when_requested(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+        ]);
+        $admin->assignRole('admin');
+
+        $participant = User::factory()->create([
+            'name' => 'Participant User',
+            'email' => 'participant@example.com',
+        ]);
+
+        $registration = Registration::factory()->create([
+            'payment_status' => 'pending_payment',
+            'user_id' => $participant->id,
+            'email' => $participant->email,
+        ]);
+
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br',
+            'send_notification' => '1',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        // Verify email was sent
+        Mail::assertSent(PaymentStatusUpdatedNotification::class, function ($mail) use ($registration, $participant) {
+            return $mail->hasTo($participant->email) &&
+                   $mail->registration->id === $registration->id &&
+                   $mail->oldStatus === 'pending_payment' &&
+                   $mail->newStatus === 'paid_br';
+        });
+    }
+
+    /**
+     * AC10: Test that email notification is not sent when checkbox is unchecked
+     */
+    public function test_admin_update_status_does_not_send_email_notification_when_not_requested(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+        ]);
+        $admin->assignRole('admin');
+
+        $participant = User::factory()->create([
+            'name' => 'Participant User',
+            'email' => 'participant@example.com',
+        ]);
+
+        $registration = Registration::factory()->create([
+            'payment_status' => 'pending_payment',
+            'user_id' => $participant->id,
+            'email' => $participant->email,
+        ]);
+
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br',
+            // send_notification not included (unchecked)
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        // Verify no email was sent
+        Mail::assertNotSent(PaymentStatusUpdatedNotification::class);
+    }
+
+    /**
+     * AC10: Test that email notification works correctly for confirmation statuses like paid_br and paid_int
+     */
+    public function test_admin_update_status_sends_notification_for_confirmation_statuses(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $participant = User::factory()->create([
+            'email' => 'participant@example.com',
+        ]);
+
+        $confirmationStatuses = ['paid_br', 'paid_int', 'free'];
+
+        foreach ($confirmationStatuses as $status) {
+            $registration = Registration::factory()->create([
+                'payment_status' => 'pending_payment',
+                'user_id' => $participant->id,
+                'email' => $participant->email,
+            ]);
+
+            $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+                'payment_status' => $status,
+                'send_notification' => '1',
+            ]);
+
+            $response->assertSessionHasNoErrors();
+            $response->assertStatus(302);
+
+            // Verify email was sent for this confirmation status
+            Mail::assertSent(PaymentStatusUpdatedNotification::class, function ($mail) use ($registration, $participant, $status) {
+                return $mail->hasTo($participant->email) &&
+                       $mail->registration->id === $registration->id &&
+                       $mail->oldStatus === 'pending_payment' &&
+                       $mail->newStatus === $status;
+            });
+        }
+
+        // Verify we sent exactly 3 emails (one for each confirmation status)
+        Mail::assertSent(PaymentStatusUpdatedNotification::class, 3);
+    }
+
+    /**
+     * AC10: Test that email notification validation parameter works correctly
+     */
+    public function test_admin_update_status_send_notification_parameter_validation(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $participant = User::factory()->create([
+            'email' => 'participant@example.com',
+        ]);
+
+        $registration = Registration::factory()->create([
+            'payment_status' => 'pending_payment',
+            'user_id' => $participant->id,
+            'email' => $participant->email,
+        ]);
+
+        // Test invalid send_notification value is rejected by validation
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br',
+            'send_notification' => 'invalid_value',
+        ]);
+
+        $response->assertSessionHasErrors('send_notification');
+        $response->assertStatus(302);
+
+        // Verify no email was sent due to validation failure
+        Mail::assertNotSent(PaymentStatusUpdatedNotification::class);
+    }
+
+    /**
+     * AC10: Test that email notification contains correct information
+     */
+    public function test_admin_update_status_notification_contains_correct_information(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $participant = User::factory()->create([
+            'name' => 'John Doe',
+            'email' => 'john.doe@example.com',
+        ]);
+
+        $registration = Registration::factory()->create([
+            'payment_status' => 'pending_br_proof_approval',
+            'user_id' => $participant->id,
+            'email' => $participant->email,
+            'full_name' => 'John Doe',
+            'calculated_fee' => 150.00,
+        ]);
+
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br',
+            'send_notification' => '1',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        // Verify email was sent with correct data
+        Mail::assertSent(PaymentStatusUpdatedNotification::class, function ($mail) use ($registration, $participant) {
+            // Check recipient
+            $hasCorrectRecipient = $mail->hasTo($participant->email);
+
+            // Check that the mail object has the correct data
+            $hasCorrectRegistration = $mail->registration->id === $registration->id;
+            $hasCorrectOldStatus = $mail->oldStatus === 'pending_br_proof_approval';
+            $hasCorrectNewStatus = $mail->newStatus === 'paid_br';
+
+            return $hasCorrectRecipient && $hasCorrectRegistration && $hasCorrectOldStatus && $hasCorrectNewStatus;
+        });
     }
 }

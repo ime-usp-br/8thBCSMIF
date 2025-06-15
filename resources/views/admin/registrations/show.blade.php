@@ -484,43 +484,54 @@
                                     <h4 class="text-sm font-semibold text-gray-900">{{ __('Update Payment Status') }}</h4>
                                     <p class="text-sm text-gray-600 mt-1">{{ __('Change the payment status for this registration') }}</p>
                                 </div>
-                                <form method="POST" action="{{ route('admin.registrations.update-status', $registration) }}" class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full lg:w-auto min-w-0 lg:min-w-96">
+                                <form method="POST" action="{{ route('admin.registrations.update-status', $registration) }}" class="w-full lg:w-auto">
                                     @csrf
                                     @method('PATCH')
-                                    <div class="flex-1 min-w-0">
-                                        <label for="payment_status" class="sr-only">{{ __('Payment Status') }}</label>
-                                        <select name="payment_status" id="payment_status" 
-                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri text-sm transition-colors duration-200 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
-                                            <option value="pending_payment" {{ $registration->payment_status === 'pending_payment' ? 'selected' : '' }}>
-                                                {{ __('Pending Payment') }}
-                                            </option>
-                                            <option value="pending_br_proof_approval" {{ $registration->payment_status === 'pending_br_proof_approval' ? 'selected' : '' }}>
-                                                {{ __('Pending BR Proof Approval') }}
-                                            </option>
-                                            <option value="paid_br" {{ $registration->payment_status === 'paid_br' ? 'selected' : '' }}>
-                                                {{ __('Paid (BR)') }}
-                                            </option>
-                                            <option value="invoice_sent_int" {{ $registration->payment_status === 'invoice_sent_int' ? 'selected' : '' }}>
-                                                {{ __('Invoice Sent (International)') }}
-                                            </option>
-                                            <option value="paid_int" {{ $registration->payment_status === 'paid_int' ? 'selected' : '' }}>
-                                                {{ __('Paid (International)') }}
-                                            </option>
-                                            <option value="free" {{ $registration->payment_status === 'free' ? 'selected' : '' }}>
-                                                {{ __('Free') }}
-                                            </option>
-                                            <option value="cancelled" {{ $registration->payment_status === 'cancelled' ? 'selected' : '' }}>
-                                                {{ __('Cancelled') }}
-                                            </option>
-                                        </select>
+                                    <div class="flex flex-col gap-3">
+                                        <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center min-w-0 lg:min-w-96">
+                                            <div class="flex-1 min-w-0">
+                                                <label for="payment_status" class="sr-only">{{ __('Payment Status') }}</label>
+                                                <select name="payment_status" id="payment_status" 
+                                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri text-sm transition-colors duration-200 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
+                                                    <option value="pending_payment" {{ $registration->payment_status === 'pending_payment' ? 'selected' : '' }}>
+                                                        {{ __('Pending Payment') }}
+                                                    </option>
+                                                    <option value="pending_br_proof_approval" {{ $registration->payment_status === 'pending_br_proof_approval' ? 'selected' : '' }}>
+                                                        {{ __('Pending BR Proof Approval') }}
+                                                    </option>
+                                                    <option value="paid_br" {{ $registration->payment_status === 'paid_br' ? 'selected' : '' }}>
+                                                        {{ __('Paid (BR)') }}
+                                                    </option>
+                                                    <option value="invoice_sent_int" {{ $registration->payment_status === 'invoice_sent_int' ? 'selected' : '' }}>
+                                                        {{ __('Invoice Sent (International)') }}
+                                                    </option>
+                                                    <option value="paid_int" {{ $registration->payment_status === 'paid_int' ? 'selected' : '' }}>
+                                                        {{ __('Paid (International)') }}
+                                                    </option>
+                                                    <option value="free" {{ $registration->payment_status === 'free' ? 'selected' : '' }}>
+                                                        {{ __('Free') }}
+                                                    </option>
+                                                    <option value="cancelled" {{ $registration->payment_status === 'cancelled' ? 'selected' : '' }}>
+                                                        {{ __('Cancelled') }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                            <button type="submit" 
+                                                    class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-usp-blue-pri hover:bg-usp-blue-pri/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-usp-blue-pri transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
+                                                <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                                </svg>
+                                                {{ __('Update Status') }}
+                                            </button>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" name="send_notification" id="send_notification" value="1" checked
+                                                   class="h-4 w-4 text-usp-blue-pri focus:ring-usp-blue-pri border-gray-300 rounded">
+                                            <label for="send_notification" class="ml-2 block text-sm text-gray-700">
+                                                {{ __('Send email notification to participant') }}
+                                            </label>
+                                        </div>
                                     </div>
-                                    <button type="submit" 
-                                            class="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-usp-blue-pri hover:bg-usp-blue-pri/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-usp-blue-pri transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
-                                        <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                        </svg>
-                                        {{ __('Update Status') }}
-                                    </button>
                                 </form>
                             </div>
                         </div>
