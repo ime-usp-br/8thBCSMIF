@@ -1,19 +1,25 @@
 <div>
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">
-                {{ __('Registration List') }}
-            </h3>
+        <div class="p-4 sm:p-6">
+            <!-- Header with USP Brand Colors -->
+            <div class="border-l-4 border-usp-blue-pri pl-4 mb-6">
+                <h3 class="text-lg sm:text-xl font-semibold text-gray-900">
+                    {{ __('Registration List') }}
+                </h3>
+                <p class="text-sm text-gray-600 mt-1">
+                    {{ __('Manage conference registrations') }}
+                </p>
+            </div>
             
-            <!-- Filters Section -->
-            <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Filters Section - Improved Mobile Layout -->
+            <div class="mb-6 space-y-4 sm:space-y-0 sm:grid sm:grid-cols-1 lg:grid-cols-2 sm:gap-4">
                 <!-- Event Filter -->
                 <div>
                     <label for="filterEventCode" class="block text-sm font-medium text-gray-700 mb-2">
                         {{ __('Filter by Event') }}
                     </label>
                     <select wire:model.live="filterEventCode" id="filterEventCode" 
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri sm:text-sm transition-colors duration-200">
                         <option value="">{{ __('All Events') }}</option>
                         <option value="BCSMIF2025">{{ __('8th BCSMIF') }}</option>
                         <option value="RAA2025">{{ __('RAA2025') }}</option>
@@ -27,7 +33,7 @@
                         {{ __('Filter by Payment Status') }}
                     </label>
                     <select wire:model.live="filterPaymentStatus" id="filterPaymentStatus" 
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri sm:text-sm transition-colors duration-200">
                         <option value="">{{ __('All Statuses') }}</option>
                         <option value="pending_payment">{{ __('Pending Payment') }}</option>
                         <option value="paid_br">{{ __('Paid (BR)') }}</option>
@@ -38,63 +44,144 @@
             </div>
             
             @if($registrations->count() > 0)
-                <div class="overflow-x-auto">
+                <!-- Mobile Cards Layout (Hidden on Desktop) -->
+                <div class="block lg:hidden space-y-4">
+                    @foreach($registrations as $registration)
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                            <div class="p-4">
+                                <!-- Header with ID and Status -->
+                                <div class="flex justify-between items-start mb-3">
+                                    <div class="flex items-center">
+                                        <span class="text-sm font-medium text-gray-500 mr-2">{{ __('ID') }}</span>
+                                        <span class="text-lg font-semibold text-gray-900">#{{ $registration->id }}</span>
+                                    </div>
+                                    @php
+                                        $statusColors = [
+                                            'pending_payment' => 'bg-yellow-100 text-yellow-800',
+                                            'paid_br' => 'bg-green-100 text-green-800',
+                                            'paid_int' => 'bg-green-100 text-green-800',
+                                            'cancelled' => 'bg-red-100 text-red-800',
+                                        ];
+                                        $statusLabels = [
+                                            'pending_payment' => __('Pending Payment'),
+                                            'paid_br' => __('Paid (BR)'),
+                                            'paid_int' => __('Paid (International)'),
+                                            'cancelled' => __('Cancelled'),
+                                        ];
+                                    @endphp
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusColors[$registration->payment_status] ?? 'bg-gray-100 text-gray-800' }}">
+                                        {{ $statusLabels[$registration->payment_status] ?? $registration->payment_status }}
+                                    </span>
+                                </div>
+                                
+                                <!-- Participant Info -->
+                                <div class="space-y-2 mb-4">
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">{{ __('Name') }}:</span>
+                                        <span class="text-sm text-gray-900 ml-1">{{ $registration->full_name }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">{{ __('Email') }}:</span>
+                                        <span class="text-sm text-gray-900 ml-1 break-all">{{ $registration->email }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">{{ __('Fee') }}:</span>
+                                        <span class="text-sm font-semibold text-gray-900 ml-1">R$ {{ number_format($registration->calculated_fee, 2, ',', '.') }}</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Events -->
+                                <div class="mb-4">
+                                    <span class="text-sm font-medium text-gray-500 block mb-1">{{ __('Events') }}:</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        @if($registration->events->count() > 0)
+                                            @foreach($registration->events as $event)
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-usp-blue-sec/20 text-usp-blue-pri">
+                                                    {{ $event->code }}
+                                                </span>
+                                            @endforeach
+                                        @else
+                                            <span class="text-gray-400 text-sm">{{ __('No events') }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                
+                                <!-- Date and Actions -->
+                                <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+                                    <span class="text-xs text-gray-500">
+                                        {{ $registration->created_at->format('d/m/Y H:i') }}
+                                    </span>
+                                    <a href="{{ route('admin.registrations.show', $registration) }}" 
+                                       class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-usp-blue-pri hover:bg-usp-blue-pri/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-usp-blue-pri transition-colors duration-200">
+                                        {{ __('Details') }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Desktop Table Layout (Hidden on Mobile) -->
+                <div class="hidden lg:block overflow-x-auto rounded-lg border border-gray-200">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {{ __('Registration ID') }}
+                                <th scope="col" class="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ __('ID') }}
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {{ __('Participant Name') }}
+                                <th scope="col" class="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ __('Participant') }}
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {{ __('Participant Email') }}
+                                <th scope="col" class="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">
+                                    {{ __('Email') }}
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th scope="col" class="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     {{ __('Events') }}
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {{ __('Total Fee') }}
+                                <th scope="col" class="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ __('Fee') }}
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {{ __('Payment Status') }}
+                                <th scope="col" class="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ __('Status') }}
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {{ __('Registration Date') }}
+                                <th scope="col" class="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">
+                                    {{ __('Date') }}
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th scope="col" class="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     {{ __('Actions') }}
                                 </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach($registrations as $registration)
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                    <td class="px-4 xl:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         #{{ $registration->id }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $registration->full_name }}
+                                    <td class="px-4 xl:px-6 py-4 text-sm text-gray-900">
+                                        <div class="font-medium">{{ $registration->full_name }}</div>
+                                        <div class="text-gray-500 xl:hidden text-xs mt-1 truncate max-w-32">{{ $registration->email }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-4 xl:px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden xl:table-cell">
                                         {{ $registration->email }}
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">
-                                        @if($registration->events->count() > 0)
-                                            @foreach($registration->events as $event)
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1 mb-1">
-                                                    {{ $event->code }}
-                                                </span>
-                                            @endforeach
-                                        @else
-                                            <span class="text-gray-400">{{ __('No events') }}</span>
-                                        @endif
+                                    <td class="px-4 xl:px-6 py-4 text-sm text-gray-900">
+                                        <div class="flex flex-wrap gap-1">
+                                            @if($registration->events->count() > 0)
+                                                @foreach($registration->events as $event)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-usp-blue-sec/20 text-usp-blue-pri">
+                                                        {{ $event->code }}
+                                                    </span>
+                                                @endforeach
+                                            @else
+                                                <span class="text-gray-400">{{ __('No events') }}</span>
+                                            @endif
+                                        </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-4 xl:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         R$ {{ number_format($registration->calculated_fee, 2, ',', '.') }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-4 xl:px-6 py-4 whitespace-nowrap">
                                         @php
                                             $statusColors = [
                                                 'pending_payment' => 'bg-yellow-100 text-yellow-800',
@@ -113,13 +200,14 @@
                                             {{ $statusLabels[$registration->payment_status] ?? $registration->payment_status }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td class="px-4 xl:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden xl:table-cell">
                                         {{ $registration->created_at->format('d/m/Y H:i') }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <td class="px-4 xl:px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <a href="{{ route('admin.registrations.show', $registration) }}" 
-                                           class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                            {{ __('Details') }}
+                                           class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-usp-blue-pri hover:bg-usp-blue-pri/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-usp-blue-pri transition-colors duration-200">
+                                            <span class="hidden xl:inline">{{ __('Details') }}</span>
+                                            <span class="xl:hidden">{{ __('View') }}</span>
                                         </a>
                                     </td>
                                 </tr>
@@ -128,13 +216,26 @@
                     </table>
                 </div>
                 
-                <div class="mt-4">
+                <!-- Enhanced Pagination -->
+                <div class="mt-6 px-4 py-3 bg-gray-50 border-t border-gray-200 rounded-b-lg">
                     {{ $registrations->links() }}
                 </div>
             @else
-                <div class="text-center py-8">
-                    <div class="text-gray-400 text-lg">
-                        {{ __('No registrations found') }}
+                <!-- Enhanced Empty State -->
+                <div class="text-center py-16 px-6">
+                    <div class="mx-auto h-24 w-24 mb-4">
+                        <svg class="h-full w-full text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">{{ __('No registrations found') }}</h3>
+                    <p class="text-gray-500 text-sm max-w-sm mx-auto">
+                        {{ __('No registrations match your current filters. Try adjusting your search criteria.') }}
+                    </p>
+                    <div class="mt-6">
+                        <button wire:click="$set('filterEventCode', '')" class="text-sm text-usp-blue-pri hover:text-usp-blue-pri/80 font-medium">
+                            {{ __('Clear all filters') }}
+                        </button>
                     </div>
                 </div>
             @endif
