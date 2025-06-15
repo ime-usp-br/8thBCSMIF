@@ -384,6 +384,7 @@
     "Coordinator registration notification sent": "Notificação de inscrição enviada ao coordenador",
     "Coordinator email not configured - coordinator notification not sent": "Email do coordenador não configurado - notificação do coordenador não enviada",
     "Payment proof uploaded successfully": "Comprovante de pagamento enviado com sucesso",
+    "Payment status updated successfully.": "Status de pagamento atualizado com sucesso.",
     "Proof upload notification sent to coordinator": "Notificação de envio de comprovante enviada ao coordenador",
     "Failed to upload payment proof": "Falha ao enviar comprovante de pagamento",
     "You are not authorized to upload proof for this registration.": "Você não está autorizado a enviar comprovante para esta inscrição.",
@@ -603,5 +604,10 @@
     "All events combined": "Todos os eventos combinados",
     "Payment status and proof details": "Status de pagamento e detalhes do comprovante",
     "Download payment verification document": "Baixar documento de verificação de pagamento",
-    "Internal registration details and notes": "Detalhes internos de registro e observações"
+    "Internal registration details and notes": "Detalhes internos de registro e observações",
+    "Pending BR Proof Approval": "Aguardando Aprovação Comprovante BR",
+    "Invoice Sent (International)": "Fatura Enviada (Internacional)",
+    "Update Payment Status": "Atualizar Status de Pagamento",
+    "Change the payment status for this registration": "Alterar o status de pagamento desta inscrição",
+    "Update Status": "Atualizar Status"
 }
