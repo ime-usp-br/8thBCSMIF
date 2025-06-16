@@ -253,7 +253,9 @@
                         {{ __('Registration Fees') }} - {{ __('8th Brazilian Conference on Statistical Modeling in Insurance and Finance') }}
                     </p>
                     <p class="text-gray-400 text-sm mt-2">
-                        Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }})
+                        <a href="https://ime.usp.br" target="_blank" class="hover:text-gray-300 transition duration-300">
+                            IME-USP
+                        </a>
                     </p>
                 </div>
             </footer>
