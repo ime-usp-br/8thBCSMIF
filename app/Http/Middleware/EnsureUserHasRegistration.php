@@ -16,11 +16,11 @@ class EnsureUserHasRegistration
     public function handle(Request $request, Closure $next): Response
     {
         $user = auth()->user();
-        
+
         if ($user) {
             // Check directly in database for registrations to avoid cache issues
             $hasRegistration = \App\Models\Registration::where('user_id', $user->id)->exists();
-            
+
             if (! $hasRegistration) {
                 // If user is authenticated but has no registrations, redirect to registration form
                 return redirect()->route('register-event');
