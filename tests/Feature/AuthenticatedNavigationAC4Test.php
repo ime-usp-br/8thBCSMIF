@@ -23,7 +23,6 @@ class AuthenticatedNavigationAC4Test extends TestCase
 
         // Verify the component contains the required navigation links
         $expectedLinks = [
-            'Dashboard',
             'My Registrations',
             'Workshops',
             'Fees',
@@ -46,7 +45,6 @@ class AuthenticatedNavigationAC4Test extends TestCase
 
         // Verify route helpers for required links
         $expectedRoutes = [
-            'route(\'dashboard\')',
             'route(\'registrations.my\')',
             'route(\'workshops\')',
             'route(\'fees\')',
@@ -68,13 +66,12 @@ class AuthenticatedNavigationAC4Test extends TestCase
         $user = User::factory()->create();
 
         // Act as the authenticated user
-        $response = $this->actingAs($user)->get('/dashboard');
+        $response = $this->actingAs($user)->get('/my-registrations');
 
         // Verify the page loads successfully
         $response->assertOk();
 
         // Verify navigation links are present in the response
-        $response->assertSee(__('Dashboard'));
         $response->assertSee(__('My Registrations'));
         $response->assertSee(__('Workshops'));
         $response->assertSee(__('Fees'));
@@ -91,7 +88,6 @@ class AuthenticatedNavigationAC4Test extends TestCase
 
         // Verify active state detection for all required routes
         $expectedActiveStates = [
-            'request()->routeIs(\'dashboard\')',
             'request()->routeIs(\'registrations.my\')',
             'request()->routeIs(\'workshops\')',
             'request()->routeIs(\'fees\')',
@@ -117,7 +113,6 @@ class AuthenticatedNavigationAC4Test extends TestCase
 
         // Count occurrences of each required link (should appear in both desktop and responsive)
         $expectedLinks = [
-            'Dashboard',
             'My Registrations',
             'Workshops',
             'Fees',
@@ -143,15 +138,15 @@ class AuthenticatedNavigationAC4Test extends TestCase
         $this->assertStringContainsString('<x-nav-link', $navigationContent);
         $this->assertStringContainsString('<x-responsive-nav-link', $navigationContent);
 
-        // Count nav-link components (should have 4 for desktop navigation)
+        // Count nav-link components (should have 3 for desktop navigation)
         $desktopNavLinks = substr_count($navigationContent, '<x-nav-link');
-        $this->assertGreaterThanOrEqual(4, $desktopNavLinks,
-            'Should have at least 4 desktop navigation links');
+        $this->assertGreaterThanOrEqual(3, $desktopNavLinks,
+            'Should have at least 3 desktop navigation links');
 
-        // Count responsive nav-link components (should have 4 for responsive navigation)
+        // Count responsive nav-link components (should have 3 for responsive navigation)
         $responsiveNavLinks = substr_count($navigationContent, '<x-responsive-nav-link');
-        $this->assertGreaterThanOrEqual(4, $responsiveNavLinks,
-            'Should have at least 4 responsive navigation links');
+        $this->assertGreaterThanOrEqual(3, $responsiveNavLinks,
+            'Should have at least 3 responsive navigation links');
     }
 
     /**
@@ -180,7 +175,6 @@ class AuthenticatedNavigationAC4Test extends TestCase
 
         // Test access to all required routes
         $routes = [
-            '/dashboard' => 'dashboard',
             '/my-registrations' => 'registrations.my',
             '/workshops' => 'workshops',
             '/fees' => 'fees',

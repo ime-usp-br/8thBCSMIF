@@ -44,7 +44,7 @@ class EmailVerificationTest extends TestCase
 
         Event::assertDispatched(Verified::class);
         $this->assertTrue($user->fresh()->hasVerifiedEmail());
-        $response->assertRedirect(route('dashboard', absolute: false).'?verified=1');
+        $response->assertRedirect(route('registrations.my', absolute: false).'?verified=1');
     }
 
     public function test_email_is_not_verified_with_invalid_hash(): void
@@ -97,9 +97,9 @@ class EmailVerificationTest extends TestCase
         Livewire::actingAs($user)
             ->test('pages.auth.verify-email')
             ->call('sendVerification')
-            // Verifica se foi redirecionado para o dashboard
+            // Verifica se foi redirecionado para o registrations.my
             // O assertRedirect do Livewire verifica o próximo request após a ação
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(route('registrations.my', absolute: false));
 
         // Garante que nenhuma notificação foi enviada
         Notification::assertNothingSent();

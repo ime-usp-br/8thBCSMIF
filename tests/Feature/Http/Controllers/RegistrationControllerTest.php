@@ -110,8 +110,8 @@ class RegistrationControllerTest extends TestCase
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        // AC12: Assert redirect to dashboard with success message
-        $response->assertRedirect(route('dashboard'));
+        // AC12: Assert redirect to registrations.my with success message
+        $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('registrations.created_successfully'));
 
         // AC8: Find the registration that was created (since we no longer get registration_id from JSON)
@@ -282,8 +282,8 @@ class RegistrationControllerTest extends TestCase
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        // AC12: Assert redirect to dashboard with success message
-        $response->assertRedirect(route('dashboard'));
+        // AC12: Assert redirect to registrations.my with success message
+        $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('registrations.created_successfully'));
 
         // Find the registration that was created
@@ -320,8 +320,8 @@ class RegistrationControllerTest extends TestCase
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        // AC12: Assert redirect to dashboard with success message
-        $response->assertRedirect(route('dashboard'));
+        // AC12: Assert redirect to registrations.my with success message
+        $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('registrations.created_successfully'));
 
         // Find the registration that was created
@@ -380,8 +380,8 @@ class RegistrationControllerTest extends TestCase
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        // AC12: Assert redirect to dashboard with success message
-        $response->assertRedirect(route('dashboard'));
+        // AC12: Assert redirect to registrations.my with success message
+        $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('registrations.created_successfully'));
 
         // Find the registration that was created
@@ -400,9 +400,9 @@ class RegistrationControllerTest extends TestCase
     }
 
     #[Test]
-    public function store_redirects_to_dashboard_with_success_message(): void
+    public function store_redirects_to_registrations_with_success_message(): void
     {
-        // AC12: Test that successful registration redirects to dashboard with success message
+        // AC12: Test that successful registration redirects to registrations.my with success message
         $user = User::factory()->create();
         $user->markEmailAsVerified();
         $this->actingAs($user);
@@ -417,8 +417,8 @@ class RegistrationControllerTest extends TestCase
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        // AC12: Verify redirect to dashboard
-        $response->assertRedirect(route('dashboard'));
+        // AC12: Verify redirect to registrations.my
+        $response->assertRedirect(route('registrations.my'));
 
         // AC12: Verify success message in session
         $response->assertSessionHas('success', __('registrations.created_successfully'));
@@ -820,7 +820,7 @@ class RegistrationControllerTest extends TestCase
         $response = $this->post(route('event-registrations.store'), $validData);
 
         // AC14: Verify successful redirect and registration creation
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('registrations.created_successfully'));
 
         $this->assertDatabaseHas('registrations', [
@@ -985,7 +985,7 @@ class RegistrationControllerTest extends TestCase
         $response = $this->post(route('event-registrations.store'), $validData);
 
         // AC14: Verify successful creation
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('registrations.created_successfully'));
 
         $registration = Registration::where('user_id', $user->id)->latest()->first();
@@ -1088,7 +1088,7 @@ class RegistrationControllerTest extends TestCase
         $response = $this->post(route('event-registrations.store'), $validData);
 
         // Verify successful registration
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('registrations.created_successfully'));
 
         $registration = Registration::where('user_id', $user->id)->latest()->first();
@@ -1136,7 +1136,7 @@ class RegistrationControllerTest extends TestCase
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('registrations.my'));
         $registration = Registration::where('user_id', $user->id)->latest()->first();
         $this->assertNotNull($registration);
 
@@ -1188,7 +1188,7 @@ class RegistrationControllerTest extends TestCase
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('registrations.my'));
         $registration = Registration::where('user_id', $user->id)->latest()->first();
         $this->assertNotNull($registration);
 
@@ -1234,7 +1234,7 @@ class RegistrationControllerTest extends TestCase
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('registrations.my'));
         $registration = Registration::where('user_id', $user->id)->latest()->first();
         $this->assertNotNull($registration);
 
