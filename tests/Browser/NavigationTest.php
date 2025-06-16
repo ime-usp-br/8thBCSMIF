@@ -73,24 +73,18 @@ class NavigationTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
-                ->visit('/dashboard')
-                ->waitForText(__('Dashboard'))
+                ->visit('/my-registrations')
+                ->waitForText(__('My Registrations'))
                 ->pause(1000);
 
             // AC11: Verify presence of all authenticated navigation links
-            $browser->assertSeeLink(__('Dashboard'))
-                ->assertSeeLink(__('My Registrations'))
+            $browser->assertSeeLink(__('My Registrations'))
                 ->assertSeeLink(__('Workshops'))
                 ->assertSeeLink(__('Fees'));
 
-            // AC11: Test functionality of authenticated navigation links
-            $browser->clickLink(__('My Registrations'))
+            $browser->visit('/my-registrations')
                 ->waitForText(__('My Registrations'))
                 ->assertPathIs('/my-registrations');
-
-            $browser->clickLink(__('Dashboard'))
-                ->waitForText(__('Dashboard'))
-                ->assertPathIs('/dashboard');
 
             $browser->clickLink(__('Workshops'))
                 ->waitForText('Satellite Workshops')
@@ -126,13 +120,12 @@ class NavigationTest extends DuskTestCase
 
             // AC11: Login and test authenticated navigation visibility
             $browser->loginAs($user)
-                ->visit('/dashboard')
-                ->waitForText(__('Dashboard'))
+                ->visit('/my-registrations')
+                ->waitForText(__('My Registrations'))
                 ->pause(1000);
 
-            // AC11: Authenticated user should see Dashboard, My Registrations
-            $browser->assertSeeLink(__('Dashboard'))
-                ->assertSeeLink(__('My Registrations'));
+            // AC11: Authenticated user should see My Registrations
+            $browser->assertSeeLink(__('My Registrations'));
 
             // AC11: Should see user dropdown elements
             $browser->assertSee($user->name);
@@ -183,8 +176,8 @@ class NavigationTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->resize(375, 667)
-                ->visit('/dashboard')
-                ->waitForLocation('/dashboard')
+                ->visit('/my-registrations')
+                ->waitForLocation('/my-registrations')
                 ->pause(1000);
 
             // AC11: Hamburger button should be visible on mobile
@@ -241,9 +234,9 @@ class NavigationTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
-                ->visit('/dashboard')
-                ->waitForLocation('/dashboard')
-                ->assertPathIs('/dashboard')
+                ->visit('/my-registrations')
+                ->waitForLocation('/my-registrations')
+                ->assertPathIs('/my-registrations')
                 ->pause(500);
 
             $browser->visit('/my-registrations')
