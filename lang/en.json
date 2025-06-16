@@ -578,5 +578,12 @@
     "Invoice Sent (International)": "Invoice Sent (International)",
     "Update Payment Status": "Update Payment Status",
     "Change the payment status for this registration": "Change the payment status for this registration",
-    "Update Status": "Update Status"
+    "Update Status": "Update Status",
+    "Login Required for Registration": "Login Required for Registration",
+    "To register for the conference and workshops, you must login first using your USP credentials or create an account.": "To register for the conference and workshops, you must login first using your USP credentials or create an account.",
+    "Login to Register": "Login to Register",
+    "Create Account": "Create Account",
+    "Registration Requires Login": "Registration Requires Login",
+    "To register for the 8th BCSMIF and satellite workshops, you must first login with your USP credentials (Senha Única) or create a new account. This ensures secure access to your registration information and payment status.": "To register for the 8th BCSMIF and satellite workshops, you must first login with your USP credentials (Senha Única) or create a new account. This ensures secure access to your registration information and payment status.",
+    "Create New Account": "Create New Account"
 }
