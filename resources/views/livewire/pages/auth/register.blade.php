@@ -138,10 +138,17 @@ new #[Layout('layouts.guest')] class extends Component {
 }; ?>
 
 
-{{-- Wrap the interactive section with x-data --}}
-{{-- No extra Alpine state needed if Livewire handles it --}}
-
-<div x-data="{}">
+{{-- Alpine data for form reactivity --}}
+<div x-data="{
+    email: @entangle('email'),
+    sou_da_usp: @entangle('sou_da_usp'),
+    get isUspEmail() {
+        return this.email.toLowerCase().endsWith('usp.br');
+    },
+    get showCodpes() {
+        return this.isUspEmail || this.sou_da_usp;
+    }
+}">
 <div class="flex justify-center mb-4">
 <a href="/" wire:navigate>
 <img src="{{ Vite::asset('resources/images/ime/logo-vertical-simplificada-padrao.png') }}" alt="Logo IME-USP" class="w-20 h-auto block dark:hidden" dusk="ime-logo-light">
@@ -174,7 +181,7 @@ new #[Layout('layouts.guest')] class extends Component {
                    id="sou_da_usp"
                    type="checkbox"
                    {{-- Disable checkbox if email is already a USP email --}}
-                   :disabled="$wire.email.toLowerCase().endsWith('usp.br')"
+                   x-bind:disabled="isUspEmail"
                    class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                    name="sou_da_usp"
                    dusk="is-usp-user-checkbox">
@@ -185,20 +192,18 @@ new #[Layout('layouts.guest')] class extends Component {
 
     <!-- Número USP (codpes) Field - Conditional -->
     {{-- Show if email ends with @usp.br OR the checkbox is checked --}}
-    {{-- AC13: Added dusk="codpes-container" to the surrounding div --}}
-    <div x-show="$wire.email.toLowerCase().endsWith('usp.br') || $wire.sou_da_usp"
-         x-cloak {{-- Prevent flash of unstyled content --}}
+    <div x-show="showCodpes" 
+         x-cloak 
          x-transition
-         class="mt-4"
+         class="mt-4" 
          dusk="codpes-container">
         <x-input-label for="codpes" :value="__('USP Number (codpes)')" dusk="codpes-label" />
-         {{-- AC13: Uses existing dusk selector 'codpes-input' from previous commit --}}
         <x-text-input wire:model="codpes" id="codpes" class="block mt-1 w-full"
                       type="text" {{-- Use text, validation handles numeric --}}
                       inputmode="numeric" {{-- Hint for mobile keyboards --}}
                       name="codpes"
                       autocomplete="off"
-                      x-bind:required="$wire.email.toLowerCase().endsWith('usp.br') || $wire.sou_da_usp"
+                      x-bind:required="showCodpes"
                       dusk="codpes-input" />
         <x-input-error :messages="$errors->get('codpes')" class="mt-2" dusk="codpes-error" />
     </div>
