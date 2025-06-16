@@ -10,10 +10,12 @@ Route::view('workshops', 'workshops')->name('workshops');
 Route::view('fees', 'fees')->name('fees');
 Route::view('payment-info', 'payment-info')->name('payment-info');
 
-
 Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
+
+// Redirect dashboard to registrations.my for compatibility
+Route::redirect('/dashboard', '/my-registrations')->name('dashboard');
 
 // Route for the event registration form
 Volt::route('register-event', 'registration-form')
