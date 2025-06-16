@@ -15,9 +15,9 @@ new #[Layout('layouts.guest')] class extends Component
     {
         // Verifica se o usuário já está verificado para evitar reenvios desnecessários
         if (Auth::user()->hasVerifiedEmail()) {
-            // Redireciona para o dashboard ou página principal se já verificado
+            // Redireciona para a página de registrations se já verificado
             // O 'navigate: true' usa o SPA mode do Livewire/Turbolinks
-            $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+            $this->redirectIntended(default: route('registrations.my', absolute: false), navigate: true);
 
             return; // Termina a execução aqui
         }

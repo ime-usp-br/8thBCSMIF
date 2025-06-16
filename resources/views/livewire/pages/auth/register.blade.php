@@ -98,7 +98,7 @@ new #[Layout('layouts.guest')] class extends Component {
     * Processa a submissão do formulário de registro.
     *
     * Valida os dados, cria o usuário, atribui o role apropriado (usp_user ou external_user),
-    * dispara o evento Registered, realiza o login e redireciona para o dashboard.
+    * dispara o evento Registered, realiza o login e redireciona para a página de registrations.
     *
     * @return void
     *
@@ -133,7 +133,7 @@ new #[Layout('layouts.guest')] class extends Component {
 
         Auth::login($user);
 
-        $this->redirect(route('dashboard', absolute: false), navigate: true);
+        $this->redirect(route('registrations.my', absolute: false), navigate: true);
     }
 }; ?>
 

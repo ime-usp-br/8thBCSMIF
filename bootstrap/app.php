@@ -23,7 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return route('login.local');
         });
 
-        $middleware->redirectUsersTo(fn (Request $request) => route('dashboard'));
+        $middleware->redirectUsersTo(fn (Request $request) => route('registrations.my'));
 
         // Register Spatie permission middleware aliases
         $middleware->alias([

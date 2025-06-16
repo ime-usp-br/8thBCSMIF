@@ -10,9 +10,6 @@ Route::view('workshops', 'workshops')->name('workshops');
 Route::view('fees', 'fees')->name('fees');
 Route::view('payment-info', 'payment-info')->name('payment-info');
 
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
 
 Route::view('profile', 'profile')
     ->middleware(['auth'])

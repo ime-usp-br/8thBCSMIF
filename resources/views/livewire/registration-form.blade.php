@@ -260,9 +260,9 @@ new #[Layout('layouts.app')] class extends Component {
             'consent_data_processing' => 'required|accepted',
         ]);
 
-        // For now, simulate successful submission by redirecting to dashboard
+        // For now, simulate successful submission by redirecting to registrations page
         session()->flash('success', __('registrations.created_successfully'));
-        $this->redirect(route('dashboard'));
+        $this->redirect(route('registrations.my'));
     }
 }; ?>
 

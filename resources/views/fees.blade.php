@@ -237,8 +237,8 @@
                                 </a>
                             @endguest
                             @auth
-                                <a href="{{ route('dashboard') }}" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-green-600 transition duration-300">
-                                    {{ __('Go to Dashboard') }}
+                                <a href="{{ route('registrations.my') }}" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-green-600 transition duration-300">
+                                    {{ __('My Registrations') }}
                                 </a>
                             @endauth
                         </div>

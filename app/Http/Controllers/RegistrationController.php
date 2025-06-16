@@ -119,8 +119,8 @@ class RegistrationController extends Controller
         event(new NewRegistrationCreated($registration));
         Log::info('NewRegistrationCreated event dispatched.', ['registration_id' => $registration->id]);
 
-        // --- AC12: Redirect to dashboard with success message ---
-        return redirect()->route('dashboard')->with('success', __('registrations.created_successfully'));
+        // --- AC12: Redirect to registrations page with success message ---
+        return redirect()->route('registrations.my')->with('success', __('registrations.created_successfully'));
     }
 
     /**

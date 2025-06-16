@@ -149,11 +149,11 @@
                                                 {{ __('Step 2: Upload Proof') }}
                                             </h4>
                                             <p class="text-blue-800 dark:text-blue-300 mb-4">
-                                                {{ __('After making payment, access your account and upload the payment proof through your dashboard.') }}
+                                                {{ __('After making payment, access your account and upload the payment proof through your registration page.') }}
                                             </p>
                                             @auth
-                                                <a href="{{ route('dashboard') }}" class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-semibold">
-                                                    {{ __('Go to Dashboard') }}
+                                                <a href="{{ route('registrations.my') }}" class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-semibold">
+                                                    {{ __('My Registrations') }}
                                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                                     </svg>
@@ -302,8 +302,8 @@
                                 </a>
                             @endguest
                             @auth
-                                <a href="{{ route('dashboard') }}" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-purple-600 transition duration-300">
-                                    {{ __('Go to Dashboard') }}
+                                <a href="{{ route('registrations.my') }}" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-purple-600 transition duration-300">
+                                    {{ __('My Registrations') }}
                                 </a>
                             @endauth
                         </div>
