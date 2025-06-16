@@ -172,6 +172,8 @@ class AuthenticatedNavigationAC4Test extends TestCase
     {
         // Create a test user
         $user = User::factory()->create();
+        // Create a registration for the user to bypass the registration middleware
+        \App\Models\Registration::factory()->create(['user_id' => $user->id]);
 
         // Test access to all required routes
         $routes = [

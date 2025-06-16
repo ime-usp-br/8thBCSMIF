@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'ensure.registration' => \App\Http\Middleware\EnsureUserHasRegistration::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

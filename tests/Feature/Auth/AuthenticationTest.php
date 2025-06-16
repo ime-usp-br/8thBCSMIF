@@ -240,11 +240,34 @@ class AuthenticationTest extends TestCase
     public function authenticated_user_can_access_profile(): void
     {
         $user = User::factory()->create();
+        // Create a registration for the user to bypass the registration middleware
+        \App\Models\Registration::factory()->create(['user_id' => $user->id]);
 
         $response = $this->actingAs($user)->get(route('profile'));
 
         $response->assertOk();
         $response->assertSee(__('Profile')); // Check for a common profile text
+    }
+
+    #[Test]
+    #[Group('auth-middleware')]
+    public function authenticated_user_without_registration_is_redirected_to_register_event(): void
+    {
+        $user = User::factory()->create();
+
+        // Test routes that should redirect users without registration
+        $routes = [
+            route('profile'),
+            '/',
+            '/workshops',
+            '/fees',
+            '/payment-info',
+        ];
+
+        foreach ($routes as $route) {
+            $response = $this->actingAs($user)->get($route);
+            $response->assertRedirect(route('register-event'));
+        }
     }
 
     // Test for AC5 of Issue #26
