@@ -52,7 +52,7 @@ class RegistrationControllerTest extends TestCase
             'nationality' => 'Brazilian',
             'date_of_birth' => '1990-01-01',
             'gender' => 'male',
-            'document_country_origin' => 'Brasil', // For CPF/RG
+            'document_country_origin' => 'BR', // For CPF/RG
             'cpf' => '123.456.789-00',
             'rg_number' => '1234567',
             'passport_number' => null,
@@ -62,10 +62,10 @@ class RegistrationControllerTest extends TestCase
             'address_street' => 'Rua Exemplo, 123',
             'address_city' => 'São Paulo',
             'address_state_province' => 'SP',
-            'address_country' => 'Brasil',
+            'address_country' => 'BR',
             'address_postal_code' => '01000-000',
             'affiliation' => 'University of Example',
-            'position' => 'grad_student', // Default position for fee calculation
+            'position' => 'graduate_student', // Default position for fee calculation
             'is_abe_member' => false,      // Default ABE status
             'arrival_date' => '2025-09-28',
             'departure_date' => '2025-10-03',
@@ -81,8 +81,8 @@ class RegistrationControllerTest extends TestCase
             'requires_visa_letter' => false,
             'sou_da_usp' => false, // For non-USP user by default
             'codpes' => null,
-            'confirm_information_accuracy' => true,
-            'confirm_data_processing_consent' => true,
+            'confirm_information' => true,
+            'consent_data_processing' => true,
         ], $overrides);
     }
 
@@ -103,7 +103,7 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
             'is_abe_member' => false,
             'participation_format' => 'in-person',
         ]);
@@ -277,7 +277,7 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'undergrad_student',
+            'position' => 'undergraduate_student',
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
@@ -315,7 +315,7 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$mainEvent->code, $workshopEvent->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
@@ -375,7 +375,7 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
@@ -412,7 +412,7 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
@@ -1081,7 +1081,7 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
             'email' => 'participant@example.com',
         ]);
 
@@ -1129,7 +1129,7 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
             'email' => 'brazilian@example.com',
             'document_country_origin' => 'BR', // Brazilian user
         ]);
@@ -1181,7 +1181,7 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
             'email' => 'international@example.com',
             'document_country_origin' => 'US', // International user
         ]);
@@ -1229,7 +1229,7 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);

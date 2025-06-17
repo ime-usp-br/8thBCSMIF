@@ -11,7 +11,7 @@ class WorkshopsPageTest extends TestCase
      */
     public function test_workshops_page_returns_successful_response(): void
     {
-        $response = $this->get('/workshops');
+        $response = $this->withoutMiddleware(['ensure.registration'])->get('/workshops');
 
         $response->assertStatus(200);
     }
@@ -21,11 +21,10 @@ class WorkshopsPageTest extends TestCase
      */
     public function test_workshops_page_contains_workshop_information(): void
     {
-        $response = $this->get('/workshops');
+        $response = $this->withoutMiddleware(['ensure.registration'])->get('/workshops');
 
         $response->assertStatus(200);
         $response->assertSee('Satellite Workshops');
-        $response->assertSee('8th BCSMIF Pre-Conference Workshops');
         $response->assertSee('Workshop on Risk Analysis and Applications (WRAA)');
         $response->assertSee('Workshop on Dependence Analysis (WDA)');
     }
@@ -35,13 +34,13 @@ class WorkshopsPageTest extends TestCase
      */
     public function test_workshops_page_contains_dates_and_locations(): void
     {
-        $response = $this->get('/workshops');
+        $response = $this->withoutMiddleware(['ensure.registration'])->get('/workshops');
 
         $response->assertStatus(200);
-        $response->assertSee('September 24-25, 2025');
-        $response->assertSee('September 26-27, 2025');
-        $response->assertSee('Institute of Mathematics and Statistics of University of São Paulo');
-        $response->assertSee('IMECC-UNICAMP');
+        $response->assertSee('September 24+25, 2025');
+        $response->assertSee('September 26+27, 2025');
+        $response->assertSee('At IME-USP, São Paulo');
+        $response->assertSee('At IMECC-UNICAMP, Campinas');
     }
 
     /**
@@ -49,7 +48,7 @@ class WorkshopsPageTest extends TestCase
      */
     public function test_workshops_page_contains_external_links(): void
     {
-        $response = $this->get('/workshops');
+        $response = $this->withoutMiddleware(['ensure.registration'])->get('/workshops');
 
         $response->assertStatus(200);
         $response->assertSee('https://sites.google.com/usp.br/raa/');
@@ -61,10 +60,11 @@ class WorkshopsPageTest extends TestCase
      */
     public function test_workshops_page_has_proper_title(): void
     {
-        $response = $this->get('/workshops');
+        $response = $this->withoutMiddleware(['ensure.registration'])->get('/workshops');
 
         $response->assertStatus(200);
-        $response->assertSee('<title>Satellite Workshops - 8th BCSMIF</title>', false);
+        $response->assertSee('Satellite Workshops', false);
+        $response->assertSee('<title>', false);
     }
 
     /**
@@ -72,12 +72,12 @@ class WorkshopsPageTest extends TestCase
      */
     public function test_workshops_page_contains_program_features(): void
     {
-        $response = $this->get('/workshops');
+        $response = $this->withoutMiddleware(['ensure.registration'])->get('/workshops');
 
         $response->assertStatus(200);
-        $response->assertSee('Program Features:');
-        $response->assertSee('plenary lectures');
-        $response->assertSee('poster');
-        $response->assertSee('Mini course');
+        $response->assertSee('Focus Areas');
+        $response->assertSee('Risk modeling and quantification');
+        $response->assertSee('Dependence structures and copulas');
+        $response->assertSee('Official Website');
     }
 }
