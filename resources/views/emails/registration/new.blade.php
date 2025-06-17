@@ -22,14 +22,15 @@
 
 {{ __('Please make payment via bank transfer or PIX to the details below:') }}
 
-**{{ __('Bank Details') }}:**
-- **{{ __('Bank') }}:** Santander
-- **{{ __('Branch') }}:** 0658
-- **{{ __('Account') }}:** 13006798-9
+**{{ __('Bank Transfer Information:') }}**
+- **{{ __('Bank:') }}** Santander
+- **{{ __('Agency:') }}** 0658
+- **{{ __('Account:') }}** 13006798-9
+- **{{ __('PIX Key:') }}** 56.572.456/0001-80
 - **{{ __('Beneficiary') }}:** Associação Brasileira de Estatística
 - **{{ __('CNPJ') }}:** 56.572.456/0001-80
 
-**{{ __('How to send proof of payment') }}:**
+**{{ __('how to send the payment proof') }}:**
 {{ __('After making payment, access your account in the system and upload the payment proof. Your status will be updated once confirmation is processed.') }}
 @else
 **{{ __('Invoice Information') }}:**

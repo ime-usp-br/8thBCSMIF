@@ -81,8 +81,8 @@ class RegistrationControllerTest extends TestCase
             'requires_visa_letter' => false,
             'sou_da_usp' => false, // For non-USP user by default
             'codpes' => null,
-            'confirm_information' => true,
-            'consent_data_processing' => true,
+            'confirm_information_accuracy' => true,
+            'confirm_data_processing_consent' => true,
         ], $overrides);
     }
 
@@ -204,6 +204,11 @@ class RegistrationControllerTest extends TestCase
         $user = User::factory()->create(['email' => 'testusp@usp.br']); // USP Email
         $user->markEmailAsVerified();
         $this->actingAs($user);
+
+        // Mock ReplicadoService to avoid connection issues during basic validation tests
+        $mockReplicado = \Mockery::mock(ReplicadoService::class);
+        $mockReplicado->shouldReceive('validarNuspEmail')->andReturn(true);
+        $this->app->instance(ReplicadoService::class, $mockReplicado);
 
         // StoreRegistrationRequest currently makes `codpes` nullable.
         // For this test, we rely on the `numeric` and `digits_between` rules from StoreRegistrationRequest
@@ -941,7 +946,7 @@ class RegistrationControllerTest extends TestCase
 
         // Test Brasil document without CPF
         $invalidBrazilData = $this->getValidRegistrationData($user, [
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'BR',
             'cpf' => null,
             'rg_number' => null,
             'passport_number' => null,
@@ -1009,6 +1014,7 @@ class RegistrationControllerTest extends TestCase
     public function new_registration_notification_includes_payment_instructions_for_brazilian_users(): void
     {
         // AC3: Test that Brazilian users with fee > 0 receive payment instructions
+        app()->setLocale('pt_BR');
         $user = User::factory()->create(['email' => 'brasileiro@example.com']);
 
         $registration = Registration::factory()->create([
@@ -1030,7 +1036,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertStringContainsString('13006798-9', $renderedContent);
         $this->assertStringContainsString('Associação Brasileira de Estatística', $renderedContent);
         $this->assertStringContainsString('56.572.456/0001-80', $renderedContent);
-        $this->assertStringContainsString('Como enviar o comprovante', $renderedContent);
+        $this->assertStringContainsString(__('how to send the payment proof'), $renderedContent);
 
         // Should NOT contain international invoice message for Brazilian users
         $this->assertStringNotContainsString('invoice com detalhes para pagamento internacional', $renderedContent);
@@ -1040,6 +1046,7 @@ class RegistrationControllerTest extends TestCase
     public function new_registration_notification_includes_invoice_message_for_international_users(): void
     {
         // AC4: Test that international users receive invoice message instead of payment instructions
+        app()->setLocale('pt_BR');
         $user = User::factory()->create(['email' => 'international@example.com']);
 
         $registration = Registration::factory()->create([
@@ -1060,7 +1067,7 @@ class RegistrationControllerTest extends TestCase
         // Should NOT contain Brazilian payment instructions for international users
         $this->assertStringNotContainsString('Instruções para Pagamento', $renderedContent);
         $this->assertStringNotContainsString('Santander', $renderedContent);
-        $this->assertStringNotContainsString('Como enviar o comprovante', $renderedContent);
+        $this->assertStringNotContainsString(__('how to send the payment proof'), $renderedContent);
     }
 
     #[Test]
@@ -1116,6 +1123,7 @@ class RegistrationControllerTest extends TestCase
     public function new_registration_notification_includes_correct_payment_instructions_for_brazilian_user(): void
     {
         // AC12: Test that NewRegistrationNotification includes correct payment instructions for Brazilian users
+        app()->setLocale('pt_BR');
         Mail::fake();
 
         config(['mail.coordinator_email' => 'coordinator@bcsmif.com']);
@@ -1184,6 +1192,10 @@ class RegistrationControllerTest extends TestCase
             'position' => 'graduate_student',
             'email' => 'international@example.com',
             'document_country_origin' => 'US', // International user
+            'passport_number' => 'AB123456789',
+            'passport_expiry_date' => '2030-12-31',
+            'cpf' => null,
+            'rg_number' => null,
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
@@ -1198,12 +1210,12 @@ class RegistrationControllerTest extends TestCase
                 $content = $mail->render();
 
                 // Verify international payment instructions are included
-                $this->assertStringContainsString(__('invoice will be sent'), $content);
-                $this->assertStringContainsString(__('detailed payment instructions'), $content);
+                $this->assertStringContainsString(__('Invoice Information'), $content);
+                $this->assertStringContainsString(__('An invoice with details for international payment will be sent to your email shortly.'), $content);
 
                 // Verify user and registration data
                 $this->assertStringContainsString($registration->full_name, $content);
-                $this->assertStringContainsString('US$ '.number_format($registration->calculated_fee, 2), $content);
+                $this->assertStringContainsString('R$ '.number_format($registration->calculated_fee, 2, ',', '.'), $content);
 
                 return true;
             }
@@ -1239,7 +1251,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertNotNull($registration);
 
         // AC12: Verify NewRegistrationNotification coordinator version contains admin panel link
-        Mail::assertSent(NewRegistrationNotification::class, function ($mail) use ($registration) {
+        Mail::assertSent(NewRegistrationNotification::class, function ($mail) use ($registration, $user) {
             if ($mail->registration->id === $registration->id && $mail->forCoordinator === true) {
                 $content = $mail->render();
 

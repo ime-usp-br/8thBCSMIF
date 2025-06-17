@@ -3,12 +3,23 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\Registration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class NavigationConditionalVisibilityAC6Test extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * Create a user with a registration to avoid middleware redirects
+     */
+    private function createUserWithRegistration(): User
+    {
+        $user = User::factory()->create();
+        Registration::factory()->create(['user_id' => $user->id]);
+        return $user;
+    }
 
     /**
      * Test that Login links appear only for guests (@guest).
@@ -23,7 +34,7 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
         $response->assertDontSee(__('Sign Up'));
 
         // Test as authenticated user - should NOT see login links in public nav
-        $user = User::factory()->create();
+        $user = $this->createUserWithRegistration();
         $response = $this->actingAs($user)->get('/');
         $response->assertOk();
         $response->assertDontSee(__('Login'));
@@ -41,11 +52,11 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
         $response->assertDontSee(__('Dashboard'));
 
         // Test as authenticated user - should see authenticated links
-        $user = User::factory()->create();
+        $user = $this->createUserWithRegistration();
         $response = $this->actingAs($user)->get('/');
         $response->assertOk();
         $response->assertSee(__('Dashboard'));
-        $response->assertSee(__('Logout'));
+        $response->assertSee(__('Log Out'));
     }
 
     /**
@@ -65,7 +76,7 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
             $response->assertSee(__('Login'));
 
             // Should NOT see authenticated-only links
-            $response->assertDontSee(__('Logout'));
+            $response->assertDontSee(__('Log Out'));
             $response->assertDontSee(__('Sign Up'));
         }
     }
@@ -76,7 +87,7 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
      */
     public function test_public_navigation_auth_section(): void
     {
-        $user = User::factory()->create();
+        $user = $this->createUserWithRegistration();
 
         // Test public pages as authenticated user
         $publicRoutes = ['/', '/workshops', '/fees', '/payment-info'];
@@ -87,7 +98,7 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
 
             // Should see authenticated-only links
             $response->assertSee(__('Dashboard'));
-            $response->assertSee(__('Logout'));
+            $response->assertSee(__('Log Out'));
             $response->assertSee(__('Sign Up'));
 
             // Should NOT see guest-only links
@@ -101,10 +112,14 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
      */
     public function test_my_registrations_appears_for_authenticated_users(): void
     {
-        $user = User::factory()->create();
+        $user = $this->createUserWithRegistration();
 
         // Test dashboard page (uses authenticated navigation)
         $response = $this->actingAs($user)->get('/dashboard');
+        $response->assertRedirect('/my-registrations');
+        
+        // Test the actual my-registrations page
+        $response = $this->actingAs($user)->get('/my-registrations');
         $response->assertOk();
         $response->assertSee(__('My Registrations'));
     }
@@ -115,16 +130,18 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
      */
     public function test_sign_up_appears_correctly_for_auth_users(): void
     {
-        $user = User::factory()->create();
+        $user = $this->createUserWithRegistration();
 
         // Test public pages - authenticated users should see Sign Up in navigation
         $response = $this->actingAs($user)->get('/');
         $response->assertOk();
+        $response->assertSee(__('Sign Up'));
 
         // In the public navigation when authenticated, Sign Up might be shown as a different action
         // Let's check if the register-event route is accessible
         $response = $this->actingAs($user)->get('/workshops');
         $response->assertOk();
+        $response->assertSee(__('Sign Up'));
 
         // Note: The exact implementation may vary based on business logic
         // This test ensures authenticated users can access registration functionality
@@ -157,7 +174,7 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
         // Verify responsive section has proper @auth directives
         $this->assertStringContainsString('@auth', $componentContent);
         $this->assertMatchesRegularExpression('/\@auth.*?Dashboard.*?\@endauth/s', $componentContent);
-        $this->assertMatchesRegularExpression('/\@auth.*?Logout.*?\@endauth/s', $componentContent);
+        $this->assertMatchesRegularExpression('/\@auth.*?Log Out.*?\@endauth/s', $componentContent);
     }
 
     /**

@@ -20,14 +20,14 @@ class PublicNavigationAC2Test extends TestCase
         $response = $this->get('/');
         $response->assertStatus(200);
 
-        // Check that all required links are present and functional
+        // Check that all required links are present and functional for guests
         $requiredLinks = [
             '/' => 'Home',
             '/workshops' => 'Workshops',
             '/fees' => 'Fees',
             '/payment-info' => 'Payment',
             '/login/local' => 'Login',
-            '/register-event' => 'Sign Up',
+            // Note: Sign Up only appears for authenticated users
         ];
 
         foreach ($requiredLinks as $url => $linkText) {
@@ -36,15 +36,8 @@ class PublicNavigationAC2Test extends TestCase
             $response->assertSee(__($linkText));
 
             // Test that each link is functional (returns valid HTTP response)
-            if ($url === '/register-event') {
-                // register-event should redirect to login for unauthenticated users
-                $linkResponse = $this->get($url);
-                $linkResponse->assertRedirect();
-            } else {
-                // Other links should be accessible to unauthenticated users
-                $linkResponse = $this->get($url);
-                $linkResponse->assertStatus(200);
-            }
+            $linkResponse = $this->get($url);
+            $linkResponse->assertStatus(200);
         }
     }
 
@@ -75,12 +68,13 @@ class PublicNavigationAC2Test extends TestCase
         $response = $this->get('/');
         $response->assertStatus(200);
 
-        // Verify correct translated text is displayed
+        // Verify correct translated text is displayed for guests
         $response->assertSee(__('Home'));
         $response->assertSee(__('Workshops'));
         $response->assertSee(__('Fees'));
         $response->assertSee(__('Payment'));
         $response->assertSee(__('Login'));
-        $response->assertSee(__('Sign Up'));
+        // Note: Sign Up only appears for authenticated users
+        $response->assertDontSee(__('Sign Up'));
     }
 }

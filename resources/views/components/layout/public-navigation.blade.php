@@ -43,6 +43,11 @@
                     </div>
                 @endguest
                 @auth
+                    <div class="flex space-x-4 mr-4">
+                        <x-nav-link :href="route('register-event')" :active="request()->routeIs('register-event')">
+                            {{ __('Sign Up') }}
+                        </x-nav-link>
+                    </div>
                     <!-- Settings Dropdown -->
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
@@ -57,6 +62,9 @@
                         </x-slot>
 
                         <x-slot name="content">
+                            <x-dropdown-link :href="route('dashboard')">
+                                {{ __('Dashboard') }}
+                            </x-dropdown-link>
                             <x-dropdown-link :href="route('profile')">
                                 {{ __('Profile') }}
                             </x-dropdown-link>
@@ -131,6 +139,12 @@
                 </div>
 
                 <div class="mt-3 space-y-1">
+                    <x-responsive-nav-link :href="route('register-event')" :active="request()->routeIs('register-event')">
+                        {{ __('Sign Up') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('dashboard')">
+                        {{ __('Dashboard') }}
+                    </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('registrations.my')" :active="request()->routeIs('registrations.my')">
                         {{ __('My Registrations') }}
                     </x-responsive-nav-link>
