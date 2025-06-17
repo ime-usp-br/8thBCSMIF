@@ -155,7 +155,7 @@
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             @foreach($registrations as $registration)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
-                                    <td class="px-4 xl:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <td class="px-4 xl:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                         #{{ $registration->id }}
                                     </td>
                                     <td class="px-4 xl:px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
@@ -178,7 +178,7 @@
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="px-4 xl:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <td class="px-4 xl:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                         R$ {{ number_format($registration->calculated_fee, 2, ',', '.') }}
                                     </td>
                                     <td class="px-4 xl:px-6 py-4 whitespace-nowrap">

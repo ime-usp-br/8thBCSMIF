@@ -160,57 +160,303 @@ new #[Layout('layouts.app')] class extends Component {
                                 
                                 @if($selectedRegistrationId === $registration->id && $selectedRegistration)
                                     <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                                        <h4 class="text-lg font-medium mb-4">{{ __('Registration Details') }}</h4>
+                                        <h4 class="text-lg font-medium mb-6">{{ __('Registration Details') }}</h4>
                                         
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="space-y-8">
+                                            <!-- Personal Information -->
                                             <div>
-                                                <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-3">{{ __('Personal Information') }}</h5>
-                                                <div class="space-y-2 text-sm">
+                                                <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-4 border-l-4 border-blue-500 pl-3">{{ __('Personal Information') }}</h5>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                                                     <div>
-                                                        <span class="text-gray-600 dark:text-gray-400">{{ __('Full Name') }}:</span>
-                                                        <span class="ml-2 text-gray-900 dark:text-gray-100">{{ $selectedRegistration->full_name }}</span>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Full Name') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->full_name }}</div>
                                                     </div>
                                                     <div>
-                                                        <span class="text-gray-600 dark:text-gray-400">{{ __('Email') }}:</span>
-                                                        <span class="ml-2 text-gray-900 dark:text-gray-100">{{ $selectedRegistration->email }}</span>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Email') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->email }}</div>
                                                     </div>
-                                                    @if($selectedRegistration->nationality)
+                                                    @if($selectedRegistration->phone_number)
                                                     <div>
-                                                        <span class="text-gray-600 dark:text-gray-400">{{ __('Nationality') }}:</span>
-                                                        <span class="ml-2 text-gray-900 dark:text-gray-100">{{ $selectedRegistration->nationality }}</span>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Phone Number') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->phone_number }}</div>
                                                     </div>
                                                     @endif
-                                                    @if($selectedRegistration->document_country_origin)
+                                                    @if($selectedRegistration->nationality)
                                                     <div>
-                                                        <span class="text-gray-600 dark:text-gray-400">{{ __('Document Country') }}:</span>
-                                                        <span class="ml-2 text-gray-900 dark:text-gray-100">{{ $selectedRegistration->document_country_origin }}</span>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Nationality') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->nationality }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->date_of_birth)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Date of Birth') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->date_of_birth->format('d/m/Y') }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->gender)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Gender') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->gender }}</div>
                                                     </div>
                                                     @endif
                                                 </div>
                                             </div>
-                                            
+
+                                            <!-- Document Information -->
+                                            @if($selectedRegistration->document_country_origin || $selectedRegistration->cpf || $selectedRegistration->rg_number || $selectedRegistration->passport_number)
                                             <div>
-                                                <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-3">{{ __('Events & Pricing') }}</h5>
+                                                <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-4 border-l-4 border-green-500 pl-3">{{ __('Document Information') }}</h5>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                                                    @if($selectedRegistration->document_country_origin)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Document Country') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->document_country_origin }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->cpf)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('CPF') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->cpf }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->rg_number)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('RG Number') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->rg_number }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->passport_number)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Passport Number') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->passport_number }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->passport_expiry_date)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Passport Expiry Date') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->passport_expiry_date->format('d/m/Y') }}</div>
+                                                    </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            @endif
+
+                                            <!-- Address Information -->
+                                            @if($selectedRegistration->address_street || $selectedRegistration->address_city || $selectedRegistration->address_country)
+                                            <div>
+                                                <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-4 border-l-4 border-purple-500 pl-3">{{ __('Address') }}</h5>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                                                    @if($selectedRegistration->address_street)
+                                                    <div class="md:col-span-2">
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Street Address') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->address_street }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->address_city)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('City') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->address_city }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->address_state_province)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('State/Province') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->address_state_province }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->address_country)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Country') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->address_country }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->address_postal_code)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Postal Code') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->address_postal_code }}</div>
+                                                    </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            @endif
+
+                                            <!-- Professional Information -->
+                                            <div>
+                                                <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-4 border-l-4 border-indigo-500 pl-3">{{ __('Professional Information') }}</h5>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                                                    @if($selectedRegistration->affiliation)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Affiliation') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->affiliation }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->position)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Position') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->position }}</div>
+                                                    </div>
+                                                    @endif
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('ABE Member') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">
+                                                            {{ $selectedRegistration->is_abe_member ? __('Yes') : __('No') }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Event Participation -->
+                                            <div>
+                                                <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-4 border-l-4 border-orange-500 pl-3">{{ __('Event Participation') }}</h5>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                                                    @if($selectedRegistration->participation_format)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Participation Format') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->participation_format }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->arrival_date)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Arrival Date') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->arrival_date->format('d/m/Y') }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->departure_date)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Departure Date') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->departure_date->format('d/m/Y') }}</div>
+                                                    </div>
+                                                    @endif
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Transport from GRU Airport') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">
+                                                            {{ $selectedRegistration->needs_transport_from_gru ? __('Yes') : __('No') }}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Transport from USP') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">
+                                                            {{ $selectedRegistration->needs_transport_from_usp ? __('Yes') : __('No') }}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Requires Visa Letter') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">
+                                                            {{ $selectedRegistration->requires_visa_letter ? __('Yes') : __('No') }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Dietary Information -->
+                                            @if($selectedRegistration->dietary_restrictions || $selectedRegistration->other_dietary_restrictions)
+                                            <div>
+                                                <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-4 border-l-4 border-red-500 pl-3">{{ __('Dietary Information') }}</h5>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                                    @if($selectedRegistration->dietary_restrictions)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Dietary Restrictions') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->dietary_restrictions }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->other_dietary_restrictions)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Other Dietary Restrictions') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->other_dietary_restrictions }}</div>
+                                                    </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            @endif
+
+                                            <!-- Emergency Contact -->
+                                            @if($selectedRegistration->emergency_contact_name || $selectedRegistration->emergency_contact_phone)
+                                            <div>
+                                                <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-4 border-l-4 border-pink-500 pl-3">{{ __('Emergency Contact') }}</h5>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                                                    @if($selectedRegistration->emergency_contact_name)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Contact Name') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->emergency_contact_name }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->emergency_contact_relationship)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Relationship') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->emergency_contact_relationship }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->emergency_contact_phone)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Contact Phone') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->emergency_contact_phone }}</div>
+                                                    </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            @endif
+                                            
+                                            <!-- Events & Pricing -->
+                                            <div>
+                                                <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-4 border-l-4 border-blue-600 pl-3">{{ __('Events & Pricing') }}</h5>
                                                 <div class="space-y-3">
                                                     @foreach($selectedRegistration->events as $event)
-                                                    <div class="border border-gray-200 dark:border-gray-600 rounded p-3">
-                                                        <div class="font-medium text-gray-900 dark:text-gray-100">{{ $event->name }}</div>
-                                                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                                            {{ __('Price at Registration') }}: R$ {{ number_format($event->pivot->price_at_registration, 2, ',', '.') }}
+                                                    <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
+                                                        <div class="flex justify-between items-start">
+                                                            <div class="flex-1">
+                                                                <div class="font-medium text-gray-900 dark:text-gray-100">{{ $event->name }}</div>
+                                                                <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300">
+                                                                        {{ $event->code }}
+                                                                    </span>
+                                                                </div>
+                                                                @if($event->description)
+                                                                <div class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                                                    {{ Str::limit($event->description, 150) }}
+                                                                </div>
+                                                                @endif
+                                                            </div>
+                                                            <div class="text-right ml-4">
+                                                                <div class="font-bold text-lg text-gray-900 dark:text-gray-100">
+                                                                    R$ {{ number_format($event->pivot->price_at_registration, 2, ',', '.') }}
+                                                                </div>
+                                                                <div class="text-xs text-gray-500 dark:text-gray-400">{{ __('Price at registration') }}</div>
+                                                            </div>
                                                         </div>
-                                                        @if($event->description)
-                                                        <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                                            {{ Str::limit($event->description, 100) }}
-                                                        </div>
-                                                        @endif
                                                     </div>
                                                     @endforeach
                                                     
-                                                    <div class="border-t border-gray-200 dark:border-gray-600 pt-3">
-                                                        <div class="font-medium text-gray-900 dark:text-gray-100">
-                                                            {{ __('Total Fee') }}: R$ {{ number_format($selectedRegistration->calculated_fee, 2, ',', '.') }}
+                                                    <div class="border-t border-gray-200 dark:border-gray-600 pt-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4">
+                                                        <div class="flex justify-between items-center">
+                                                            <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ __('Total Registration Fee') }}</span>
+                                                            <span class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                                                R$ {{ number_format($selectedRegistration->calculated_fee, 2, ',', '.') }}
+                                                            </span>
                                                         </div>
                                                     </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Registration Information -->
+                                            <div>
+                                                <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-4 border-l-4 border-gray-500 pl-3">{{ __('Registration Information') }}</h5>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Registration Date') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->created_at->format('d/m/Y H:i') }}</div>
+                                                    </div>
+                                                    @if($selectedRegistration->payment_uploaded_at)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Payment Proof Uploaded At') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->payment_uploaded_at->format('d/m/Y H:i') }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($selectedRegistration->registration_category_snapshot)
+                                                    <div>
+                                                        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ __('Registration Category') }}:</span>
+                                                        <div class="text-gray-900 dark:text-gray-100">{{ $selectedRegistration->registration_category_snapshot }}</div>
+                                                    </div>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>

@@ -449,12 +449,12 @@
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('Registration Date') }}</p>
-                                <p class="mt-1 text-sm text-gray-900 font-medium">{{ $registration->created_at->format('d/m/Y H:i') }}</p>
+                                <p class="mt-1 text-sm text-gray-900 dark:text-gray-100 font-medium">{{ $registration->created_at->format('d/m/Y H:i') }}</p>
                             </div>
                             @if($registration->payment_uploaded_at)
                             <div>
                                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('Payment Proof Uploaded At') }}</p>
-                                <p class="mt-1 text-sm text-gray-900 font-medium">{{ $registration->payment_uploaded_at->format('d/m/Y H:i') }}</p>
+                                <p class="mt-1 text-sm text-gray-900 dark:text-gray-100 font-medium">{{ $registration->payment_uploaded_at->format('d/m/Y H:i') }}</p>
                             </div>
                             @endif
                         </div>
@@ -478,10 +478,10 @@
                         @endif
                         
                         <!-- Payment Status Update Form -->
-                        <div class="mt-6 bg-gray-50 rounded-lg p-4 sm:p-6">
+                        <div class="mt-6 bg-gray-50 dark:bg-gray-700 rounded-lg p-4 sm:p-6">
                             <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                                 <div class="flex-shrink-0">
-                                    <h4 class="text-sm font-semibold text-gray-900">{{ __('Update Payment Status') }}</h4>
+                                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ __('Update Payment Status') }}</h4>
                                     <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ __('Change the payment status for this registration') }}</p>
                                 </div>
                                 <form method="POST" action="{{ route('admin.registrations.update-status', $registration) }}" class="w-full lg:w-auto">
@@ -492,7 +492,7 @@
                                             <div class="flex-1 min-w-0">
                                                 <label for="payment_status" class="sr-only">{{ __('Payment Status') }}</label>
                                                 <select name="payment_status" id="payment_status" 
-                                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri text-sm transition-colors duration-200 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
+                                                        class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri text-sm transition-colors duration-200 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
                                                     <option value="pending_payment" {{ $registration->payment_status === 'pending_payment' ? 'selected' : '' }}>
                                                         {{ __('Pending Payment') }}
                                                     </option>
@@ -527,7 +527,7 @@
                                         <div class="flex items-center">
                                             <input type="checkbox" name="send_notification" id="send_notification" value="1" checked
                                                    class="h-4 w-4 text-usp-blue-pri focus:ring-usp-blue-pri border-gray-300 rounded">
-                                            <label for="send_notification" class="ml-2 block text-sm text-gray-700">
+                                            <label for="send_notification" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                                                 {{ __('Send email notification to participant') }}
                                             </label>
                                         </div>
