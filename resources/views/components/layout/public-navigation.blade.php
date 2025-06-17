@@ -61,6 +61,12 @@
                                 {{ __('Profile') }}
                             </x-dropdown-link>
 
+                            @if(auth()->user() && auth()->user()->hasRole('admin'))
+                                <x-dropdown-link :href="route('admin.registrations.index')">
+                                    {{ __('Registrations') }}
+                                </x-dropdown-link>
+                            @endif
+
                             <!-- Authentication -->
                             <form method="POST" action="{{ route('logout') }}" class="w-full">
                                 @csrf
@@ -131,6 +137,11 @@
                     <x-responsive-nav-link :href="route('profile')">
                         {{ __('Profile') }}
                     </x-responsive-nav-link>
+                    @if(auth()->user() && auth()->user()->hasRole('admin'))
+                        <x-responsive-nav-link :href="route('admin.registrations.index')">
+                            {{ __('Registrations') }}
+                        </x-responsive-nav-link>
+                    @endif
                     <form method="POST" action="{{ route('logout') }}" class="w-full">
                         @csrf
                         <button type="submit" class="w-full text-start block px-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:text-gray-800 dark:focus:text-gray-200 focus:bg-gray-50 dark:focus:bg-gray-700 focus:border-gray-300 dark:focus:border-gray-600 transition duration-150 ease-in-out">

@@ -63,6 +63,12 @@ new class extends Component
                             {{ __('Profile') }}
                         </x-dropdown-link>
 
+                        @if(auth()->user() && auth()->user()->hasRole('admin'))
+                            <x-dropdown-link :href="route('admin.registrations.index')" wire:navigate>
+                                {{ __('Registrations') }}
+                            </x-dropdown-link>
+                        @endif
+
                         <!-- Authentication -->
                         <button wire:click="logout" class="w-full text-start">
                             <x-dropdown-link>
@@ -110,6 +116,12 @@ new class extends Component
                 <x-responsive-nav-link :href="route('profile')" wire:navigate>
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
+
+                @if(auth()->user() && auth()->user()->hasRole('admin'))
+                    <x-responsive-nav-link :href="route('admin.registrations.index')" wire:navigate>
+                        {{ __('Registrations') }}
+                    </x-responsive-nav-link>
+                @endif
 
                 <!-- Authentication -->
                 <button wire:click="logout" class="w-full text-start">
