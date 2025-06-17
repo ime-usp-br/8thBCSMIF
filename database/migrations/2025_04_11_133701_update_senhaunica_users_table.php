@@ -16,11 +16,11 @@ class UpdateSenhaunicaUsersTable extends Migration
         // Caso necessário, ajuste para refletir suas necessidades
         Schema::table('users', function (Blueprint $table) {
             // Only add codpes if it doesn't exist
-            if (!Schema::hasColumn('users', 'codpes')) {
+            if (! Schema::hasColumn('users', 'codpes')) {
                 $table->integer('codpes')->nullable();
             }
         });
-        
+
         // Change password to nullable in separate statement for SQLite compatibility
         Schema::table('users', function (Blueprint $table) {
             $table->string('password')->nullable()->change(); // deixar opcional

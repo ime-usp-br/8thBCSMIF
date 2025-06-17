@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\Registration;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
@@ -19,6 +19,7 @@ class ProfileTest extends TestCase
     {
         $user = User::factory()->create();
         Registration::factory()->create(['user_id' => $user->id]);
+
         return $user;
     }
 

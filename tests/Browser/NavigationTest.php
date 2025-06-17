@@ -90,7 +90,7 @@ class NavigationTest extends DuskTestCase
             // AC11: Test navigation to workshop and fees pages work (may redirect to register-event)
             $browser->visit('/workshops')
                 ->pause(2000);
-                
+
             $browser->visit('/fees')
                 ->pause(2000);
         });

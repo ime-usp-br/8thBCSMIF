@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Services\ReplicadoService;
 use App\Exceptions\ReplicadoServiceException;
+use App\Services\ReplicadoService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -37,13 +37,14 @@ class StoreRegistrationRequest extends FormRequest
                 'digits_between:6,8',
                 Rule::requiredIf($isUspUser),
                 function ($attribute, $value, $fail) {
+                    /** @var callable $fail */
                     // Custom validation using ReplicadoService for USP users
                     if ($value && $this->input('sou_da_usp')) {
                         try {
                             $replicadoService = app(ReplicadoService::class);
                             $email = $this->input('email');
-                            
-                            if (!$replicadoService->validarNuspEmail((int) $value, $email)) {
+
+                            if (is_numeric($value) && is_string($email) && ! $replicadoService->validarNuspEmail((int) $value, $email)) {
                                 $fail(__('validation.custom.codpes.replicado_validation_failed'));
                             }
                         } catch (ReplicadoServiceException $e) {
@@ -52,7 +53,7 @@ class StoreRegistrationRequest extends FormRequest
                     }
                 },
             ],
-            
+
             // Personal Information
             'full_name' => ['required', 'string', 'max:255'],
             'nationality' => ['nullable', 'string', 'max:255'],
@@ -139,7 +140,7 @@ class StoreRegistrationRequest extends FormRequest
             'codpes.required' => __('validation.custom.registration.codpes_required_if_usp'),
             'codpes.numeric' => __('validation.custom.registration.codpes_numeric'),
             'codpes.digits_between' => __('validation.custom.registration.codpes_digits_between', ['min' => 6, 'max' => 8]),
-            
+
             'full_name.required' => __('validation.custom.registration.full_name_required'),
             'email.required' => __('validation.custom.registration.email_required'),
             'email.email' => __('validation.custom.registration.email_format'),

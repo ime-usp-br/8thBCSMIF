@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\Registration;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,6 +18,7 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
     {
         $user = User::factory()->create();
         Registration::factory()->create(['user_id' => $user->id]);
+
         return $user;
     }
 
@@ -117,7 +118,7 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
         // Test dashboard page (uses authenticated navigation)
         $response = $this->actingAs($user)->get('/dashboard');
         $response->assertRedirect('/my-registrations');
-        
+
         // Test the actual my-registrations page
         $response = $this->actingAs($user)->get('/my-registrations');
         $response->assertOk();
