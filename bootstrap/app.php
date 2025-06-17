@@ -23,13 +23,14 @@ return Application::configure(basePath: dirname(__DIR__))
             return route('login.local');
         });
 
-        $middleware->redirectUsersTo(fn (Request $request) => route('dashboard'));
+        $middleware->redirectUsersTo(fn (Request $request) => route('registrations.my'));
 
         // Register Spatie permission middleware aliases
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'ensure.registration' => \App\Http\Middleware\EnsureUserHasRegistration::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

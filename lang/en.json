@@ -293,6 +293,7 @@
     "validation.custom.registration.address_country_required": "The country of residence is required.",
     "validation.custom.registration.codpes_digits_between": "The USP Number (codpes) must be between :min and :max digits.",
     "validation.custom.registration.codpes_numeric": "The USP Number (codpes) must be a number.",
+    "validation.custom.registration.codpes_required_if_usp": "The USP Number (codpes) is required for USP users.",
     "validation.custom.registration.confirm_data_processing_consent_accepted": "You must consent to the processing of your data.",
     "validation.custom.registration.confirm_information_accuracy_accepted": "You must confirm that the information provided is accurate.",
     "validation.custom.registration.cpf_required_if_brazil": "The CPF is required if the document country of origin is Brazil.",
@@ -578,5 +579,12 @@
     "Invoice Sent (International)": "Invoice Sent (International)",
     "Update Payment Status": "Update Payment Status",
     "Change the payment status for this registration": "Change the payment status for this registration",
-    "Update Status": "Update Status"
+    "Update Status": "Update Status",
+    "Login Required for Registration": "Login Required for Registration",
+    "To register for the conference and workshops, you must login first using your USP credentials or create an account.": "To register for the conference and workshops, you must login first using your USP credentials or create an account.",
+    "Login to Register": "Login to Register",
+    "Create Account": "Create Account",
+    "Registration Requires Login": "Registration Requires Login",
+    "To register for the 8th BCSMIF and satellite workshops, you must first login with your USP credentials (Senha Única) or create a new account. This ensures secure access to your registration information and payment status.": "To register for the 8th BCSMIF and satellite workshops, you must first login with your USP credentials (Senha Única) or create a new account. This ensures secure access to your registration information and payment status.",
+    "Create New Account": "Create New Account"
 }

@@ -1,6 +1,8 @@
 <?php
 
+use App\Events\NewRegistrationCreated;
 use App\Models\Event;
+use App\Models\Registration;
 use App\Services\FeeCalculationService;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
@@ -67,6 +69,9 @@ new #[Layout('layouts.app')] class extends Component {
     // Available options
     public array $available_events = [];
     public array $countries = [];
+    
+    // Success state
+    public bool $registration_successful = false;
 
     public function mount(): void
     {
@@ -260,9 +265,123 @@ new #[Layout('layouts.app')] class extends Component {
             'consent_data_processing' => 'required|accepted',
         ]);
 
-        // For now, simulate successful submission by redirecting to dashboard
-        session()->flash('success', __('registrations.created_successfully'));
-        $this->redirect(route('dashboard'));
+        // If validation passes, submit directly via Livewire instead of form submission
+        $this->submitRegistration();
+    }
+
+    public function submitRegistration(): void
+    {
+
+        // Prepare data for registration creation
+        $registrationData = [
+            'user_id' => auth()->id(),
+            'full_name' => $this->full_name,
+            'nationality' => $this->nationality,
+            'date_of_birth' => $this->date_of_birth ?: null,
+            'gender' => $this->gender === 'other' ? $this->other_gender : $this->gender,
+            'document_country_origin' => $this->document_country_origin,
+            'cpf' => $this->cpf ?: null,
+            'rg_number' => $this->rg_number ?: null,
+            'passport_number' => $this->passport_number ?: null,
+            'passport_expiry_date' => $this->passport_expiry_date ?: null,
+            'email' => $this->email,
+            'phone_number' => $this->phone_number ?: null,
+            'address_street' => $this->address_street ?: null,
+            'address_city' => $this->address_city ?: null,
+            'address_state_province' => $this->address_state_province ?: null,
+            'address_country' => $this->address_country,
+            'address_postal_code' => $this->address_postal_code ?: null,
+            'affiliation' => $this->affiliation ?: null,
+            'position' => $this->position === 'other' ? $this->other_position : $this->position,
+            'is_abe_member' => $this->is_abe_member === 'yes',
+            'arrival_date' => $this->arrival_date ?: null,
+            'departure_date' => $this->departure_date ?: null,
+            'participation_format' => $this->participation_format,
+            'needs_transport_from_gru' => $this->needs_transport_from_gru,
+            'needs_transport_from_usp' => $this->needs_transport_from_usp,
+            'dietary_restrictions' => $this->dietary_restrictions === 'other' ? $this->other_dietary_restrictions : $this->dietary_restrictions,
+            'emergency_contact_name' => $this->emergency_contact_name ?: null,
+            'emergency_contact_relationship' => $this->emergency_contact_relationship ?: null,
+            'emergency_contact_phone' => $this->emergency_contact_phone ?: null,
+            'requires_visa_letter' => $this->requires_visa_letter === 'yes',
+        ];
+
+        try {
+            // Determine participant category for fee calculation
+            $position = $this->position === 'other' ? $this->other_position : $this->position;
+            $isAbeMember = $this->is_abe_member === 'yes';
+
+            $participantCategory = match ($position) {
+                'undergraduate_student' => 'undergrad_student',
+                'graduate_student' => 'grad_student',
+                'professor' => $isAbeMember ? 'professor_abe' : 'professor_non_abe_professional',
+                'professional', 'researcher' => 'professor_non_abe_professional',
+                default => 'professor_non_abe_professional',
+            };
+
+            // Calculate fees
+            $feeCalculationService = app(FeeCalculationService::class);
+            $feeData = $feeCalculationService->calculateFees(
+                $participantCategory,
+                $this->selected_event_codes,
+                Carbon::now(),
+                $this->participation_format
+            );
+
+            // Add fee calculation data
+            $registrationData['registration_category_snapshot'] = $participantCategory;
+            $registrationData['calculated_fee'] = $feeData['total_fee'];
+
+            // Create registration
+            $registration = Registration::create($registrationData);
+
+            // Set payment status
+            $paymentStatus = ($feeData['total_fee'] == 0) ? 'free' : 'pending_payment';
+            $registration->update(['payment_status' => $paymentStatus]);
+
+            // Sync events with price_at_registration
+            $eventSyncData = [];
+            foreach ($feeData['details'] as $eventDetail) {
+                if (! isset($eventDetail['error'])) {
+                    $eventSyncData[$eventDetail['event_code']] = ['price_at_registration' => $eventDetail['calculated_price']];
+                }
+            }
+            if (! empty($eventSyncData)) {
+                $registration->events()->sync($eventSyncData);
+            }
+
+            // Dispatch event
+            event(new NewRegistrationCreated($registration));
+
+            // Set success state
+            $this->registration_successful = true;
+            
+        } catch (\Exception $e) {
+            // Handle errors
+            $this->addError('general', __('Failed to submit registration. Please try again.') . ' Error: ' . $e->getMessage());
+        }
+    }
+
+    public function resetForm(): void
+    {
+        $this->reset([
+            'full_name', 'nationality', 'date_of_birth', 'gender', 'other_gender',
+            'document_country_origin', 'cpf', 'rg_number', 'passport_number', 'passport_expiry_date',
+            'email', 'phone_number', 'address_street', 'address_city', 'address_state_province', 
+            'address_country', 'address_postal_code', 'affiliation', 'position', 'other_position',
+            'is_abe_member', 'arrival_date', 'departure_date', 'selected_event_codes', 
+            'participation_format', 'needs_transport_from_gru', 'needs_transport_from_usp',
+            'dietary_restrictions', 'other_dietary_restrictions', 'emergency_contact_name',
+            'emergency_contact_relationship', 'emergency_contact_phone', 'requires_visa_letter',
+            'confirm_information', 'consent_data_processing', 'registration_successful'
+        ]);
+        
+        // Re-initialize defaults
+        $this->document_country_origin = 'BR';
+        $this->address_country = 'BR';
+        if (auth()->user()) {
+            $this->email = auth()->user()->email;
+        }
     }
 }; ?>
 
@@ -275,8 +394,37 @@ new #[Layout('layouts.app')] class extends Component {
                     <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">{{ __('Please fill out all required information to register for the conference') }}</p>
                 </div>
 
+                {{-- Success Display --}}
+                @if($registration_successful)
+                    <div class="text-center">
+                        <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative" role="alert">
+                            <div class="flex items-center justify-center mb-4">
+                                <svg class="h-12 w-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-2">{{ __('Registration Successful!') }}</h3>
+                            <p class="mb-4">{{ __('Your registration has been submitted successfully. You can view and manage your registrations on the My Registrations page.') }}</p>
+                            <div class="space-y-2 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
+                                <a href="{{ route('registrations.my') }}" class="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200">
+                                    {{ __('View My Registrations') }}
+                                </a>
+                                <button type="button" wire:click="resetForm" class="inline-flex items-center px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-all duration-200">
+                                    {{ __('Submit Another Registration') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    {{-- General Error Display --}}
+                    @if($errors->has('general'))
+                        <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+                            <strong class="font-bold">{{ __('Error!') }}</strong>
+                            <span class="block sm:inline">{{ $errors->first('general') }}</span>
+                        </div>
+                    @endif
+
                 <div class="space-y-8">
-                    @csrf
                     {{-- Personal Information --}}
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
                         <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('1. Personal Information') }}</h2>
@@ -678,50 +826,25 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                     </div>
 
-                    {{-- Hidden fields for form submission to RegistrationController --}}
-                    <input type="hidden" name="full_name" value="{{ $full_name }}">
-                    <input type="hidden" name="nationality" value="{{ $nationality }}">
-                    <input type="hidden" name="date_of_birth" value="{{ $date_of_birth }}">
-                    <input type="hidden" name="gender" value="{{ $gender === 'other' ? $other_gender : $gender }}">
-                    <input type="hidden" name="document_country_origin" value="{{ $document_country_origin }}">
-                    <input type="hidden" name="cpf" value="{{ $cpf }}">
-                    <input type="hidden" name="rg_number" value="{{ $rg_number }}">
-                    <input type="hidden" name="passport_number" value="{{ $passport_number }}">
-                    <input type="hidden" name="passport_expiry_date" value="{{ $passport_expiry_date }}">
-                    <input type="hidden" name="email" value="{{ $email }}">
-                    <input type="hidden" name="phone_number" value="{{ $phone_number }}">
-                    <input type="hidden" name="address_street" value="{{ $address_street }}">
-                    <input type="hidden" name="address_city" value="{{ $address_city }}">
-                    <input type="hidden" name="address_state_province" value="{{ $address_state_province }}">
-                    <input type="hidden" name="address_country" value="{{ $address_country }}">
-                    <input type="hidden" name="address_postal_code" value="{{ $address_postal_code }}">
-                    <input type="hidden" name="affiliation" value="{{ $affiliation }}">
-                    <input type="hidden" name="position" value="{{ $position === 'other' ? $other_position : $position }}">
-                    <input type="hidden" name="is_abe_member" value="{{ $is_abe_member === 'yes' ? 1 : 0 }}">
-                    <input type="hidden" name="arrival_date" value="{{ $arrival_date }}">
-                    <input type="hidden" name="departure_date" value="{{ $departure_date }}">
-                    @foreach($selected_event_codes as $eventCode)
-                        <input type="hidden" name="selected_event_codes[]" value="{{ $eventCode }}">
-                    @endforeach
-                    <input type="hidden" name="participation_format" value="{{ $participation_format }}">
-                    <input type="hidden" name="needs_transport_from_gru" value="{{ $needs_transport_from_gru ? 1 : 0 }}">
-                    <input type="hidden" name="needs_transport_from_usp" value="{{ $needs_transport_from_usp ? 1 : 0 }}">
-                    <input type="hidden" name="dietary_restrictions" value="{{ $dietary_restrictions === 'other' ? $other_dietary_restrictions : $dietary_restrictions }}">
-                    <input type="hidden" name="emergency_contact_name" value="{{ $emergency_contact_name }}">
-                    <input type="hidden" name="emergency_contact_relationship" value="{{ $emergency_contact_relationship }}">
-                    <input type="hidden" name="emergency_contact_phone" value="{{ $emergency_contact_phone }}">
-                    <input type="hidden" name="requires_visa_letter" value="{{ $requires_visa_letter === 'yes' ? 1 : 0 }}">
 
                     {{-- Submit Button --}}
                     <div class="flex flex-col sm:flex-row justify-center sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
-                        <button type="button" onclick="window.history.back()" class="w-full sm:w-auto px-6 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                        <button type="button" onclick="window.history.back()" class="w-full sm:w-auto px-6 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2" wire:loading.attr="disabled" wire:target="validateAndSubmit">
                             {{ __('Cancel') }}
                         </button>
-                        <x-primary-button type="button" wire:click="validateAndSubmit" class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-usp-blue-pri to-usp-blue-sec hover:from-usp-blue-sec hover:to-usp-blue-pri text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" dusk="submit-registration-button">
-                            {{ __('Submit Registration') }}
+                        <x-primary-button type="button" wire:click="validateAndSubmit" wire:loading.attr="disabled" class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-usp-blue-pri to-usp-blue-sec hover:from-usp-blue-sec hover:to-usp-blue-pri text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" dusk="submit-registration-button">
+                            <span wire:loading.remove wire:target="validateAndSubmit">{{ __('Submit Registration') }}</span>
+                            <span wire:loading wire:target="validateAndSubmit" class="flex items-center">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                {{ __('Submitting...') }}
+                            </span>
                         </x-primary-button>
                     </div>
                 </div>
+                @endif
             </div>
         </div>
     </div>

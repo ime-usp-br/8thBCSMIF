@@ -302,6 +302,7 @@ class RegistrationFormTest extends DuskTestCase
 
             // AC3: Select 'Other' dietary restrictions option
             $browser->click('@dietary-restrictions-other')
+                ->pause(300) // Allow Livewire to process
                 ->waitFor('input[wire\\:model="other_dietary_restrictions"]')
                 ->assertVisible('input[wire\\:model="other_dietary_restrictions"]')
                 ->assertAttribute('input[wire\\:model="other_dietary_restrictions"]', 'required', 'true')
@@ -309,11 +310,13 @@ class RegistrationFormTest extends DuskTestCase
 
             // AC3: Select different dietary restrictions option and verify other field disappears
             $browser->click('@dietary-restrictions-vegetarian')
+                ->pause(300) // Allow Livewire to process
                 ->waitUntilMissing('input[wire\\:model="other_dietary_restrictions"]')
                 ->assertMissing('input[wire\\:model="other_dietary_restrictions"]');
 
             // AC3: Select 'Other' again to verify it reappears
             $browser->click('@dietary-restrictions-other')
+                ->pause(300) // Allow Livewire to process
                 ->waitFor('input[wire\\:model="other_dietary_restrictions"]')
                 ->assertVisible('input[wire\\:model="other_dietary_restrictions"]');
         });
@@ -351,6 +354,7 @@ class RegistrationFormTest extends DuskTestCase
 
             // Dietary Restrictions "Other" field
             $browser->click('@dietary-restrictions-other')
+                ->pause(300) // Allow Livewire to process
                 ->waitFor('input[wire\\:model="other_dietary_restrictions"]')
                 ->assertAttribute('input[wire\\:model="other_dietary_restrictions"]', 'required', 'true');
 
@@ -369,7 +373,7 @@ class RegistrationFormTest extends DuskTestCase
     /**
      * AC4: Teste Dusk simula o preenchimento e submissão bem-sucedida do formulário
      * com dados válidos para um participante brasileiro e verifica o redirecionamento
-     * para a página de confirmação/dashboard com mensagem de sucesso.
+     * para a página de registros (/my-registrations) com mensagem de sucesso.
      */
     #[Test]
     #[Group('dusk')]
@@ -421,7 +425,9 @@ class RegistrationFormTest extends DuskTestCase
                 ->click('@participation-format-in-person');
 
             // 6. Dietary Restrictions
-            $browser->click('@dietary-restrictions-none');
+            $browser->click('@dietary-restrictions-none')
+                ->pause(300) // Allow Livewire to process
+                ->pause(300); // Allow Livewire to process
 
             // 7. Emergency Contact
             $browser->type('@emergency-contact-name-input', 'Parent Name')
@@ -435,13 +441,13 @@ class RegistrationFormTest extends DuskTestCase
             // AC4: Submit the form and wait for processing
             $browser->click('@submit-registration-button')
                 ->pause(3000) // Give time for Livewire validation and form submission
-                ->waitForLocation('/dashboard', 30);
+                ->waitForLocation('/my-registrations', 30);
 
-            // AC4: Verify successful redirection to dashboard
-            $browser->assertPathIs('/dashboard');
+            // AC4: Verify successful redirection to my registrations
+            $browser->assertPathIs('/my-registrations');
 
             // AC4: Successful redirection confirms form submission worked
-            // (Success message verification would require dashboard message display implementation)
+            // (Success message verification would require my-registrations page message display implementation)
         });
     }
 
@@ -449,7 +455,7 @@ class RegistrationFormTest extends DuskTestCase
      * AC5: Teste Dusk simula o preenchimento e submissão bem-sucedida do formulário
      * com dados válidos para um participante internacional (incluindo seleção de
      * suporte a visto, se aplicável) e verifica o redirecionamento para a página
-     * de confirmação/dashboard com mensagem de sucesso.
+     * de registros (/my-registrations) com mensagem de sucesso.
      */
     #[Test]
     #[Group('dusk')]
@@ -502,7 +508,9 @@ class RegistrationFormTest extends DuskTestCase
                 ->click('@participation-format-in-person');
 
             // 6. Dietary Restrictions
-            $browser->click('@dietary-restrictions-vegetarian');
+            $browser->click('@dietary-restrictions-vegetarian')
+                ->pause(300) // Allow Livewire to process
+                ->pause(300); // Allow Livewire to process
 
             // 7. Emergency Contact
             $browser->type('@emergency-contact-name-input', 'Emergency Contact')
@@ -522,13 +530,13 @@ class RegistrationFormTest extends DuskTestCase
             // AC5: Submit the form and wait for processing
             $browser->click('@submit-registration-button')
                 ->pause(3000) // Give time for Livewire validation and form submission
-                ->waitForLocation('/dashboard', 30);
+                ->waitForLocation('/my-registrations', 30);
 
-            // AC5: Verify successful redirection to dashboard
-            $browser->assertPathIs('/dashboard');
+            // AC5: Verify successful redirection to my registrations
+            $browser->assertPathIs('/my-registrations');
 
             // AC5: Successful redirection confirms form submission worked for international participant
-            // (Success message verification would require dashboard message display implementation)
+            // (Success message verification would require my-registrations page message display implementation)
         });
     }
 
@@ -595,7 +603,9 @@ class RegistrationFormTest extends DuskTestCase
                 ->click('@participation-format-online');
 
             // 6. Dietary Restrictions - select "Other" and specify
-            $browser->click('@dietary-restrictions-other');
+            $browser->click('@dietary-restrictions-other')
+                ->pause(300) // Allow Livewire to process
+                ->pause(500); // Allow Livewire to update DOM
             $browser->waitFor('input[wire\\:model="other_dietary_restrictions"]')
                 ->type('input[wire\\:model="other_dietary_restrictions"]', 'Kosher');
 
@@ -617,10 +627,10 @@ class RegistrationFormTest extends DuskTestCase
             // AC5: Submit the form and wait for processing
             $browser->click('@submit-registration-button')
                 ->pause(3000) // Give time for Livewire validation and form submission
-                ->waitForLocation('/dashboard', 30);
+                ->waitForLocation('/my-registrations', 30);
 
-            // AC5: Verify successful redirection to dashboard
-            $browser->assertPathIs('/dashboard');
+            // AC5: Verify successful redirection to my registrations
+            $browser->assertPathIs('/my-registrations');
 
             // AC5: Successful redirection confirms form submission worked for international participant
         });
@@ -703,6 +713,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->click('@position-other')
                 ->waitFor('input[wire\\:model="other_position"]')
                 ->click('@dietary-restrictions-other')
+                ->pause(300) // Allow Livewire to process
                 ->waitFor('input[wire\\:model="other_dietary_restrictions"]')
                 ->click('@submit-registration-button')
                 ->pause(2000); // Wait for Livewire validation
@@ -841,6 +852,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@departure-date-input', '10/03/2025')
                 ->click('@participation-format-in-person')
                 ->click('@dietary-restrictions-none')
+                ->pause(300) // Allow Livewire to process
                 ->type('@emergency-contact-name-input', 'Parent Name')
                 ->type('@emergency-contact-relationship-input', 'Parent')
                 ->type('@emergency-contact-phone-input', '+55 11 987654321')
@@ -905,6 +917,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->click('@participation-format-in-person')
                 ->pause(1000) // Wait for Livewire to process participation format
                 ->click('@dietary-restrictions-vegetarian')
+                ->pause(300) // Allow Livewire to process
                 ->pause(500) // Wait for Livewire to process dietary selection
                 ->type('@emergency-contact-name-input', 'Emergency Contact')
                 ->type('@emergency-contact-relationship-input', 'Spouse')
@@ -968,6 +981,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->check('@event-BCSMIF2025')
                 ->click('@participation-format-in-person')
                 ->click('@dietary-restrictions-none')
+                ->pause(300) // Allow Livewire to process
                 ->type('@emergency-contact-name-input', 'Parent Name')
                 ->type('@emergency-contact-relationship-input', 'Parent')
                 ->type('@emergency-contact-phone-input', '+55 11 987654321')
@@ -1025,6 +1039,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@departure-date-input', '10/03/2025')
                 ->click('@participation-format-in-person')
                 ->click('@dietary-restrictions-none')
+                ->pause(300) // Allow Livewire to process
                 ->type('@emergency-contact-name-input', 'Parent Name')
                 ->type('@emergency-contact-relationship-input', 'Parent')
                 ->type('@emergency-contact-phone-input', '+55 11 987654321')
@@ -1084,6 +1099,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->check('@event-BCSMIF2025')
                 ->click('@participation-format-in-person')
                 ->click('@dietary-restrictions-vegetarian')
+                ->pause(300) // Allow Livewire to process
                 ->type('@emergency-contact-name-input', 'Emergency Contact')
                 ->type('@emergency-contact-relationship-input', 'Spouse')
                 ->type('@emergency-contact-phone-input', '+1 555 987-6543')
@@ -1109,10 +1125,10 @@ class RegistrationFormTest extends DuskTestCase
             // AC7: Submit form again with corrected data
             $browser->click('@submit-registration-button')
                 ->pause(3000) // Give time for Livewire validation and form submission
-                ->waitForLocation('/dashboard', 30);
+                ->waitForLocation('/my-registrations', 30);
 
-            // AC7: Verify successful redirection indicates form accepted valid data
-            $browser->assertPathIs('/dashboard');
+            // AC7: Verify successful redirection to my registrations indicates form accepted valid data
+            $browser->assertPathIs('/my-registrations');
         });
     }
 

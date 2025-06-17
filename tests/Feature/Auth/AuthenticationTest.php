@@ -53,8 +53,8 @@ class AuthenticationTest extends TestCase
         // Verifica se não há erros de validação
         $component
             ->assertHasNoErrors()
-            // Verifica se foi redirecionado para o dashboard
-            ->assertRedirect(route('dashboard', absolute: false));
+            // Verifica se foi redirecionado para registrations.my
+            ->assertRedirect(route('registrations.my', absolute: false));
 
         // Verifica se o usuário está autenticado
         $this->assertAuthenticated();
@@ -159,11 +159,10 @@ class AuthenticationTest extends TestCase
 
         $this->actingAs($user);
 
-        $response = $this->get('/dashboard');
+        $response = $this->get('/my-registrations');
 
         $response
             ->assertOk()
-            ->assertSee(__('Dashboard'))
             ->assertSee(__('My Registrations'))
             ->assertSee($user->name);
     }
@@ -185,13 +184,13 @@ class AuthenticationTest extends TestCase
     // New tests for AC3 of Issue #26
     #[Test]
     #[Group('auth-middleware')]
-    public function unauthenticated_user_is_redirected_from_dashboard_to_local_login(): void
+    public function unauthenticated_user_is_redirected_from_registrations_to_local_login(): void
     {
         // Ensure no user is authenticated
         $this->assertGuest();
 
-        // Attempt to access the dashboard route
-        $response = $this->get(route('dashboard'));
+        // Attempt to access the registrations route
+        $response = $this->get(route('registrations.my'));
 
         // Assert that the user is redirected to the local login route
         $response->assertRedirect(route('login.local'));
@@ -213,24 +212,24 @@ class AuthenticationTest extends TestCase
 
     #[Test]
     #[Group('auth-middleware')]
-    public function authenticated_user_can_access_dashboard(): void
+    public function authenticated_user_can_access_registrations(): void
     {
-        $user = User::factory()->verified()->create(); // Use verified for dashboard access as per AC4
+        $user = User::factory()->verified()->create(); // Use verified for registrations access as per AC4
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
+        $response = $this->actingAs($user)->get(route('registrations.my'));
 
         $response->assertOk();
-        $response->assertSee(__('Dashboard')); // Check for a common dashboard text
+        $response->assertSee(__('My Registrations')); // Check for registrations page text
     }
 
     // Test for AC4 (Issue #26) and AC10.2 (Issue #26)
     #[Test]
     #[Group('auth-middleware')]
-    public function authenticated_unverified_user_is_redirected_from_dashboard_to_verification_notice(): void
+    public function authenticated_unverified_user_is_redirected_from_registrations_to_verification_notice(): void
     {
         $user = User::factory()->unverified()->create(); // Create an unverified user
 
-        $response = $this->actingAs($user)->get(route('dashboard'));
+        $response = $this->actingAs($user)->get(route('registrations.my'));
 
         // Assert that the user is redirected to the email verification notice route
         $response->assertRedirect(route('verification.notice'));
@@ -241,6 +240,8 @@ class AuthenticationTest extends TestCase
     public function authenticated_user_can_access_profile(): void
     {
         $user = User::factory()->create();
+        // Create a registration for the user to bypass the registration middleware
+        \App\Models\Registration::factory()->create(['user_id' => $user->id]);
 
         $response = $this->actingAs($user)->get(route('profile'));
 
@@ -248,19 +249,40 @@ class AuthenticationTest extends TestCase
         $response->assertSee(__('Profile')); // Check for a common profile text
     }
 
+    #[Test]
+    #[Group('auth-middleware')]
+    public function authenticated_user_without_registration_is_redirected_to_register_event(): void
+    {
+        $user = User::factory()->create();
+
+        // Test routes that should redirect users without registration
+        $routes = [
+            route('profile'),
+            '/',
+            '/workshops',
+            '/fees',
+            '/payment-info',
+        ];
+
+        foreach ($routes as $route) {
+            $response = $this->actingAs($user)->get($route);
+            $response->assertRedirect(route('register-event'));
+        }
+    }
+
     // Test for AC5 of Issue #26
     #[Test]
     #[Group('auth-middleware')]
-    public function authenticated_user_is_redirected_from_guest_routes_to_dashboard(): void
+    public function authenticated_user_is_redirected_from_guest_routes_to_registrations(): void
     {
         $user = User::factory()->create(); // Could be verified or unverified, doesn't matter for guest middleware
 
         // Test redirection from /login/local
         $responseLogin = $this->actingAs($user)->get(route('login.local'));
-        $responseLogin->assertRedirect(route('dashboard', absolute: false));
+        $responseLogin->assertRedirect(route('registrations.my', absolute: false));
 
         // Test redirection from /register
         $responseRegister = $this->actingAs($user)->get(route('register'));
-        $responseRegister->assertRedirect(route('dashboard', absolute: false));
+        $responseRegister->assertRedirect(route('registrations.my', absolute: false));
     }
 }

@@ -62,7 +62,7 @@ class RegistrationValidationTest extends TestCase
             ->set('codpes', '') // Intentionally set as empty, should be ignored and result in null codpes
             ->call('register')
             ->assertHasNoErrors()
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(route('registrations.my', absolute: false));
 
         $this->assertAuthenticated();
         $user = User::where('email', $email)->first();
@@ -101,7 +101,7 @@ class RegistrationValidationTest extends TestCase
             ->call('register');
 
         $component->assertHasNoErrors()
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(route('registrations.my', absolute: false));
 
         $this->assertAuthenticated();
         $user = User::where('email', $uspEmail)->first();
@@ -138,7 +138,7 @@ class RegistrationValidationTest extends TestCase
             ->set('codpes', '9876543') // This codpes should be ignored
             ->call('register')
             ->assertHasNoErrors()
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(route('registrations.my', absolute: false));
 
         $this->assertAuthenticated();
         $user = User::where('email', $generatedEmail)->first();

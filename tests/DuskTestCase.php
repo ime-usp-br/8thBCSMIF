@@ -39,12 +39,19 @@ abstract class DuskTestCase extends BaseTestCase
             ]);
         })->all());
 
-        return RemoteWebDriver::create(
+        $driver = RemoteWebDriver::create(
             $_ENV['DUSK_DRIVER_URL'] ?? 'http://localhost:9515',
             DesiredCapabilities::chrome()->setCapability(
                 ChromeOptions::CAPABILITY, $options
             )
         );
+
+        // Increase default timeouts
+        $driver->manage()->timeouts()->implicitlyWait(30);
+        $driver->manage()->timeouts()->pageLoadTimeout(60);
+        $driver->manage()->timeouts()->setScriptTimeout(60);
+
+        return $driver;
     }
 
     /**

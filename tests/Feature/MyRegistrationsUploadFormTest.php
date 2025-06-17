@@ -31,7 +31,7 @@ class MyRegistrationsUploadFormTest extends TestCase
 
         // Check that the AC6 conditional logic exists in the template
         $this->assertStringContainsString('payment_status === \'pending_payment\'', $templateContent);
-        $this->assertStringContainsString('document_country_origin === \'Brasil\'', $templateContent);
+        $this->assertStringContainsString('in_array($registration->document_country_origin, [\'Brasil\', \'BR\'])', $templateContent);
 
         // Check that the form exists with correct attributes
         $this->assertStringContainsString('event-registrations.upload-proof', $templateContent);
@@ -86,7 +86,7 @@ class MyRegistrationsUploadFormTest extends TestCase
         $templateContent = file_get_contents($templatePath);
 
         // AC7: Verify form action points to correct route
-        $this->assertStringContainsString('action="{{ route(\'event-registrations.upload-proof\', $selectedRegistration) }}"', $templateContent);
+        $this->assertStringContainsString('action="{{ route(\'event-registrations.upload-proof\', $registration) }}"', $templateContent);
 
         // AC7: Verify form method is POST
         $this->assertStringContainsString('method="POST"', $templateContent);

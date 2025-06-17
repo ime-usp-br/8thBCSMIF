@@ -23,7 +23,7 @@ new class extends Component
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" wire:navigate>
+                    <a href="{{ route('registrations.my') }}" wire:navigate>
                         <img src="{{ Vite::asset('resources/images/ime/logo-horizontal-simplificada-padrao.png') }}" alt="Logo IME-USP" class="w-20 h-auto block dark:hidden" dusk="ime-logo-light">
                         <img src="{{ Vite::asset('resources/images/ime/logo-horizontal-simplificada-branca.png') }}" alt="Logo IME-USP" class="w-20 h-auto hidden dark:block" dusk="ime-logo-dark">
                     </a>
@@ -31,9 +31,6 @@ new class extends Component
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
                     <x-nav-link :href="route('registrations.my')" :active="request()->routeIs('registrations.my')" wire:navigate>
                         {{ __('My Registrations') }}
                     </x-nav-link>
@@ -66,6 +63,12 @@ new class extends Component
                             {{ __('Profile') }}
                         </x-dropdown-link>
 
+                        @if(auth()->user() && auth()->user()->hasRole('admin'))
+                            <x-dropdown-link :href="route('admin.registrations.index')" wire:navigate>
+                                {{ __('Registrations') }}
+                            </x-dropdown-link>
+                        @endif
+
                         <!-- Authentication -->
                         <button wire:click="logout" class="w-full text-start">
                             <x-dropdown-link>
@@ -91,9 +94,6 @@ new class extends Component
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('registrations.my')" :active="request()->routeIs('registrations.my')" wire:navigate>
                 {{ __('My Registrations') }}
             </x-responsive-nav-link>
@@ -116,6 +116,12 @@ new class extends Component
                 <x-responsive-nav-link :href="route('profile')" wire:navigate>
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
+
+                @if(auth()->user() && auth()->user()->hasRole('admin'))
+                    <x-responsive-nav-link :href="route('admin.registrations.index')" wire:navigate>
+                        {{ __('Registrations') }}
+                    </x-responsive-nav-link>
+                @endif
 
                 <!-- Authentication -->
                 <button wire:click="logout" class="w-full text-start">

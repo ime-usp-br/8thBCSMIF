@@ -5,18 +5,17 @@ use App\Http\Controllers\RegistrationController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
-Route::view('/', 'welcome');
-Route::view('workshops', 'workshops')->name('workshops');
-Route::view('fees', 'fees')->name('fees');
-Route::view('payment-info', 'payment-info')->name('payment-info');
-
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+Route::view('/', 'welcome')->middleware('ensure.registration');
+Route::view('workshops', 'workshops')->name('workshops')->middleware('ensure.registration');
+Route::view('fees', 'fees')->name('fees')->middleware('ensure.registration');
+Route::view('payment-info', 'payment-info')->name('payment-info')->middleware('ensure.registration');
 
 Route::view('profile', 'profile')
-    ->middleware(['auth'])
+    ->middleware(['auth', 'ensure.registration'])
     ->name('profile');
+
+// Redirect dashboard to registrations.my for compatibility
+Route::redirect('/dashboard', '/my-registrations')->name('dashboard');
 
 // Route for the event registration form
 Volt::route('register-event', 'registration-form')

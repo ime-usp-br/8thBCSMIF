@@ -12,6 +12,7 @@
 
         <!-- Scripts e Estilos via Vite -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
     </head>
     <body class="font-sans antialiased dark:bg-black dark:text-white/50">
 
@@ -34,17 +35,16 @@
                         <h2 class="text-xl md:text-2xl mb-8 font-light">
                             {{ __('8th Brazilian Conference on Statistical Modeling in Insurance and Finance') }}
                         </h2>
+                        
                         <div class="flex flex-col md:flex-row gap-4 justify-center">
                             @guest
-                                <a href="{{ route('register') }}" class="bg-white text-blue-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
-                                    {{ __('Register Now') }}
+                                <a href="{{ route('login.local') }}" class="bg-white text-blue-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+                                    {{ __('Login to Register') }}
+                                </a>
+                                <a href="{{ route('register') }}" class="bg-yellow-400 text-blue-900 px-8 py-3 rounded-lg font-semibold hover:bg-yellow-300 transition duration-300">
+                                    {{ __('Create Account') }}
                                 </a>
                             @endguest
-                            @auth
-                                <a href="{{ route('dashboard') }}" class="bg-white text-blue-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
-                                    {{ __('Dashboard') }}
-                                </a>
-                            @endauth
                             <a href="#details" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-900 transition duration-300">
                                 {{ __('Learn More') }}
                             </a>
@@ -177,19 +177,35 @@
                     </div>
                 </section>
 
-                {{-- Auth Links for Guests --}}
+                {{-- Registration Notice for Guests --}}
                 @guest
-                <section class="text-center">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                            {{ __('Ready to Join?') }}
+                <section class="text-center mb-16">
+                    <div class="bg-gradient-to-r from-orange-100 to-yellow-100 dark:from-orange-900 dark:to-yellow-900 rounded-lg shadow-lg p-8 border-2 border-orange-300 dark:border-orange-700">
+                        <div class="flex justify-center mb-4">
+                            <div class="bg-orange-500 text-white rounded-full p-3">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                            {{ __('Registration Requires Login') }}
                         </h2>
+                        <p class="text-lg text-gray-700 dark:text-gray-300 mb-6 max-w-3xl mx-auto">
+                            {{ __('To register for the 8th BCSMIF and satellite workshops, you must first login with your USP credentials (Senha Única) or create a new account. This ensures secure access to your registration information and payment status.') }}
+                        </p>
                         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                            <a href="{{ route('login') }}" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-300">
+                            <a href="{{ route('login') }}" class="bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                                </svg>
                                 {{ __('Login with Senha Única USP') }}
                             </a>
-                            <a href="{{ route('register') }}" class="border-2 border-blue-600 text-blue-600 dark:text-blue-400 px-8 py-3 rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition duration-300">
-                                {{ __('Register') }}
+                            <a href="{{ route('register') }}" class="border-2 border-blue-600 text-blue-600 dark:text-blue-400 px-8 py-4 rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition duration-300 flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                                </svg>
+                                {{ __('Create New Account') }}
                             </a>
                         </div>
                     </div>
@@ -204,10 +220,13 @@
                         {{ __('Organization of') }} {{ __('8th Brazilian Conference on Statistical Modeling in Insurance and Finance') }}
                     </p>
                     <p class="text-gray-400 text-sm mt-2">
-                        Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }})
+                        <a href="https://ime.usp.br" target="_blank" class="hover:text-gray-300 transition duration-300">
+                            IME-USP
+                        </a>
                     </p>
                 </div>
             </footer>
         </div>
+        @livewireScripts
     </body>
 </html>

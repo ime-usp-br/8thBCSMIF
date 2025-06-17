@@ -52,7 +52,7 @@ class RegistrationControllerTest extends TestCase
             'nationality' => 'Brazilian',
             'date_of_birth' => '1990-01-01',
             'gender' => 'male',
-            'document_country_origin' => 'Brasil', // For CPF/RG
+            'document_country_origin' => 'BR', // For CPF/RG
             'cpf' => '123.456.789-00',
             'rg_number' => '1234567',
             'passport_number' => null,
@@ -62,10 +62,10 @@ class RegistrationControllerTest extends TestCase
             'address_street' => 'Rua Exemplo, 123',
             'address_city' => 'São Paulo',
             'address_state_province' => 'SP',
-            'address_country' => 'Brasil',
+            'address_country' => 'BR',
             'address_postal_code' => '01000-000',
             'affiliation' => 'University of Example',
-            'position' => 'grad_student', // Default position for fee calculation
+            'position' => 'graduate_student', // Default position for fee calculation
             'is_abe_member' => false,      // Default ABE status
             'arrival_date' => '2025-09-28',
             'departure_date' => '2025-10-03',
@@ -103,15 +103,15 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
             'is_abe_member' => false,
             'participation_format' => 'in-person',
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        // AC12: Assert redirect to dashboard with success message
-        $response->assertRedirect(route('dashboard'));
+        // AC12: Assert redirect to registrations.my with success message
+        $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('registrations.created_successfully'));
 
         // AC8: Find the registration that was created (since we no longer get registration_id from JSON)
@@ -205,6 +205,11 @@ class RegistrationControllerTest extends TestCase
         $user->markEmailAsVerified();
         $this->actingAs($user);
 
+        // Mock ReplicadoService to avoid connection issues during basic validation tests
+        $mockReplicado = \Mockery::mock(ReplicadoService::class);
+        $mockReplicado->shouldReceive('validarNuspEmail')->andReturn(true);
+        $this->app->instance(ReplicadoService::class, $mockReplicado);
+
         // StoreRegistrationRequest currently makes `codpes` nullable.
         // For this test, we rely on the `numeric` and `digits_between` rules from StoreRegistrationRequest
         // for 'codpes' when 'sou_da_usp' is true and an invalid 'codpes' is provided.
@@ -277,13 +282,13 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'undergrad_student',
+            'position' => 'undergraduate_student',
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        // AC12: Assert redirect to dashboard with success message
-        $response->assertRedirect(route('dashboard'));
+        // AC12: Assert redirect to registrations.my with success message
+        $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('registrations.created_successfully'));
 
         // Find the registration that was created
@@ -315,13 +320,13 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$mainEvent->code, $workshopEvent->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        // AC12: Assert redirect to dashboard with success message
-        $response->assertRedirect(route('dashboard'));
+        // AC12: Assert redirect to registrations.my with success message
+        $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('registrations.created_successfully'));
 
         // Find the registration that was created
@@ -375,13 +380,13 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        // AC12: Assert redirect to dashboard with success message
-        $response->assertRedirect(route('dashboard'));
+        // AC12: Assert redirect to registrations.my with success message
+        $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('registrations.created_successfully'));
 
         // Find the registration that was created
@@ -400,9 +405,9 @@ class RegistrationControllerTest extends TestCase
     }
 
     #[Test]
-    public function store_redirects_to_dashboard_with_success_message(): void
+    public function store_redirects_to_registrations_with_success_message(): void
     {
-        // AC12: Test that successful registration redirects to dashboard with success message
+        // AC12: Test that successful registration redirects to registrations.my with success message
         $user = User::factory()->create();
         $user->markEmailAsVerified();
         $this->actingAs($user);
@@ -412,13 +417,13 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        // AC12: Verify redirect to dashboard
-        $response->assertRedirect(route('dashboard'));
+        // AC12: Verify redirect to registrations.my
+        $response->assertRedirect(route('registrations.my'));
 
         // AC12: Verify success message in session
         $response->assertSessionHas('success', __('registrations.created_successfully'));
@@ -820,7 +825,7 @@ class RegistrationControllerTest extends TestCase
         $response = $this->post(route('event-registrations.store'), $validData);
 
         // AC14: Verify successful redirect and registration creation
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('registrations.created_successfully'));
 
         $this->assertDatabaseHas('registrations', [
@@ -941,7 +946,7 @@ class RegistrationControllerTest extends TestCase
 
         // Test Brasil document without CPF
         $invalidBrazilData = $this->getValidRegistrationData($user, [
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'BR',
             'cpf' => null,
             'rg_number' => null,
             'passport_number' => null,
@@ -985,7 +990,7 @@ class RegistrationControllerTest extends TestCase
         $response = $this->post(route('event-registrations.store'), $validData);
 
         // AC14: Verify successful creation
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('registrations.created_successfully'));
 
         $registration = Registration::where('user_id', $user->id)->latest()->first();
@@ -1009,6 +1014,7 @@ class RegistrationControllerTest extends TestCase
     public function new_registration_notification_includes_payment_instructions_for_brazilian_users(): void
     {
         // AC3: Test that Brazilian users with fee > 0 receive payment instructions
+        app()->setLocale('pt_BR');
         $user = User::factory()->create(['email' => 'brasileiro@example.com']);
 
         $registration = Registration::factory()->create([
@@ -1030,7 +1036,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertStringContainsString('13006798-9', $renderedContent);
         $this->assertStringContainsString('Associação Brasileira de Estatística', $renderedContent);
         $this->assertStringContainsString('56.572.456/0001-80', $renderedContent);
-        $this->assertStringContainsString('Como enviar o comprovante', $renderedContent);
+        $this->assertStringContainsString(__('how to send the payment proof'), $renderedContent);
 
         // Should NOT contain international invoice message for Brazilian users
         $this->assertStringNotContainsString('invoice com detalhes para pagamento internacional', $renderedContent);
@@ -1040,6 +1046,7 @@ class RegistrationControllerTest extends TestCase
     public function new_registration_notification_includes_invoice_message_for_international_users(): void
     {
         // AC4: Test that international users receive invoice message instead of payment instructions
+        app()->setLocale('pt_BR');
         $user = User::factory()->create(['email' => 'international@example.com']);
 
         $registration = Registration::factory()->create([
@@ -1060,7 +1067,7 @@ class RegistrationControllerTest extends TestCase
         // Should NOT contain Brazilian payment instructions for international users
         $this->assertStringNotContainsString('Instruções para Pagamento', $renderedContent);
         $this->assertStringNotContainsString('Santander', $renderedContent);
-        $this->assertStringNotContainsString('Como enviar o comprovante', $renderedContent);
+        $this->assertStringNotContainsString(__('how to send the payment proof'), $renderedContent);
     }
 
     #[Test]
@@ -1081,14 +1088,14 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
             'email' => 'participant@example.com',
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
         // Verify successful registration
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('registrations.created_successfully'));
 
         $registration = Registration::where('user_id', $user->id)->latest()->first();
@@ -1116,6 +1123,7 @@ class RegistrationControllerTest extends TestCase
     public function new_registration_notification_includes_correct_payment_instructions_for_brazilian_user(): void
     {
         // AC12: Test that NewRegistrationNotification includes correct payment instructions for Brazilian users
+        app()->setLocale('pt_BR');
         Mail::fake();
 
         config(['mail.coordinator_email' => 'coordinator@bcsmif.com']);
@@ -1129,14 +1137,14 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
             'email' => 'brazilian@example.com',
             'document_country_origin' => 'BR', // Brazilian user
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('registrations.my'));
         $registration = Registration::where('user_id', $user->id)->latest()->first();
         $this->assertNotNull($registration);
 
@@ -1181,14 +1189,18 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
             'email' => 'international@example.com',
             'document_country_origin' => 'US', // International user
+            'passport_number' => 'AB123456789',
+            'passport_expiry_date' => '2030-12-31',
+            'cpf' => null,
+            'rg_number' => null,
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('registrations.my'));
         $registration = Registration::where('user_id', $user->id)->latest()->first();
         $this->assertNotNull($registration);
 
@@ -1198,12 +1210,12 @@ class RegistrationControllerTest extends TestCase
                 $content = $mail->render();
 
                 // Verify international payment instructions are included
-                $this->assertStringContainsString(__('invoice will be sent'), $content);
-                $this->assertStringContainsString(__('detailed payment instructions'), $content);
+                $this->assertStringContainsString(__('Invoice Information'), $content);
+                $this->assertStringContainsString(__('An invoice with details for international payment will be sent to your email shortly.'), $content);
 
                 // Verify user and registration data
                 $this->assertStringContainsString($registration->full_name, $content);
-                $this->assertStringContainsString('US$ '.number_format($registration->calculated_fee, 2), $content);
+                $this->assertStringContainsString('R$ '.number_format($registration->calculated_fee, 2, ',', '.'), $content);
 
                 return true;
             }
@@ -1229,17 +1241,17 @@ class RegistrationControllerTest extends TestCase
 
         $validData = $this->getValidRegistrationData($user, [
             'selected_event_codes' => [$event->code],
-            'position' => 'grad_student',
+            'position' => 'graduate_student',
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('registrations.my'));
         $registration = Registration::where('user_id', $user->id)->latest()->first();
         $this->assertNotNull($registration);
 
         // AC12: Verify NewRegistrationNotification coordinator version contains admin panel link
-        Mail::assertSent(NewRegistrationNotification::class, function ($mail) use ($registration) {
+        Mail::assertSent(NewRegistrationNotification::class, function ($mail) use ($registration, $user) {
             if ($mail->registration->id === $registration->id && $mail->forCoordinator === true) {
                 $content = $mail->render();
 

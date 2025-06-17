@@ -453,7 +453,6 @@
     "Register Now": "Inscreva-se Agora",
     "View Workshop Details": "Ver Detalhes dos Workshops",
     "Check Registration Fees": "Verificar Taxas de Inscrição",
-    "Payment Instructions": "Instruções de Pagamento",
     "Ready to Join?": "Pronto para Participar?",
     "Ready to Participate?": "Pronto para Participar?",
     "Ready to Register?": "Pronto para se Inscrever?",
@@ -609,5 +608,18 @@
     "Invoice Sent (International)": "Fatura Enviada (Internacional)",
     "Update Payment Status": "Atualizar Status de Pagamento",
     "Change the payment status for this registration": "Alterar o status de pagamento desta inscrição",
-    "Update Status": "Atualizar Status"
+    "Update Status": "Atualizar Status",
+    "Login Required for Registration": "Login Obrigatório para Inscrição",
+    "To register for the conference and workshops, you must login first using your USP credentials or create an account.": "Para se inscrever na conferência e workshops, você deve primeiro fazer login com suas credenciais USP ou criar uma conta.",
+    "Login to Register": "Fazer Login para Inscrever-se",
+    "Create Account": "Criar Conta",
+    "Registration Requires Login": "Inscrição Requer Login",
+    "To register for the 8th BCSMIF and satellite workshops, you must first login with your USP credentials (Senha Única) or create a new account. This ensures secure access to your registration information and payment status.": "Para se inscrever no 8º BCSMIF e workshops satélites, você deve primeira fazer login com suas credenciais USP (Senha Única) ou criar uma nova conta. Isso garante acesso seguro às suas informações de inscrição e status de pagamento.",
+    "Create New Account": "Criar Nova Conta",
+    "Bank Transfer Information:": "Informações para Transferência Bancária:",
+    "Bank:": "Banco:",
+    "Agency:": "Agência:",
+    "Account:": "Conta:",
+    "PIX Key:": "Chave PIX:",
+    "how to send the payment proof": "como enviar o comprovante de pagamento"
 }

@@ -17,7 +17,12 @@ new class extends Component
             'password' => ['required', 'string', 'current_password'],
         ]);
 
-        tap(Auth::user(), $logout(...))->delete();
+        $user = Auth::user();
+        
+        // Delete related registrations first to avoid foreign key constraint errors
+        $user->registrations()->delete();
+
+        tap($user, $logout(...))->delete();
 
         $this->redirect('/', navigate: true);
     }

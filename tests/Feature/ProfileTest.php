@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Registration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Volt\Volt;
@@ -11,9 +12,20 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_profile_page_is_displayed(): void
+    /**
+     * Create a user with a registration to avoid middleware redirects
+     */
+    private function createUserWithRegistration(): User
     {
         $user = User::factory()->create();
+        Registration::factory()->create(['user_id' => $user->id]);
+
+        return $user;
+    }
+
+    public function test_profile_page_is_displayed(): void
+    {
+        $user = $this->createUserWithRegistration();
 
         $response = $this->actingAs($user)->get('/profile');
 
@@ -26,13 +38,12 @@ class ProfileTest extends TestCase
 
     public function test_profile_information_can_be_updated(): void
     {
-        $user = User::factory()->create();
+        $user = $this->createUserWithRegistration();
 
         $this->actingAs($user);
 
         $component = Volt::test('profile.update-profile-information-form')
             ->set('name', 'Test User')
-            ->set('email', 'test@example.com')
             ->call('updateProfileInformation');
 
         $component
@@ -42,31 +53,30 @@ class ProfileTest extends TestCase
         $user->refresh();
 
         $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        // Email cannot be updated as it's readonly in the form
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
     {
-        $user = User::factory()->create();
+        $user = $this->createUserWithRegistration();
 
         $this->actingAs($user);
 
         $component = Volt::test('profile.update-profile-information-form')
             ->set('name', 'Test User')
-            ->set('email', $user->email)
             ->call('updateProfileInformation');
 
         $component
             ->assertHasNoErrors()
             ->assertNoRedirect();
 
+        // Email verification status should remain unchanged since email is readonly
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
     public function test_user_can_delete_their_account(): void
     {
-        $user = User::factory()->create();
+        $user = $this->createUserWithRegistration();
 
         $this->actingAs($user);
 
@@ -84,7 +94,7 @@ class ProfileTest extends TestCase
 
     public function test_correct_password_must_be_provided_to_delete_account(): void
     {
-        $user = User::factory()->create();
+        $user = $this->createUserWithRegistration();
 
         $this->actingAs($user);
 

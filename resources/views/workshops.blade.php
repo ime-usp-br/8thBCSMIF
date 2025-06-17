@@ -12,6 +12,7 @@
 
         <!-- Scripts e Estilos via Vite -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
     </head>
     <body class="font-sans antialiased dark:bg-black dark:text-white/50">
 
@@ -228,8 +229,8 @@
                                 </a>
                             @endguest
                             @auth
-                                <a href="{{ route('dashboard') }}" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
-                                    {{ __('Go to Dashboard') }}
+                                <a href="{{ route('registrations.my') }}" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+                                    {{ __('My Registrations') }}
                                 </a>
                             @endauth
                             <a href="/fees" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition duration-300">
@@ -247,10 +248,13 @@
                         {{ __('Satellite Workshops') }} - {{ __('8th Brazilian Conference on Statistical Modeling in Insurance and Finance') }}
                     </p>
                     <p class="text-gray-400 text-sm mt-2">
-                        Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }})
+                        <a href="https://ime.usp.br" target="_blank" class="hover:text-gray-300 transition duration-300">
+                            IME-USP
+                        </a>
                     </p>
                 </div>
             </footer>
         </div>
+        @livewireScripts
     </body>
 </html>

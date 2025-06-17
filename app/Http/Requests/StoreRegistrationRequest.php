@@ -25,9 +25,35 @@ class StoreRegistrationRequest extends FormRequest
      */
     public function rules(): array
     {
-        $isBrazilianDocument = $this->input('document_country_origin') === 'Brasil';
+        $isBrazilianDocument = $this->input('document_country_origin') === 'BR';
+        $isUspUser = $this->input('sou_da_usp') === true || $this->input('sou_da_usp') === '1' || $this->input('sou_da_usp') === 'true';
 
         return [
+            // USP-specific fields
+            'sou_da_usp' => ['nullable', 'boolean'],
+            'codpes' => [
+                'nullable',
+                'numeric',
+                'digits_between:6,8',
+                Rule::requiredIf($isUspUser),
+                function ($attribute, $value, $fail) {
+                    /** @var callable $fail */
+                    // Custom validation using ReplicadoService for USP users
+                    if ($value && $this->input('sou_da_usp')) {
+                        try {
+                            $replicadoService = app(ReplicadoService::class);
+                            $email = $this->input('email');
+
+                            if (is_numeric($value) && is_string($email) && ! $replicadoService->validarNuspEmail((int) $value, $email)) {
+                                $fail(__('validation.custom.codpes.replicado_validation_failed'));
+                            }
+                        } catch (ReplicadoServiceException $e) {
+                            $fail(__('validation.custom.codpes.replicado_service_unavailable'));
+                        }
+                    }
+                },
+            ],
+
             // Personal Information
             'full_name' => ['required', 'string', 'max:255'],
             'nationality' => ['nullable', 'string', 'max:255'],
@@ -72,7 +98,7 @@ class StoreRegistrationRequest extends FormRequest
 
             // Professional Details
             'affiliation' => ['nullable', 'string', 'max:255'],
-            'position' => ['required', 'string', Rule::in(['undergrad_student', 'grad_student', 'researcher', 'professor', 'professional', 'other'])],
+            'position' => ['required', 'string', Rule::in(['undergraduate_student', 'graduate_student', 'researcher', 'professor', 'professional', 'other'])],
             'is_abe_member' => ['boolean'], // Default is false, so allowing true/false/'0'/'1'
 
             // Event Participation
@@ -85,7 +111,7 @@ class StoreRegistrationRequest extends FormRequest
             'needs_transport_from_usp' => ['boolean'],
 
             // Dietary Restrictions
-            'dietary_restrictions' => ['nullable', 'string', Rule::in(['none', 'vegetarian', 'vegan', 'gluten-free', 'other'])],
+            'dietary_restrictions' => ['nullable', 'string', Rule::in(['none', 'vegetarian', 'vegan', 'gluten_free', 'other'])],
             'other_dietary_restrictions' => ['nullable', 'string', 'max:255', 'required_if:dietary_restrictions,other'],
 
             // Emergency Contact
@@ -96,36 +122,9 @@ class StoreRegistrationRequest extends FormRequest
             // Visa Support
             'requires_visa_letter' => ['boolean'],
 
-            // USP Identification
-            'sou_da_usp' => ['boolean'],
-            'codpes' => [
-                'nullable',
-                'numeric',
-                'digits_between:6,8',
-                Rule::requiredIf($this->boolean('sou_da_usp')),
-                Rule::when($this->boolean('sou_da_usp') && $this->filled('codpes'), function () {
-                    return [
-                        function (string $attribute, mixed $value, \Closure $fail) {
-                            try {
-                                $replicadoService = app(ReplicadoService::class);
-                                $codpes = is_numeric($value) ? (int) $value : 0;
-                                $email = $this->string('email');
-                                $isValid = $replicadoService->validarNuspEmail($codpes, $email);
-
-                                if (! $isValid) {
-                                    $fail(__('validation.custom.codpes.replicado_validation_failed'));
-                                }
-                            } catch (ReplicadoServiceException $e) {
-                                $fail(__('validation.custom.codpes.replicado_service_unavailable'));
-                            }
-                        },
-                    ];
-                }),
-            ],
-
             // Declaration
-            'confirm_information_accuracy' => ['accepted'],
-            'confirm_data_processing_consent' => ['accepted'],
+            'confirm_information_accuracy' => ['required', 'accepted'],
+            'confirm_data_processing_consent' => ['required', 'accepted'],
         ];
     }
 
@@ -137,6 +136,11 @@ class StoreRegistrationRequest extends FormRequest
     public function messages(): array
     {
         return [
+            // USP-specific validation messages
+            'codpes.required' => __('validation.custom.registration.codpes_required_if_usp'),
+            'codpes.numeric' => __('validation.custom.registration.codpes_numeric'),
+            'codpes.digits_between' => __('validation.custom.registration.codpes_digits_between', ['min' => 6, 'max' => 8]),
+
             'full_name.required' => __('validation.custom.registration.full_name_required'),
             'email.required' => __('validation.custom.registration.email_required'),
             'email.email' => __('validation.custom.registration.email_format'),
@@ -147,9 +151,6 @@ class StoreRegistrationRequest extends FormRequest
             'selected_event_codes.*.exists' => __('validation.custom.registration.selected_event_code_invalid'),
             'participation_format.required' => __('validation.custom.registration.participation_format_required'),
             'other_dietary_restrictions.required_if' => __('validation.custom.registration.other_dietary_restrictions_required_if'),
-            'codpes.required' => __('validation.custom.registration.codpes_required_if_usp'),
-            'codpes.numeric' => __('validation.custom.registration.codpes_numeric'),
-            'codpes.digits_between' => __('validation.custom.registration.codpes_digits_between'),
             'confirm_information_accuracy.accepted' => __('validation.custom.registration.confirm_information_accuracy_accepted'),
             'confirm_data_processing_consent.accepted' => __('validation.custom.registration.confirm_data_processing_consent_accepted'),
             'departure_date.after_or_equal' => __('validation.custom.registration.departure_date_after_or_equal_arrival_date'),
@@ -170,6 +171,7 @@ class StoreRegistrationRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'codpes' => __('USP Number (codpes)'),
             'full_name' => __('Full Name'),
             'nationality' => __('Nationality'),
             'date_of_birth' => __('Date of Birth'),
@@ -202,8 +204,6 @@ class StoreRegistrationRequest extends FormRequest
             'emergency_contact_relationship' => __('Emergency Contact Relationship'),
             'emergency_contact_phone' => __('Emergency Contact Phone'),
             'requires_visa_letter' => __('Visa Invitation Letter Requirement'),
-            'sou_da_usp' => __('USP Affiliation Declaration'),
-            'codpes' => __('USP Number (codpes)'),
             'confirm_information_accuracy' => __('Information Accuracy Confirmation'),
             'confirm_data_processing_consent' => __('Data Processing Consent'),
         ];
