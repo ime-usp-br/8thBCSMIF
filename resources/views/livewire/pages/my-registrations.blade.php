@@ -78,6 +78,71 @@ new #[Layout('layouts.app')] class extends Component {
                                                 {{ __(ucfirst(str_replace(['_', '-'], ' ', $registration->payment_status))) }}
                                             </span>
                                         </p>
+
+                                        {{-- Payment Proof Upload Form - Always visible for Brazilian users with pending payment --}}
+                                        @if($registration->payment_status === 'pending_payment' && in_array($registration->document_country_origin, ['Brasil', 'BR']))
+                                            <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+                                                <h5 class="font-medium text-yellow-800 dark:text-yellow-300 mb-3">
+                                                    {{ __('Payment Proof Upload') }}
+                                                </h5>
+                                                
+                                                {{-- Display success message --}}
+                                                @if(session('success'))
+                                                    <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                                                        {{ session('success') }}
+                                                    </div>
+                                                @endif
+                                                
+                                                {{-- Display validation errors --}}
+                                                @if($errors->any())
+                                                    <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                                                        <ul class="list-disc list-inside">
+                                                            @foreach($errors->all() as $error)
+                                                                <li>{{ $error }}</li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                @endif
+                                                
+                                                <form action="{{ route('event-registrations.upload-proof', $registration) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
+                                                    @csrf
+                                                    
+                                                    <div>
+                                                        <label for="payment_proof_{{ $registration->id }}" class="block text-sm font-medium text-yellow-800 dark:text-yellow-300 mb-2">
+                                                            {{ __('Payment Proof Document') }}
+                                                        </label>
+                                                        <input 
+                                                            type="file" 
+                                                            id="payment_proof_{{ $registration->id }}" 
+                                                            name="payment_proof" 
+                                                            accept=".jpg,.jpeg,.png,.pdf"
+                                                            class="block w-full text-sm text-gray-500 dark:text-gray-400
+                                                                   file:mr-4 file:py-2 file:px-4
+                                                                   file:rounded-full file:border-0
+                                                                   file:text-sm file:font-semibold
+                                                                   file:bg-yellow-100 file:text-yellow-800
+                                                                   hover:file:bg-yellow-200
+                                                                   dark:file:bg-yellow-900 dark:file:text-yellow-300
+                                                                   dark:hover:file:bg-yellow-800"
+                                                            required
+                                                        >
+                                                        <p class="mt-1 text-xs text-yellow-700 dark:text-yellow-400">
+                                                            {{ __('Accepted formats: JPG, JPEG, PNG, PDF. Maximum size: 10MB.') }}
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div class="flex justify-end">
+                                                        <button 
+                                                            type="submit" 
+                                                            dusk="upload-payment-proof-button"
+                                                            class="inline-flex items-center px-3 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-700 focus:bg-yellow-700 active:bg-yellow-900 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                                        >
+                                                            {{ __('Upload Payment Proof') }}
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="ml-4">
                                         <button 
@@ -149,69 +214,6 @@ new #[Layout('layouts.app')] class extends Component {
                                                 </div>
                                             </div>
                                         </div>
-                                        
-                                        {{-- Payment Proof Upload Form --}}
-                                        @if($selectedRegistration->payment_status === 'pending_payment' && $selectedRegistration->document_country_origin === 'Brasil')
-                                            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                                                <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-4">{{ __('Payment Proof Upload') }}</h5>
-                                                
-                                                {{-- Display success message --}}
-                                                @if(session('success'))
-                                                    <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-                                                        {{ session('success') }}
-                                                    </div>
-                                                @endif
-                                                
-                                                {{-- Display validation errors --}}
-                                                @if($errors->any())
-                                                    <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-                                                        <ul class="list-disc list-inside">
-                                                            @foreach($errors->all() as $error)
-                                                                <li>{{ $error }}</li>
-                                                            @endforeach
-                                                        </ul>
-                                                    </div>
-                                                @endif
-                                                
-                                                <form action="{{ route('event-registrations.upload-proof', $selectedRegistration) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
-                                                    @csrf
-                                                    
-                                                    <div>
-                                                        <label for="payment_proof" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                            {{ __('Payment Proof Document') }}
-                                                        </label>
-                                                        <input 
-                                                            type="file" 
-                                                            id="payment_proof" 
-                                                            name="payment_proof" 
-                                                            accept=".jpg,.jpeg,.png,.pdf"
-                                                            class="block w-full text-sm text-gray-500 dark:text-gray-400
-                                                                   file:mr-4 file:py-2 file:px-4
-                                                                   file:rounded-full file:border-0
-                                                                   file:text-sm file:font-semibold
-                                                                   file:bg-blue-50 file:text-blue-700
-                                                                   hover:file:bg-blue-100
-                                                                   dark:file:bg-blue-900 dark:file:text-blue-300
-                                                                   dark:hover:file:bg-blue-800"
-                                                            required
-                                                        >
-                                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                                            {{ __('Accepted formats: JPG, JPEG, PNG, PDF. Maximum size: 10MB.') }}
-                                                        </p>
-                                                    </div>
-                                                    
-                                                    <div class="flex justify-end">
-                                                        <button 
-                                                            type="submit" 
-                                                            dusk="upload-payment-proof-button"
-                                                            class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                                                        >
-                                                            {{ __('Upload Payment Proof') }}
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        @endif
                                     </div>
                                 @endif
                             </div>
