@@ -1,5 +1,4 @@
 import './bootstrap';
-import Alpine from 'alpinejs';
 
 // Only set Alpine if not already defined (avoid conflicts)
 if (typeof window.Alpine === 'undefined') {
