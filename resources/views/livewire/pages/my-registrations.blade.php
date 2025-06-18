@@ -200,10 +200,17 @@ new #[Layout('layouts.app')] class extends Component {
                                                         {{ __('Bank Transfer Information:') }}
                                                     </h6>
                                                     <div class="text-xs text-blue-700 dark:text-blue-400 space-y-1">
-                                                        <div><strong>{{ __('Bank:') }}</strong> Banco do Brasil</div>
-                                                        <div><strong>{{ __('Agency:') }}</strong> 1234-5</div>
-                                                        <div><strong>{{ __('Account:') }}</strong> 12345-6</div>
+                                                        <div><strong>{{ __('Bank:') }}</strong> Banco Santander</div>
+                                                        <div><strong>{{ __('Agency:') }}</strong> 0658</div>
+                                                        <div><strong>{{ __('Account:') }}</strong> 13006798-9</div>
+                                                        <div><strong>{{ __('Beneficiary:') }}</strong> Associação Brasileira de Estatística</div>
+                                                        <div><strong>{{ __('CNPJ:') }}</strong> 56.572.456/0001-80</div>
                                                         <div><strong>{{ __('Amount:') }}</strong> R$ {{ number_format($amountStillOwed, 2, ',', '.') }}</div>
+                                                    </div>
+                                                    <div class="mt-2 p-2 bg-blue-100 dark:bg-blue-800/30 border border-blue-300 dark:border-blue-600 rounded text-xs">
+                                                        <p class="text-blue-800 dark:text-blue-300">
+                                                            <strong>{{ __('Important') }}:</strong> {{ __('Include your full name and registration email in the payment reference.') }}
+                                                        </p>
                                                     </div>
                                                 </div>
 
