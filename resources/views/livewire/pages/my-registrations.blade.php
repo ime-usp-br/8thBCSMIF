@@ -38,13 +38,32 @@ new #[Layout('layouts.app')] class extends Component {
         
         // Get all events the user is currently registered for
         $currentEvents = collect();
+        $currentEventCodes = [];
         foreach ($registrations as $registration) {
             foreach ($registration->events as $event) {
                 $currentEvents->push([
                     'code' => $event->code,
                     'name' => $event->name,
-                    'price' => $event->pivot->price_at_registration
+                    'price' => $event->pivot->price_at_registration,
+                    'is_main_conference' => $event->is_main_conference
                 ]);
+                $currentEventCodes[] = $event->code;
+            }
+        }
+        
+        // Calculate current prices with discounts applied (recalculated)
+        $recalculatedPrices = [];
+        if (!empty($currentEventCodes) && $user->registration) {
+            $feeCalculationService = app(\App\Services\FeeCalculationService::class);
+            $recalculatedFees = $feeCalculationService->calculateFees(
+                $user->registration->registration_category_snapshot,
+                array_unique($currentEventCodes),
+                now(),
+                $user->registration->participation_format ?: 'in-person'
+            );
+            
+            foreach ($recalculatedFees['details'] as $detail) {
+                $recalculatedPrices[$detail['event_code']] = $detail['calculated_price'];
             }
         }
         
@@ -65,21 +84,30 @@ new #[Layout('layouts.app')] class extends Component {
             }
         }
         
-        // Calculate totals
-        $grandTotal = $currentEvents->sum('price');
+        // Calculate totals - use recalculated prices if available
+        $grandTotal = $currentEvents->sum('price'); // Historical total
+        $grandTotalRecalculated = array_sum($recalculatedPrices); // Current total with discounts
         $totalPaidAmount = array_sum($paidByEvent);
         $totalPendingAmount = array_sum($pendingByEvent);
         
-        // Calculate amount still owed considering what was already paid per event
+        // Calculate amount still owed using recalculated prices
         $amountStillOwed = 0;
+        $amountStillOwedRecalculated = 0;
+        
         foreach ($currentEvents as $event) {
             $eventCode = $event['code'];
-            $eventPrice = $event['price'];
+            $historicalPrice = $event['price'];
+            $currentPrice = $recalculatedPrices[$eventCode] ?? $historicalPrice;
             $paidForThisEvent = $paidByEvent[$eventCode] ?? 0;
             
-            // Only count as owed if less was paid than the current price
-            if ($paidForThisEvent < $eventPrice) {
-                $amountStillOwed += ($eventPrice - $paidForThisEvent);
+            // Historical calculation (current logic)
+            if ($paidForThisEvent < $historicalPrice) {
+                $amountStillOwed += ($historicalPrice - $paidForThisEvent);
+            }
+            
+            // Recalculated logic - only owe if paid less than current discounted price
+            if ($paidForThisEvent < $currentPrice) {
+                $amountStillOwedRecalculated += ($currentPrice - $paidForThisEvent);
             }
         }
         
@@ -90,10 +118,13 @@ new #[Layout('layouts.app')] class extends Component {
             'totalPaidAmount' => $totalPaidAmount,
             'totalPendingAmount' => $totalPendingAmount,
             'grandTotal' => $grandTotal,
+            'grandTotalRecalculated' => $grandTotalRecalculated,
             'amountStillOwed' => $amountStillOwed,
+            'amountStillOwedRecalculated' => $amountStillOwedRecalculated,
             'paidByEvent' => $paidByEvent,
             'pendingByEvent' => $pendingByEvent,
             'currentEvents' => $currentEvents,
+            'recalculatedPrices' => $recalculatedPrices,
         ];
     }
 }; ?>
@@ -129,20 +160,35 @@ new #[Layout('layouts.app')] class extends Component {
                                         <p class="text-gray-600 dark:text-gray-400 mb-2">
                                             <strong>{{ __('Total Current Events Value') }}:</strong>
                                             R$ {{ number_format($grandTotal, 2, ',', '.') }}
+                                            @if($grandTotalRecalculated != $grandTotal)
+                                                <span class="ml-2 text-sm text-blue-600 dark:text-blue-400">
+                                                    ({{ __('With current discounts') }}: R$ {{ number_format($grandTotalRecalculated, 2, ',', '.') }})
+                                                </span>
+                                            @endif
                                         </p>
                                         <p class="text-gray-600 dark:text-gray-400 mb-2">
                                             <strong>{{ __('Payment Status') }}:</strong>
                                             @if($totalPaidAmount > 0)
                                                 <span class="text-green-600 dark:text-green-400">{{ __('Paid') }}: R$ {{ number_format($totalPaidAmount, 2, ',', '.') }}</span>
                                             @endif
-                                            @if($amountStillOwed > 0)
+                                            @if($amountStillOwedRecalculated > 0)
                                                 @if($totalPaidAmount > 0)<br>@endif
-                                                <span class="text-yellow-600 dark:text-yellow-400">{{ __('Amount Still Owed') }}: R$ {{ number_format($amountStillOwed, 2, ',', '.') }}</span>
-                                            @elseif($totalPaidAmount > 0 && $amountStillOwed == 0)
+                                                <span class="text-yellow-600 dark:text-yellow-400">{{ __('Amount Still Owed') }}: R$ {{ number_format($amountStillOwedRecalculated, 2, ',', '.') }}</span>
+                                                @if($amountStillOwed != $amountStillOwedRecalculated)
+                                                    <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                                                        ({{ __('Historical calculation') }}: R$ {{ number_format($amountStillOwed, 2, ',', '.') }})
+                                                    </span>
+                                                @endif
+                                            @elseif($totalPaidAmount > 0 && $amountStillOwedRecalculated <= 0)
                                                 <br><span class="text-green-600 dark:text-green-400">{{ __('Fully Paid') }}</span>
+                                                @if($amountStillOwed > 0 && $amountStillOwedRecalculated <= 0)
+                                                    <span class="ml-2 text-sm text-blue-600 dark:text-blue-400">
+                                                        ({{ __('Discount applied retroactively') }})
+                                                    </span>
+                                                @endif
                                             @endif
                                             @if($totalPaidAmount == 0)
-                                                <span class="text-red-600 dark:text-red-400">{{ __('No Payments Made') }} - {{ __('Amount Owed') }}: R$ {{ number_format($amountStillOwed, 2, ',', '.') }}</span>
+                                                <span class="text-red-600 dark:text-red-400">{{ __('No Payments Made') }} - {{ __('Amount Owed') }}: R$ {{ number_format($amountStillOwedRecalculated, 2, ',', '.') }}</span>
                                             @endif
                                         </p>
                                         <p class="text-gray-600 dark:text-gray-400">
@@ -163,14 +209,14 @@ new #[Layout('layouts.app')] class extends Component {
                                         </p>
 
                                         {{-- Payment Proof Upload Form - Show only if there's an amount still owed --}}
-                                        @if($amountStillOwed > 0 && in_array($registration->document_country_origin, ['Brasil', 'BR']))
+                                        @if($amountStillOwedRecalculated > 0 && in_array($registration->document_country_origin, ['Brasil', 'BR']))
                                             <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
                                                 <h5 class="font-medium text-yellow-800 dark:text-yellow-300 mb-3">
                                                     {{ __('Payment Proof Upload') }}
                                                 </h5>
                                                 <div class="mb-3 p-2 bg-yellow-100 dark:bg-yellow-800/30 border border-yellow-300 dark:border-yellow-600 rounded">
                                                     <p class="text-sm text-yellow-800 dark:text-yellow-300">
-                                                        <strong>{{ __('Amount to Pay') }}:</strong> R$ {{ number_format($amountStillOwed, 2, ',', '.') }}
+                                                        <strong>{{ __('Amount to Pay') }}:</strong> R$ {{ number_format($amountStillOwedRecalculated, 2, ',', '.') }}
                                                     </p>
                                                     <p class="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
                                                         {{ __('Upload proof only for the amount still owed above. Do not pay for events already paid.') }}
@@ -205,7 +251,7 @@ new #[Layout('layouts.app')] class extends Component {
                                                         <div><strong>{{ __('Account:') }}</strong> 13006798-9</div>
                                                         <div><strong>{{ __('Beneficiary:') }}</strong> Associação Brasileira de Estatística</div>
                                                         <div><strong>{{ __('CNPJ:') }}</strong> 56.572.456/0001-80</div>
-                                                        <div><strong>{{ __('Amount:') }}</strong> R$ {{ number_format($amountStillOwed, 2, ',', '.') }}</div>
+                                                        <div><strong>{{ __('Amount:') }}</strong> R$ {{ number_format($amountStillOwedRecalculated, 2, ',', '.') }}</div>
                                                     </div>
                                                     <div class="mt-2 p-2 bg-blue-100 dark:bg-blue-800/30 border border-blue-300 dark:border-blue-600 rounded text-xs">
                                                         <p class="text-blue-800 dark:text-blue-300">
@@ -531,6 +577,12 @@ new #[Layout('layouts.app')] class extends Component {
                                                                     R$ {{ number_format($event->pivot->price_at_registration, 2, ',', '.') }}
                                                                 </div>
                                                                 <div class="text-xs text-gray-500 dark:text-gray-400">{{ __('Price at registration') }}</div>
+                                                                @if(isset($recalculatedPrices[$event->code]) && $recalculatedPrices[$event->code] != $event->pivot->price_at_registration)
+                                                                    <div class="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                                                                        R$ {{ number_format($recalculatedPrices[$event->code], 2, ',', '.') }}
+                                                                    </div>
+                                                                    <div class="text-xs text-blue-500 dark:text-blue-400">{{ __('Current price with discounts') }}</div>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     </div>
@@ -540,9 +592,16 @@ new #[Layout('layouts.app')] class extends Component {
                                                         <div class="space-y-2">
                                                             <div class="flex justify-between items-center">
                                                                 <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ __('Total Registration Fee') }}</span>
-                                                                <span class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                                                    R$ {{ number_format($grandTotal, 2, ',', '.') }}
-                                                                </span>
+                                                                <div class="text-right">
+                                                                    <span class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                                                        R$ {{ number_format($grandTotal, 2, ',', '.') }}
+                                                                    </span>
+                                                                    @if($grandTotalRecalculated != $grandTotal)
+                                                                        <div class="text-sm text-blue-600 dark:text-blue-400">
+                                                                            {{ __('With discounts') }}: R$ {{ number_format($grandTotalRecalculated, 2, ',', '.') }}
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
                                                             </div>
                                                             @if($totalPaidAmount > 0)
                                                                 <div class="flex justify-between items-center text-sm border-t border-gray-300 dark:border-gray-600 pt-2">
@@ -552,14 +611,14 @@ new #[Layout('layouts.app')] class extends Component {
                                                                     </span>
                                                                 </div>
                                                             @endif
-                                                            @if($amountStillOwed > 0)
+                                                            @if($amountStillOwedRecalculated > 0)
                                                                 <div class="flex justify-between items-center text-sm">
                                                                     <span class="text-yellow-600 dark:text-yellow-400">{{ __('Amount Still Owed') }}</span>
                                                                     <span class="font-medium text-yellow-600 dark:text-yellow-400">
-                                                                        R$ {{ number_format($amountStillOwed, 2, ',', '.') }}
+                                                                        R$ {{ number_format($amountStillOwedRecalculated, 2, ',', '.') }}
                                                                     </span>
                                                                 </div>
-                                                            @elseif($totalPaidAmount > 0 && $amountStillOwed == 0)
+                                                            @elseif($totalPaidAmount > 0 && $amountStillOwedRecalculated <= 0)
                                                                 <div class="flex justify-between items-center text-sm">
                                                                     <span class="text-green-600 dark:text-green-400">{{ __('Status') }}</span>
                                                                     <span class="font-medium text-green-600 dark:text-green-400">
@@ -580,10 +639,12 @@ new #[Layout('layouts.app')] class extends Component {
                                                     @foreach($currentEvents as $event)
                                                         @php
                                                             $eventCode = $event['code'];
-                                                            $eventPrice = $event['price'];
+                                                            $historicalPrice = $event['price'];
+                                                            $currentPrice = $recalculatedPrices[$eventCode] ?? $historicalPrice;
                                                             $paidForEvent = $paidByEvent[$eventCode] ?? 0;
                                                             $pendingForEvent = $pendingByEvent[$eventCode] ?? 0;
-                                                            $owedForEvent = max(0, $eventPrice - $paidForEvent);
+                                                            $owedForEventHistorical = max(0, $historicalPrice - $paidForEvent);
+                                                            $owedForEventCurrent = max(0, $currentPrice - $paidForEvent);
                                                         @endphp
                                                         <div class="flex justify-between items-center py-2 px-3 bg-gray-50 dark:bg-gray-700 rounded">
                                                             <div>
@@ -591,14 +652,20 @@ new #[Layout('layouts.app')] class extends Component {
                                                                 <span class="text-sm text-gray-600 dark:text-gray-400 ml-2">({{ $eventCode }})</span>
                                                             </div>
                                                             <div class="text-right text-sm">
-                                                                <div>{{ __('Price') }}: R$ {{ number_format($eventPrice, 2, ',', '.') }}</div>
+                                                                <div>{{ __('Price') }}: R$ {{ number_format($historicalPrice, 2, ',', '.') }}</div>
+                                                                @if($currentPrice != $historicalPrice)
+                                                                    <div class="text-blue-600">{{ __('Current price') }}: R$ {{ number_format($currentPrice, 2, ',', '.') }}</div>
+                                                                @endif
                                                                 @if($paidForEvent > 0)
                                                                     <div class="text-green-600">{{ __('Paid') }}: R$ {{ number_format($paidForEvent, 2, ',', '.') }}</div>
                                                                 @endif
-                                                                @if($owedForEvent > 0)
-                                                                    <div class="text-yellow-600">{{ __('Owed') }}: R$ {{ number_format($owedForEvent, 2, ',', '.') }}</div>
-                                                                @elseif($paidForEvent >= $eventPrice)
+                                                                @if($owedForEventCurrent > 0)
+                                                                    <div class="text-yellow-600">{{ __('Owed') }}: R$ {{ number_format($owedForEventCurrent, 2, ',', '.') }}</div>
+                                                                @elseif($paidForEvent >= $currentPrice)
                                                                     <div class="text-green-600">✓ {{ __('Fully Paid') }}</div>
+                                                                    @if($paidForEvent > $currentPrice)
+                                                                        <div class="text-blue-600 text-xs">{{ __('Overpaid by discount') }}: R$ {{ number_format($paidForEvent - $currentPrice, 2, ',', '.') }}</div>
+                                                                    @endif
                                                                 @endif
                                                             </div>
                                                         </div>

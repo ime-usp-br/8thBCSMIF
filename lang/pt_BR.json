@@ -644,5 +644,12 @@
     "Owed": "Devido",
     "Amount to Pay": "Valor a Pagar",
     "Upload proof only for the amount still owed above. Do not pay for events already paid.": "Envie o comprovante apenas para o valor ainda devido acima. Não pague por eventos já pagos.",
-    "Include your full name and registration email in the payment reference.": "Inclua seu nome completo e email de registro na referência do pagamento."
+    "Include your full name and registration email in the payment reference.": "Inclua seu nome completo e email de registro na referência do pagamento.",
+    "With current discounts": "Com descontos atuais",
+    "Historical calculation": "Cálculo histórico",
+    "Discount applied retroactively": "Desconto aplicado retroativamente",
+    "Current price with discounts": "Preço atual com descontos",
+    "Current price": "Preço atual",
+    "Overpaid by discount": "Pago a mais por desconto",
+    "With discounts": "Com descontos"
 }
