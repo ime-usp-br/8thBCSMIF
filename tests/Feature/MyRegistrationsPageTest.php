@@ -228,9 +228,8 @@ class MyRegistrationsPageTest extends TestCase
         $response->assertSee('Dependence Analysis Workshop');
 
         // AC3 Requirement 3: Total fee formatted correctly
-        $response->assertSee('R$ 350,75'); // Registration 1
-        $response->assertSee('R$ 0,00');   // Registration 2 (free)
-        $response->assertSee('R$ 150,00'); // Registration 3
+        // Note: Page now shows combined total for all events, not individual registration totals
+        $response->assertSee('R$ 500,75'); // Combined total: 100.25 + 200.50 + 50.00 + 0.00 + 150.00
 
         // AC3 Requirement 4: Payment status formatted with proper styling
         // Check for localized status text

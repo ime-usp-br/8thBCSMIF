@@ -52,7 +52,7 @@
                             <h2 class="text-3xl font-bold mb-2">
                                 {{ __('For Brazilian Participants') }}
                             </h2>
-                            <p class="text-green-100">{{ __('Payment via bank transfer or PIX') }}</p>
+                            <p class="text-green-100">{{ __('Payment via bank transfer') }}</p>
                         </div>
                         
                         <div class="p-8">
@@ -136,7 +136,7 @@
                                                 {{ __('Step 1: Make Payment') }}
                                             </h4>
                                             <p class="text-green-800 dark:text-green-300 mb-4">
-                                                {{ __('Transfer the registration amount to the bank account above using bank transfer or PIX.') }}
+                                                {{ __('Transfer the registration amount to the bank account above using bank transfer.') }}
                                             </p>
                                             <div class="bg-green-100 dark:bg-green-900/30 p-3 rounded border border-green-300 dark:border-green-700">
                                                 <p class="text-sm text-green-800 dark:text-green-300">

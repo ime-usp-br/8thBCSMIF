@@ -37,6 +37,11 @@ Volt::route('my-registrations', 'pages.my-registrations')
     ->middleware(['auth', 'verified'])
     ->name('registrations.my');
 
+// Route for additional event registration
+Route::get('/add-events', App\Livewire\AdditionalRegistrationForm::class)
+    ->middleware(['auth', 'verified'])
+    ->name('registrations.add-events');
+
 // Admin routes for registration management
 Route::prefix('admin/registrations')
     ->middleware(['auth', 'role:admin'])

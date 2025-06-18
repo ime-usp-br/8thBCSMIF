@@ -131,8 +131,26 @@ This is a Laravel 12 application for the 8th Brazilian Conference on Statistical
 ### Key Models and Services
 
 - **User Model** (`app/Models/User.php`): Extended with HasRoles, HasSenhaunica traits, includes `codpes` field for USP number validation
+- **Payment Model** (`app/Models/Payment.php`): Separate payment tracking system allowing multiple payments per user for additional events
 - **ReplicadoService** (`app/Services/ReplicadoService.php`): Validates USP numbers and emails against institutional database
+- **AdditionalRegistrationService** (`app/Services/AdditionalRegistrationService.php`): Handles additional event registrations with fee calculations and payment tracking
 - **Event/Fee Models**: Conference-specific models for registration system
+
+### Payment and Event Immutability Policy
+
+**CRITICAL BUSINESS RULE:** Once events are paid for (payment_status = 'paid_br' or 'paid_international'), they become **permanent and immutable**:
+
+- ✅ **No refunds** are allowed for paid events
+- ✅ **No cancellations** are permitted for paid events  
+- ✅ **No modifications** to paid events are allowed
+- ✅ Only **additional events** can be added through the additional registration system
+
+**Implementation Details:**
+- `User::getImmutableEventCodes()`: Returns list of paid event codes that cannot be modified
+- `User::isEventImmutable(string $eventCode)`: Checks if specific event is paid and immutable
+- `Payment::areEventsImmutable()`: Determines if payment's events are immutable (paid)
+- `AdditionalRegistrationService::canUserRegisterForEvents()`: Prevents re-registration for paid events
+- Frontend clearly displays paid events as "PERMANENT" and "Non-refundable"
 
 ## Essential Development Commands
 

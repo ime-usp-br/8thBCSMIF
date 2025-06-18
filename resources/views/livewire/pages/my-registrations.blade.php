@@ -25,16 +25,75 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function with(): array
     {
-        $registrations = Auth::user()->registrations()->with('events')->latest()->get();
+        $user = Auth::user();
+        $registrations = $user->registrations()->with('events')->latest()->get();
         
         $selectedRegistration = null;
         if ($this->selectedRegistrationId) {
             $selectedRegistration = $registrations->firstWhere('id', $this->selectedRegistrationId);
         }
         
+        // Calculate current state: total value of all registered events vs actual payments by event
+        $allPayments = $user->payments()->with('events')->get();
+        
+        // Get all events the user is currently registered for
+        $currentEvents = collect();
+        foreach ($registrations as $registration) {
+            foreach ($registration->events as $event) {
+                $currentEvents->push([
+                    'code' => $event->code,
+                    'name' => $event->name,
+                    'price' => $event->pivot->price_at_registration
+                ]);
+            }
+        }
+        
+        // Calculate what has been actually paid for each event
+        $paidByEvent = [];
+        $pendingByEvent = [];
+        
+        foreach ($allPayments as $payment) {
+            foreach ($payment->events as $event) {
+                $eventCode = $event->code;
+                $eventPrice = $event->pivot->individual_price;
+                
+                if ($payment->payment_status === 'paid_br' || $payment->payment_status === 'paid_international') {
+                    $paidByEvent[$eventCode] = ($paidByEvent[$eventCode] ?? 0) + $eventPrice;
+                } else if ($payment->payment_status === 'pending_payment') {
+                    $pendingByEvent[$eventCode] = ($pendingByEvent[$eventCode] ?? 0) + $eventPrice;
+                }
+            }
+        }
+        
+        // Calculate totals
+        $grandTotal = $currentEvents->sum('price');
+        $totalPaidAmount = array_sum($paidByEvent);
+        $totalPendingAmount = array_sum($pendingByEvent);
+        
+        // Calculate amount still owed considering what was already paid per event
+        $amountStillOwed = 0;
+        foreach ($currentEvents as $event) {
+            $eventCode = $event['code'];
+            $eventPrice = $event['price'];
+            $paidForThisEvent = $paidByEvent[$eventCode] ?? 0;
+            
+            // Only count as owed if less was paid than the current price
+            if ($paidForThisEvent < $eventPrice) {
+                $amountStillOwed += ($eventPrice - $paidForThisEvent);
+            }
+        }
+        
         return [
             'registrations' => $registrations,
             'selectedRegistration' => $selectedRegistration,
+            'allPayments' => $allPayments,
+            'totalPaidAmount' => $totalPaidAmount,
+            'totalPendingAmount' => $totalPendingAmount,
+            'grandTotal' => $grandTotal,
+            'amountStillOwed' => $amountStillOwed,
+            'paidByEvent' => $paidByEvent,
+            'pendingByEvent' => $pendingByEvent,
+            'currentEvents' => $currentEvents,
         ];
     }
 }; ?>
@@ -43,7 +102,16 @@ new #[Layout('layouts.app')] class extends Component {
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6 text-gray-900 dark:text-gray-100">
-                <h2 class="text-2xl font-bold mb-6">{{ __('My Registrations') }}</h2>
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold">{{ __('My Registrations') }}</h2>
+                    @if($registrations->count() > 0)
+                        <a href="{{ route('registrations.add-events') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                           wire:navigate>
+                            + {{ __('Add More Events') }}
+                        </a>
+                    @endif
+                </div>
                 
                 @if($registrations->count() > 0)
                     <div class="space-y-4">
@@ -59,11 +127,26 @@ new #[Layout('layouts.app')] class extends Component {
                                             {{ $registration->events->pluck('name')->join(', ') }}
                                         </p>
                                         <p class="text-gray-600 dark:text-gray-400 mb-2">
-                                            <strong>{{ __('Total Fee') }}:</strong>
-                                            R$ {{ number_format($registration->calculated_fee, 2, ',', '.') }}
+                                            <strong>{{ __('Total Current Events Value') }}:</strong>
+                                            R$ {{ number_format($grandTotal, 2, ',', '.') }}
+                                        </p>
+                                        <p class="text-gray-600 dark:text-gray-400 mb-2">
+                                            <strong>{{ __('Payment Status') }}:</strong>
+                                            @if($totalPaidAmount > 0)
+                                                <span class="text-green-600 dark:text-green-400">{{ __('Paid') }}: R$ {{ number_format($totalPaidAmount, 2, ',', '.') }}</span>
+                                            @endif
+                                            @if($amountStillOwed > 0)
+                                                @if($totalPaidAmount > 0)<br>@endif
+                                                <span class="text-yellow-600 dark:text-yellow-400">{{ __('Amount Still Owed') }}: R$ {{ number_format($amountStillOwed, 2, ',', '.') }}</span>
+                                            @elseif($totalPaidAmount > 0 && $amountStillOwed == 0)
+                                                <br><span class="text-green-600 dark:text-green-400">{{ __('Fully Paid') }}</span>
+                                            @endif
+                                            @if($totalPaidAmount == 0)
+                                                <span class="text-red-600 dark:text-red-400">{{ __('No Payments Made') }} - {{ __('Amount Owed') }}: R$ {{ number_format($amountStillOwed, 2, ',', '.') }}</span>
+                                            @endif
                                         </p>
                                         <p class="text-gray-600 dark:text-gray-400">
-                                            <strong>{{ __('Payment Status') }}:</strong>
+                                            <strong>{{ __('Registration Status') }}:</strong>
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                                 @if($registration->payment_status === 'pending_payment')
                                                     bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
@@ -79,12 +162,20 @@ new #[Layout('layouts.app')] class extends Component {
                                             </span>
                                         </p>
 
-                                        {{-- Payment Proof Upload Form - Always visible for Brazilian users with pending payment --}}
-                                        @if($registration->payment_status === 'pending_payment' && in_array($registration->document_country_origin, ['Brasil', 'BR']))
+                                        {{-- Payment Proof Upload Form - Show only if there's an amount still owed --}}
+                                        @if($amountStillOwed > 0 && in_array($registration->document_country_origin, ['Brasil', 'BR']))
                                             <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
                                                 <h5 class="font-medium text-yellow-800 dark:text-yellow-300 mb-3">
                                                     {{ __('Payment Proof Upload') }}
                                                 </h5>
+                                                <div class="mb-3 p-2 bg-yellow-100 dark:bg-yellow-800/30 border border-yellow-300 dark:border-yellow-600 rounded">
+                                                    <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                                                        <strong>{{ __('Amount to Pay') }}:</strong> R$ {{ number_format($amountStillOwed, 2, ',', '.') }}
+                                                    </p>
+                                                    <p class="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
+                                                        {{ __('Upload proof only for the amount still owed above. Do not pay for events already paid.') }}
+                                                    </p>
+                                                </div>
                                                 
                                                 {{-- Display success message --}}
                                                 @if(session('success'))
@@ -104,6 +195,18 @@ new #[Layout('layouts.app')] class extends Component {
                                                     </div>
                                                 @endif
                                                 
+                                                <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded">
+                                                    <h6 class="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">
+                                                        {{ __('Bank Transfer Information:') }}
+                                                    </h6>
+                                                    <div class="text-xs text-blue-700 dark:text-blue-400 space-y-1">
+                                                        <div><strong>{{ __('Bank:') }}</strong> Banco do Brasil</div>
+                                                        <div><strong>{{ __('Agency:') }}</strong> 1234-5</div>
+                                                        <div><strong>{{ __('Account:') }}</strong> 12345-6</div>
+                                                        <div><strong>{{ __('Amount:') }}</strong> R$ {{ number_format($amountStillOwed, 2, ',', '.') }}</div>
+                                                    </div>
+                                                </div>
+
                                                 <form action="{{ route('event-registrations.upload-proof', $registration) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
                                                     @csrf
                                                     
@@ -427,15 +530,132 @@ new #[Layout('layouts.app')] class extends Component {
                                                     @endforeach
                                                     
                                                     <div class="border-t border-gray-200 dark:border-gray-600 pt-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4">
-                                                        <div class="flex justify-between items-center">
-                                                            <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ __('Total Registration Fee') }}</span>
-                                                            <span class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                                                R$ {{ number_format($selectedRegistration->calculated_fee, 2, ',', '.') }}
-                                                            </span>
+                                                        <div class="space-y-2">
+                                                            <div class="flex justify-between items-center">
+                                                                <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ __('Total Registration Fee') }}</span>
+                                                                <span class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                                                    R$ {{ number_format($grandTotal, 2, ',', '.') }}
+                                                                </span>
+                                                            </div>
+                                                            @if($totalPaidAmount > 0)
+                                                                <div class="flex justify-between items-center text-sm border-t border-gray-300 dark:border-gray-600 pt-2">
+                                                                    <span class="text-green-600 dark:text-green-400">{{ __('Amount Paid') }}</span>
+                                                                    <span class="font-medium text-green-600 dark:text-green-400">
+                                                                        R$ {{ number_format($totalPaidAmount, 2, ',', '.') }}
+                                                                    </span>
+                                                                </div>
+                                                            @endif
+                                                            @if($amountStillOwed > 0)
+                                                                <div class="flex justify-between items-center text-sm">
+                                                                    <span class="text-yellow-600 dark:text-yellow-400">{{ __('Amount Still Owed') }}</span>
+                                                                    <span class="font-medium text-yellow-600 dark:text-yellow-400">
+                                                                        R$ {{ number_format($amountStillOwed, 2, ',', '.') }}
+                                                                    </span>
+                                                                </div>
+                                                            @elseif($totalPaidAmount > 0 && $amountStillOwed == 0)
+                                                                <div class="flex justify-between items-center text-sm">
+                                                                    <span class="text-green-600 dark:text-green-400">{{ __('Status') }}</span>
+                                                                    <span class="font-medium text-green-600 dark:text-green-400">
+                                                                        {{ __('Fully Paid') }}
+                                                                    </span>
+                                                                </div>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <!-- Payment Breakdown by Event -->
+                                            @if(!empty($paidByEvent) || !empty($pendingByEvent))
+                                            <div>
+                                                <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-4 border-l-4 border-orange-500 pl-3">{{ __('Payment Breakdown by Event') }}</h5>
+                                                <div class="space-y-2">
+                                                    @foreach($currentEvents as $event)
+                                                        @php
+                                                            $eventCode = $event['code'];
+                                                            $eventPrice = $event['price'];
+                                                            $paidForEvent = $paidByEvent[$eventCode] ?? 0;
+                                                            $pendingForEvent = $pendingByEvent[$eventCode] ?? 0;
+                                                            $owedForEvent = max(0, $eventPrice - $paidForEvent);
+                                                        @endphp
+                                                        <div class="flex justify-between items-center py-2 px-3 bg-gray-50 dark:bg-gray-700 rounded">
+                                                            <div>
+                                                                <span class="font-medium text-gray-900 dark:text-gray-100">{{ $event['name'] }}</span>
+                                                                <span class="text-sm text-gray-600 dark:text-gray-400 ml-2">({{ $eventCode }})</span>
+                                                            </div>
+                                                            <div class="text-right text-sm">
+                                                                <div>{{ __('Price') }}: R$ {{ number_format($eventPrice, 2, ',', '.') }}</div>
+                                                                @if($paidForEvent > 0)
+                                                                    <div class="text-green-600">{{ __('Paid') }}: R$ {{ number_format($paidForEvent, 2, ',', '.') }}</div>
+                                                                @endif
+                                                                @if($owedForEvent > 0)
+                                                                    <div class="text-yellow-600">{{ __('Owed') }}: R$ {{ number_format($owedForEvent, 2, ',', '.') }}</div>
+                                                                @elseif($paidForEvent >= $eventPrice)
+                                                                    <div class="text-green-600">✓ {{ __('Fully Paid') }}</div>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                            @endif
+
+                                            <!-- Payment History -->
+                                            @if($allPayments->count() > 0)
+                                            <div>
+                                                <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-4 border-l-4 border-purple-500 pl-3">{{ __('Payment History') }}</h5>
+                                                <div class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+                                                    <p class="text-sm text-yellow-800 dark:text-yellow-300 flex items-center">
+                                                        <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                        <strong>{{ __('PERMANENT EVENTS POLICY:') }}</strong> {{ __('All paid events are permanent and non-refundable. Once payment is confirmed, events cannot be cancelled or modified.') }}
+                                                    </p>
+                                                </div>
+                                                <div class="space-y-3">
+                                                    @foreach($allPayments as $payment)
+                                                    <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
+                                                        <div class="flex justify-between items-start">
+                                                            <div class="flex-1">
+                                                                <div class="flex items-center space-x-2 mb-2">
+                                                                    <div class="font-medium text-gray-900 dark:text-gray-100">
+                                                                        {{ __('Payment') }} #{{ $payment->payment_reference }}
+                                                                    </div>
+                                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                                                        @if($payment->isPaid())
+                                                                            bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300
+                                                                        @else
+                                                                            bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300
+                                                                        @endif
+                                                                    ">
+                                                                        @if($payment->isPaid())
+                                                                            🔒 {{ __('PAID - PERMANENT') }}
+                                                                        @else
+                                                                            {{ __('Pending') }}
+                                                                        @endif
+                                                                    </span>
+                                                                </div>
+                                                                @if($payment->events->count() > 0)
+                                                                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                                                        <strong>{{ __('Events') }}:</strong> {{ $payment->events->pluck('name')->join(', ') }}
+                                                                    </div>
+                                                                @endif
+                                                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                                    {{ __('Created') }}: {{ $payment->created_at->format('d/m/Y H:i') }}
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-right ml-4">
+                                                                <div class="font-bold text-lg text-gray-900 dark:text-gray-100">
+                                                                    R$ {{ number_format($payment->total_amount, 2, ',', '.') }}
+                                                                </div>
+                                                                <div class="text-xs text-gray-500 dark:text-gray-400">{{ __('Payment amount') }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                            @endif
 
                                             <!-- Registration Information -->
                                             <div>

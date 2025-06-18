@@ -81,4 +81,23 @@ class Event extends Model
             ->withPivot('price_at_registration')
             ->withTimestamps();
     }
+
+    /**
+     * The payments that cover this event.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Payment, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     */
+    public function payments(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Payment::class,
+            'event_payment',
+            'event_code',
+            'payment_id',
+            'code',
+            'id'
+        )
+            ->withPivot('individual_price', 'registration_id')
+            ->withTimestamps();
+    }
 }
