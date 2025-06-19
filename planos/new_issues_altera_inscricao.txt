@@ -1,0 +1,498 @@
+TITLE: Criar migration para a tabela 'payments'
+TYPE: chore
+LABELS: bcsmif,database,migration,eloquent,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+CHORE_MOTIVATION:
+Para suportar o novo fluxo de modificação de inscrições com pagamentos múltiplos, é fundamental adaptar a estrutura do banco de dados. A criação de uma tabela dedicada `payments` centralizará todos os registros financeiros, permitindo um rastreamento claro do histórico de pagamentos de cada participante e desacoplando a lógica financeira do registro de inscrição principal.
+CHORE_DESCRIPTION:
+Esta tarefa consiste em criar uma nova migration para a tabela `payments`. Esta tabela será a fonte da verdade para todos os pagamentos realizados ou pendentes por uma inscrição. Um novo registro será criado no momento da inscrição inicial e a cada vez que uma modificação gerar um novo valor a ser pago.
+TECHNICAL_DETAILS:
+A migration deve definir a tabela `payments` com as seguintes colunas e tipos:
+- `id`: Chave primária (bigIncrements).
+- `registration_id`: Chave estrangeira para a tabela `registrations`, com `onDelete('cascade')`.
+- `amount`: Tipo `decimal` para armazenar o valor do pagamento.
+- `status`: Tipo `string`, para armazenar status como 'pending', 'paid', 'pending_approval', 'cancelled'. Deve ter um índice.
+- `payment_proof_path`: Tipo `string`, `nullable`. Para o caminho do arquivo do comprovante.
+- `payment_date`: Tipo `timestamp`, `nullable`. Para registrar a data de confirmação do pagamento.
+- `notes`: Tipo `text`, `nullable`. Para notas administrativas.
+- `timestamps`: Padrão `created_at` e `updated_at`.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Nova migration `YYYY_MM_DD_HHMMSS_create_payments_table.php` existe no diretório `database/migrations`.
+- [ ] AC2: O método `up()` da migration cria a tabela `payments` com todas as colunas, tipos e constraints especificadas na seção de detalhes técnicos.
+- [ ] AC3: A chave estrangeira `registration_id` está corretamente definida e aponta para a tabela `registrations`.
+- [ ] AC4: O método `down()` da migration remove completamente a tabela `payments` usando `Schema::dropIfExists('payments')`.
+- [ ] AC5: O comando `php artisan migrate` executa a nova migration com sucesso.
+- [ ] AC6: O comando `php artisan migrate:rollback` reverte a nova migration com sucesso.
+- [ ] AC7: Testes automatizados (PHPUnit para Feature/Unit, Dusk para Browser/UI) criados/atualizados para cobrir a nova funcionalidade.
+- [ ] AC8: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC9: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC10: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: Desenvolver o Model Eloquent 'Payment'
+TYPE: chore
+LABELS: bcsmif,database,eloquent,model,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+CHORE_MOTIVATION:
+Após a criação da tabela `payments`, é necessário um Model Eloquent correspondente para interagir com ela de forma orientada a objetos. O Model `Payment` encapsulará a lógica de negócio relacionada a um pagamento individual e definirá seu relacionamento com o Model `Registration`.
+CHORE_DESCRIPTION:
+Criar o Model Eloquent `App\Models\Payment`. Este model deve ser configurado com os atributos `fillable`, `casts` apropriados para os campos da tabela `payments`, e definir o relacionamento `belongsTo` para vincular cada pagamento à sua respectiva inscrição.
+TECHNICAL_DETAILS:
+- Gerar o model com `php artisan make:model Payment -f` para criar a factory associada.
+- No `App\Models\Payment`:
+  - `protected $fillable`: Deve incluir todos os campos da tabela, exceto `id` e `timestamps`.
+  - `protected $casts`: Configurar `amount` para `'decimal:2'` e `payment_date` para `'datetime'`.
+  - Definir a relação: `public function registration(): BelongsTo { return $this->belongsTo(Registration::class); }`.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: O arquivo `app/Models/Payment.php` existe e define a classe `Payment`.
+- [ ] AC2: A propriedade `$fillable` no model `Payment` está corretamente definida com todos os campos da tabela.
+- [ ] AC3: A propriedade `$casts` está configurada para `amount` como `decimal:2` e `payment_date` como `datetime`.
+- [ ] AC4: O relacionamento `registration()` que retorna um `BelongsTo(Registration::class)` está implementado no model.
+- [ ] AC5: Uma factory `PaymentFactory.php` básica existe em `database/factories`.
+- [ ] AC6: Testes automatizados (PHPUnit para Feature/Unit, Dusk para Browser/UI) criados/atualizados para cobrir a nova funcionalidade.
+- [ ] AC7: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC8: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC9: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: Refatorar o Model 'Registration' para integração com 'Payment'
+TYPE: chore
+LABELS: bcsmif,database,eloquent,refactor,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+CHORE_MOTIVATION:
+Com a introdução da tabela `payments`, as responsabilidades de armazenamento de informações financeiras foram movidas do model `Registration` para o novo model `Payment`. É necessário refatorar `Registration` para refletir essa mudança, removendo colunas legadas e estabelecendo o novo relacionamento `hasMany`.
+CHORE_DESCRIPTION:
+Esta tarefa consiste em modificar o model `App\Models\Registration` e sua migration correspondente para se adequar à nova estrutura de pagamentos múltiplos. As colunas `calculated_fee`, `payment_proof_path` e `payment_uploaded_at` serão removidas da tabela `registrations` através de uma nova migration. O model será atualizado para incluir o relacionamento `hasMany(Payment::class)`. A coluna `payment_status` será mantida, mas sua lógica será adaptada para refletir um status consolidado dos pagamentos associados.
+TECHNICAL_DETAILS:
+1.  **Nova Migration:** Criar uma nova migration (ex: `update_registrations_for_multiple_payments`) que remove as colunas `calculated_fee`, `payment_proof_path`, e `payment_uploaded_at` da tabela `registrations`.
+2.  **Model `Registration`:**
+    - Remover as colunas removidas da propriedade `$fillable` e `$casts`.
+    - Adicionar o relacionamento inverso: `public function payments(): HasMany { return $this->hasMany(Payment::class); }`.
+    - (Opcional) Adicionar um accessor para o status consolidado, ex: `getConsolidatedPaymentStatusAttribute()`, que itera sobre `$this->payments` para determinar se o status geral é 'paid', 'partially_paid', 'pending', etc. A coluna `registrations.payment_status` será atualizada por esta lógica.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Nova migration para remover as colunas `calculated_fee`, `payment_proof_path`, e `payment_uploaded_at` da tabela `registrations` foi criada.
+- [ ] AC2: A migration executa (`up()`) e reverte (`down()`) com sucesso.
+- [ ] AC3: As propriedades `$fillable` e `$casts` no model `Registration` foram atualizadas para remover as colunas antigas.
+- [ ] AC4: O relacionamento `payments()` que retorna um `HasMany(Payment::class)` está implementado e funcional no model `Registration`.
+- [ ] AC5: O propósito da coluna `registrations.payment_status` está documentado no model como um status consolidado.
+- [ ] AC6: Testes automatizados (PHPUnit para Feature/Unit, Dusk para Browser/UI) criados/atualizados para cobrir a nova funcionalidade.
+- [ ] AC7: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC8: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC9: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: Aprimorar 'FeeCalculationService' para Modificações
+TYPE: feature
+LABELS: bcsmif,backend,service,business-logic,feature,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+FEATURE_MOTIVATION:
+Para permitir que os usuários modifiquem suas inscrições adicionando novos eventos, o `FeeCalculationService` precisa ser capaz de recalcular taxas para uma inscrição existente. Isso envolve considerar os pagamentos já realizados e aplicar descontos retroativamente, caso a nova seleção de eventos qualifique o participante para um.
+FEATURE_DESCRIPTION:
+Modificar o `FeeCalculationService` para que ele possa processar tanto novas inscrições quanto modificações de inscrições existentes. O método principal de cálculo deverá aceitar um objeto `Registration` opcional. Se este objeto for fornecido, o serviço deve:
+1.  Calcular o valor total já pago, somando todos os `payments` com status 'paid'.
+2.  Recalcular o custo total da nova seleção de eventos.
+3.  Aplicar descontos retroativamente (ex: se a adição do evento principal conceder desconto em um workshop já pago).
+4.  Retornar o novo valor total da inscrição e a diferença a ser paga.
+PROPOSED_SOLUTION:
+- Refatorar o método principal (ex: `calculateFees`) para aceitar `?Registration $registration = null` como um novo parâmetro.
+- Se `$registration` não for nulo:
+  - Calcular `totalPaid = $registration->payments()->where('status', 'paid')->sum('amount')`.
+  - O loop de cálculo de taxas para cada evento deve ser executado para a nova lista de eventos. A lógica de desconto para workshops (baseada na presença do evento principal na nova lista) será aplicada naturalmente.
+  - O serviço retornará um array mais detalhado, como: `['new_total_fee' => ..., 'total_paid' => ..., 'amount_due' => ...]`.
+- Testes unitários serão cruciais para validar a lógica de recálculo e descontos retroativos.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: O método principal do `FeeCalculationService` aceita um objeto `Registration` opcional.
+- [ ] AC2: Se uma `Registration` é fornecida, o serviço calcula corretamente o `total_paid` somando os pagamentos concluídos.
+- [ ] AC3: O serviço recalcula o custo total para a nova seleção de eventos, aplicando os mesmos descontos de uma inscrição nova.
+- [ ] AC4: O serviço retorna o novo valor total, o valor já pago e a diferença a pagar.
+- [ ] AC5: A lógica de desconto retroativo funciona corretamente (ex: o preço de um workshop é recalculado para baixo se o evento principal for adicionado).
+- [ ] AC6: O serviço continua funcionando corretamente para novas inscrições (quando `Registration` é nulo).
+- [ ] AC7: Testes automatizados (PHPUnit para Feature/Unit, Dusk para Browser/UI) criados/atualizados para cobrir a nova funcionalidade.
+- [ ] AC8: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC9: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC10: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: Implementar Lógica de Modificação de Inscrição
+TYPE: feature
+LABELS: bcsmif,backend,controller,business-logic,feature,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+FEATURE_MOTIVATION:
+Com o serviço de cálculo de taxas aprimorado, o próximo passo é criar o ponto de entrada no backend (controller) para lidar com as solicitações de modificação de inscrição. Este controller orquestrará o fluxo de atualização de uma inscrição existente.
+FEATURE_DESCRIPTION:
+Implementar um novo `RegistrationModificationController` (ou adicionar um método a um controller existente) para processar o fluxo de modificação de inscrição. O método `store` ou `update` deste controller irá:
+1.  Receber o ID da inscrição a ser modificada e a nova lista de eventos selecionados pelo usuário.
+2.  Usar o `FeeCalculationService` aprimorado para determinar a diferença a ser paga.
+3.  Se a diferença for maior que zero, criar um novo registro na tabela `payments` com status 'pending' e o valor da diferença.
+4.  Atualizar a tabela pivot `event_registration` para refletir a nova seleção de eventos do participante.
+5.  Disparar uma notificação por email sobre a modificação.
+PROPOSED_SOLUTION:
+- Criar a rota `POST /my-registration/modify` que aponta para `RegistrationModificationController@store`.
+- O método `store(Registration $registration, Request $request)` receberá a inscrição via route-model binding.
+- Validar a nova lista de `selected_event_codes` do request.
+- Utilizar o `FeeCalculationService` passando a `$registration`.
+- Se `amount_due > 0`, criar um novo `Payment` associado: `$registration->payments()->create(['amount' => $amount_due, 'status' => 'pending']);`.
+- Atualizar a pivot: `$registration->events()->sync($new_event_codes_with_prices);`. Os preços para os eventos já existentes e novos devem ser recalculados e sincronizados na pivot.
+- Disparar o Mailable `RegistrationModifiedNotification`.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Uma nova rota e um método de controller (`RegistrationModificationController@store` ou similar) existem para lidar com a modificação.
+- [ ] AC2: O método valida a nova seleção de eventos.
+- [ ] AC3: O método utiliza o `FeeCalculationService` passando a inscrição existente.
+- [ ] AC4: Se o `amount_due` calculado pelo serviço for maior que zero, um novo registro `Payment` é criado com o valor correto e status 'pending'.
+- [ ] AC5: Se o `amount_due` for zero ou menor, nenhum novo `Payment` é criado.
+- [ ] AC6: A tabela pivot `event_registration` é atualizada para refletir a nova lista de eventos associados à inscrição.
+- [ ] AC7: Uma notificação por email (`RegistrationModifiedNotification`) é disparada após a modificação.
+- [ ] AC8: Testes automatizados (PHPUnit para Feature/Unit, Dusk para Browser/UI) criados/atualizados para cobrir a nova funcionalidade.
+- [ ] AC9: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC10: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC11: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: Desenvolver Sistema de Notificações por Email para Modificação e Lembretes
+TYPE: feature
+LABELS: bcsmif,backend,mail,notification,artisan,feature,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+FEATURE_MOTIVATION:
+Para manter os participantes e a coordenação informados sobre o ciclo de vida da inscrição, é necessário um sistema robusto de notificações por email. Isso inclui confirmações de modificação, cópias para o coordenador e lembretes proativos sobre prazos importantes, como o "early bird".
+FEATURE_DESCRIPTION:
+Esta tarefa engloba a criação de três funcionalidades de notificação distintas:
+1.  **Email de Modificação:** Criar um Mailable `RegistrationModifiedNotification` a ser enviado ao participante após uma alteração bem-sucedida, contendo o resumo atualizado da inscrição e o novo valor devido.
+2.  **Notificação ao Coordenador:** Garantir que o email do coordenador do evento seja incluído em cópia (CC ou CCO) em todas as comunicações automáticas relevantes enviadas aos participantes (inscrição, modificação, confirmação de pagamento).
+3.  **Lembrete de "Early Bird":** Criar um Comando Artisan agendável (ex: `app:send-early-bird-reminders`) que, quando executado, envia um email de lembrete para participantes com pagamentos pendentes, informando sobre o fim próximo do prazo de "early bird" e o consequente aumento de valor.
+PROPOSED_SOLUTION:
+- **`RegistrationModifiedNotification`:** Gerar com `php artisan make:mail`. A view Markdown deve exibir os eventos atualizados, o novo valor total, o valor já pago e a diferença a pagar, com instruções de pagamento se houver valor devido.
+- **CC para Coordenador:** Nos Mailables relevantes (`NewRegistrationNotification`, `RegistrationModifiedNotification`, etc.), no método `envelope()`, adicionar `.cc(config('mail.coordinator_email'))` ou `.bcc(...)`.
+- **Comando Artisan:**
+  - Gerar com `php artisan make:command SendEarlyBirdReminders`.
+  - Lógica:
+    - Obter a data de fim do "early bird" dos eventos.
+    - Buscar todas as `registrations` que tenham `payments` com status 'pending'.
+    - Verificar se o `created_at` da inscrição está dentro do período "early bird".
+    - Enviar um novo Mailable (`EarlyBirdReminderNotification`) para cada participante elegível.
+  - Agendar o comando em `app/Console/Kernel.php` para rodar diariamente ou conforme necessário.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: O Mailable `RegistrationModifiedNotification` existe e é enviado corretamente após uma modificação de inscrição.
+- [ ] AC2: O conteúdo do email de modificação reflete corretamente o novo estado da inscrição e o valor devido.
+- [ ] AC3: O coordenador do evento (configurado no `.env`) recebe uma cópia de emails importantes enviados aos participantes.
+- [ ] AC4: O Comando Artisan `app:send-early-bird-reminders` existe e está registrado.
+- [ ] AC5: A lógica do comando identifica corretamente os participantes com pagamentos pendentes dentro do prazo de "early bird".
+- [ ] AC6: Um Mailable `EarlyBirdReminderNotification` é enviado aos participantes elegíveis pelo comando.
+- [ ] AC7: O comando está agendado para execução no `Console Kernel`.
+- [ ] AC8: Testes automatizados (PHPUnit para Feature/Unit, Dusk para Browser/UI) criados/atualizados para cobrir a nova funcionalidade.
+- [ ] AC9: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC10: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC11: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: Atualizar a Página 'Minha Inscrição'
+TYPE: feature
+LABELS: bcsmif,frontend,livewire,volt,ui,feature,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+FEATURE_MOTIVATION:
+Para acomodar o novo fluxo de modificação de inscrição e múltiplos pagamentos, a página "Minha Inscrição" precisa ser redesenhada. Ela se tornará o hub central para o participante gerenciar sua inscrição única, adicionar eventos e acompanhar seu histórico financeiro.
+FEATURE_DESCRIPTION:
+Renomear a rota e a página de `/my-registrations` para `/my-registration`. A página deve exibir um histórico detalhado de pagamentos, listando cada registro da tabela `payments` com seu status e valor. Para cada pagamento com status 'pending', um formulário de upload de comprovante deve ser exibido. Um botão proeminente "Adicionar Eventos" deve ser o ponto de entrada para o fluxo de modificação.
+PROPOSED_SOLUTION:
+- Atualizar a rota em `routes/web.php` e os links que apontam para ela.
+- Modificar o componente Livewire/Volt responsável pela página.
+- O componente deve carregar a inscrição do usuário com a relação `payments` eager-loaded: `Auth::user()->registration()->with('payments')->first()`.
+- No template Blade, usar um `@foreach` para iterar sobre `$registration->payments` e exibir os detalhes de cada um.
+- Renderizar condicionalmente o formulário de upload de comprovante (`<livewire:payment-upload-form :payment="$payment" />`) dentro do loop, passando o objeto `payment` para o componente filho.
+- O botão "Adicionar Eventos" deve apontar para a nova rota de modificação.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: A rota `/my-registrations` foi renomeada para `/my-registration`.
+- [ ] AC2: A página exibe um botão "Adicionar Eventos".
+- [ ] AC3: A página exibe uma lista ou "timeline" com todos os `payments` associados à inscrição do usuário.
+- [ ] AC4: Cada item na lista de pagamentos mostra seu valor (`amount`) e `status`.
+- [ ] AC5: Um formulário de upload de comprovante é exibido condicionalmente para cada pagamento com status 'pending'.
+- [ ] AC6: Após o upload do comprovante para um pagamento, o respectivo formulário de upload é ocultado.
+- [ ] AC7: A interface é clara, intuitiva e responsiva.
+- [ ] AC8: Testes automatizados (PHPUnit para Feature/Unit, Dusk para Browser/UI) criados/atualizados para cobrir a nova funcionalidade.
+- [ ] AC9: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC10: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC11: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: Criar Interface de Modificação de Inscrição
+TYPE: feature
+LABELS: bcsmif,frontend,livewire,volt,ui,feature,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+FEATURE_MOTIVATION:
+Para permitir que os usuários adicionem eventos às suas inscrições existentes, é necessária uma nova interface dedicada. Esta interface deve ser clara, mostrando o impacto financeiro das alterações em tempo real para o usuário.
+FEATURE_DESCRIPTION:
+Desenvolver um novo componente Livewire/Volt para a página de modificação de inscrição. Esta interface permitirá ao usuário selecionar novos eventos/workshops que ainda não fazem parte de sua inscrição. Um resumo financeiro dinâmico deve ser exibido na tela, mostrando: "Valor Original", "Valor já Pago", "Custo dos Novos Itens" e "Total a Pagar Agora". Se um pagamento anterior ainda estiver sob análise do administrador, o sistema deve exibir um aviso informativo, sem bloquear a ação.
+PROPOSED_SOLUTION:
+- Criar a rota `GET /my-registration/modify` que renderiza o novo componente Livewire/Volt.
+- O componente receberá a inscrição do usuário. No `mount()`, ele carregará todos os eventos disponíveis e os eventos já selecionados pelo usuário.
+- A view exibirá checkboxes apenas para os eventos ainda não selecionados.
+- Ao selecionar/desselecionar um novo evento (`wire:model.live`), uma ação no backend do componente será acionada.
+- Esta ação chamará o `FeeCalculationService` com a nova lista de eventos (atuais + novos selecionados) e a inscrição existente.
+- O serviço retornará os dados financeiros (`new_total_fee`, `total_paid`, `amount_due`), que serão usados para atualizar as propriedades públicas do componente e, consequentemente, o resumo financeiro na tela.
+- Implementar um aviso que verifica se há pagamentos com status `pending_approval`.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Uma nova página/rota para modificação de inscrição existe e carrega o componente Livewire/Volt.
+- [ ] AC2: A interface exibe apenas os eventos/workshops que o usuário ainda não selecionou.
+- [ ] AC3: Um resumo financeiro dinâmico é exibido na tela.
+- [ ] AC4: O resumo financeiro é atualizado em tempo real (ou com um clique em "Recalcular") quando o usuário altera a seleção de novos eventos.
+- [ ] AC5: O resumo exibe claramente "Valor Original", "Valor já Pago", "Custo dos Novos Itens" e "Total a Pagar Agora".
+- [ ] AC6: Um aviso informativo é exibido se houver pagamentos em análise (`pending_approval`), mas a funcionalidade não é bloqueada.
+- [ ] AC7: Um botão "Confirmar Alterações" submete o formulário para a lógica de backend responsável pela modificação.
+- [ ] AC8: Testes automatizados (PHPUnit para Feature/Unit, Dusk para Browser/UI) criados/atualizados para cobrir a nova funcionalidade.
+- [ ] AC9: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC10: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC11: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: Gerenciamento de Comprovantes de Pagamento
+TYPE: feature
+LABELS: bcsmif,frontend,livewire,storage,feature,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+FEATURE_MOTIVATION:
+Após a refatoração para múltiplos pagamentos, a lógica de upload de comprovantes precisa ser associada a um `payment` específico, não mais à `registration` como um todo. Esta tarefa garante que o upload e a visualização de comprovantes estejam corretamente vinculados a cada transação financeira pendente.
+FEATURE_DESCRIPTION:
+Na página "Minha Inscrição", cada formulário de upload de comprovante deve estar associado a um registro de `payment` específico. Após o upload bem-sucedido, o formulário correspondente deve ser ocultado. O usuário deve ter a opção de visualizar ou baixar os comprovantes que já enviou para cada pagamento. Em caso de falha no upload, o sistema deve instruir o usuário a contatar a organização.
+PROPOSED_SOLUTION:
+- Criar um componente Livewire `PaymentUploadForm` que recebe um objeto `Payment` como parâmetro.
+- Este componente conterá a lógica de upload, validação e submissão do arquivo. A rota de destino do formulário será algo como `POST /payments/{payment}/upload-proof`.
+- O controller correspondente (`PaymentController@uploadProof`) receberá o `Payment` via route-model binding e realizará o armazenamento do arquivo, atualizando o `status` e `payment_proof_path` *desse* `Payment` específico.
+- Após o sucesso, o componente pode emitir um evento para a página pai ("Minha Inscrição") para que ela se atualize e oculte o formulário do pagamento recém-processado.
+- Adicionar um link/botão "Visualizar Comprovante" para pagamentos que já possuem um `payment_proof_path`, que apontará para uma rota segura de download.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: O formulário de upload de comprovante na página "Minha Inscrição" submete os dados para uma rota que identifica o `payment` específico (ex: `/payments/{payment}/upload-proof`).
+- [ ] AC2: A lógica de backend associa o arquivo de comprovante ao registro correto na tabela `payments`.
+- [ ] AC3: Após o upload bem-sucedido para um pagamento, o formulário de upload correspondente é ocultado na UI.
+- [ ] AC4: Um link ou botão "Visualizar Comprovante" aparece para pagamentos que já têm um comprovante enviado.
+- [ ] AC5: Clicar em "Visualizar Comprovante" permite que o usuário baixe o arquivo que ele enviou anteriormente.
+- [ ] AC6: Em caso de erro no upload (ex: tipo de arquivo, tamanho, erro de servidor), uma mensagem clara instrui o usuário a contatar a organização.
+- [ ] AC7: Testes automatizados (PHPUnit para Feature/Unit, Dusk para Browser/UI) criados/atualizados para cobrir a nova funcionalidade.
+- [ ] AC8: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC9: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC10: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: [Admin] Aprimorar Listagem de Inscrições no Painel Admin
+TYPE: ui
+LABELS: admin,backend,ui,livewire,feature,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+FEATURE_MOTIVATION:
+Com a introdução de pagamentos múltiplos, a listagem de inscrições no painel do administrador precisa fornecer uma visão rápida e clara do status financeiro de cada inscrição, que agora pode ser mais complexo (pago, parcialmente pago, múltiplos pagamentos pendentes).
+FEATURE_DESCRIPTION:
+Na tela principal de administração de inscrições, modificar a exibição para incluir uma coluna ou área visual que resuma o status de todos os pagamentos (`payments`) associados a cada inscrição. Isso deve ser feito de forma visualmente clara, usando, por exemplo, "badges" coloridos para cada status de pagamento individual ('pending', 'paid', 'pending_approval'). O objetivo é permitir que os administradores identifiquem rapidamente as inscrições que requerem atenção financeira.
+PROPOSED_SOLUTION:
+- Modificar o componente Livewire que renderiza a lista de inscrições do admin.
+- No método `render` do componente, fazer o eager-loading da relação `payments`: `Registration::with('payments')->paginate()`.
+- Criar uma nova coluna na tabela chamada "Status de Pagamentos".
+- Dentro desta coluna, iterar sobre os `$registration->payments` de cada inscrição.
+- Para cada `payment`, renderizar um pequeno "badge" (ex: um `<span>` com classes Tailwind) com uma cor e texto correspondentes ao `payment->status`.
+  - Ex: Amarelo para 'pending', Verde para 'paid', Laranja para 'pending_approval'.
+- Se não houver pagamentos, exibir um status correspondente.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: A tela de listagem de inscrições no painel admin exibe uma nova coluna ou seção "Status de Pagamentos".
+- [ ] AC2: Para cada inscrição, esta seção exibe visualmente o status de cada um dos seus pagamentos associados.
+- [ ] AC3: Badges coloridos (ou outro indicador visual claro) são usados para diferenciar os status ('pending', 'paid', 'pending_approval', etc.).
+- [ ] AC4: A exibição é clara e não sobrecarrega a interface, mesmo para inscrições com múltiplos pagamentos.
+- [ ] AC5: O carregamento da página permanece performático (usar eager loading).
+- [ ] AC6: Testes automatizados (PHPUnit para Feature/Unit, Dusk para Browser/UI) criados/atualizados para cobrir a nova funcionalidade.
+- [ ] AC7: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC8: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC9: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: [Admin] Redesenhar Detalhes da Inscrição no Painel Admin
+TYPE: ui
+LABELS: admin,backend,ui,livewire,feature,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+FEATURE_MOTIVATION:
+A página de detalhes da inscrição no painel do administrador deve ser adaptada para refletir a nova estrutura de múltiplos pagamentos. Ações como aprovação de pagamento agora precisam ser realizadas em um pagamento individual, e não na inscrição como um todo.
+FEATURE_DESCRIPTION:
+Redesenhar a página de detalhes de uma inscrição no painel admin para incluir uma "timeline" ou um histórico detalhado de pagamentos. Cada item de pagamento (`payment`) na lista deve exibir seu valor, status, e, se aplicável, um link para baixar o comprovante. O formulário de aprovação de pagamento (que anteriormente atuava sobre a `registration`) deve agora ser movido para atuar sobre cada `payment` individualmente.
+PROPOSED_SOLUTION:
+- Modificar a view `admin.registrations.show` e seu componente Livewire associado.
+- Adicionar uma seção "Histórico de Pagamentos".
+- Iterar sobre `$registration->payments`. Para cada `$payment`:
+  - Exibir `payment->amount`, `payment->status`.
+  - Se `payment->payment_proof_path` existir, exibir um link para download.
+  - Se `payment->status` for `pending_approval` ou `pending`, exibir um formulário de ação.
+- O formulário de ação para cada pagamento pode ter botões como "Marcar como Pago", "Rejeitar", "Enviar Invoice", que farão um `POST` ou `PATCH` para uma nova rota, ex: `PATCH /admin/payments/{payment}/update-status`, passando o novo status.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: A página de detalhes da inscrição no admin exibe uma seção de "Histórico de Pagamentos" ou "Timeline".
+- [ ] AC2: Cada pagamento associado à inscrição é listado com seu valor, status e data.
+- [ ] AC3: Um link para baixar o comprovante é exibido para cada pagamento que possui um comprovante.
+- [ ] AC4: Um formulário ou conjunto de botões de ação (ex: "Marcar como Pago") está disponível para cada pagamento individual que requer uma ação.
+- [ ] AC5: A ação de aprovação/rejeição de pagamento atua sobre um registro de `payment` específico, e não sobre a `registration` como um todo.
+- [ ] AC6: Após uma ação (ex: marcar como pago), a interface da página é atualizada para refletir o novo status do pagamento.
+- [ ] AC7: Testes automatizados (PHPUnit para Feature/Unit, Dusk para Browser/UI) criados/atualizados para cobrir a nova funcionalidade.
+- [ ] AC8: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC9: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC10: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: [Admin] Implementar Relatórios Financeiros Avançados
+TYPE: feature
+LABELS: admin,backend,reports,export,feature,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+FEATURE_MOTIVATION:
+Para fins de contabilidade e gerenciamento financeiro do evento, os administradores precisam de uma forma fácil de exportar os dados de pagamento. Com múltiplos pagamentos por inscrição, são necessárias duas visualizações: uma consolidada e uma detalhada.
+FEATURE_DESCRIPTION:
+Criar uma nova área de relatórios no painel de administração. Esta área deve oferecer opções para gerar e exportar (em formato CSV/Excel) dois tipos de relatórios financeiros:
+1.  **Relatório Simples:** Uma visualização consolidada, com uma linha por inscrição, mostrando o valor total pago (soma de todos os `payments` com status 'paid').
+2.  **Relatório Completo:** Uma visualização detalhada, com uma linha para cada `payment` individual, incluindo o ID da inscrição, dados do participante, valor do pagamento, status e data.
+PROPOSED_SOLUTION:
+- Usar um pacote como `maatwebsite/excel` para facilitar a geração de exportações.
+- Criar um `FinancialReportController` com dois métodos: `exportSimple()` e `exportComplete()`.
+- **`exportSimple()`:**
+  - `Registration::with('user', 'payments')->get()`
+  - Mapear a coleção, para cada registro calcular `total_paid = $registration->payments->where('status', 'paid')->sum('amount')`.
+  - Criar uma classe `SimpleReportExport` que implementa `FromCollection` e define os cabeçalhos.
+- **`exportComplete()`:**
+  - `Payment::with('registration.user')->get()` para obter todos os pagamentos e suas relações.
+  - Criar uma classe `CompleteReportExport` que mapeia os dados para o formato desejado (uma linha por pagamento).
+- Na UI do admin, adicionar uma página `/admin/reports` com dois botões de download que apontam para as rotas dos métodos de exportação.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Uma nova página `/admin/reports` (ou seção equivalente) existe e é acessível apenas por administradores.
+- [ ] AC2: A página contém botões para baixar o "Relatório Simples" e o "Relatório Completo".
+- [ ] AC3: Clicar em "Relatório Simples" inicia o download de um arquivo CSV/Excel.
+- [ ] AC4: O arquivo do Relatório Simples contém uma linha por inscrição, com colunas para ID da inscrição, nome do participante e o total pago.
+- [ ] AC5: Clicar em "Relatório Completo" inicia o download de um arquivo CSV/Excel.
+- [ ] AC6: O arquivo do Relatório Completo contém uma linha para cada `payment` individual, com colunas para ID do pagamento, ID da inscrição, dados do participante, valor, status e data do pagamento.
+- [ ] AC7: A geração dos relatórios é performática e não causa timeouts para um volume razoável de dados.
+- [ ] AC8: Testes automatizados (PHPUnit para Feature/Unit, Dusk para Browser/UI) criados/atualizados para cobrir a nova funcionalidade.
+- [ ] AC9: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC10: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC11: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: [Admin] Criar Interface de Edição Completa para Admin
+TYPE: feature
+LABELS: admin,backend,ui,activity-log,feature,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+FEATURE_MOTIVATION:
+Em certas situações, um administrador pode precisar fazer ajustes manuais em uma inscrição, como corrigir um nome, adicionar/remover um evento, ou ajustar um pagamento. É necessária uma interface poderosa e restrita para realizar essas edições, com todas as ações devidamente auditadas.
+FEATURE_DESCRIPTION:
+Desenvolver uma nova página (`/admin/registrations/{id}/edit-full`) de acesso restrito (ex: para super-admins) que permita a edição completa de qualquer campo de uma inscrição. Esta interface deve permitir que o administrador edite os dados pessoais do participante, os eventos nos quais ele está inscrito, e os detalhes dos pagamentos associados. Todas as ações de salvamento nesta página devem ser rigorosamente registradas em um log de auditoria. Esta interface também será o local onde a remoção de eventos por parte dos participantes será implementada (ou seja, apenas administradores poderão remover eventos de uma inscrição).
+PROPOSED_SOLUTION:
+- Utilizar um pacote como `spatie/laravel-activitylog` para registrar as alterações.
+- Criar a rota `GET /admin/registrations/{id}/edit-full` e a correspondente `PUT/PATCH`.
+- Proteger a rota com um Gate ou um middleware específico (ex: `role:super-admin`).
+- A view de edição será um grande formulário, possivelmente usando componentes Livewire, que bindam diretamente com o model `Registration` e suas relações (`payments`, `events`).
+- O método `update` no controller irá salvar as alterações na `Registration`, sincronizar os `events` na pivot, e atualizar os `payments` individuais.
+- Configurar o `laravel-activitylog` nos models `Registration` e `Payment` para registrar automaticamente as alterações ou usar a helper `activity()` manualmente no controller para criar logs mais descritivos (ex: "Admin X removeu o evento Y da inscrição Z").
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Uma nova página `/admin/registrations/{id}/edit-full` existe e é acessível apenas por administradores com permissão específica.
+- [ ] AC2: A página exibe um formulário que permite editar todos os campos relevantes de uma `Registration`.
+- [ ] AC3: A interface permite adicionar e remover eventos da inscrição de um participante.
+- [ ] AC4: A interface permite editar os detalhes de um `payment` (ex: valor, status).
+- [ ] AC5: Salvar o formulário atualiza corretamente os dados no banco de dados.
+- [ ] AC6: Todas as alterações feitas através desta interface são registradas em um log de auditoria (ex: tabela `activity_log`).
+- [ ] AC7: O log de auditoria registra qual administrador fez a alteração, o que foi alterado (dados antigos e novos) e quando.
+- [ ] AC8: Testes automatizados (PHPUnit para Feature/Unit, Dusk para Browser/UI) criados/atualizados para cobrir a nova funcionalidade.
+- [ ] AC9: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC10: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC11: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: [Test] Criar Testes de Unidade para 'FeeCalculationService'
+TYPE: test
+LABELS: test,backend,service,phpunit,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+TEST_MOTIVATION:
+A lógica de cálculo de taxas é uma parte crítica e complexa do sistema. Testes de unidade detalhados para o `FeeCalculationService` são essenciais para garantir que todos os cenários de cálculo, incluindo os novos fluxos de modificação e descontos retroativos, funcionem corretamente e sem regressões.
+TEST_SCOPE:
+- Testar o cálculo de taxas para novas inscrições em diferentes cenários (categorias de participante, períodos 'early' e 'late').
+- Testar o recálculo de taxas para modificações de inscrições existentes.
+- Cobrir especificamente o cenário de desconto retroativo (ex: adicionar evento principal e obter desconto em workshop já selecionado).
+- Testar o tratamento de inscrições que já foram parcial ou totalmente pagas.
+- Validar cenários de borda e casos onde taxas não são encontradas.
+TEST_APPROACH:
+- Criar a classe de teste `tests/Unit/Services/FeeCalculationServiceTest.php`.
+- Usar `RefreshDatabase` e popular o banco de dados com `Event` e `Fee` factories para criar cenários de teste controlados.
+- Para cada cenário, instanciar o `FeeCalculationService` e chamar seu método de cálculo, comparando o resultado com o valor esperado usando `assertEquals`.
+- Criar cenários de teste específicos para:
+  - Graduado, early-bird, evento principal.
+  - Profissional, late, evento principal + workshop (sem desconto prévio).
+  - Profissional, modificação, adicionando evento principal (deve aplicar desconto no workshop).
+  - Modificação que não altera o valor.
+  - Modificação que resulta em crédito (valor final menor que o já pago).
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Teste de unidade para o `FeeCalculationService` existe.
+- [ ] AC2: Testes cobrem o cálculo para diferentes categorias de participantes e períodos de tempo.
+- [ ] AC3: Teste específico valida a aplicação correta de descontos retroativos.
+- [ ] AC4: Teste específico valida o recálculo quando pagamentos parciais já foram feitos.
+- [ ] AC5: Teste específico valida o cenário onde uma combinação de taxa não é encontrada.
+- [ ] AC6: Os testes alcançam uma alta cobertura de linha e de caminhos lógicos do serviço.
+- [ ] AC7: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC8: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC9: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: [Test] Criar Testes de Feature para Fluxos de Backend
+TYPE: test
+LABELS: test,backend,controller,phpunit,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+TEST_MOTIVATION:
+Para garantir a integridade dos fluxos de negócio de ponta a ponta no backend, testes de feature são necessários. Eles simulam requisições HTTP para os controllers e verificam o estado final do sistema (banco de dados, emails enviados, etc.), validando a interação entre os diferentes componentes (Controllers, Services, Models).
+TEST_SCOPE:
+- Criar testes de feature abrangentes para o fluxo de modificação de uma inscrição.
+- Criar testes de feature para o fluxo de aprovação de pagamentos individuais pelo administrador.
+- Validar a criação correta de novos registros de `payment` durante a modificação.
+- Validar as notificações por email disparadas em cada fluxo.
+TEST_APPROACH:
+- Criar novas classes de teste em `tests/Feature/`.
+- **Modificação de Inscrição:**
+  - Simular um usuário autenticado.
+  - Criar uma inscrição e pagamentos iniciais usando factories.
+  - Fazer uma requisição `POST` para a rota de modificação com a nova seleção de eventos.
+  - Assertivas:
+    - Verificar se um novo `payment` foi criado (se houver valor devido).
+    - Verificar se a tabela `event_registration` foi atualizada.
+    - Usar `Mail::fake()` para verificar se o `RegistrationModifiedNotification` foi enviado.
+- **Aprovação de Pagamento (Admin):**
+  - Criar um usuário administrador e autenticá-lo.
+  - Criar uma inscrição com um pagamento pendente.
+  - Fazer uma requisição `PATCH` para a rota de atualização de status do pagamento.
+  - Assertivas:
+    - Verificar se o status do `payment` no banco de dados foi atualizado.
+    - Verificar se o log de auditoria foi criado (se aplicável).
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Testes de feature para o fluxo de modificação de inscrição foram criados.
+- [ ] AC2: Testes de feature para o fluxo de aprovação de pagamento pelo administrador foram criados.
+- [ ] AC3: Os testes validam a criação correta de registros `payment` e a atualização da pivot `event_registration`.
+- [ ] AC4: Os testes validam o disparo de notificações por email (`Mail::fake()`).
+- [ ] AC5: Os testes cobrem cenários de sucesso e de falha (ex: dados inválidos, permissões insuficientes).
+- [ ] AC6: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC7: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC8: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
+------
+TITLE: [Test] Atualizar Testes de Browser (Dusk)
+TYPE: test
+LABELS: test,frontend,ui,dusk,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+TEST_MOTIVATION:
+As mudanças na interface do usuário para suportar a modificação de inscrições e pagamentos múltiplos precisam ser validadas com testes de browser para garantir que a experiência do usuário seja correta e livre de regressões.
+TEST_SCOPE:
+- Atualizar os testes de Dusk existentes ou criar novos para cobrir o novo fluxo do participante:
+  1.  Acessar a página "Minha Inscrição".
+  2.  Clicar em "Adicionar Eventos".
+  3.  Interagir com a nova interface de modificação.
+  4.  Verificar o cálculo dinâmico de taxas na tela.
+  5.  Submeter a modificação.
+  6.  Voltar para "Minha Inscrição" e verificar o novo pagamento pendente.
+  7.  Fazer o upload de múltiplos comprovantes para pagamentos diferentes.
+TEST_APPROACH:
+- Criar uma nova classe de teste `tests/Browser/RegistrationModificationTest.php`.
+- No método de teste, simular o login de um usuário que já possui uma inscrição inicial.
+- Usar os comandos do Dusk (`visit`, `click`, `check`, `type`, etc.) para navegar pelo fluxo de modificação.
+- Usar `assertSee`, `assertValue` para verificar a atualização dinâmica do resumo financeiro.
+- Após submeter a modificação, navegar de volta para `/my-registration` e usar `assertSee` para verificar a presença do novo pagamento pendente na lista.
+- Usar `attach()` para simular o upload de comprovantes para diferentes pagamentos na mesma página e verificar se os formulários correspondentes são ocultados após o sucesso.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: Testes de Dusk cobrem o fluxo de adição de eventos a uma inscrição existente.
+- [ ] AC2: Teste verifica se o resumo financeiro dinâmico na tela de modificação é calculado e exibido corretamente.
+- [ ] AC3: Teste verifica se, após a modificação, um novo pagamento pendente aparece na página "Minha Inscrição".
+- [ ] AC4: Teste simula o upload de comprovantes para múltiplos pagamentos pendentes na mesma página.
+- [ ] AC5: Os testes de Dusk são robustos e não apresentam falhas intermitentes ("flaky").
+- [ ] AC6: Todos os testes (existentes e novos) passam na CI.
+- [ ] AC7: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).
+- [ ] AC8: Código PHP implementado passa na análise estática do Larastan (`./vendor/bin/phpstan analyse` no nível configurado).
