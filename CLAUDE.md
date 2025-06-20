@@ -580,3 +580,227 @@ When working with USP-specific features:
 - **Blade views:** Located in `resources/views/livewire/`
 - **Frontend assets:** `resources/css/app.css` and `resources/js/app.js`
 - **Database:** Migrations, factories, and seeders for Events/Fees models
+
+## MCP Server Integration - Context7
+
+Claude Code tem acesso ao servidor MCP Context7 que fornece documentação atualizada e exemplos de código para milhares de bibliotecas. Baseado nas tecnologias específicas do projeto 8th BCSMIF:
+
+### Context7 Server - Documentação & Integração de Bibliotecas
+
+**Funcionalidades Disponíveis:**
+- **Acesso a Documentação em Tempo Real**: Consulte documentação atualizada de milhares de bibliotecas
+- **Recuperação de Snippets de Código**: Acesse exemplos práticos e padrões de implementação
+- **Resolução de Bibliotecas**: Resolva automaticamente nomes de pacotes para IDs compatíveis
+- **Orientação Específica por Framework**: Suporte especializado para Laravel, React, Vue e outros frameworks
+
+## 🎯 Bibliotecas Específicas do Projeto (Testadas e Disponíveis)
+
+### **Laravel 12 Framework**
+- **ID Context7**: `/context7/laravel_com-docs-12.x`
+- **Snippets**: 4.920 exemplos de código
+- **Casos de Uso Específicos**:
+  - Eloquent ORM patterns
+  - Validation rules e #[Validate] attributes
+  - Model relationships
+  - Database migrations
+  - Artisan commands
+
+**Exemplo prático:**
+```bash
+# Buscar padrões de validação para formulários
+mcp__context7__get-library-docs "/context7/laravel_com-docs-12.x" --topic "validation" --tokens 3000
+
+# Documentação de Eloquent para models
+mcp__context7__get-library-docs "/context7/laravel_com-docs-12.x" --topic "eloquent" --tokens 5000
+```
+
+### **Livewire 3.4 (Full-Stack Framework)**
+- **ID Context7**: `/context7/livewire_laravel_com-docs`
+- **Snippets**: 681 exemplos
+- **Casos de Uso do Projeto**:
+  - Formulários reativos de inscrição
+  - Validação em tempo real com `#[Validate]`
+  - Form objects para organização
+  - Interação com Alpine.js
+
+**Padrões Testados:**
+- ✅ Validação com `#[Validate('required|min:5')]`
+- ✅ Form objects para separação de responsabilidades
+- ✅ Real-time validation com `wire:model.blur`
+- ✅ Error handling com `@error('field')`
+
+### **Spatie Laravel Permission**
+- **ID Context7**: `/spatie/laravel-permission`
+- **Snippets**: 158 exemplos
+- **Aplicação no Projeto**:
+  - Middleware de roles para rotas administrativas
+  - Controle de acesso a eventos
+  - Gestão de permissões de coordenadores
+
+**Implementações Testadas:**
+- ✅ Middleware `role:admin` para rotas
+- ✅ Blade directives `@role('admin')`
+- ✅ Seeders para roles e permissions
+- ✅ Verificações com `$user->hasRole('coordinator')`
+
+### **Alpine.js 3.14 (JavaScript Reativo)**
+- **ID Context7**: `/alpinejs/alpine`
+- **Snippets**: 425 exemplos
+- **Integração com Livewire**:
+  - Event handling para formulários
+  - Modais e dropdowns
+  - Interações sem JavaScript customizado
+
+**Diretivas Relevantes:**
+- ✅ `@click` para eventos de click
+- ✅ `x-data` para estado local
+- ✅ `x-show/x-if` para visibilidade condicional
+- ✅ `x-transition` para animações
+
+### **Tailwind CSS 3.1**
+- **ID Context7**: `/tailwindlabs/tailwindcss.com`
+- **Snippets**: 2.066 exemplos
+- **Aplicação no Layout**:
+  - Componentes de UI responsivos
+  - Sistema de cores USP (usp-blue-pri, usp-blue-sec, usp-yellow)
+  - Utility-first approach
+
+## 🔧 Casos de Uso Específicos por Fase
+
+### **1. Análise & Planejamento de Issues**
+
+**Para funcionalidades de inscrição:**
+```bash
+# Pesquisar padrões de formulários Livewire
+mcp__context7__resolve-library-id "Livewire 3"
+mcp__context7__get-library-docs "/context7/livewire_laravel_com-docs" --topic "form validation" --tokens 3000
+
+# Verificar padrões de permissões
+mcp__context7__get-library-docs "/spatie/laravel-permission" --topic "roles middleware" --tokens 2000
+```
+
+**Para UI/UX:**
+```bash
+# Componentes responsivos Tailwind
+mcp__context7__get-library-docs "/tailwindlabs/tailwindcss.com" --topic "components utilities" --tokens 2000
+
+# Interações Alpine.js
+mcp__context7__get-library-docs "/alpinejs/alpine" --topic "directives events" --tokens 2000
+```
+
+### **2. Implementação de Features**
+
+**Sistema de Inscrições:**
+- Consultar form objects Livewire para organização
+- Padrões de validação `#[Validate]` para campos
+- Middleware de permissões para rotas administrativas
+
+**Interface de Usuário:**
+- Componentes Tailwind para cards de eventos
+- Modais Alpine.js para confirmações
+- Estados de loading com Livewire
+
+### **3. Quality Checks & Testes**
+
+**Validação de Padrões:**
+```bash
+# Verificar best practices Laravel
+mcp__context7__get-library-docs "/context7/laravel_com-docs-12.x" --topic "testing" --tokens 2000
+
+# Padrões de middleware
+mcp__context7__get-library-docs "/spatie/laravel-permission" --topic "middleware" --tokens 1500
+```
+
+## 🎯 Exemplos Práticos Testados
+
+### **Livewire Form com Validação**
+Baseado na documentação Context7, padrão confirmado funcional:
+
+```php
+class RegistrationForm extends Form
+{
+    #[Validate('required|min:5')]
+    public $name = '';
+    
+    #[Validate('required|email')]
+    public $email = '';
+    
+    public function store()
+    {
+        $this->validate();
+        Registration::create($this->all());
+        $this->reset();
+    }
+}
+```
+
+### **Middleware de Permissões**
+Padrão testado e disponível na documentação:
+
+```php
+// Em routes/web.php
+Route::group(['middleware' => ['role:coordinator']], function () {
+    Route::get('/admin/events', [EventController::class, 'index']);
+});
+
+// Em Laravel 11 bootstrap/app.php
+->withMiddleware(function (Middleware $middleware) {
+    $middleware->alias([
+        'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+    ]);
+})
+```
+
+### **Alpine.js + Livewire Integration**
+Padrões confirmados na documentação:
+
+```html
+<div x-data="{ open: false }">
+    <button @click="open = !open">Toggle Modal</button>
+    <div x-show="open" x-transition>
+        Modal content
+    </div>
+</div>
+```
+
+## ⚡ Workflow Integrado com Context7
+
+### **Durante resolve-ac (Implementação):**
+1. **Identificar tecnologia necessária** (Livewire, Alpine, etc.)
+2. **Resolver biblioteca**: `mcp__context7__resolve-library-id "Livewire 3"`
+3. **Buscar padrões específicos**: `--topic "form validation"`
+4. **Aplicar padrões ao código** do projeto
+5. **Referenciar snippets** para implementação correta
+
+### **Durante analyze-ac (Validação):**
+1. **Verificar conformidade** com padrões oficiais
+2. **Cross-reference** implementação com documentação
+3. **Validar best practices** usando Context7
+4. **Confirmar padrões** estão sendo seguidos corretamente
+
+### **Durante desenvolvimento contínuo:**
+- **Consulte Context7** antes de implementar novas features
+- **Valide padrões** contra documentação oficial
+- **Mantenha consistência** com exemplos documentados
+- **Atualize conhecimento** com novos snippets disponíveis
+
+## 🔍 Resolução de Problemas Comuns
+
+### **IDs de Biblioteca Confirmados:**
+- ✅ Laravel 12: `/context7/laravel_com-docs-12.x`
+- ✅ Livewire: `/context7/livewire_laravel_com-docs`
+- ✅ Spatie Permission: `/spatie/laravel-permission`
+- ✅ Alpine.js: `/alpinejs/alpine`
+- ✅ Tailwind CSS: `/tailwindlabs/tailwindcss.com`
+
+### **Tokens Recomendados por Tipo:**
+- **Consultas rápidas**: 1000-2000 tokens
+- **Implementação features**: 3000-5000 tokens
+- **Research completo**: 8000-10000 tokens
+
+### **Tópicos Mais Úteis:**
+- Laravel: `"validation"`, `"eloquent"`, `"testing"`, `"middleware"`
+- Livewire: `"form validation"`, `"components"`, `"lifecycle"`
+- Spatie Permission: `"roles middleware"`, `"blade directives"`
+- Alpine.js: `"directives events"`, `"lifecycle"`
+- Tailwind: `"components utilities"`, `"responsive design"`
