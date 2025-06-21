@@ -82,9 +82,8 @@ class RegistrationController extends Controller
             [
                 'user_id' => $user->id,
                 'registration_category_snapshot' => $participantCategory,
-                'calculated_fee' => $feeData['total_fee'],
                 // payment_status will be handled by AC9.
-                // Other fields like payment_proof_path, payment_uploaded_at, invoice_sent_at, notes
+                // Other fields like invoice_sent_at, notes
                 // will be null/default on creation or handled by other processes.
             ]
         );
@@ -94,7 +93,7 @@ class RegistrationController extends Controller
         Log::info('Registration created successfully.', [
             'registration_id' => $registration->id,
             'user_id' => $user->id,
-            'calculated_fee' => $registration->calculated_fee,
+            'total_fee' => $feeData['total_fee'],
             'category_snapshot' => $registration->registration_category_snapshot,
         ]);
 

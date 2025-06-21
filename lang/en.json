@@ -549,6 +549,7 @@
     "Paid (International)": "Paid (International)",
     "Cancelled": "Cancelled",
     "Payment proof not found": "Payment proof not found",
+    "Payment proof download not yet implemented for new payment structure": "Payment proof download not yet implemented for new payment structure",
     "Payment proof file not found": "Payment proof file not found",
     "Filter by Event": "Filter by Event",
     "All Events": "All Events",

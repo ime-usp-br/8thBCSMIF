@@ -9,7 +9,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -31,15 +30,9 @@ class RegistrationController extends Controller
 
     public function downloadProof(Registration $registration): BinaryFileResponse|StreamedResponse|Response
     {
-        if (! $registration->payment_proof_path) {
-            abort(404, __('Payment proof not found'));
-        }
-
-        if (! Storage::disk('private')->exists($registration->payment_proof_path)) {
-            abort(404, __('Payment proof file not found'));
-        }
-
-        return Storage::disk('private')->download($registration->payment_proof_path);
+        // TODO: This method needs to be refactored to work with the new Payment model structure
+        // where payment_proof_path is now stored in the payments table, not registrations
+        abort(501, __('Payment proof download not yet implemented for new payment structure'));
     }
 
     public function updateStatus(Request $request, Registration $registration): RedirectResponse
