@@ -72,7 +72,6 @@ class NewRegistrationNotificationTest extends TestCase
             'full_name' => 'Test Full Name',
             'cpf' => '123.456.789-00',
             'document_country_origin' => 'BR',
-            'calculated_fee' => 500.00,
             'payment_status' => 'pending',
             'position' => 'student',
             'affiliation' => 'Test University',

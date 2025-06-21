@@ -63,7 +63,6 @@ class MyRegistrationsTest extends DuskTestCase
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
             'document_country_origin' => 'Brasil',
-            'calculated_fee' => 500.00,
         ]);
 
         // Associate the event with the registration
@@ -104,7 +103,6 @@ class MyRegistrationsTest extends DuskTestCase
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
             'document_country_origin' => 'Argentina', // Non-Brazilian
-            'calculated_fee' => 500.00,
         ]);
 
         // Associate the event with the registration
@@ -144,7 +142,6 @@ class MyRegistrationsTest extends DuskTestCase
             'user_id' => $user->id,
             'payment_status' => 'approved', // Not pending
             'document_country_origin' => 'Brasil',
-            'calculated_fee' => 500.00,
         ]);
 
         // Associate the event with the registration
@@ -371,7 +368,6 @@ class MyRegistrationsTest extends DuskTestCase
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
             'document_country_origin' => 'Brasil',
-            'calculated_fee' => 500.00,
         ]);
 
         // Associate the event with the registration
@@ -442,7 +438,6 @@ class MyRegistrationsTest extends DuskTestCase
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
             'document_country_origin' => 'Brasil',
-            'calculated_fee' => 500.00,
         ]);
 
         // Associate the event with the registration
@@ -640,7 +635,6 @@ class MyRegistrationsTest extends DuskTestCase
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
             'document_country_origin' => 'Brasil',
-            'calculated_fee' => 500.00,
         ]);
 
         // Associate the event with the registration

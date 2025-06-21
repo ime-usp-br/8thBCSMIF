@@ -39,7 +39,7 @@
 ## {{ __('Registration Summary') }}
 
 **{{ __('Registration ID') }}:** #{{ $registration->id }}  
-**{{ __('Total Amount') }}:** R$ {{ number_format((float) $registration->calculated_fee, 2, ',', '.') }}
+**{{ __('Total Amount') }}:** R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
 
 @if($registration->events->count() > 0)
 **{{ __('Selected Events') }}:**

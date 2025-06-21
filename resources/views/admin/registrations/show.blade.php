@@ -65,7 +65,7 @@
                         </div>
                         <div class="text-right">
                             <p class="text-white font-bold text-lg">
-                                R$ {{ number_format($registration->calculated_fee, 2, ',', '.') }}
+                                R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
                             </p>
                             <p class="text-usp-blue-sec/80 text-xs">
                                 {{ __('Total Fee') }}
@@ -404,7 +404,7 @@
                                     <p class="text-sm text-usp-blue-sec/80 mt-1">{{ __('All events combined') }}</p>
                                 </div>
                                 <span class="text-2xl font-bold">
-                                    R$ {{ number_format($registration->calculated_fee, 2, ',', '.') }}
+                                    R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
                                 </span>
                             </div>
                         </div>

@@ -12,9 +12,9 @@
 - {{ $event->name }}: R$ {{ number_format((float) $event->pivot->price_at_registration, 2, ',', '.') }}
 @endforeach
 
-**{{ __('Total Amount') }}:** R$ {{ number_format((float) $registration->calculated_fee, 2, ',', '.') }}
+**{{ __('Total Amount') }}:** R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
 
-@if($registration->calculated_fee > 0)
+@if($registration->events->sum('pivot.price_at_registration') > 0)
 **{{ __('Payment Status') }}:** {{ ucfirst(str_replace('_', ' ', $registration->payment_status)) }}
 
 @if($registration->document_country_origin === 'BR' || $registration->document_country_origin === 'Brazil')

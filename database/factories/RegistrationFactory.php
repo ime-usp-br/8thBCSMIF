@@ -75,10 +75,7 @@ class RegistrationFactory extends Factory
             'requires_visa_letter' => ! $isBrazilian && $this->faker->boolean(30),
 
             'registration_category_snapshot' => $position,
-            'calculated_fee' => $this->faker->randomFloat(2, 0, 2000),
             'payment_status' => $this->faker->randomElement(['pending_payment', 'pending_br_proof_approval', 'paid_br', 'invoice_sent_int', 'paid_int', 'free', 'cancelled']),
-            'payment_proof_path' => null,
-            'payment_uploaded_at' => null,
             'invoice_sent_at' => null,
             'notes' => $this->faker->optional()->sentence(),
         ];

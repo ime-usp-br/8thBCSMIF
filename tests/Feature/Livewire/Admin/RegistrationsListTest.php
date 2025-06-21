@@ -45,7 +45,6 @@ class RegistrationsListTest extends TestCase
             'user_id' => $user->id,
             'full_name' => 'John Test Doe',
             'email' => 'john@example.com',
-            'calculated_fee' => 100.50,
             'payment_status' => 'pending_payment',
         ]);
 
