@@ -4,6 +4,9 @@ namespace Tests\Unit\Services;
 
 use App\Models\Event;
 use App\Models\Fee;
+use App\Models\Payment;
+use App\Models\Registration;
+use App\Models\User;
 use App\Services\FeeCalculationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -575,5 +578,336 @@ class FeeCalculationServiceTest extends TestCase
                 'expected_error_for_event' => [$workshopCode => __('fees.fee_config_not_found')],
             ],
         ];
+    }
+
+    #[Test]
+    public function it_accepts_optional_registration_parameter(): void
+    {
+        // AC1: Test that the method accepts an optional Registration parameter
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create(['user_id' => $user->id]);
+
+        Fee::factory()->create([
+            'event_code' => $this->mainConferenceCode,
+            'participant_category' => 'grad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 600.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $result = $this->service->calculateFees(
+            'grad_student',
+            [$this->mainConferenceCode],
+            Carbon::parse('2025-08-01'),
+            'in-person',
+            $registration
+        );
+
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('details', $result);
+        $this->assertArrayHasKey('total_fee', $result);
+        // Should have modification-specific keys when registration is provided
+        $this->assertArrayHasKey('new_total_fee', $result);
+        $this->assertArrayHasKey('total_paid', $result);
+        $this->assertArrayHasKey('amount_due', $result);
+    }
+
+    #[Test]
+    public function it_calculates_total_paid_from_paid_payments(): void
+    {
+        // AC2: Test calculation of total_paid from payments with status 'paid'
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create(['user_id' => $user->id]);
+
+        // Create payments with different statuses
+        Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 300.00,
+            'status' => 'paid',
+        ]);
+        Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 200.00,
+            'status' => 'paid',
+        ]);
+        Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 100.00,
+            'status' => 'pending', // Should not be included
+        ]);
+
+        Fee::factory()->create([
+            'event_code' => $this->mainConferenceCode,
+            'participant_category' => 'grad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 600.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $result = $this->service->calculateFees(
+            'grad_student',
+            [$this->mainConferenceCode],
+            Carbon::parse('2025-08-01'),
+            'in-person',
+            $registration
+        );
+
+        $this->assertEquals(500.00, $result['total_paid']); // Only paid payments: 300 + 200
+        $this->assertEquals(600.00, $result['new_total_fee']);
+        $this->assertEquals(100.00, $result['amount_due']); // 600 - 500
+    }
+
+    #[Test]
+    public function it_recalculates_total_for_new_event_selection_with_discounts(): void
+    {
+        // AC3: Test recalculation with discounts applied
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create(['user_id' => $user->id]);
+
+        Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 250.00,
+            'status' => 'paid',
+        ]);
+
+        // Setup fees for main conference and workshop
+        Fee::factory()->create([
+            'event_code' => $this->mainConferenceCode,
+            'participant_category' => 'professor_abe',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 1200.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+        Fee::factory()->create([
+            'event_code' => $this->workshopCode,
+            'participant_category' => 'professor_abe',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 100.00, // Discounted price
+            'is_discount_for_main_event_participant' => true,
+        ]);
+        Fee::factory()->create([
+            'event_code' => $this->workshopCode,
+            'participant_category' => 'professor_abe',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 250.00, // Normal price
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $result = $this->service->calculateFees(
+            'professor_abe',
+            [$this->mainConferenceCode, $this->workshopCode], // Adding both events
+            Carbon::parse('2025-08-01'),
+            'in-person',
+            $registration
+        );
+
+        $this->assertEquals(1300.00, $result['new_total_fee']); // 1200 + 100 (discounted workshop)
+        $this->assertEquals(250.00, $result['total_paid']);
+        $this->assertEquals(1050.00, $result['amount_due']); // 1300 - 250
+    }
+
+    #[Test]
+    public function it_returns_detailed_response_structure_for_modifications(): void
+    {
+        // AC4: Test detailed response structure
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create(['user_id' => $user->id]);
+
+        Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 400.00,
+            'status' => 'paid',
+        ]);
+
+        Fee::factory()->create([
+            'event_code' => $this->mainConferenceCode,
+            'participant_category' => 'grad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 600.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $result = $this->service->calculateFees(
+            'grad_student',
+            [$this->mainConferenceCode],
+            Carbon::parse('2025-08-01'),
+            'in-person',
+            $registration
+        );
+
+        // Check all required fields are present
+        $this->assertArrayHasKey('details', $result);
+        $this->assertArrayHasKey('total_fee', $result);
+        $this->assertArrayHasKey('new_total_fee', $result);
+        $this->assertArrayHasKey('total_paid', $result);
+        $this->assertArrayHasKey('amount_due', $result);
+
+        // Check values
+        $this->assertEquals(600.00, $result['total_fee']);
+        $this->assertEquals(600.00, $result['new_total_fee']);
+        $this->assertEquals(400.00, $result['total_paid']);
+        $this->assertEquals(200.00, $result['amount_due']);
+    }
+
+    #[Test]
+    public function it_applies_retroactive_discount_when_main_conference_added(): void
+    {
+        // AC5: Test retroactive discount logic
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create(['user_id' => $user->id]);
+
+        Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 250.00, // Original workshop price
+            'status' => 'paid',
+        ]);
+
+        // Setup workshop fees
+        Fee::factory()->create([
+            'event_code' => $this->workshopCode,
+            'participant_category' => 'professor_abe',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 100.00, // Discounted price for main conference participants
+            'is_discount_for_main_event_participant' => true,
+        ]);
+        Fee::factory()->create([
+            'event_code' => $this->workshopCode,
+            'participant_category' => 'professor_abe',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 250.00, // Normal price
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        // Main conference fee
+        Fee::factory()->create([
+            'event_code' => $this->mainConferenceCode,
+            'participant_category' => 'professor_abe',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 1200.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        // Test scenario: User originally registered for workshop only, now adding main conference
+        $result = $this->service->calculateFees(
+            'professor_abe',
+            [$this->mainConferenceCode, $this->workshopCode], // Now including main conference
+            Carbon::parse('2025-08-01'),
+            'in-person',
+            $registration
+        );
+
+        // Workshop should now be calculated at discounted price due to main conference attendance
+        $workshopDetail = collect($result['details'])->firstWhere('event_code', $this->workshopCode);
+        $this->assertEquals(100.00, $workshopDetail['calculated_price']); // Discounted price
+
+        $this->assertEquals(1300.00, $result['new_total_fee']); // 1200 + 100 (discounted workshop)
+        $this->assertEquals(250.00, $result['total_paid']);
+        $this->assertEquals(1050.00, $result['amount_due']); // 1300 - 250
+    }
+
+    #[Test]
+    public function it_continues_working_for_new_registrations_when_registration_is_null(): void
+    {
+        // AC6: Test backward compatibility
+        Fee::factory()->create([
+            'event_code' => $this->mainConferenceCode,
+            'participant_category' => 'grad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 600.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $result = $this->service->calculateFees(
+            'grad_student',
+            [$this->mainConferenceCode],
+            Carbon::parse('2025-08-01'),
+            'in-person',
+            null // Explicitly null registration
+        );
+
+        // Should work exactly as before
+        $this->assertArrayHasKey('details', $result);
+        $this->assertArrayHasKey('total_fee', $result);
+        $this->assertEquals(600.00, $result['total_fee']);
+
+        // Should NOT have modification-specific keys
+        $this->assertArrayNotHasKey('new_total_fee', $result);
+        $this->assertArrayNotHasKey('total_paid', $result);
+        $this->assertArrayNotHasKey('amount_due', $result);
+    }
+
+    #[Test]
+    public function it_handles_zero_payments_correctly(): void
+    {
+        // Test edge case: registration with no payments
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create(['user_id' => $user->id]);
+        // No payments created
+
+        Fee::factory()->create([
+            'event_code' => $this->mainConferenceCode,
+            'participant_category' => 'grad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 600.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $result = $this->service->calculateFees(
+            'grad_student',
+            [$this->mainConferenceCode],
+            Carbon::parse('2025-08-01'),
+            'in-person',
+            $registration
+        );
+
+        $this->assertEquals(0.00, $result['total_paid']);
+        $this->assertEquals(600.00, $result['new_total_fee']);
+        $this->assertEquals(600.00, $result['amount_due']); // Full amount due
+    }
+
+    #[Test]
+    public function it_handles_negative_amount_due_when_overpaid(): void
+    {
+        // Test edge case: registration with overpayment
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create(['user_id' => $user->id]);
+
+        Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 800.00, // More than required
+            'status' => 'paid',
+        ]);
+
+        Fee::factory()->create([
+            'event_code' => $this->mainConferenceCode,
+            'participant_category' => 'grad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 600.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $result = $this->service->calculateFees(
+            'grad_student',
+            [$this->mainConferenceCode],
+            Carbon::parse('2025-08-01'),
+            'in-person',
+            $registration
+        );
+
+        $this->assertEquals(800.00, $result['total_paid']);
+        $this->assertEquals(600.00, $result['new_total_fee']);
+        $this->assertEquals(-200.00, $result['amount_due']); // Negative = overpaid
     }
 }
