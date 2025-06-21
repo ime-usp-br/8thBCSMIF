@@ -33,7 +33,7 @@ class RegistrationTest extends TestCase
         $this->assertNotNull($registration->full_name, 'full_name should be filled by the factory.');
         $this->assertNotNull($registration->email, 'email should be filled by the factory.');
         $this->assertNotNull($registration->registration_category_snapshot, 'registration_category_snapshot should be filled.');
-        $this->assertNotNull($registration->calculated_fee, 'calculated_fee should be filled.');
+        // calculated_fee was removed and moved to Payment model
         $this->assertNotNull($registration->payment_status, 'payment_status should be filled.');
     }
 
@@ -88,27 +88,21 @@ class RegistrationTest extends TestCase
     }
 
     #[Test]
-    public function payment_and_invoice_datetimes_are_casted_to_carbon_instances_or_null(): void
+    public function invoice_datetime_is_casted_to_carbon_instance_or_null(): void
     {
-        $paymentUploadedAt = now();
         $invoiceSentAt = now()->subDay();
 
-        $registrationWithDates = Registration::factory()->create([
-            'payment_uploaded_at' => $paymentUploadedAt,
+        $registrationWithDate = Registration::factory()->create([
             'invoice_sent_at' => $invoiceSentAt,
         ]);
 
-        $this->assertInstanceOf(Carbon::class, $registrationWithDates->payment_uploaded_at);
-        $this->assertEquals($paymentUploadedAt->toDateTimeString(), $registrationWithDates->payment_uploaded_at->toDateTimeString());
-        $this->assertInstanceOf(Carbon::class, $registrationWithDates->invoice_sent_at);
-        $this->assertEquals($invoiceSentAt->toDateTimeString(), $registrationWithDates->invoice_sent_at->toDateTimeString());
+        $this->assertInstanceOf(Carbon::class, $registrationWithDate->invoice_sent_at);
+        $this->assertEquals($invoiceSentAt->toDateTimeString(), $registrationWithDate->invoice_sent_at->toDateTimeString());
 
-        $registrationNullDates = Registration::factory()->create([
-            'payment_uploaded_at' => null,
+        $registrationNullDate = Registration::factory()->create([
             'invoice_sent_at' => null,
         ]);
-        $this->assertNull($registrationNullDates->payment_uploaded_at);
-        $this->assertNull($registrationNullDates->invoice_sent_at);
+        $this->assertNull($registrationNullDate->invoice_sent_at);
     }
 
     #[Test]
@@ -141,19 +135,70 @@ class RegistrationTest extends TestCase
     }
 
     #[Test]
-    public function calculated_fee_is_casted_to_decimal_string(): void
+    public function registration_has_payments_relationship(): void
     {
-        $registration = Registration::factory()->create(['calculated_fee' => 123.45]);
-        $this->assertIsString($registration->calculated_fee);
-        $this->assertEquals('123.45', $registration->calculated_fee);
+        $registration = Registration::factory()->create();
 
-        $registrationInteger = Registration::factory()->create(['calculated_fee' => 100]);
-        $this->assertIsString($registrationInteger->calculated_fee);
-        $this->assertEquals('100.00', $registrationInteger->calculated_fee);
+        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $registration->payments());
+    }
 
-        $registrationZero = Registration::factory()->create(['calculated_fee' => 0]);
-        $this->assertIsString($registrationZero->calculated_fee);
-        $this->assertEquals('0.00', $registrationZero->calculated_fee);
+    #[Test]
+    public function registration_payments_relationship_returns_empty_collection_by_default(): void
+    {
+        $registration = Registration::factory()->create();
+
+        $this->assertCount(0, $registration->payments);
+        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $registration->payments);
+    }
+
+    #[Test]
+    public function registration_can_have_associated_payments(): void
+    {
+        $registration = Registration::factory()->create();
+
+        // Create a payment for this registration
+        $payment = \App\Models\Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 500.00,
+            'status' => 'pending',
+        ]);
+
+        $registration->refresh();
+
+        $this->assertCount(1, $registration->payments);
+        $this->assertEquals($payment->id, $registration->payments->first()->id);
+        $this->assertEquals('500.00', $registration->payments->first()->amount);
+        $this->assertEquals('pending', $registration->payments->first()->status);
+    }
+
+    #[Test]
+    public function registration_can_have_multiple_payments(): void
+    {
+        $registration = Registration::factory()->create();
+
+        // Create multiple payments for this registration
+        $payment1 = \App\Models\Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 300.00,
+            'status' => 'paid',
+        ]);
+
+        $payment2 = \App\Models\Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 200.00,
+            'status' => 'pending',
+        ]);
+
+        $registration->refresh();
+
+        $this->assertCount(2, $registration->payments);
+
+        $paymentIds = $registration->payments->pluck('id')->toArray();
+        $this->assertContains($payment1->id, $paymentIds);
+        $this->assertContains($payment2->id, $paymentIds);
+
+        $totalAmount = $registration->payments->sum('amount');
+        $this->assertEquals(500.00, $totalAmount);
     }
 
     #[Test]
@@ -204,8 +249,8 @@ class RegistrationTest extends TestCase
                     $this->assertInstanceOf(Carbon::class, $registration->{$key}, "Attribute {$key} should be Carbon instance.");
                     $this->assertEquals(Carbon::parse($value)->toDateTimeString(), $registration->{$key}->toDateTimeString());
                 }
-            } elseif ($key === 'calculated_fee') {
-                $this->assertEquals(number_format((float) $value, 2, '.', ''), $registration->{$key});
+            } elseif (in_array($key, ['amount'])) {
+                // Skip amount validation as it's moved to Payment model
             } else {
                 $this->assertEquals($value, $registration->{$key});
             }

@@ -94,8 +94,6 @@ class ProofUploadedNotificationTest extends TestCase
             'full_name' => 'João Silva',
             'cpf' => '12345678901',
             'document_country_origin' => 'BR',
-            'calculated_fee' => '150.00',
-            'payment_uploaded_at' => now(),
         ]);
 
         $mailable = new ProofUploadedNotification($registration);

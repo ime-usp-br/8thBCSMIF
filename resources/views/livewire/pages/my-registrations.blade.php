@@ -60,7 +60,7 @@ new #[Layout('layouts.app')] class extends Component {
                                         </p>
                                         <p class="text-gray-600 dark:text-gray-400 mb-2">
                                             <strong>{{ __('Total Fee') }}:</strong>
-                                            R$ {{ number_format($registration->calculated_fee, 2, ',', '.') }}
+                                            R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
                                         </p>
                                         <p class="text-gray-600 dark:text-gray-400">
                                             <strong>{{ __('Payment Status') }}:</strong>
@@ -430,7 +430,7 @@ new #[Layout('layouts.app')] class extends Component {
                                                         <div class="flex justify-between items-center">
                                                             <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ __('Total Registration Fee') }}</span>
                                                             <span class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                                                R$ {{ number_format($selectedRegistration->calculated_fee, 2, ',', '.') }}
+                                                                R$ {{ number_format($selectedRegistration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
                                                             </span>
                                                         </div>
                                                     </div>

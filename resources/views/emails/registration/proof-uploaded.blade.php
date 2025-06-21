@@ -10,7 +10,7 @@
 **{{ __('Participante') }}:** {{ $registration->full_name }}  
 **{{ __('E-mail') }}:** {{ $registration->user->email }}  
 **{{ __('Documento') }}:** {{ $registration->cpf ?: $registration->passport_number }} ({{ $registration->document_country_origin }})  
-**{{ __('Data de Upload') }}:** {{ $registration->payment_uploaded_at->format('d/m/Y H:i') }}
+**{{ __('Data de Upload') }}:** {{ now()->format('d/m/Y H:i') }}
 
 ## {{ __('Eventos Selecionados') }}
 
@@ -21,7 +21,9 @@
 
 ## {{ __('Informações Financeiras') }}
 
-**{{ __('Valor Total') }}:** R$ {{ number_format((float) $registration->calculated_fee, 2, ',', '.') }}  
+@if($registration->events->isNotEmpty())
+**{{ __('Valor Total') }}:** R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}  
+@endif
 **{{ __('Status do Pagamento') }}:** {{ ucfirst(str_replace('_', ' ', $registration->payment_status)) }}
 
 ## {{ __('Ação Necessária') }}
