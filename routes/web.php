@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\RegistrationController as AdminRegistrationController;
 use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\RegistrationModificationController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -31,6 +32,11 @@ Route::post('/event-registrations', [RegistrationController::class, 'store'])
 Route::post('/event-registrations/{registration}/upload-proof', [RegistrationController::class, 'uploadProof'])
     ->middleware(['auth', 'verified'])
     ->name('event-registrations.upload-proof');
+
+// Route for modifying registration
+Route::post('/my-registration/modify/{registration}', [RegistrationModificationController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('registration.modify');
 
 // Route for my registrations page
 Volt::route('my-registrations', 'pages.my-registrations')
