@@ -4,19 +4,22 @@ description: "Propõe uma mensagem de commit Git seguindo os padrões do projeto
 
 ## Tarefa: Elaboração da Mensagem de Commit
 
-Sua tarefa é analisar as mudanças em stage e o histórico de commits recentes para criar uma mensagem de commit que siga estritamente os padrões do projeto definidos em `CLAUDE.md`.
+**Claude Code deve analisar** as mudanças em stage e o histórico de commits recentes para criar uma mensagem de commit que siga estritamente os padrões do projeto definidos em `CLAUDE.md`.
 
 **1. Verificação de Changes em Stage:**
-!echo "📋 Verificando se há mudanças para commit..." && git diff --cached --stat && echo -e "\n📊 Status do repositório:" && git status --porcelain
+**Claude Code deve executar:**
+!git diff --cached --stat && git status --porcelain
 
 **2. Histórico de Commits Recentes (FORMATO COMPLETO):**
-!echo "📜 Analisando padrão de commits (usando git log -5, NÃO --oneline):" && git log -5 --pretty=format:"%h - %s%n%b%n---"
+**Claude Code deve executar:**
+!git log -5 --pretty=format:"%h - %s%n%b%n---"
 
 **3. Identificação de Issue/AC (se aplicável):**
-!echo "🔍 Verificando referências a issues nas mudanças:" && git diff --cached | grep -E "#[0-9]+" | head -5 || echo "Nenhuma referência a issue encontrada no diff"
+**Claude Code deve executar:**
+!git diff --cached | grep -E "#[0-9]+" | head -5 || echo "Nenhuma referência a issue encontrada no diff"
 
 **4. Ação:**
-Com base nas informações acima e nos padrões do projeto:
+Com base nas informações acima e nos padrões do projeto, **Claude Code deve criar** o comando de commit com:
 - **Tipo**: feat/fix/test/docs/refactor/style
 - **Escopo**: Módulo/área afetada
 - **Descrição**: Resumo principal com referência à issue (#X)
@@ -27,7 +30,7 @@ Com base nas informações acima e nos padrões do projeto:
 
 **Exemplo de Formato da Resposta Esperada:**
 
-Aqui está o comando de commit pronto para ser executado:
+**Claude Code deve executar** o comando de commit pronto:
 
 ```bash
 git commit -m "$(cat <<'EOF'
@@ -39,3 +42,4 @@ feat(auth): Implementa fluxo de login com Senha Única (#42)
 - Atende AC1: O usuário pode clicar no botão "Login com Senha Única".
 EOF
 )"
+```
