@@ -28,6 +28,20 @@ class RegistrationModifiedNotificationTest extends TestCase
 
         $this->assertInstanceOf(RegistrationModifiedNotification::class, $mailable);
         $this->assertEquals($registration->id, $mailable->registration->id);
+        $this->assertFalse($mailable->forCoordinator);
+    }
+
+    #[Test]
+    public function mailable_can_be_instantiated_for_coordinator(): void
+    {
+        $user = User::factory()->create();
+        $registration = Registration::factory()->for($user)->create();
+
+        $mailable = new RegistrationModifiedNotification($registration, forCoordinator: true);
+
+        $this->assertInstanceOf(RegistrationModifiedNotification::class, $mailable);
+        $this->assertEquals($registration->id, $mailable->registration->id);
+        $this->assertTrue($mailable->forCoordinator);
     }
 
     #[Test]
@@ -52,6 +66,20 @@ class RegistrationModifiedNotificationTest extends TestCase
         $content = $mailable->content();
 
         $this->assertEquals('emails.registration.modified', $content->markdown);
+        $this->assertArrayHasKey('registration', $content->with);
+        $this->assertEquals($registration->id, $content->with['registration']->id);
+    }
+
+    #[Test]
+    public function content_uses_coordinator_template_when_for_coordinator(): void
+    {
+        $user = User::factory()->create();
+        $registration = Registration::factory()->for($user)->create();
+
+        $mailable = new RegistrationModifiedNotification($registration, forCoordinator: true);
+        $content = $mailable->content();
+
+        $this->assertEquals('emails.registration.modified-coordinator', $content->markdown);
         $this->assertArrayHasKey('registration', $content->with);
         $this->assertEquals($registration->id, $content->with['registration']->id);
     }

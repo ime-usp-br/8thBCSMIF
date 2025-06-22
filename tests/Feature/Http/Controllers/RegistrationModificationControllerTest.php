@@ -115,12 +115,14 @@ class RegistrationModificationControllerTest extends TestCase
     }
 
     #[Test]
-    public function store_sends_notification_to_coordinator(): void
+    public function store_sends_notification_to_participant_and_coordinator(): void
     {
         Mail::fake();
         config(['mail.coordinator_email' => 'coordinator@example.com']);
 
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'email' => 'participant@example.com',
+        ]);
         $registration = Registration::factory()->for($user)->create([
             'registration_category_snapshot' => 'grad_student',
             'participation_format' => 'in-person',
@@ -136,9 +138,17 @@ class RegistrationModificationControllerTest extends TestCase
 
         $response->assertRedirect(route('registrations.my'));
 
-        // Check that notification was sent
+        // Check that notification was sent to participant (2 emails total)
+        Mail::assertSent(RegistrationModifiedNotification::class, 2);
+
+        // Check participant email
         Mail::assertSent(RegistrationModifiedNotification::class, function ($mail) use ($registration) {
-            return $mail->registration->id === $registration->id;
+            return $mail->registration->id === $registration->id && ! $mail->forCoordinator;
+        });
+
+        // Check coordinator email
+        Mail::assertSent(RegistrationModifiedNotification::class, function ($mail) use ($registration) {
+            return $mail->registration->id === $registration->id && $mail->forCoordinator;
         });
     }
 

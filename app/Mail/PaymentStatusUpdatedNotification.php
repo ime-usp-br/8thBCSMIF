@@ -29,9 +29,17 @@ class PaymentStatusUpdatedNotification extends Mailable
      */
     public function envelope(): Envelope
     {
-        return new Envelope(
+        $envelope = new Envelope(
             subject: __('Payment Status Updated - 8th BCSMIF'),
         );
+
+        // Add coordinator email in BCC for payment status updates
+        $coordinatorEmail = config('mail.coordinator_email');
+        if (is_string($coordinatorEmail)) {
+            $envelope->bcc($coordinatorEmail);
+        }
+
+        return $envelope;
     }
 
     /**
@@ -52,5 +60,15 @@ class PaymentStatusUpdatedNotification extends Mailable
     public function attachments(): array
     {
         return [];
+    }
+
+    /**
+     * Get the coordinator email address.
+     */
+    public static function getCoordinatorEmail(): ?string
+    {
+        $email = config('mail.coordinator_email');
+
+        return is_string($email) ? $email : null;
     }
 }

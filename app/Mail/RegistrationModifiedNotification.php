@@ -14,22 +14,37 @@ class RegistrationModifiedNotification extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
-        public Registration $registration
+        public Registration $registration,
+        public bool $forCoordinator = false
     ) {
         //
     }
 
     public function envelope(): Envelope
     {
-        return new Envelope(
+        $envelope = new Envelope(
             subject: __('Registration Modified - 8th BCSMIF'),
         );
+
+        // Add coordinator email as recipient when sending coordinator notification
+        if ($this->forCoordinator) {
+            $coordinatorEmail = config('mail.coordinator_email');
+            if (is_string($coordinatorEmail)) {
+                $envelope->to($coordinatorEmail);
+            }
+        }
+
+        return $envelope;
     }
 
     public function content(): Content
     {
+        $template = $this->forCoordinator
+            ? 'emails.registration.modified-coordinator'
+            : 'emails.registration.modified';
+
         return new Content(
-            markdown: 'emails.registration.modified',
+            markdown: $template,
             with: [
                 'registration' => $this->registration,
             ],
