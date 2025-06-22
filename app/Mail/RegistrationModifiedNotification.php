@@ -30,6 +30,9 @@ class RegistrationModifiedNotification extends Mailable
     {
         return new Content(
             markdown: 'emails.registration.modified',
+            with: [
+                'registration' => $this->registration,
+            ],
         );
     }
 
