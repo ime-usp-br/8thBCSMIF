@@ -14,4 +14,12 @@ class RegistrationPolicy
     {
         return $user->id === $registration->user_id;
     }
+
+    /**
+     * Determine whether the user can update/modify the registration.
+     */
+    public function update(User $user, Registration $registration): bool
+    {
+        return $user->id === $registration->user_id;
+    }
 }
