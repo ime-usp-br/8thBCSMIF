@@ -469,4 +469,71 @@ class MyRegistrationsPageTest extends TestCase
         $response->assertSee('Test Event');
         $response->assertSee('R$ 100,00');
     }
+
+    /**
+     * Test that each payment item shows its amount and status (AC4).
+     * This test specifically addresses AC4 requirements for Issue #49.
+     */
+    public function test_payment_items_display_amount_and_status(): void
+    {
+        // Create verified user
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create event
+        $event = Event::factory()->create(['name' => 'Test Event']);
+
+        // Create registration
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        // Attach event to registration
+        $registration->events()->attach($event->code, ['price_at_registration' => 200.00]);
+
+        // Create payments with different amounts and statuses
+        $payment1 = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 150.75,
+            'status' => 'pending',
+        ]);
+
+        $payment2 = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 49.25,
+            'status' => 'approved',
+        ]);
+
+        $payment3 = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 100.00,
+            'status' => 'rejected',
+        ]);
+
+        // Test that the page displays all payments with their amounts and statuses
+        $response = $this->actingAs($user)->get('/my-registration');
+        $response->assertOk();
+
+        // AC4 Requirement: Each payment shows its amount
+        $response->assertSee(__('Amount').': R$ 150,75');
+        $response->assertSee(__('Amount').': R$ 49,25');
+        $response->assertSee(__('Amount').': R$ 100,00');
+
+        // AC4 Requirement: Each payment shows its status
+        $response->assertSee(__('Pending'));
+        $response->assertSee(__('Approved'));
+        $response->assertSee(__('Rejected'));
+
+        // Verify payment identifiers are shown
+        $response->assertSee(__('Payment').' #'.$payment1->id);
+        $response->assertSee(__('Payment').' #'.$payment2->id);
+        $response->assertSee(__('Payment').' #'.$payment3->id);
+
+        // Verify status styling classes are present
+        $content = $response->getContent();
+        $this->assertStringContainsString('bg-yellow-100 text-yellow-800', $content); // pending
+        $this->assertStringContainsString('bg-green-100 text-green-800', $content);  // approved
+        $this->assertStringContainsString('bg-red-100 text-red-800', $content);     // rejected
+    }
 }
