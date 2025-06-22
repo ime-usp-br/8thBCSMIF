@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\Event;
 use App\Models\Registration;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -9,7 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class PaymentStatusUpdatedNotification extends Mailable
+class EarlyBirdReminderNotification extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -18,8 +19,7 @@ class PaymentStatusUpdatedNotification extends Mailable
      */
     public function __construct(
         public Registration $registration,
-        public string $oldStatus,
-        public string $newStatus
+        public Event $event
     ) {
         //
     }
@@ -30,10 +30,10 @@ class PaymentStatusUpdatedNotification extends Mailable
     public function envelope(): Envelope
     {
         $envelope = new Envelope(
-            subject: __('Payment Status Updated - 8th BCSMIF'),
+            subject: __('Early Bird Deadline Reminder - 8th BCSMIF'),
         );
 
-        // Add coordinator email in BCC for payment status updates
+        // Add coordinator email as BCC
         $coordinatorEmail = config('mail.coordinator_email');
         if (is_string($coordinatorEmail)) {
             $envelope->bcc($coordinatorEmail);
@@ -48,7 +48,7 @@ class PaymentStatusUpdatedNotification extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.registration.payment-status-updated',
+            markdown: 'mail.early-bird-reminder',
         );
     }
 
@@ -60,15 +60,5 @@ class PaymentStatusUpdatedNotification extends Mailable
     public function attachments(): array
     {
         return [];
-    }
-
-    /**
-     * Get the coordinator email address.
-     */
-    public static function getCoordinatorEmail(): ?string
-    {
-        $email = config('mail.coordinator_email');
-
-        return is_string($email) ? $email : null;
     }
 }

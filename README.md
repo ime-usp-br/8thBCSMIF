@@ -180,7 +180,91 @@ Este projeto utiliza as ferramentas de qualidade e desenvolvimento herdadas do L
 *   **Laravel Dusk (Browser):** Requer setup específico (servidor app e ChromeDriver rodando). Veja o [Guia de Desenvolvimento](./docs/guia_de_desenvolvimento.md#9-testes-automatizados) para instruções detalhadas de execução local.
     Comando principal: `php artisan dusk`
 
-## 10. Documentação
+## 10. Deploy e Produção
+
+### 10.1. Configuração do Laravel Scheduler
+
+**IMPORTANTE:** Este projeto utiliza o Laravel Scheduler para executar tarefas automatizadas (como envio de lembretes de early bird). Para que funcione em produção, é **obrigatório** configurar o crontab do sistema.
+
+#### 10.1.1. Tarefas Agendadas
+
+O sistema possui as seguintes tarefas agendadas em `routes/console.php`:
+
+*   **Early Bird Reminders:** `app:send-early-bird-reminders` - Executa diariamente à meia-noite para enviar lembretes de prazo early bird.
+
+#### 10.1.2. Configuração do Crontab (OBRIGATÓRIA)
+
+O Laravel Scheduler é apenas uma **abstração** - você precisa do crontab do sistema para executar o scheduler.
+
+**1. Adicionar entrada no crontab do servidor:**
+
+```bash
+# Editar crontab (como usuário que roda a aplicação)
+crontab -e
+
+# Adicionar esta linha (substituir /path-to-your-project pelo caminho real):
+* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+**2. Verificar configuração:**
+
+```bash
+# Listar crontab atual
+crontab -l
+
+# Verificar tarefas agendadas no Laravel
+php artisan schedule:list
+```
+
+**3. Exemplo para servidor de produção:**
+
+```bash
+# Para o projeto 8thBCSMIF no servidor de produção
+* * * * * cd /var/www/8thBCSMIF && php artisan schedule:run >> /dev/null 2>&1
+```
+
+#### 10.1.3. Como Funciona
+
+1. **Crontab** executa `php artisan schedule:run` **a cada minuto**
+2. **Laravel** verifica quais comandos agendados devem rodar no momento atual
+3. Se for a hora certa (ex: 0:00 para `daily()`), executa o comando correspondente
+
+#### 10.1.4. Desenvolvimento Local
+
+Para testes locais, use:
+
+```bash
+# Simula o scheduler em foreground (não requer crontab)
+php artisan schedule:work
+
+# Ou execute comandos manualmente para testes
+php artisan app:send-early-bird-reminders
+```
+
+#### 10.1.5. Monitoramento
+
+```bash
+# Verificar logs do sistema para problemas de crontab
+tail -f /var/log/syslog | grep CRON
+
+# Verificar logs da aplicação Laravel
+tail -f storage/logs/laravel.log
+
+# Testar execução manual do scheduler
+php artisan schedule:run --verbose
+```
+
+**⚠️ ATENÇÃO:** Sem a configuração do crontab, as tarefas agendadas (como lembretes de early bird) **NUNCA** serão executadas automaticamente, mesmo estando configuradas no código.
+
+### 10.2. Outras Configurações de Deploy
+
+*   Siga as melhores práticas do Laravel para deploy em produção
+*   Configure adequadamente as variáveis de ambiente (`.env`)
+*   Execute `composer install --optimize-autoloader --no-dev`
+*   Execute `npm run build` para assets de produção
+*   Configure cache: `php artisan config:cache`, `php artisan route:cache`, `php artisan view:cache`
+
+## 11. Documentação
 
 *   **Este README.md:** Visão geral do projeto do site de inscrições.
 *   **Diretório `docs/`:**
@@ -189,10 +273,10 @@ Este projeto utiliza as ferramentas de qualidade e desenvolvimento herdadas do L
     *   `plano_inscricao_8thBCSMIF.md`: Plano de implementação detalhado do site.
     *   Documentos herdados do Starter Kit (`guia_de_desenvolvimento.md`, `padroes_codigo_boas_praticas.md`, etc.) que guiam o desenvolvimento deste projeto.
 
-## 11. Como Contribuir
+## 12. Como Contribuir
 
 Siga o fluxo descrito no **[Guia de Estratégia de Desenvolvimento](./docs/guia_de_desenvolvimento.md)** (herdado e adaptado do Starter Kit) para contribuições.
 
-## 12. Licença
+## 13. Licença
 
 Este projeto é licenciado sob a **Licença MIT**. Veja o arquivo [LICENSE](./LICENSE) para mais detalhes.
