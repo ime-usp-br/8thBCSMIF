@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -54,7 +55,17 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get the registrations for the user.
+     * Get the registration for the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\Registration, $this>
+     */
+    public function registration(): HasOne
+    {
+        return $this->hasOne(Registration::class);
+    }
+
+    /**
+     * Get the registrations for the user (backward compatibility).
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Registration, $this>
      */

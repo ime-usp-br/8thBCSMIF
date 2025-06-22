@@ -25,15 +25,16 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function with(): array
     {
-        $registrations = Auth::user()->registrations()->with('events')->latest()->get();
+        // Load the single registration with payments and events eager-loaded
+        $registration = Auth::user()->registration()->with(['payments', 'events'])->first();
         
         $selectedRegistration = null;
-        if ($this->selectedRegistrationId) {
-            $selectedRegistration = $registrations->firstWhere('id', $this->selectedRegistrationId);
+        if ($this->selectedRegistrationId && $registration && $this->selectedRegistrationId === $registration->id) {
+            $selectedRegistration = $registration;
         }
         
         return [
-            'registrations' => $registrations,
+            'registration' => $registration,
             'selectedRegistration' => $selectedRegistration,
         ];
     }
@@ -45,7 +46,7 @@ new #[Layout('layouts.app')] class extends Component {
             <div class="p-6 text-gray-900 dark:text-gray-100">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
                     <h2 class="text-2xl font-bold mb-4 sm:mb-0">{{ __('My Registration') }}</h2>
-                    @if($registrations->count() > 0)
+                    @if($registration)
                         <a href="#" 
                            class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                            wire:navigate>
@@ -57,42 +58,133 @@ new #[Layout('layouts.app')] class extends Component {
                     @endif
                 </div>
                 
-                @if($registrations->count() > 0)
-                    <div class="space-y-4">
-                        @foreach($registrations as $registration)
-                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <div class="flex justify-between items-start">
-                                    <div class="flex-1">
-                                        <h3 class="text-lg font-semibold mb-2">
-                                            {{ __('Registration') }} #{{ $registration->id }}
-                                        </h3>
-                                        <p class="text-gray-600 dark:text-gray-400 mb-2">
-                                            <strong>{{ __('Events') }}:</strong>
-                                            {{ $registration->events->pluck('name')->join(', ') }}
-                                        </p>
-                                        <p class="text-gray-600 dark:text-gray-400 mb-2">
-                                            <strong>{{ __('Total Fee') }}:</strong>
-                                            R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
-                                        </p>
-                                        <p class="text-gray-600 dark:text-gray-400">
-                                            <strong>{{ __('Payment Status') }}:</strong>
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                @if($registration->payment_status === 'pending_payment')
-                                                    bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
-                                                @elseif($registration->payment_status === 'pending_br_proof_approval')
-                                                    bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
-                                                @elseif($registration->payment_status === 'approved')
-                                                    bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-                                                @else
-                                                    bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300
-                                                @endif
-                                            ">
-                                                {{ __(ucfirst(str_replace(['_', '-'], ' ', $registration->payment_status))) }}
-                                            </span>
-                                        </p>
+                @if($registration)
+                    <div class="space-y-6">
+                        {{-- Registration Overview --}}
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold mb-2">
+                                        {{ __('Registration') }} #{{ $registration->id }}
+                                    </h3>
+                                    <p class="text-gray-600 dark:text-gray-400 mb-2">
+                                        <strong>{{ __('Events') }}:</strong>
+                                        {{ $registration->events->pluck('name')->join(', ') }}
+                                    </p>
+                                    <p class="text-gray-600 dark:text-gray-400 mb-2">
+                                        <strong>{{ __('Total Fee') }}:</strong>
+                                        R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
+                                    </p>
+                                    <p class="text-gray-600 dark:text-gray-400">
+                                        <strong>{{ __('Payment Status') }}:</strong>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                            @if($registration->payment_status === 'pending_payment')
+                                                bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
+                                            @elseif($registration->payment_status === 'pending_br_proof_approval')
+                                                bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                                            @elseif($registration->payment_status === 'approved')
+                                                bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                                            @else
+                                                bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300
+                                            @endif
+                                        ">
+                                            {{ __(ucfirst(str_replace(['_', '-'], ' ', $registration->payment_status))) }}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="ml-4">
+                                    <button 
+                                        wire:click="viewRegistration({{ $registration->id }})"
+                                        class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150"
+                                    >
+                                        @if($selectedRegistrationId === $registration->id)
+                                            {{ __('Hide Details') }}
+                                        @else
+                                            {{ __('View Details') }}
+                                        @endif
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
-                                        {{-- Payment Proof Upload Form - Always visible for Brazilian users with pending payment --}}
-                                        @if($registration->payment_status === 'pending_payment' && in_array($registration->document_country_origin, ['Brasil', 'BR']))
+                        {{-- Payments Timeline --}}
+                        @if($registration->payments->count() > 0)
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                            <h4 class="text-lg font-semibold mb-4 border-l-4 border-blue-500 pl-3">{{ __('Payment History') }}</h4>
+                            <div class="space-y-4">
+                                @foreach($registration->payments->sortByDesc('created_at') as $payment)
+                                <div class="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center
+                                            @if($payment->status === 'pending')
+                                                bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-400
+                                            @elseif($payment->status === 'approved')
+                                                bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400
+                                            @elseif($payment->status === 'rejected')
+                                                bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400
+                                            @else
+                                                bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-400
+                                            @endif
+                                        ">
+                                            @if($payment->status === 'pending')
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                                                </svg>
+                                            @elseif($payment->status === 'approved')
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                </svg>
+                                            @elseif($payment->status === 'rejected')
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                </svg>
+                                            @else
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                                </svg>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    {{ __('Payment') }} #{{ $payment->id }}
+                                                </p>
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                                    {{ __('Amount') }}: R$ {{ number_format($payment->amount, 2, ',', '.') }}
+                                                </p>
+                                            </div>
+                                            <div class="text-right">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                    @if($payment->status === 'pending')
+                                                        bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
+                                                    @elseif($payment->status === 'approved')
+                                                        bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                                                    @elseif($payment->status === 'rejected')
+                                                        bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
+                                                    @else
+                                                        bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300
+                                                    @endif
+                                                ">
+                                                    {{ __(ucfirst($payment->status)) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            {{ $payment->created_at->format('d/m/Y H:i') }}
+                                            @if($payment->payment_date)
+                                                • {{ __('Paid on') }}: {{ $payment->payment_date->format('d/m/Y') }}
+                                            @endif
+                                        </p>
+                                        @if($payment->notes)
+                                        <p class="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                                            {{ $payment->notes }}
+                                        </p>
+                                        @endif
+                                        
+                                        {{-- Payment Proof Upload Form - Conditionally displayed for pending payments --}}
+                                        @if($payment->status === 'pending' && in_array($registration->document_country_origin, ['Brasil', 'BR']))
                                             <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
                                                 <h5 class="font-medium text-yellow-800 dark:text-yellow-300 mb-3">
                                                     {{ __('Payment Proof Upload') }}
@@ -118,14 +210,15 @@ new #[Layout('layouts.app')] class extends Component {
                                                 
                                                 <form action="{{ route('event-registrations.upload-proof', $registration) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
                                                     @csrf
+                                                    <input type="hidden" name="payment_id" value="{{ $payment->id }}">
                                                     
                                                     <div>
-                                                        <label for="payment_proof_{{ $registration->id }}" class="block text-sm font-medium text-yellow-800 dark:text-yellow-300 mb-2">
+                                                        <label for="payment_proof_{{ $payment->id }}" class="block text-sm font-medium text-yellow-800 dark:text-yellow-300 mb-2">
                                                             {{ __('Payment Proof Document') }}
                                                         </label>
                                                         <input 
                                                             type="file" 
-                                                            id="payment_proof_{{ $registration->id }}" 
+                                                            id="payment_proof_{{ $payment->id }}" 
                                                             name="payment_proof" 
                                                             accept=".jpg,.jpeg,.png,.pdf"
                                                             class="block w-full text-sm text-gray-500 dark:text-gray-400
@@ -146,7 +239,7 @@ new #[Layout('layouts.app')] class extends Component {
                                                     <div class="flex justify-end">
                                                         <button 
                                                             type="submit" 
-                                                            dusk="upload-payment-proof-button"
+                                                            dusk="upload-payment-proof-button-{{ $payment->id }}"
                                                             class="inline-flex items-center px-3 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-700 focus:bg-yellow-700 active:bg-yellow-900 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition ease-in-out duration-150"
                                                         >
                                                             {{ __('Upload Payment Proof') }}
@@ -156,21 +249,13 @@ new #[Layout('layouts.app')] class extends Component {
                                             </div>
                                         @endif
                                     </div>
-                                    <div class="ml-4">
-                                        <button 
-                                            wire:click="viewRegistration({{ $registration->id }})"
-                                            class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150"
-                                        >
-                                            @if($selectedRegistrationId === $registration->id)
-                                                {{ __('Hide Details') }}
-                                            @else
-                                                {{ __('View Details') }}
-                                            @endif
-                                        </button>
-                                    </div>
                                 </div>
-                                
-                                @if($selectedRegistrationId === $registration->id && $selectedRegistration)
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+
+                        @if($selectedRegistrationId === $registration->id && $selectedRegistration)
                                     <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                                         <h4 class="text-lg font-medium mb-6">{{ __('Registration Details') }}</h4>
                                         
@@ -473,9 +558,7 @@ new #[Layout('layouts.app')] class extends Component {
                                             </div>
                                         </div>
                                     </div>
-                                @endif
-                            </div>
-                        @endforeach
+                        @endif
                     </div>
                 @else
                     <div class="text-center py-8">

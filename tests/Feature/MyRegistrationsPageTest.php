@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Event;
+use App\Models\Payment;
 use App\Models\Registration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -185,64 +186,69 @@ class MyRegistrationsPageTest extends TestCase
         $event2 = Event::factory()->create(['name' => '8th BCSMIF Conference']);
         $event3 = Event::factory()->create(['name' => 'Dependence Analysis Workshop']);
 
-        // Create registration with multiple events and different payment statuses
-        $registration1 = Registration::factory()->create([
+        // Create single registration with multiple events and multiple payments
+        $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
         ]);
-        $registration1->events()->attach($event1->code, ['price_at_registration' => 100.25]);
-        $registration1->events()->attach($event2->code, ['price_at_registration' => 200.50]);
-        $registration1->events()->attach($event3->code, ['price_at_registration' => 50.00]);
+        $registration->events()->attach($event1->code, ['price_at_registration' => 100.25]);
+        $registration->events()->attach($event2->code, ['price_at_registration' => 200.50]);
+        $registration->events()->attach($event3->code, ['price_at_registration' => 50.00]);
 
-        $registration2 = Registration::factory()->create([
-            'user_id' => $user->id,
-            'payment_status' => 'approved',
+        // Create multiple payments with different statuses for the single registration
+        $payment1 = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 100.25,
+            'status' => 'pending',
         ]);
-        $registration2->events()->attach($event1->code, ['price_at_registration' => 0.00]);
 
-        $registration3 = Registration::factory()->create([
-            'user_id' => $user->id,
-            'payment_status' => 'pending_br_proof_approval',
+        $payment2 = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 200.50,
+            'status' => 'approved',
         ]);
-        $registration3->events()->attach($event2->code, ['price_at_registration' => 150.00]);
 
-        // Test the page displays all key information for each registration
+        $payment3 = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 50.00,
+            'status' => 'pending',
+        ]);
+
+        // Test the page displays all key information for the registration
         $response = $this->actingAs($user)->get('/my-registration');
         $response->assertOk();
 
-        // AC3 Requirement 1: Registration ID for each registration
-        $response->assertSee(__('Registration').' #'.$registration1->id);
-        $response->assertSee(__('Registration').' #'.$registration2->id);
-        $response->assertSee(__('Registration').' #'.$registration3->id);
+        // AC3 Requirement 1: Registration ID displayed
+        $response->assertSee(__('Registration').' #'.$registration->id);
 
-        // AC3 Requirement 2: List of event names for each registration
-        // Registration 1 should show all three events (check each one individually)
+        // AC3 Requirement 2: List of event names for the registration
         $response->assertSee('Workshop on Risk Analysis');
         $response->assertSee('8th BCSMIF Conference');
         $response->assertSee('Dependence Analysis Workshop');
 
-        // AC3 Requirement 3: Total fee formatted correctly
-        $response->assertSee('R$ 350,75'); // Registration 1
-        $response->assertSee('R$ 0,00');   // Registration 2 (free)
-        $response->assertSee('R$ 150,00'); // Registration 3
+        // AC3 Requirement 3: Total fee formatted correctly (sum of all events)
+        $response->assertSee('R$ 350,75'); // Total: 100.25 + 200.50 + 50.00
 
-        // AC3 Requirement 4: Payment status formatted with proper styling
-        // Check for localized status text
-        $response->assertSee(__('Pending payment'));           // pending_payment
-        $response->assertSee(__('Approved'));                  // approved
-        $response->assertSee(__('Pending br proof approval')); // pending_br_proof_approval
+        // AC3 Requirement 4: Payment History section is displayed
+        $response->assertSee(__('Payment History'));
+
+        // AC3 Requirement 5: Individual payments with amounts and status
+        $response->assertSee('R$ 100,25'); // Payment 1
+        $response->assertSee('R$ 200,50'); // Payment 2
+        $response->assertSee('R$ 50,00');  // Payment 3
+
+        // AC3 Requirement 6: Payment statuses formatted with proper styling
+        $response->assertSee(__('Pending')); // pending status
+        $response->assertSee(__('Approved')); // approved status
 
         // Verify status badges have correct CSS classes
         $content = $response->getContent();
 
-        // Check for pending_payment styling (yellow)
+        // Check for pending styling (yellow)
         $this->assertStringContainsString('bg-yellow-100 text-yellow-800', $content);
 
         // Check for approved styling (green)
         $this->assertStringContainsString('bg-green-100 text-green-800', $content);
-
-        // Check for pending_br_proof_approval styling (blue)
-        $this->assertStringContainsString('bg-blue-100 text-blue-800', $content);
     }
 
     /**
