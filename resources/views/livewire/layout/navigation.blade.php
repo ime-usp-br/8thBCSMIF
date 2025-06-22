@@ -95,7 +95,7 @@ new class extends Component
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('registrations.my')" :active="request()->routeIs('registrations.my')" wire:navigate>
-                {{ __('My Registrations') }}
+                {{ __('My Registration') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('workshops')" :active="request()->routeIs('workshops')" wire:navigate>
                 {{ __('Workshops') }}

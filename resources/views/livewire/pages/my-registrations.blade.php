@@ -43,7 +43,19 @@ new #[Layout('layouts.app')] class extends Component {
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6 text-gray-900 dark:text-gray-100">
-                <h2 class="text-2xl font-bold mb-6">{{ __('My Registration') }}</h2>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                    <h2 class="text-2xl font-bold mb-4 sm:mb-0">{{ __('My Registration') }}</h2>
+                    @if($registrations->count() > 0)
+                        <a href="#" 
+                           class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                           wire:navigate>
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            {{ __('Add Events') }}
+                        </a>
+                    @endif
+                </div>
                 
                 @if($registrations->count() > 0)
                     <div class="space-y-4">
