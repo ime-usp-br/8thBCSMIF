@@ -27,7 +27,7 @@
                     </x-nav-link>
                     @auth
                         <x-nav-link :href="route('registrations.my')" :active="request()->routeIs('registrations.my')">
-                            {{ __('My Registrations') }}
+                            {{ __('My Registration') }}
                         </x-nav-link>
                     @endauth
                 </div>
@@ -146,7 +146,7 @@
                         {{ __('Dashboard') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('registrations.my')" :active="request()->routeIs('registrations.my')">
-                        {{ __('My Registrations') }}
+                        {{ __('My Registration') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('profile')">
                         {{ __('Profile') }}

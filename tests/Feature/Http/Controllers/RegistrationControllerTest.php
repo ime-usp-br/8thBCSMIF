@@ -1405,7 +1405,7 @@ class RegistrationControllerTest extends TestCase
         });
 
         // AC8: Verify that the success message can be displayed on the UI
-        // (This simulates what would happen when user navigates back to my-registrations page)
+        // (This simulates what would happen when user navigates back to my-registration page)
         $myRegistrationsResponse = $this->get(route('registrations.my'));
         $myRegistrationsResponse->assertOk();
 

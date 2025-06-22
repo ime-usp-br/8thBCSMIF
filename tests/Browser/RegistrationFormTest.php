@@ -373,7 +373,7 @@ class RegistrationFormTest extends DuskTestCase
     /**
      * AC4: Teste Dusk simula o preenchimento e submissão bem-sucedida do formulário
      * com dados válidos para um participante brasileiro e verifica o redirecionamento
-     * para a página de registros (/my-registrations) com mensagem de sucesso.
+     * para a página de registros (/my-registration) com mensagem de sucesso.
      */
     #[Test]
     #[Group('dusk')]
@@ -441,13 +441,13 @@ class RegistrationFormTest extends DuskTestCase
             // AC4: Submit the form and wait for processing
             $browser->click('@submit-registration-button')
                 ->pause(3000) // Give time for Livewire validation and form submission
-                ->waitForLocation('/my-registrations', 30);
+                ->waitForLocation('/my-registration', 30);
 
             // AC4: Verify successful redirection to my registrations
-            $browser->assertPathIs('/my-registrations');
+            $browser->assertPathIs('/my-registration');
 
             // AC4: Successful redirection confirms form submission worked
-            // (Success message verification would require my-registrations page message display implementation)
+            // (Success message verification would require my-registration page message display implementation)
         });
     }
 
@@ -455,7 +455,7 @@ class RegistrationFormTest extends DuskTestCase
      * AC5: Teste Dusk simula o preenchimento e submissão bem-sucedida do formulário
      * com dados válidos para um participante internacional (incluindo seleção de
      * suporte a visto, se aplicável) e verifica o redirecionamento para a página
-     * de registros (/my-registrations) com mensagem de sucesso.
+     * de registros (/my-registration) com mensagem de sucesso.
      */
     #[Test]
     #[Group('dusk')]
@@ -530,13 +530,13 @@ class RegistrationFormTest extends DuskTestCase
             // AC5: Submit the form and wait for processing
             $browser->click('@submit-registration-button')
                 ->pause(3000) // Give time for Livewire validation and form submission
-                ->waitForLocation('/my-registrations', 30);
+                ->waitForLocation('/my-registration', 30);
 
             // AC5: Verify successful redirection to my registrations
-            $browser->assertPathIs('/my-registrations');
+            $browser->assertPathIs('/my-registration');
 
             // AC5: Successful redirection confirms form submission worked for international participant
-            // (Success message verification would require my-registrations page message display implementation)
+            // (Success message verification would require my-registration page message display implementation)
         });
     }
 
@@ -627,10 +627,10 @@ class RegistrationFormTest extends DuskTestCase
             // AC5: Submit the form and wait for processing
             $browser->click('@submit-registration-button')
                 ->pause(3000) // Give time for Livewire validation and form submission
-                ->waitForLocation('/my-registrations', 30);
+                ->waitForLocation('/my-registration', 30);
 
             // AC5: Verify successful redirection to my registrations
-            $browser->assertPathIs('/my-registrations');
+            $browser->assertPathIs('/my-registration');
 
             // AC5: Successful redirection confirms form submission worked for international participant
         });
@@ -1125,10 +1125,10 @@ class RegistrationFormTest extends DuskTestCase
             // AC7: Submit form again with corrected data
             $browser->click('@submit-registration-button')
                 ->pause(3000) // Give time for Livewire validation and form submission
-                ->waitForLocation('/my-registrations', 30);
+                ->waitForLocation('/my-registration', 30);
 
             // AC7: Verify successful redirection to my registrations indicates form accepted valid data
-            $browser->assertPathIs('/my-registrations');
+            $browser->assertPathIs('/my-registration');
         });
     }
 

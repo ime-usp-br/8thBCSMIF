@@ -16,7 +16,7 @@ Route::view('profile', 'profile')
     ->name('profile');
 
 // Redirect dashboard to registrations.my for compatibility
-Route::redirect('/dashboard', '/my-registrations')->name('dashboard');
+Route::redirect('/dashboard', '/my-registration')->name('dashboard');
 
 // Route for the event registration form
 Volt::route('register-event', 'registration-form')
@@ -38,8 +38,8 @@ Route::post('/my-registration/modify/{registration}', [RegistrationModificationC
     ->middleware(['auth', 'verified'])
     ->name('registration.modify');
 
-// Route for my registrations page
-Volt::route('my-registrations', 'pages.my-registrations')
+// Route for my registration page
+Volt::route('my-registration', 'pages.my-registrations')
     ->middleware(['auth', 'verified'])
     ->name('registrations.my');
 

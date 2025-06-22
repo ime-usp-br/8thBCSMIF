@@ -66,7 +66,7 @@ class AuthenticatedNavigationAC4Test extends TestCase
         $user = User::factory()->create();
 
         // Act as the authenticated user
-        $response = $this->actingAs($user)->get('/my-registrations');
+        $response = $this->actingAs($user)->get('/my-registration');
 
         // Verify the page loads successfully
         $response->assertOk();
@@ -177,7 +177,7 @@ class AuthenticatedNavigationAC4Test extends TestCase
 
         // Test access to all required routes
         $routes = [
-            '/my-registrations' => 'registrations.my',
+            '/my-registration' => 'registrations.my',
             '/workshops' => 'workshops',
             '/fees' => 'fees',
         ];

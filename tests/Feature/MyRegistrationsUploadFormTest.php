@@ -22,7 +22,7 @@ class MyRegistrationsUploadFormTest extends TestCase
         ]);
 
         // Test the page loads
-        $response = $this->actingAs($user)->get('/my-registrations');
+        $response = $this->actingAs($user)->get('/my-registration');
         $response->assertOk();
 
         // AC6: Verify template file contains the upload form implementation

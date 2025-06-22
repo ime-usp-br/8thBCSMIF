@@ -19,7 +19,7 @@ class MyRegistrationsPageTest extends TestCase
     public function test_my_registrations_route_requires_authentication(): void
     {
         // Test that unauthenticated users are redirected to login
-        $response = $this->get('/my-registrations');
+        $response = $this->get('/my-registration');
         $response->assertRedirect(route('login.local'));
     }
 
@@ -33,7 +33,7 @@ class MyRegistrationsPageTest extends TestCase
         $user = User::factory()->unverified()->create();
 
         // Test that unverified users are redirected to verification notice
-        $response = $this->actingAs($user)->get('/my-registrations');
+        $response = $this->actingAs($user)->get('/my-registration');
         $response->assertRedirect(route('verification.notice'));
     }
 
@@ -49,7 +49,7 @@ class MyRegistrationsPageTest extends TestCase
         ]);
 
         // Test that verified users can access the page
-        $response = $this->actingAs($user)->get('/my-registrations');
+        $response = $this->actingAs($user)->get('/my-registration');
         $response->assertOk();
         $response->assertSeeVolt('pages.my-registrations');
     }
@@ -61,7 +61,7 @@ class MyRegistrationsPageTest extends TestCase
     public function test_my_registrations_route_has_correct_name(): void
     {
         // Verify route name exists and points to correct URL
-        $this->assertEquals(url('/my-registrations'), route('registrations.my'));
+        $this->assertEquals(url('/my-registration'), route('registrations.my'));
     }
 
     /**
@@ -76,7 +76,7 @@ class MyRegistrationsPageTest extends TestCase
         ]);
 
         // Test page content
-        $response = $this->actingAs($user)->get('/my-registrations');
+        $response = $this->actingAs($user)->get('/my-registration');
         $response->assertOk();
         $response->assertSee(__('My Registrations'));
     }
@@ -93,7 +93,7 @@ class MyRegistrationsPageTest extends TestCase
         ]);
 
         // Test empty state content
-        $response = $this->actingAs($user)->get('/my-registrations');
+        $response = $this->actingAs($user)->get('/my-registration');
         $response->assertOk();
         $response->assertSee(__('No registrations found'));
         $response->assertSee(__('You have not registered for any events yet.'));
@@ -127,7 +127,7 @@ class MyRegistrationsPageTest extends TestCase
         $registration->events()->attach($event2->code, ['price_at_registration' => 75.00]);
 
         // Test that registration is displayed
-        $response = $this->actingAs($user)->get('/my-registrations');
+        $response = $this->actingAs($user)->get('/my-registration');
         $response->assertOk();
         $response->assertSee(__('Registration').' #'.$registration->id);
         $response->assertSee('Conference Workshop');
@@ -161,7 +161,7 @@ class MyRegistrationsPageTest extends TestCase
         $registration2->events()->attach($event->code, ['price_at_registration' => 200.00]);
 
         // Test that user1 only sees their own registration
-        $response = $this->actingAs($user1)->get('/my-registrations');
+        $response = $this->actingAs($user1)->get('/my-registration');
         $response->assertOk();
         $response->assertSee(__('Registration').' #'.$registration1->id);
         $response->assertSee('R$ 100,00');
@@ -207,7 +207,7 @@ class MyRegistrationsPageTest extends TestCase
         $registration3->events()->attach($event2->code, ['price_at_registration' => 150.00]);
 
         // Test the page displays all key information for each registration
-        $response = $this->actingAs($user)->get('/my-registrations');
+        $response = $this->actingAs($user)->get('/my-registration');
         $response->assertOk();
 
         // AC3 Requirement 1: Registration ID for each registration
@@ -281,7 +281,7 @@ class MyRegistrationsPageTest extends TestCase
         $registration->events()->attach($event2->code, ['price_at_registration' => 125.25]);
 
         // Test that View Details button is visible
-        $response = $this->actingAs($user)->get('/my-registrations');
+        $response = $this->actingAs($user)->get('/my-registration');
         $response->assertOk();
         $response->assertSee(__('View Details'));
 
@@ -293,7 +293,7 @@ class MyRegistrationsPageTest extends TestCase
                     'id' => 'my-registrations',
                     'name' => 'pages.my-registrations',
                     'locale' => 'en',
-                    'path' => '/my-registrations',
+                    'path' => '/my-registration',
                     'method' => 'GET',
                 ],
                 'serverMemo' => [
@@ -319,7 +319,7 @@ class MyRegistrationsPageTest extends TestCase
         // For Livewire component testing, we'll use a different approach
         // Test the component state by calling the page again with the selected registration
         $this->actingAs($user)
-            ->get('/my-registrations')
+            ->get('/my-registration')
             ->assertOk();
     }
 
@@ -377,7 +377,7 @@ class MyRegistrationsPageTest extends TestCase
         $this->assertEquals(100.50, $conferenceEvent->pivot->price_at_registration);
 
         // Test that the page loads correctly with the registration data
-        $response = $this->actingAs($user)->get('/my-registrations');
+        $response = $this->actingAs($user)->get('/my-registration');
         $response->assertOk();
 
         // Test that basic registration information is displayed (these are always visible)
@@ -454,7 +454,7 @@ class MyRegistrationsPageTest extends TestCase
         $registration->events()->attach($event->code, ['price_at_registration' => 100.00]);
 
         // Test that View Details button is displayed
-        $response = $this->actingAs($user)->get('/my-registrations');
+        $response = $this->actingAs($user)->get('/my-registration');
         $response->assertOk();
         $response->assertSee(__('View Details'));
 
