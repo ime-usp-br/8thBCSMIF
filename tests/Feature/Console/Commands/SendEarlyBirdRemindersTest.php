@@ -38,7 +38,7 @@ class SendEarlyBirdRemindersTest extends TestCase
     {
         // Create event with early bird deadline far in the future
         $event = Event::factory()->create([
-            'registration_deadline_early' => Carbon::today()->addDays(10),
+            'registration_deadline_early' => Carbon::today()->addDays(5),
         ]);
 
         $this->artisan('app:send-early-bird-reminders')
@@ -51,9 +51,9 @@ class SendEarlyBirdRemindersTest extends TestCase
     {
         Mail::fake();
 
-        // Create event with early bird deadline in 3 days (within 7-day window)
+        // Create event with early bird deadline in 1 day (within 1-day window)
         $event = Event::factory()->create([
-            'registration_deadline_early' => Carbon::today()->addDays(3),
+            'registration_deadline_early' => Carbon::today()->addDays(1),
         ]);
 
         // Create registration with pending payment created before deadline
@@ -95,9 +95,9 @@ class SendEarlyBirdRemindersTest extends TestCase
     {
         Mail::fake();
 
-        // Create event with early bird deadline in 3 days
+        // Create event with early bird deadline in 1 day
         $event = Event::factory()->create([
-            'registration_deadline_early' => Carbon::today()->addDays(3),
+            'registration_deadline_early' => Carbon::today()->addDays(1),
         ]);
 
         // Create registration created AFTER the early bird deadline
@@ -133,7 +133,7 @@ class SendEarlyBirdRemindersTest extends TestCase
         Mail::fake();
 
         $event = Event::factory()->create([
-            'registration_deadline_early' => Carbon::today()->addDays(3),
+            'registration_deadline_early' => Carbon::today()->addDays(1),
         ]);
 
         $user = User::factory()->create();
@@ -170,7 +170,7 @@ class SendEarlyBirdRemindersTest extends TestCase
 
         // Create two events - only one with approaching deadline
         $eventWithDeadline = Event::factory()->create([
-            'registration_deadline_early' => Carbon::today()->addDays(3),
+            'registration_deadline_early' => Carbon::today()->addDays(1),
         ]);
 
         $eventWithoutDeadline = Event::factory()->create([
@@ -230,7 +230,7 @@ class SendEarlyBirdRemindersTest extends TestCase
         Mail::fake();
 
         $event = Event::factory()->create([
-            'registration_deadline_early' => Carbon::today()->addDays(3),
+            'registration_deadline_early' => Carbon::today()->addDays(1),
         ]);
 
         $user = User::factory()->create();

@@ -32,9 +32,9 @@ class SendEarlyBirdReminders extends Command
     {
         $today = Carbon::today();
 
-        // Find events with early bird deadlines approaching (within next 7 days)
+        // Find events with early bird deadlines approaching (within next 1 day)
         $upcomingEarlyBirdEvents = Event::where('registration_deadline_early', '>', $today)
-            ->where('registration_deadline_early', '<=', $today->copy()->addDays(7))
+            ->where('registration_deadline_early', '<=', $today->copy()->addDays(1))
             ->get();
 
         if ($upcomingEarlyBirdEvents->isEmpty()) {
