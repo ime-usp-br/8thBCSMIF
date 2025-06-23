@@ -183,8 +183,8 @@ new #[Layout('layouts.app')] class extends Component {
                                         </p>
                                         @endif
                                         
-                                        {{-- Payment Proof Upload Form - Conditionally displayed for pending payments --}}
-                                        @if($payment->status === 'pending' && in_array($registration->document_country_origin, ['Brasil', 'BR']))
+                                        {{-- Payment Proof Upload Form - Conditionally displayed for pending payments without proof --}}
+                                        @if($payment->status === 'pending' && in_array($registration->document_country_origin, ['Brasil', 'BR']) && !$payment->payment_proof_path)
                                             <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
                                                 <h5 class="font-medium text-yellow-800 dark:text-yellow-300 mb-3">
                                                     {{ __('Payment Proof Upload') }}
@@ -246,6 +246,23 @@ new #[Layout('layouts.app')] class extends Component {
                                                         </button>
                                                     </div>
                                                 </form>
+                                            </div>
+                                        @elseif($payment->payment_proof_path)
+                                            {{-- Show uploaded proof confirmation --}}
+                                            <div class="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                                                <div class="flex items-center">
+                                                    <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                    </svg>
+                                                    <span class="text-green-800 dark:text-green-300 font-medium">
+                                                        {{ __('Payment proof uploaded successfully') }}
+                                                    </span>
+                                                </div>
+                                                @if($payment->payment_date)
+                                                    <p class="text-sm text-green-700 dark:text-green-400 mt-2">
+                                                        {{ __('Uploaded on') }}: {{ $payment->payment_date->format('d/m/Y H:i') }}
+                                                    </p>
+                                                @endif
                                             </div>
                                         @endif
                                     </div>

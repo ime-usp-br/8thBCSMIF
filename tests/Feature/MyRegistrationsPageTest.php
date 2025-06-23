@@ -686,4 +686,116 @@ class MyRegistrationsPageTest extends TestCase
         $content = $response->getContent();
         $this->assertStringNotContainsString('payment_id" value="'.$approvedPayment->id.'"', $content);
     }
+
+    /**
+     * Test that upload form is hidden after payment proof is uploaded (AC6).
+     * This test specifically addresses AC6 requirements for Issue #49.
+     */
+    public function test_upload_form_hidden_after_payment_proof_uploaded(): void
+    {
+        // Create verified user
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create event
+        $event = Event::factory()->create(['name' => 'Test Event']);
+
+        // Create registration for Brazilian user
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'document_country_origin' => 'Brasil',
+        ]);
+
+        // Attach event to registration
+        $registration->events()->attach($event->code, ['price_at_registration' => 200.00]);
+
+        // Create pending payment with proof already uploaded
+        $paymentWithProof = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 100.00,
+            'status' => 'pending',
+            'payment_proof_path' => 'proofs/123/test_proof.pdf',
+            'payment_date' => now(),
+        ]);
+
+        // Create another pending payment without proof
+        $paymentWithoutProof = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 100.00,
+            'status' => 'pending',
+            'payment_proof_path' => null,
+        ]);
+
+        // Test that the page displays the behavior correctly
+        $response = $this->actingAs($user)->get('/my-registration');
+        $response->assertOk();
+
+        $content = $response->getContent();
+
+        // AC6 Requirement: Upload form is NOT shown for payment with proof uploaded
+        $this->assertStringNotContainsString('payment_id" value="'.$paymentWithProof->id.'"', $content);
+        $this->assertStringNotContainsString('payment_proof_'.$paymentWithProof->id, $content);
+
+        // Verify that confirmation message is shown instead for uploaded proof
+        $this->assertStringContainsString(__('Payment proof uploaded successfully'), $content);
+        $this->assertStringContainsString(__('Uploaded on'), $content);
+
+        // Verify upload form IS shown for payment without proof
+        $this->assertStringContainsString('payment_id" value="'.$paymentWithoutProof->id.'"', $content);
+        $this->assertStringContainsString('payment_proof_'.$paymentWithoutProof->id, $content);
+        $this->assertStringContainsString(__('Payment Proof Upload'), $content);
+    }
+
+    /**
+     * Test that upload confirmation message displays correctly for uploaded payment (AC6).
+     * This test specifically addresses AC6 requirements for Issue #49.
+     */
+    public function test_upload_confirmation_message_displayed_for_uploaded_payment(): void
+    {
+        // Create verified user
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create event
+        $event = Event::factory()->create(['name' => 'Test Event']);
+
+        // Create registration for Brazilian user
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'document_country_origin' => 'Brasil',
+        ]);
+
+        // Attach event to registration
+        $registration->events()->attach($event->code, ['price_at_registration' => 150.00]);
+
+        // Create payment with proof uploaded at specific time
+        $uploadDate = now()->subHours(2);
+        $payment = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 150.00,
+            'status' => 'pending',
+            'payment_proof_path' => 'proofs/123/uploaded_proof.pdf',
+            'payment_date' => $uploadDate,
+        ]);
+
+        // Test that the page displays the confirmation message
+        $response = $this->actingAs($user)->get('/my-registration');
+        $response->assertOk();
+
+        // AC6 Requirement: Confirmation message shows successfully uploaded proof
+        $response->assertSee(__('Payment proof uploaded successfully'));
+        $response->assertSee(__('Uploaded on').': '.$uploadDate->format('d/m/Y H:i'));
+
+        // Verify styling classes for success state are present
+        $content = $response->getContent();
+        $this->assertStringContainsString('bg-green-50', $content);
+        $this->assertStringContainsString('text-green-800', $content);
+        $this->assertStringContainsString('border-green-200', $content);
+
+        // Verify upload form is NOT present
+        $this->assertStringNotContainsString('payment_id" value="'.$payment->id.'"', $content);
+        $this->assertStringNotContainsString(__('Upload Payment Proof'), $content);
+    }
 }

@@ -132,30 +132,37 @@ class RegistrationController extends Controller
     }
 
     /**
-     * Upload payment proof for a registration.
+     * Upload payment proof for a specific payment.
      *
      * Handles the upload of payment proof files for Brazilian participants,
-     * updates the registration status, and dispatches notification to coordinator.
+     * updates the individual payment status, and dispatches notification to coordinator.
      */
     public function uploadProof(Request $request, Registration $registration): RedirectResponse
     {
         // Validate that user owns this registration
         Gate::authorize('uploadProof', $registration);
 
-        // Validate that registration is in correct status for proof upload
-        if ($registration->payment_status !== 'pending_payment') {
-            return redirect()->back()->with('error', __('Payment proof can only be uploaded for registrations pending payment.'));
-        }
-
-        // Validate uploaded file
+        // Validate that we have a payment_id in the request
         $request->validate([
+            'payment_id' => 'required|integer|exists:payments,id',
             'payment_proof' => [
                 'required',
                 'file',
                 'mimes:jpg,jpeg,png,pdf',
-                'max:5120', // 5MB max
+                'max:10240', // 10MB max
             ],
         ]);
+
+        // Get the specific payment and validate it belongs to this registration
+        $payment = $registration->payments()->where('id', $request->payment_id)->first();
+        if (! $payment) {
+            return redirect()->back()->with('error', __('Payment not found or does not belong to this registration.'));
+        }
+
+        // Validate that payment is in correct status for proof upload
+        if ($payment->status !== 'pending') {
+            return redirect()->back()->with('error', __('Payment proof can only be uploaded for pending payments.'));
+        }
 
         try {
             // Store the uploaded file with sanitized filename
@@ -164,27 +171,38 @@ class RegistrationController extends Controller
                 throw new \RuntimeException('No file was uploaded.');
             }
 
-            // AC6: Generate sanitized and unique filename
+            // Generate sanitized and unique filename
             $originalName = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
             $extension = $uploadedFile->getClientOriginalExtension();
             $sanitizedName = Str::slug($originalName);
-            $filename = time().'_'.$sanitizedName.'.'.$extension;
+            $filename = time().'_payment_'.$payment->id.'_'.$sanitizedName.'.'.$extension;
 
             $path = $uploadedFile->storeAs("proofs/{$registration->id}", $filename, 'private');
 
-            // Update registration with proof details
-            $registration->update([
+            // Update payment with proof details
+            $payment->update([
                 'payment_proof_path' => $path,
-                'payment_uploaded_at' => Carbon::now(),
-                'payment_status' => 'pending_br_proof_approval',
+                'payment_date' => Carbon::now(),
+                'notes' => __('Payment proof uploaded by user'),
             ]);
 
             $user = $request->user();
             Log::info(__('Payment proof uploaded successfully'), [
                 'registration_id' => $registration->id,
+                'payment_id' => $payment->id,
                 'file_path' => $path,
                 'user_id' => $user?->id,
             ]);
+
+            // Check if all payments for this registration have proof uploaded
+            $pendingPayments = $registration->payments()->where('status', 'pending')->count();
+            if ($pendingPayments === 0) {
+                // Update registration status if all payments have been submitted
+                $registration->update([
+                    'payment_uploaded_at' => Carbon::now(),
+                    'payment_status' => 'pending_br_proof_approval',
+                ]);
+            }
 
             // Dispatch ProofUploadedNotification to coordinator
             $coordinatorEmail = ProofUploadedNotification::getCoordinatorEmail();
@@ -192,6 +210,7 @@ class RegistrationController extends Controller
                 Mail::to($coordinatorEmail)->send(new ProofUploadedNotification($registration));
                 Log::info(__('Proof upload notification sent to coordinator'), [
                     'registration_id' => $registration->id,
+                    'payment_id' => $payment->id,
                     'coordinator_email' => $coordinatorEmail,
                 ]);
             }
@@ -202,6 +221,7 @@ class RegistrationController extends Controller
             $user = $request->user();
             Log::error(__('Failed to upload payment proof'), [
                 'registration_id' => $registration->id,
+                'payment_id' => $request->payment_id,
                 'error' => $e->getMessage(),
                 'user_id' => $user?->id,
             ]);
