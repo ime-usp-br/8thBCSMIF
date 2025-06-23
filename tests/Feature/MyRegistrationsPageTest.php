@@ -561,10 +561,9 @@ class MyRegistrationsPageTest extends TestCase
         $registration->events()->attach($event->code, ['price_at_registration' => 300.00]);
 
         // Create payments with different statuses
-        $pendingPayment = Payment::factory()->create([
+        $pendingPayment = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 150.00,
-            'status' => 'pending',
         ]);
 
         $approvedPayment = Payment::factory()->create([

@@ -43,6 +43,11 @@ Volt::route('my-registration', 'pages.my-registrations')
     ->middleware(['auth', 'verified'])
     ->name('registrations.my');
 
+// Route for modifying registration
+Volt::route('my-registration/modify', 'pages.registration-modification')
+    ->middleware(['auth', 'verified'])
+    ->name('registrations.modify');
+
 // Admin routes for registration management
 Route::prefix('admin/registrations')
     ->middleware(['auth', 'role:admin'])

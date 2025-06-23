@@ -22,14 +22,26 @@ class RegistrationModificationController extends Controller
             'selected_event_codes.*' => 'required|string|exists:events,code',
         ]);
 
-        $feeCalculationService = app(FeeCalculationService::class);
+        // Ensure we're only adding new events (not already registered)
+        $currentEventCodes = $registration->events->pluck('code')->toArray();
 
         /** @var array{selected_event_codes: list<string>} $validatedData */
         $selectedEventCodes = $validatedData['selected_event_codes'];
+        $newEventCodes = array_diff($selectedEventCodes, $currentEventCodes);
+
+        if (empty($newEventCodes)) {
+            return redirect()->route('registrations.my')->with('error', __('All selected events are already in your registration.'));
+        }
+
+        $feeCalculationService = app(FeeCalculationService::class);
+
+        // Get current event codes to preserve existing events
+        /** @var list<string> $allEventCodes */
+        $allEventCodes = array_values(array_merge($currentEventCodes, array_values($newEventCodes)));
 
         $feeData = $feeCalculationService->calculateFees(
             $registration->registration_category_snapshot,
-            $selectedEventCodes,
+            $allEventCodes,
             now(),
             $registration->participation_format ?? 'in-person',
             $registration
@@ -44,17 +56,18 @@ class RegistrationModificationController extends Controller
             ]);
         }
 
-        $eventSyncData = [];
+        // Only attach new events (incrementally), not sync all events
+        $newEventData = [];
         foreach ($feeData['details'] as $eventDetail) {
-            if (! isset($eventDetail['error'])) {
-                $eventSyncData[$eventDetail['event_code']] = [
+            if (! isset($eventDetail['error']) && in_array($eventDetail['event_code'], $newEventCodes)) {
+                $newEventData[$eventDetail['event_code']] = [
                     'price_at_registration' => $eventDetail['calculated_price'],
                 ];
             }
         }
 
-        if (! empty($eventSyncData)) {
-            $registration->events()->sync($eventSyncData);
+        if (! empty($newEventData)) {
+            $registration->events()->attach($newEventData);
         }
 
         // Send notification to the participant (user)
@@ -70,7 +83,7 @@ class RegistrationModificationController extends Controller
             'registration_id' => $registration->id,
             'user_id' => $registration->user_id,
             'amount_due' => $amountDue,
-            'new_events' => array_keys($eventSyncData),
+            'new_events_added' => array_keys($newEventData),
         ]);
 
         return redirect()->route('registrations.my')->with('success', __('Registration modified successfully'));
