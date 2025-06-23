@@ -102,6 +102,15 @@ class RegistrationController extends Controller
         $registration->update(['payment_status' => $paymentStatus]);
         Log::info('Payment status set for registration.', ['registration_id' => $registration->id, 'payment_status' => $paymentStatus]);
 
+        // Create individual Payment record for non-free registrations
+        if ($feeData['total_fee'] > 0) {
+            $registration->payments()->create([
+                'amount' => $feeData['total_fee'],
+                'status' => 'pending',
+            ]);
+            Log::info('Payment record created for registration.', ['registration_id' => $registration->id, 'amount' => $feeData['total_fee']]);
+        }
+
         // --- AC10: Sync events with price_at_registration ---
         $eventSyncData = [];
         foreach ($feeData['details'] as $eventDetail) {

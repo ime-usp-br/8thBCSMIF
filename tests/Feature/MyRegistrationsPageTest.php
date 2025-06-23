@@ -536,4 +536,154 @@ class MyRegistrationsPageTest extends TestCase
         $this->assertStringContainsString('bg-green-100 text-green-800', $content);  // approved
         $this->assertStringContainsString('bg-red-100 text-red-800', $content);     // rejected
     }
+
+    /**
+     * Test that upload form is displayed conditionally for pending payments only (AC5).
+     * This test specifically addresses AC5 requirements for Issue #49.
+     */
+    public function test_upload_form_displayed_conditionally_for_pending_payments(): void
+    {
+        // Create verified user
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create event
+        $event = Event::factory()->create(['name' => 'Test Event']);
+
+        // Create registration for Brazilian user
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'document_country_origin' => 'Brasil',
+        ]);
+
+        // Attach event to registration
+        $registration->events()->attach($event->code, ['price_at_registration' => 300.00]);
+
+        // Create payments with different statuses
+        $pendingPayment = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 150.00,
+            'status' => 'pending',
+        ]);
+
+        $approvedPayment = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 100.00,
+            'status' => 'approved',
+        ]);
+
+        $rejectedPayment = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 50.00,
+            'status' => 'rejected',
+        ]);
+
+        // Test that the page displays conditional upload forms
+        $response = $this->actingAs($user)->get('/my-registration');
+        $response->assertOk();
+
+        // AC5 Requirement: Upload form is shown for pending payments
+        $content = $response->getContent();
+
+        // Check that form with pending payment ID exists (for the pending payment only)
+        $this->assertStringContainsString('payment_id" value="'.$pendingPayment->id.'"', $content);
+        $this->assertStringContainsString(__('Payment Proof Upload'), $content);
+        $this->assertStringContainsString('payment_proof_'.$pendingPayment->id, $content);
+
+        // Verify form elements are present for pending payment
+        $this->assertStringContainsString('name="payment_proof"', $content);
+        $this->assertStringContainsString('enctype="multipart/form-data"', $content);
+        $this->assertStringContainsString(__('Upload Payment Proof'), $content);
+
+        // Verify forms are NOT shown for approved and rejected payments
+        $this->assertStringNotContainsString('payment_id" value="'.$approvedPayment->id.'"', $content);
+        $this->assertStringNotContainsString('payment_id" value="'.$rejectedPayment->id.'"', $content);
+    }
+
+    /**
+     * Test that upload form is NOT displayed for non-Brazilian users (AC5).
+     * This test specifically addresses AC5 requirements for Issue #49.
+     */
+    public function test_upload_form_not_displayed_for_non_brazilian_users(): void
+    {
+        // Create verified user
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create event
+        $event = Event::factory()->create(['name' => 'Test Event']);
+
+        // Create registration for non-Brazilian user
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'document_country_origin' => 'Argentina', // Non-Brazilian
+        ]);
+
+        // Attach event to registration
+        $registration->events()->attach($event->code, ['price_at_registration' => 200.00]);
+
+        // Create pending payment (but user is not Brazilian)
+        $pendingPayment = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 200.00,
+            'status' => 'pending',
+        ]);
+
+        // Test that the page does NOT display upload form for non-Brazilian users
+        $response = $this->actingAs($user)->get('/my-registration');
+        $response->assertOk();
+
+        // AC5 Requirement: Upload form is NOT shown for non-Brazilian users
+        $response->assertDontSee(__('Payment Proof Upload'));
+        $response->assertDontSee('payment_proof_'.$pendingPayment->id);
+
+        // Verify form elements are not present
+        $content = $response->getContent();
+        $this->assertStringNotContainsString('payment_id" value="'.$pendingPayment->id.'"', $content);
+    }
+
+    /**
+     * Test that upload form is NOT displayed for non-pending payments (AC5).
+     * This test specifically addresses AC5 requirements for Issue #49.
+     */
+    public function test_upload_form_not_displayed_for_non_pending_payments(): void
+    {
+        // Create verified user
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create event
+        $event = Event::factory()->create(['name' => 'Test Event']);
+
+        // Create registration for Brazilian user
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'document_country_origin' => 'Brasil',
+        ]);
+
+        // Attach event to registration
+        $registration->events()->attach($event->code, ['price_at_registration' => 200.00]);
+
+        // Create approved payment (Brazilian user but not pending status)
+        $approvedPayment = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'amount' => 200.00,
+            'status' => 'approved',
+        ]);
+
+        // Test that the page does NOT display upload form for non-pending payments
+        $response = $this->actingAs($user)->get('/my-registration');
+        $response->assertOk();
+
+        // AC5 Requirement: Upload form is NOT shown for non-pending payments
+        $response->assertDontSee(__('Payment Proof Upload'));
+        $response->assertDontSee('payment_proof_'.$approvedPayment->id);
+
+        // Verify form elements are not present for this payment
+        $content = $response->getContent();
+        $this->assertStringNotContainsString('payment_id" value="'.$approvedPayment->id.'"', $content);
+    }
 }
