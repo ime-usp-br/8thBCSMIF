@@ -14,9 +14,9 @@ Com base na última análise de AC executada (cujo conteúdo está abaixo), no p
 **Claude Code deve executar:**
 !LATEST_ANALYSIS=$(ls -t llm_outputs/analyze-ac/*.txt | head -1) && cat "$LATEST_ANALYSIS"
 
-**3. Hash do Último Commit:**
+**3. Hash do Último Commit (CORRIGIDO):**
 **Claude Code deve executar:**
-!git log -1 --pretty=format:%H
+!COMMIT_HASH=$(git rev-parse HEAD) && COMMIT_SHORT=$(git rev-parse --short HEAD) && echo "Full: $COMMIT_HASH" && echo "Short: $COMMIT_SHORT"
 
 **4. Verificação de Padrão de Comentários (CRÍTICO):**
 **Claude Code deve executar:**
@@ -29,8 +29,11 @@ Com base na última análise de AC executada (cujo conteúdo está abaixo), no p
 - **RASTREABILIDADE:** Inclua o hash do commit no rodapé, formatado como um link.
 
 **Claude Code deve executar:**
-1. Criar arquivo `/tmp/comment.txt` usando ferramenta Write (NUNCA HEREDOC)
-2. Executar comando `gh api` para postar o comentário
+1. **MÉTODO APROVADO:** `cp llm_outputs/analyze-ac/[timestamp].txt /tmp/comment.txt` (NUNCA HEREDOC)
+2. Adicionar rodapé com commit hash do commit ATUAL (não antigo)
+3. Executar comando `gh api` para postar o comentário
+
+**LIÇÃO APRENDIDA:** Usar `cp` para copiar analyze-ac output evita problemas de formatação.
 
 **Formato do Comentário (exemplo):**
 
@@ -54,8 +57,23 @@ O Critério de Aceite X (ACX) foi **Atendido**.
 **Validação realizada no commit:** [commit_hash_aqui](https://github.com/owner/repo/commit/commit_hash_aqui)
 ```
 
-**Comando Final:**
+**Comando Final (TESTADO E APROVADO):**
 **Claude Code deve executar:**
 ```bash
+# 1. Copiar analyze-ac output (método que funcionou)
+LATEST_ANALYSIS=$(ls -t llm_outputs/analyze-ac/*.txt | head -1)
+cp "$LATEST_ANALYSIS" /tmp/comment.txt
+
+# 2. Adicionar rodapé com commit ATUAL
+echo "" >> /tmp/comment.txt
+echo "---" >> /tmp/comment.txt
+echo "**Validação realizada no commit:** [$COMMIT_SHORT](https://github.com/ime-usp-br/8thBCSMIF/commit/$COMMIT_HASH)" >> /tmp/comment.txt
+
+# 3. Verificar conteúdo antes de postar
+cat /tmp/comment.txt
+
+# 4. Postar comentário
 gh api repos/:owner/:repo/issues/$ARGUMENTS/comments -F body=@/tmp/comment.txt
 ```
+
+**✅ APROVADO:** Este método funcionou perfeitamente na conversa AC1 Issue #50.

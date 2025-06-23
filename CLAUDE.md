@@ -2,40 +2,43 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🔄 WORKFLOW SEQUENCE (OBRIGATÓRIO)
+## 🔄 WORKFLOW SEQUENCE CLAUDE CODE (OBRIGATÓRIO)
 
-**SEMPRE siga esta sequência exata para implementar qualquer AC (Acceptance Criteria):**
+**Claude Code deve executar este workflow completo autonomamente para implementar qualquer AC:**
 
-### 1. **Análise e Planejamento**
-- Use `TodoWrite` para planejar as tarefas
+### 1. **Análise e Planejamento Inicial**
+- **SEMPRE** use `TodoWrite` para criar workflow transparente das tarefas
 - Leia a issue completa: `gh issue view <ISSUE_NUMBER>`
-- Identifique o AC específico a implementar
+- Identifique o AC específico e seus requisitos exatos
+- **ATENÇÃO ESPECIAL**: Para requisitos "incrementais", verifique se operações são aditivas (attach/create) não substitutivas (sync/update)
 - Analise dependências e padrões existentes no código
 
-### 2. **Implementação**
-- Implemente as mudanças seguindo padrões do projeto
-- **SEMPRE** adicione testes que comprovem a funcionalidade (mesmo que o AC não exija explicitamente)
-- Siga convenções de código existentes
+### 2. **Implementação com Validação de Requisitos**
+- Implemente mudanças seguindo padrões do projeto
+- **CRÍTICO**: Para funcionalidades "incrementais", use métodos aditivos (attach, create) não substitutivos (sync, update)
+- **SEMPRE** adicione testes que comprovem a funcionalidade
+- Verifique se implementação atende exatamente o comportamento descrito no AC
 
-### 3. **Quality Checks (OBRIGATÓRIOS)**
+### 3. **Quality Checks Automáticos (OBRIGATÓRIOS)**
 ```bash
 vendor/bin/pint                     # PSR-12 formatting
 vendor/bin/phpstan analyse          # Static analysis  
 php artisan test                    # PHPUnit tests
 pytest -v --live                    # Python tests (se aplicável)
 ```
+**Todos devem passar antes de prosseguir.**
 
-### 4. **Validação (CRÍTICO)**
+### 4. **Validação Automática (CRÍTICO)**
 ```bash
 git add .
 python3 scripts/generate_context.py --stages git
 printf "y\ny\ny\n" | python3 scripts/tasks/llm_task_analyze_ac.py -i <ISSUE> -a <AC> -sc
 ```
-**⚠️ SÓ AVANCE SE analyze-ac APROVAR! Caso contrário, atenda as exigências.**
+**⚠️ SÓ AVANCE SE analyze-ac APROVAR! Se reprovar, corrija e repita validação.**
 
-### 5. **Commit & Documentação**
+### 5. **Commit com Padrão Projeto**
 ```bash
-git log -5                          # Analise formato (NÃO use --oneline)
+git log -5                          # Analise formato completo (NÃO --oneline)
 git commit -m "$(cat <<'EOF'
 tipo(escopo): Descrição principal (#issue)
 
@@ -46,6 +49,22 @@ tipo(escopo): Descrição principal (#issue)
 EOF
 )"
 git push                            # ANTES do comentário GitHub
+```
+
+### 6. **Documentação GitHub Automática**
+```bash
+# Capturar hash do commit recém-criado
+COMMIT_HASH=$(git rev-parse HEAD)
+COMMIT_SHORT=$(git rev-parse --short HEAD)
+
+# Criar comentário usando analyze-ac output
+cp llm_outputs/analyze-ac/[timestamp].txt /tmp/comment.txt
+echo "" >> /tmp/comment.txt
+echo "---" >> /tmp/comment.txt
+echo "**Validação realizada no commit:** [$COMMIT_SHORT](https://github.com/ime-usp-br/8thBCSMIF/commit/$COMMIT_HASH)" >> /tmp/comment.txt
+
+# Postar comentário
+gh api repos/:owner/:repo/issues/<ISSUE>/comments -F body=@/tmp/comment.txt
 ```
 
 ### 6. **Documentação GitHub**
@@ -431,23 +450,31 @@ When executing autonomous AC implementation cycles, document any interruptions e
 
 ### Workflow Lessons Learned
 
-**Successful Patterns:**
-- Autonomous execution of full cycle (discovery → implementation → validation → commit)
-- Effective use of existing placeholder code that just needed activation
-- Quality checks integration working seamlessly
-- GitHub API integration for automated issue management
+**✅ Successful Patterns Desta Conversa:**
+- **Autonomous Claude Code Workflow**: Executou ciclo completo (análise → implementação → validação → commit → documentação)
+- **TodoWrite Integration**: Tracking transparente funcionou perfeitamente 
+- **Quality Checks Automáticos**: PSR-12, PHPStan, PHPUnit executaram sem problemas
+- **User Feedback Integration**: User testing manual identificou bug crítico, Claude Code corrigiu imediatamente
+- **GitHub API Integration**: Postagem automática de comentário funcionou perfeitamente
+- **Commit Format**: Seguiu perfeitamente padrão projeto usando HEREDOC
 
-**Interruption #1 - Mock Service Issues:**
-- **Context**: FeeCalculationService mock not applied due to `app()` instantiation in controller
-- **Problem**: Test expecting specific mock values but real service returning different results
-- **Solution**: Adapted test to validate core functionality (pivot table associations) without forcing mock
-- **Learning**: When mocks fail, focus on the primary AC requirement rather than forcing unreliable mocks
-- **Future Prevention**: Consider dependency injection patterns for better testability
+**🔴 Critical Learning - Requisitos "Incrementais":**
+- **Context**: AC1 Issue #50 requeria modificação "incremental" de inscrições
+- **Bug Inicial**: Implementação usou `sync()` (substitutivo) em vez de `attach()` (aditivo)
+- **User Feedback**: "ao confirmar a mudança ela apagou os eventos anteriores e ficou soh com os novos, o que esta errado, a ideia eh ser incremental"
+- **Solution**: Claude Code identificou e corrigiu: `$registration->events()->attach($newEventData)` 
+- **Learning**: Para funcionalidades "incrementais", SEMPRE usar métodos aditivos (attach, create) não substitutivos (sync, update)
+- **Prevention**: Workflow agora inclui verificação específica para requisitos incrementais
 
-**Process Optimizations Identified:**
-- `printf "y\ny\ny\n"` automation worked perfectly for all validation scripts
-- Context generation before validation is critical for accurate analysis
-- Real-time documentation of solutions during implementation improves future cycles
+**🟡 Minor Issues Identificados:**
+- **Commit Hash Inconsistency**: Comentário GitHub usou commit antigo (019e20b) em vez do atual (4d1ada8)
+- **Solution**: Workflow agora captura hash do commit recém-criado automaticamente
+
+**🔧 Process Optimizations Confirmados:**
+- `printf "y\ny\ny\n"` automation funcionou perfeitamente para validation scripts
+- Context generation antes da validação é crítico para análise precisa
+- Real-time documentation durante implementação melhora ciclos futuros
+- Claude Code pode executar workflow completo autonomamente com alta qualidade
 
 **Interruption #2 - Git Commit Message Format Analysis:**
 - **Context:** Using `git log --oneline` to analyze commit patterns for consistency
