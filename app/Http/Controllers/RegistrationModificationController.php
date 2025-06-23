@@ -24,7 +24,7 @@ class RegistrationModificationController extends Controller
 
         // Ensure we're only adding new events (not already registered)
         $currentEventCodes = $registration->events->pluck('code')->toArray();
-        
+
         /** @var array{selected_event_codes: list<string>} $validatedData */
         $selectedEventCodes = $validatedData['selected_event_codes'];
         $newEventCodes = array_diff($selectedEventCodes, $currentEventCodes);
@@ -65,7 +65,6 @@ class RegistrationModificationController extends Controller
                 ];
             }
         }
-
 
         if (! empty($newEventData)) {
             $registration->events()->attach($newEventData);

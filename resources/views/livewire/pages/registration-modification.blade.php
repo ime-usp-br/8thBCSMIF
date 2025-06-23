@@ -74,6 +74,16 @@ new #[Layout('layouts.app')] class extends Component {
             $this->registration->participation_format ?? 'in-person',
             $this->registration
         );
+
+        // Calculate cost of new items only
+        $newEventsFee = $feeCalculationService->calculateFees(
+            $this->registration->registration_category_snapshot,
+            $this->selectedEventCodes,
+            now(),
+            $this->registration->participation_format ?? 'in-person'
+        );
+        
+        $this->feeCalculation['new_items_cost'] = $newEventsFee['total_fee'];
     }
 
     public function with(): array
@@ -226,7 +236,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <div class="text-center">
                                     <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Cost of New Items') }}</p>
                                     <p class="text-lg font-semibold text-blue-600 dark:text-blue-400">
-                                        R$ {{ number_format(($feeCalculation['new_total_fee'] ?? 0) - $registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
+                                        R$ {{ number_format($feeCalculation['new_items_cost'] ?? 0, 2, ',', '.') }}
                                     </p>
                                 </div>
                                 <div class="text-center">
