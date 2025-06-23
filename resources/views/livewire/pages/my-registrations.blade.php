@@ -208,9 +208,8 @@ new #[Layout('layouts.app')] class extends Component {
                                                     </div>
                                                 @endif
                                                 
-                                                <form action="{{ route('event-registrations.upload-proof', $registration) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
+                                                <form action="{{ route('payments.upload-proof', $payment) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
                                                     @csrf
-                                                    <input type="hidden" name="payment_id" value="{{ $payment->id }}">
                                                     
                                                     <div>
                                                         <label for="payment_proof_{{ $payment->id }}" class="block text-sm font-medium text-yellow-800 dark:text-yellow-300 mb-2">
