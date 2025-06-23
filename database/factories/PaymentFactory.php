@@ -44,6 +44,7 @@ class PaymentFactory extends Factory
             'status' => 'pending',
             'payment_date' => null,
             'payment_proof_path' => null,
+            'notes' => null,
         ]);
     }
 
