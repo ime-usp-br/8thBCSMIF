@@ -23,7 +23,7 @@ class AuthenticatedNavigationAC4Test extends TestCase
 
         // Verify the component contains the required navigation links
         $expectedLinks = [
-            'My Registrations',
+            'My Registration',
             'Workshops',
             'Fees',
         ];
@@ -66,13 +66,13 @@ class AuthenticatedNavigationAC4Test extends TestCase
         $user = User::factory()->create();
 
         // Act as the authenticated user
-        $response = $this->actingAs($user)->get('/my-registrations');
+        $response = $this->actingAs($user)->get('/my-registration');
 
         // Verify the page loads successfully
         $response->assertOk();
 
         // Verify navigation links are present in the response
-        $response->assertSee(__('My Registrations'));
+        $response->assertSee(__('My Registration'));
         $response->assertSee(__('Workshops'));
         $response->assertSee(__('Fees'));
     }
@@ -113,7 +113,7 @@ class AuthenticatedNavigationAC4Test extends TestCase
 
         // Count occurrences of each required link (should appear in both desktop and responsive)
         $expectedLinks = [
-            'My Registrations',
+            'My Registration',
             'Workshops',
             'Fees',
         ];
@@ -177,7 +177,7 @@ class AuthenticatedNavigationAC4Test extends TestCase
 
         // Test access to all required routes
         $routes = [
-            '/my-registrations' => 'registrations.my',
+            '/my-registration' => 'registrations.my',
             '/workshops' => 'workshops',
             '/fees' => 'fees',
         ];

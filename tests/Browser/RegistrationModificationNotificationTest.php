@@ -58,7 +58,7 @@ class RegistrationModificationNotificationTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
+                ->visit('/my-registration')
                 ->waitForText(__('My Registrations'))
                 ->assertSee('John Doe Test')
                 ->assertSee('BCSMIF2025')
@@ -130,7 +130,7 @@ class RegistrationModificationNotificationTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
+                ->visit('/my-registration')
                 ->waitForText(__('My Registrations'))
 
                 // Click modify button
@@ -171,7 +171,7 @@ class RegistrationModificationNotificationTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
+                ->visit('/my-registration')
                 ->waitForText(__('My Registrations'))
 
                 // Click modify button
@@ -224,7 +224,7 @@ class RegistrationModificationNotificationTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
+                ->visit('/my-registration')
                 ->waitForText(__('My Registrations'))
 
                 // Click modify button
@@ -305,7 +305,7 @@ class RegistrationModificationNotificationTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
+                ->visit('/my-registration')
                 ->waitForText(__('My Registrations'))
 
                 // Modify registration to add workshop
@@ -318,7 +318,7 @@ class RegistrationModificationNotificationTest extends DuskTestCase
                 ->waitForText(__('Registration updated successfully'))
 
                 // Return to my registrations and verify updated information
-                ->visit('/my-registrations')
+                ->visit('/my-registration')
                 ->waitForText(__('My Registrations'))
                 ->assertSee('Success Test User')
 

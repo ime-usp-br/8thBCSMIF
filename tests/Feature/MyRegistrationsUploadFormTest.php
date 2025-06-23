@@ -22,7 +22,7 @@ class MyRegistrationsUploadFormTest extends TestCase
         ]);
 
         // Test the page loads
-        $response = $this->actingAs($user)->get('/my-registrations');
+        $response = $this->actingAs($user)->get('/my-registration');
         $response->assertOk();
 
         // AC6: Verify template file contains the upload form implementation
@@ -30,8 +30,9 @@ class MyRegistrationsUploadFormTest extends TestCase
         $templateContent = file_get_contents($templatePath);
 
         // Check that the AC6 conditional logic exists in the template
-        $this->assertStringContainsString('payment_status === \'pending_payment\'', $templateContent);
+        $this->assertStringContainsString('$payment->status === \'pending\'', $templateContent);
         $this->assertStringContainsString('in_array($registration->document_country_origin, [\'Brasil\', \'BR\'])', $templateContent);
+        $this->assertStringContainsString('!$payment->payment_proof_path', $templateContent);
 
         // Check that the form exists with correct attributes
         $this->assertStringContainsString('event-registrations.upload-proof', $templateContent);
@@ -77,8 +78,14 @@ class MyRegistrationsUploadFormTest extends TestCase
 
         $registration = \App\Models\Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
             'document_country_origin' => 'Brasil',
+        ]);
+
+        // Create a pending payment for the registration
+        \App\Models\Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'status' => 'pending',
+            'amount' => 200.00,
         ]);
 
         // Load the template and check form structure

@@ -56,7 +56,7 @@ class LoginTest extends DuskTestCase
     /**
      * Garante que um usuário registrado possa se autenticar com sucesso
      * utilizando o formulário de login local (email e senha) e seja
-     * redirecionado para a página de registros (`/my-registrations`).
+     * redirecionado para a página de registros (`/my-registration`).
      */
     #[Test]
     #[Group('auth')]
@@ -76,8 +76,8 @@ class LoginTest extends DuskTestCase
                 ->type('@password-input', 'password')
                 ->waitFor('@login-button')
                 ->click('@login-button')
-                ->waitForLocation('/my-registrations')
-                ->assertPathIs('/my-registrations');
+                ->waitForLocation('/my-registration')
+                ->assertPathIs('/my-registration');
         });
     }
 

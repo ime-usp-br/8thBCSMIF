@@ -117,10 +117,10 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
 
         // Test dashboard page (uses authenticated navigation)
         $response = $this->actingAs($user)->get('/dashboard');
-        $response->assertRedirect('/my-registrations');
+        $response->assertRedirect('/my-registration');
 
-        // Test the actual my-registrations page
-        $response = $this->actingAs($user)->get('/my-registrations');
+        // Test the actual my-registration page
+        $response = $this->actingAs($user)->get('/my-registration');
         $response->assertOk();
         $response->assertSee(__('My Registrations'));
     }

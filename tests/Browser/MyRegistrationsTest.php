@@ -24,7 +24,7 @@ class MyRegistrationsTest extends DuskTestCase
     }
 
     /**
-     * AC1: Test that an unauthenticated user trying to access /my-registrations
+     * AC1: Test that an unauthenticated user trying to access /my-registration
      * is redirected to the login page (/login/local).
      */
     #[Test]
@@ -34,7 +34,7 @@ class MyRegistrationsTest extends DuskTestCase
     {
         $this->browse(function (Browser $browser) {
             $browser->logout()
-                ->visit('/my-registrations')
+                ->visit('/my-registration')
                 ->waitForLocation('/login/local')
                 ->assertPathIs('/login/local');
         });
@@ -70,8 +70,8 @@ class MyRegistrationsTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
-                ->waitForText(__('My Registrations'))
+                ->visit('/my-registration')
+                ->waitForText(__('My Registration'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
                 ->waitForText(__('Payment Proof Upload'))
@@ -110,8 +110,8 @@ class MyRegistrationsTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
-                ->waitForText(__('My Registrations'))
+                ->visit('/my-registration')
+                ->waitForText(__('My Registration'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
                 ->assertDontSee(__('Payment Proof Upload'))
@@ -149,8 +149,8 @@ class MyRegistrationsTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
-                ->waitForText(__('My Registrations'))
+                ->visit('/my-registration')
+                ->waitForText(__('My Registration'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
                 ->assertDontSee(__('Payment Proof Upload'))
@@ -178,8 +178,8 @@ class MyRegistrationsTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
-                ->waitForText(__('My Registrations'))
+                ->visit('/my-registration')
+                ->waitForText(__('My Registration'))
                 ->assertSee(__('No registrations found'))
                 ->assertSee(__('You have not registered for any events yet.'))
                 ->assertSeeLink(__('Register for Event'))
@@ -212,21 +212,18 @@ class MyRegistrationsTest extends DuskTestCase
         $registration1 = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
-            'calculated_fee' => 350.50,
             'full_name' => 'Test User One',
         ]);
 
         $registration2 = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'approved',
-            'calculated_fee' => 275.75,
             'full_name' => 'Test User One',
         ]);
 
         $registration3 = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'pending_br_proof_approval',
-            'calculated_fee' => 125.00,
             'full_name' => 'Test User One',
         ]);
 
@@ -240,8 +237,8 @@ class MyRegistrationsTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user, $registration1, $registration2, $registration3, $event1, $event2, $event3) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
-                ->waitForText(__('My Registrations'))
+                ->visit('/my-registration')
+                ->waitForText(__('My Registration'))
 
                 // Verify all three registrations are displayed
                 ->assertSee(__('Registration').' #'.$registration1->id)
@@ -292,7 +289,6 @@ class MyRegistrationsTest extends DuskTestCase
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'approved',
-            'calculated_fee' => 625.25,
             'full_name' => 'John Doe Registration Test',
             'email' => 'john.doe@example.com',
             'nationality' => 'Brazilian',
@@ -306,8 +302,8 @@ class MyRegistrationsTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user, $registration, $event1, $event2, $event3) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
-                ->waitForText(__('My Registrations'))
+                ->visit('/my-registration')
+                ->waitForText(__('My Registration'))
                 ->waitForText(__('Registration').' #'.$registration->id)
 
                 // Click to view registration details
@@ -375,8 +371,8 @@ class MyRegistrationsTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
-                ->waitForText(__('My Registrations'))
+                ->visit('/my-registration')
+                ->waitForText(__('My Registration'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
                 ->waitForText(__('Payment Proof Upload'))
@@ -388,7 +384,7 @@ class MyRegistrationsTest extends DuskTestCase
                 ->click('@upload-payment-proof-button')
 
                 // Wait for page to load after form submission
-                ->waitForLocation('/my-registrations')
+                ->waitForLocation('/my-registration')
                 ->pause(1000)
 
                 // Verify the page reflects the updated payment status directly in the list
@@ -445,8 +441,8 @@ class MyRegistrationsTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
-                ->waitForText(__('My Registrations'))
+                ->visit('/my-registration')
+                ->waitForText(__('My Registration'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
                 ->waitForText(__('Payment Proof Upload'))
@@ -461,13 +457,13 @@ class MyRegistrationsTest extends DuskTestCase
                 // Due to the current system architecture, validation messages do not persist
                 // after redirect in this Livewire context. However, we can verify validation
                 // occurred by:
-                // 1. Confirming we're redirected back to my-registrations (validation failed)
+                // 1. Confirming we're redirected back to my-registration (validation failed)
                 // 2. Status remains unchanged (upload was rejected)
                 // 3. Form is still available (indicating failure to process)
-                ->waitForLocation('/my-registrations')
+                ->waitForLocation('/my-registration')
                 ->pause(1000)
 
-                // The fact that we're back at /my-registrations and not on a success page
+                // The fact that we're back at /my-registration and not on a success page
                 // confirms the validation error occurred and the upload was rejected
                 ->assertSee(__('Pending payment'))
                 ->assertDontSee(__('Pending br proof approval'))
@@ -481,7 +477,7 @@ class MyRegistrationsTest extends DuskTestCase
                 // between valid and invalid files - this confirms the .txt rejection was intentional
                 ->attach('payment_proof', __DIR__.'/files/test_payment_proof.pdf')
                 ->click('@upload-payment-proof-button')
-                ->waitForLocation('/my-registrations')
+                ->waitForLocation('/my-registration')
                 ->pause(1000)
 
                 // This time it should succeed, proving the earlier rejection was due to file type validation
@@ -532,14 +528,12 @@ class MyRegistrationsTest extends DuskTestCase
         $user1Registration1 = Registration::factory()->create([
             'user_id' => $user1->id,
             'payment_status' => 'pending_payment',
-            'calculated_fee' => 350.50,
             'full_name' => 'User One Registration',
         ]);
 
         $user1Registration2 = Registration::factory()->create([
             'user_id' => $user1->id,
             'payment_status' => 'approved',
-            'calculated_fee' => 225.75,
             'full_name' => 'User One Second Registration',
         ]);
 
@@ -547,14 +541,12 @@ class MyRegistrationsTest extends DuskTestCase
         $user2Registration1 = Registration::factory()->create([
             'user_id' => $user2->id,
             'payment_status' => 'pending_payment',
-            'calculated_fee' => 400.00,
             'full_name' => 'User Two Registration',
         ]);
 
         $user2Registration2 = Registration::factory()->create([
             'user_id' => $user2->id,
             'payment_status' => 'pending_br_proof_approval',
-            'calculated_fee' => 150.00,
             'full_name' => 'User Two Other Registration',
         ]);
 
@@ -567,8 +559,8 @@ class MyRegistrationsTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user1, $user2, $user1Registration1, $user1Registration2, $user2Registration1, $user2Registration2) {
             // Login as user1 and verify they only see their own registrations
             $browser->loginAs($user1)
-                ->visit('/my-registrations')
-                ->waitForText(__('My Registrations'))
+                ->visit('/my-registration')
+                ->waitForText(__('My Registration'))
 
                 // User1 should see their own registrations
                 ->assertSee(__('Registration').' #'.$user1Registration1->id)
@@ -587,8 +579,8 @@ class MyRegistrationsTest extends DuskTestCase
 
             // Login as user2 and verify they only see their own registrations
             $browser->loginAs($user2)
-                ->visit('/my-registrations')
-                ->waitForText(__('My Registrations'))
+                ->visit('/my-registration')
+                ->waitForText(__('My Registration'))
 
                 // User2 should see their own registrations
                 ->assertSee(__('Registration').' #'.$user2Registration1->id)
@@ -642,8 +634,8 @@ class MyRegistrationsTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
-                ->waitForText(__('My Registrations'))
+                ->visit('/my-registration')
+                ->waitForText(__('My Registration'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
                 ->waitForText(__('Payment Proof Upload'))
@@ -658,13 +650,13 @@ class MyRegistrationsTest extends DuskTestCase
                 // Due to the current system architecture, validation messages do not persist
                 // after redirect in this Livewire context. However, we can verify validation
                 // occurred by:
-                // 1. Confirming we're redirected back to my-registrations (validation failed)
+                // 1. Confirming we're redirected back to my-registration (validation failed)
                 // 2. Status remains unchanged (upload was rejected)
                 // 3. Form is still available (indicating failure to process)
-                ->waitForLocation('/my-registrations')
+                ->waitForLocation('/my-registration')
                 ->pause(1000)
 
-                // The fact that we're back at /my-registrations and not on a success page
+                // The fact that we're back at /my-registration and not on a success page
                 // confirms the validation error occurred and the upload was rejected
                 ->assertSee(__('Pending payment'))
                 ->assertDontSee(__('Pending br proof approval'))
@@ -678,7 +670,7 @@ class MyRegistrationsTest extends DuskTestCase
                 // between valid and oversized files - this confirms the oversized rejection was intentional
                 ->attach('payment_proof', __DIR__.'/files/test_payment_proof.pdf')
                 ->click('@upload-payment-proof-button')
-                ->waitForLocation('/my-registrations')
+                ->waitForLocation('/my-registration')
                 ->pause(1000)
 
                 // This time it should succeed, proving the earlier rejection was due to file size validation

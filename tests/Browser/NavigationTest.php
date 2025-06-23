@@ -74,7 +74,7 @@ class NavigationTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
+                ->visit('/my-registration')
                 ->waitForText(__('My Registrations'))
                 ->pause(1000);
 
@@ -83,9 +83,9 @@ class NavigationTest extends DuskTestCase
                 ->assertSeeLink(__('Workshops'))
                 ->assertSeeLink(__('Fees'));
 
-            $browser->visit('/my-registrations')
+            $browser->visit('/my-registration')
                 ->waitForText(__('My Registrations'))
-                ->assertPathIs('/my-registrations');
+                ->assertPathIs('/my-registration');
 
             // AC11: Test navigation to workshop and fees pages work (may redirect to register-event)
             $browser->visit('/workshops')
@@ -121,7 +121,7 @@ class NavigationTest extends DuskTestCase
 
             // AC11: Login and test authenticated navigation visibility
             $browser->loginAs($user)
-                ->visit('/my-registrations')
+                ->visit('/my-registration')
                 ->waitForText(__('My Registrations'))
                 ->pause(1000);
 
@@ -178,17 +178,17 @@ class NavigationTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->resize(375, 667)
-                ->visit('/my-registrations')
-                ->waitForLocation('/my-registrations')
+                ->visit('/my-registration')
+                ->waitForLocation('/my-registration')
                 ->pause(1000);
 
             // AC11: Hamburger button should be visible on mobile
             $browser->assertVisible('div.-me-2 button');
 
             // AC11: Test authenticated navigation by visiting pages directly (mobile hamburger works via JavaScript)
-            $browser->visit('/my-registrations')
+            $browser->visit('/my-registration')
                 ->waitForText(__('My Registrations'))
-                ->assertPathIs('/my-registrations');
+                ->assertPathIs('/my-registration');
         });
     }
 
@@ -236,14 +236,14 @@ class NavigationTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
-                ->visit('/my-registrations')
-                ->waitForLocation('/my-registrations')
-                ->assertPathIs('/my-registrations')
+                ->visit('/my-registration')
+                ->waitForLocation('/my-registration')
+                ->assertPathIs('/my-registration')
                 ->pause(500);
 
-            $browser->visit('/my-registrations')
+            $browser->visit('/my-registration')
                 ->waitForText(__('My Registrations'))
-                ->assertPathIs('/my-registrations');
+                ->assertPathIs('/my-registration');
 
             $browser->visit('/workshops')
                 ->pause(2000);

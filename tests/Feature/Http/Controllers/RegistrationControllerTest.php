@@ -7,6 +7,7 @@ use App\Exceptions\ReplicadoServiceException;
 use App\Mail\NewRegistrationNotification;
 use App\Mail\ProofUploadedNotification;
 use App\Models\Event;
+use App\Models\Payment;
 use App\Models\Registration;
 use App\Models\User;
 use App\Services\ReplicadoService;
@@ -453,22 +454,36 @@ class RegistrationControllerTest extends TestCase
             'payment_status' => 'pending_payment',
         ]);
 
+        // Create a Payment record for the registration
+        $payment = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 500.00,
+        ]);
+
         // Create a fake uploaded file
         $uploadedFile = UploadedFile::fake()->image('payment_proof.jpg', 800, 600);
 
         $response = $this->post(
             route('event-registrations.upload-proof', $registration),
-            ['payment_proof' => $uploadedFile]
+            [
+                'payment_proof' => $uploadedFile,
+                'payment_id' => $payment->id,
+            ]
         );
 
         // Verify the response
         $response->assertRedirect();
         $response->assertSessionHas('success', __('Payment proof uploaded successfully. The coordinator will review your submission.'));
 
-        // Verify the registration was updated
+        // Verify the payment was updated
+        $payment->refresh();
+        $this->assertNotNull($payment->payment_proof_path);
+        $this->assertNotNull($payment->payment_date);
+        $this->assertEquals('pending', $payment->status); // Status remains pending after upload
+
+        // Verify the registration status - stays pending_payment since payment status is still 'pending'
         $registration->refresh();
-        // Note: payment_proof_path and payment_uploaded_at moved to Payment model
-        $this->assertEquals('pending_br_proof_approval', $registration->payment_status);
+        $this->assertEquals('pending_payment', $registration->payment_status); // No change until all payments are non-pending
 
         // AC10: Verify ProofUploadedNotification was sent to coordinator
         Mail::assertSent(ProofUploadedNotification::class, function ($mail) use ($registration) {
@@ -483,11 +498,18 @@ class RegistrationControllerTest extends TestCase
     public function upload_proof_requires_authentication(): void
     {
         $registration = Registration::factory()->create(['payment_status' => 'pending_payment']);
+        $payment = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 500.00,
+        ]);
         $uploadedFile = UploadedFile::fake()->image('payment_proof.jpg');
 
         $response = $this->post(
             route('event-registrations.upload-proof', $registration),
-            ['payment_proof' => $uploadedFile]
+            [
+                'payment_proof' => $uploadedFile,
+                'payment_id' => $payment->id,
+            ]
         );
 
         $response->assertRedirect(route('login.local'));
@@ -504,11 +526,18 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $owner->id,
             'payment_status' => 'pending_payment',
         ]);
+        $payment = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 500.00,
+        ]);
         $uploadedFile = UploadedFile::fake()->image('payment_proof.jpg');
 
         $response = $this->post(
             route('event-registrations.upload-proof', $registration),
-            ['payment_proof' => $uploadedFile]
+            [
+                'payment_proof' => $uploadedFile,
+                'payment_id' => $payment->id,
+            ]
         );
 
         $response->assertForbidden();
@@ -524,6 +553,11 @@ class RegistrationControllerTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
+        ]);
+
+        $payment = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 500.00,
         ]);
 
         // Test that the policy allows access for the owner
@@ -546,6 +580,11 @@ class RegistrationControllerTest extends TestCase
             'payment_status' => 'pending_payment',
         ]);
 
+        $payment = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 500.00,
+        ]);
+
         // Test that the policy denies access for non-owner
         $this->assertFalse(
             Gate::allows('uploadProof', $registration),
@@ -564,15 +603,22 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $user->id,
             'payment_status' => 'paid_br',  // Already paid
         ]);
+        $payment = Payment::factory()->paid()->create([
+            'registration_id' => $registration->id,
+            'amount' => 500.00,
+        ]);
         $uploadedFile = UploadedFile::fake()->image('payment_proof.jpg');
 
         $response = $this->post(
             route('event-registrations.upload-proof', $registration),
-            ['payment_proof' => $uploadedFile]
+            [
+                'payment_proof' => $uploadedFile,
+                'payment_id' => $payment->id,
+            ]
         );
 
         $response->assertRedirect();
-        $response->assertSessionHas('error', __('Payment proof can only be uploaded for registrations pending payment.'));
+        $response->assertSessionHas('error', __('Payment proof can only be uploaded for pending payments.'));
 
         // Verify no notification was sent
         Mail::assertNotSent(ProofUploadedNotification::class);
@@ -589,23 +635,36 @@ class RegistrationControllerTest extends TestCase
             'payment_status' => 'pending_payment',
         ]);
 
+        $payment = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 500.00,
+        ]);
+
         // Test missing file
-        $response = $this->post(route('event-registrations.upload-proof', $registration), []);
+        $response = $this->post(route('event-registrations.upload-proof', $registration), [
+            'payment_id' => $payment->id,
+        ]);
         $response->assertSessionHasErrors(['payment_proof']);
 
         // Test invalid file type
         $invalidFile = UploadedFile::fake()->create('document.txt', 100);
         $response = $this->post(
             route('event-registrations.upload-proof', $registration),
-            ['payment_proof' => $invalidFile]
+            [
+                'payment_proof' => $invalidFile,
+                'payment_id' => $payment->id,
+            ]
         );
         $response->assertSessionHasErrors(['payment_proof']);
 
-        // Test file too large (over 5MB)
-        $largeFile = UploadedFile::fake()->create('large.jpg', 6000);
+        // Test file too large (over 10MB)
+        $largeFile = UploadedFile::fake()->create('large.jpg', 11000); // 11MB - over the 10MB limit
         $response = $this->post(
             route('event-registrations.upload-proof', $registration),
-            ['payment_proof' => $largeFile]
+            [
+                'payment_proof' => $largeFile,
+                'payment_id' => $payment->id,
+            ]
         );
         $response->assertSessionHasErrors(['payment_proof']);
     }
@@ -632,25 +691,37 @@ class RegistrationControllerTest extends TestCase
             'payment_status' => 'pending_payment',
         ]);
 
+        $payment = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 500.00,
+        ]);
+
         // Test 1: Upload bem-sucedido de um arquivo válido
         $this->actingAs($owner);
         $validFile = UploadedFile::fake()->image('payment_proof.jpg', 800, 600);
 
         $response = $this->post(
             route('event-registrations.upload-proof', $registration),
-            ['payment_proof' => $validFile]
+            [
+                'payment_proof' => $validFile,
+                'payment_id' => $payment->id,
+            ]
         );
 
         $response->assertRedirect();
         $response->assertSessionHas('success', __('Payment proof uploaded successfully. The coordinator will review your submission.'));
 
         // Verificação dos dados atualizados no banco
-        $registration->refresh();
-        // Note: payment_proof_path moved to Payment model
-        // Note: payment_uploaded_at moved to Payment model
-        $this->assertEquals('pending_br_proof_approval', $registration->payment_status);
+        $payment->refresh();
+        $this->assertNotNull($payment->payment_proof_path);
+        $this->assertNotNull($payment->payment_date);
+        $this->assertEquals('pending', $payment->status); // Status remains pending after upload
 
-        // Note: File storage verification moved to Payment model
+        $registration->refresh();
+        $this->assertEquals('pending_payment', $registration->payment_status); // No change until all payments are non-pending
+
+        // Verify file was stored in private storage
+        $this->assertTrue(Storage::disk('private')->exists($payment->payment_proof_path));
 
         // Test notification dispatch
         Mail::assertSent(ProofUploadedNotification::class, function ($mail) use ($registration) {
@@ -663,10 +734,18 @@ class RegistrationControllerTest extends TestCase
             'payment_status' => 'pending_payment',
         ]);
 
+        $payment2 = Payment::factory()->pending()->create([
+            'registration_id' => $registration2->id,
+            'amount' => 500.00,
+        ]);
+
         $invalidTypeFile = UploadedFile::fake()->create('document.txt', 100);
         $response = $this->post(
             route('event-registrations.upload-proof', $registration2),
-            ['payment_proof' => $invalidTypeFile]
+            [
+                'payment_proof' => $invalidTypeFile,
+                'payment_id' => $payment2->id,
+            ]
         );
         $response->assertSessionHasErrors(['payment_proof']);
 
@@ -676,10 +755,18 @@ class RegistrationControllerTest extends TestCase
             'payment_status' => 'pending_payment',
         ]);
 
-        $largeSizeFile = UploadedFile::fake()->create('large.jpg', 6000); // Over 5MB
+        $payment3 = Payment::factory()->pending()->create([
+            'registration_id' => $registration3->id,
+            'amount' => 500.00,
+        ]);
+
+        $largeSizeFile = UploadedFile::fake()->create('large.jpg', 11000); // Over 10MB
         $response = $this->post(
             route('event-registrations.upload-proof', $registration3),
-            ['payment_proof' => $largeSizeFile]
+            [
+                'payment_proof' => $largeSizeFile,
+                'payment_id' => $payment3->id,
+            ]
         );
         $response->assertSessionHasErrors(['payment_proof']);
 
@@ -690,23 +777,34 @@ class RegistrationControllerTest extends TestCase
             'payment_status' => 'pending_payment',
         ]);
 
+        $payment4 = Payment::factory()->pending()->create([
+            'registration_id' => $registration4->id,
+            'amount' => 500.00,
+        ]);
+
         $unauthorizedFile = UploadedFile::fake()->image('unauthorized.jpg');
         $response = $this->post(
             route('event-registrations.upload-proof', $registration4),
-            ['payment_proof' => $unauthorizedFile]
+            [
+                'payment_proof' => $unauthorizedFile,
+                'payment_id' => $payment4->id,
+            ]
         );
         $response->assertForbidden();
 
         // Verify no changes occurred for unauthorized attempt
+        $payment4->refresh();
+        $this->assertNull($payment4->payment_proof_path);
+        $this->assertEquals('pending', $payment4->status);
+
         $registration4->refresh();
-        // Note: payment_proof_path and payment_uploaded_at moved to Payment model
         $this->assertEquals('pending_payment', $registration4->payment_status);
     }
 
     #[Test]
     public function upload_proof_accepts_valid_file_types_and_sizes(): void
     {
-        // AC4: Test that valid file types (PDF, JPG, PNG) and sizes (≤5MB) are accepted
+        // AC4: Test that valid file types (PDF, JPG, PNG) and sizes (≤10MB) are accepted
         Mail::fake();
         Storage::fake('private');
 
@@ -720,10 +818,17 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
         ]);
+        $payment1 = Payment::factory()->pending()->create([
+            'registration_id' => $registration1->id,
+            'amount' => 500.00,
+        ]);
         $jpgFile = UploadedFile::fake()->image('proof.jpg', 800, 600);
         $response = $this->post(
             route('event-registrations.upload-proof', $registration1),
-            ['payment_proof' => $jpgFile]
+            [
+                'payment_proof' => $jpgFile,
+                'payment_id' => $payment1->id,
+            ]
         );
         $response->assertRedirect();
         $response->assertSessionHas('success');
@@ -734,10 +839,17 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
         ]);
+        $payment2 = Payment::factory()->pending()->create([
+            'registration_id' => $registration2->id,
+            'amount' => 500.00,
+        ]);
         $pngFile = UploadedFile::fake()->image('proof.png', 800, 600);
         $response = $this->post(
             route('event-registrations.upload-proof', $registration2),
-            ['payment_proof' => $pngFile]
+            [
+                'payment_proof' => $pngFile,
+                'payment_id' => $payment2->id,
+            ]
         );
         $response->assertRedirect();
         $response->assertSessionHas('success');
@@ -748,10 +860,17 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
         ]);
+        $payment3 = Payment::factory()->pending()->create([
+            'registration_id' => $registration3->id,
+            'amount' => 500.00,
+        ]);
         $pdfFile = UploadedFile::fake()->create('proof.pdf', 1000, 'application/pdf');
         $response = $this->post(
             route('event-registrations.upload-proof', $registration3),
-            ['payment_proof' => $pdfFile]
+            [
+                'payment_proof' => $pdfFile,
+                'payment_id' => $payment3->id,
+            ]
         );
         $response->assertRedirect();
         $response->assertSessionHas('success');
@@ -762,24 +881,38 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
         ]);
+        $payment4 = Payment::factory()->pending()->create([
+            'registration_id' => $registration4->id,
+            'amount' => 500.00,
+        ]);
         $jpegFile = UploadedFile::fake()->image('proof.jpeg', 800, 600);
         $response = $this->post(
             route('event-registrations.upload-proof', $registration4),
-            ['payment_proof' => $jpegFile]
+            [
+                'payment_proof' => $jpegFile,
+                'payment_id' => $payment4->id,
+            ]
         );
         $response->assertRedirect();
         $response->assertSessionHas('success');
         $response->assertSessionHasNoErrors();
 
-        // Test file at maximum size limit (5MB = 5120KB)
+        // Test file at maximum size limit (10MB = 10240KB)
         $registration5 = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
         ]);
-        $maxSizeFile = UploadedFile::fake()->image('max_size.jpg', 2000, 2000)->size(5120);
+        $payment5 = Payment::factory()->pending()->create([
+            'registration_id' => $registration5->id,
+            'amount' => 500.00,
+        ]);
+        $maxSizeFile = UploadedFile::fake()->image('max_size.jpg', 2000, 2000)->size(10240);
         $response = $this->post(
             route('event-registrations.upload-proof', $registration5),
-            ['payment_proof' => $maxSizeFile]
+            [
+                'payment_proof' => $maxSizeFile,
+                'payment_id' => $payment5->id,
+            ]
         );
         $response->assertRedirect();
         $response->assertSessionHas('success');
@@ -1289,25 +1422,40 @@ class RegistrationControllerTest extends TestCase
             'payment_status' => 'pending_payment',
         ]);
 
+        $payment = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 500.00,
+        ]);
+
         // Create a file with special characters and spaces that need sanitization
         $unsafeFilename = 'My Payment Proof (special)! & file.jpg';
         $uploadedFile = UploadedFile::fake()->image($unsafeFilename, 800, 600);
 
         $response = $this->post(
             route('event-registrations.upload-proof', $registration),
-            ['payment_proof' => $uploadedFile]
+            [
+                'payment_proof' => $uploadedFile,
+                'payment_id' => $payment->id,
+            ]
         );
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
 
-        // Verify the registration was updated
+        // Verify the payment was updated
+        $payment->refresh();
+        $this->assertNotNull($payment->payment_proof_path);
+        $this->assertNotNull($payment->payment_date);
+        $this->assertEquals('pending', $payment->status); // Status remains pending after upload
+
+        // Verify the registration status - stays pending_payment since payment status is still 'pending'
         $registration->refresh();
+        $this->assertEquals('pending_payment', $registration->payment_status); // No change until all payments are non-pending
 
-        // Note: payment_proof_path functionality moved to Payment model
-        // This test may need updating when upload proof functionality is refactored
-
-        // File storage verification disabled - needs refactoring for Payment model
+        // Verify filename sanitization - the actual filename should be sanitized
+        // The stored path should not contain the unsafe characters from the original filename
+        $this->assertStringNotContainsString('(special)!', $payment->payment_proof_path);
+        $this->assertStringNotContainsString('&', $payment->payment_proof_path);
     }
 
     #[Test]
@@ -1327,11 +1475,19 @@ class RegistrationControllerTest extends TestCase
             'payment_status' => 'pending_payment',
         ]);
 
+        $payment = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 500.00,
+        ]);
+
         $uploadedFile = UploadedFile::fake()->image('payment_proof.jpg', 800, 600);
 
         $response = $this->post(
             route('event-registrations.upload-proof', $registration),
-            ['payment_proof' => $uploadedFile]
+            [
+                'payment_proof' => $uploadedFile,
+                'payment_id' => $payment->id,
+            ]
         );
 
         $response->assertRedirect();
@@ -1379,25 +1535,37 @@ class RegistrationControllerTest extends TestCase
         // Associate the event with the registration
         $registration->events()->attach($event->code, ['price_at_registration' => 500.00]);
 
+        // Create a Payment record for the registration
+        $payment = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 500.00,
+        ]);
+
         // Create a fake uploaded file
         $uploadedFile = UploadedFile::fake()->image('payment_proof.jpg', 800, 600);
 
         // AC8: Upload the proof
         $response = $this->post(
             route('event-registrations.upload-proof', $registration),
-            ['payment_proof' => $uploadedFile]
+            [
+                'payment_proof' => $uploadedFile,
+                'payment_id' => $payment->id,
+            ]
         );
 
         // AC8: Verify redirect back with success message
         $response->assertRedirect();
         $response->assertSessionHas('success', __('Payment proof uploaded successfully. The coordinator will review your submission.'));
 
-        // AC8: Verify registration status is updated to pending_br_proof_approval
-        $registration->refresh();
-        $this->assertEquals('pending_br_proof_approval', $registration->payment_status);
+        // AC8: Verify payment was updated with proof details
+        $payment->refresh();
+        $this->assertNotNull($payment->payment_proof_path);
+        $this->assertNotNull($payment->payment_date);
+        $this->assertEquals('pending', $payment->status); // Status remains pending after upload
 
-        // Note: payment_proof_path and payment_uploaded_at moved to Payment model
-        // This test may need updating when upload proof functionality is refactored
+        // AC8: Verify registration status - stays pending_payment since payment status is still 'pending'
+        $registration->refresh();
+        $this->assertEquals('pending_payment', $registration->payment_status); // No change until all payments are non-pending
 
         // AC8: Verify notification was sent (additional verification)
         Mail::assertSent(ProofUploadedNotification::class, function ($mail) use ($registration) {
@@ -1405,14 +1573,14 @@ class RegistrationControllerTest extends TestCase
         });
 
         // AC8: Verify that the success message can be displayed on the UI
-        // (This simulates what would happen when user navigates back to my-registrations page)
+        // (This simulates what would happen when user navigates back to my-registration page)
         $myRegistrationsResponse = $this->get(route('registrations.my'));
         $myRegistrationsResponse->assertOk();
 
-        // The status should now show as pending_br_proof_approval in the UI
-        // This verifies that the UI properly reflects the updated status after reload
+        // The status should remain as pending_payment since payment status is still 'pending'
+        // This verifies that the UI properly reflects the current status after reload
         // Status is formatted according to: __(ucfirst(str_replace(['_', '-'], ' ', $registration->payment_status)))
-        $formattedStatus = __(ucfirst(str_replace(['_', '-'], ' ', 'pending_br_proof_approval')));
+        $formattedStatus = __(ucfirst(str_replace(['_', '-'], ' ', 'pending_payment')));
         $myRegistrationsResponse->assertSee($formattedStatus);
     }
 }

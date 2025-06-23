@@ -159,7 +159,7 @@ class AuthenticationTest extends TestCase
 
         $this->actingAs($user);
 
-        $response = $this->get('/my-registrations');
+        $response = $this->get('/my-registration');
 
         $response
             ->assertOk()
