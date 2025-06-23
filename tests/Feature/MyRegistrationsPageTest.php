@@ -66,10 +66,10 @@ class MyRegistrationsPageTest extends TestCase
     }
 
     /**
-     * Test that my-registrations page displays proper header and content.
-     * This test specifically addresses AC1 requirements for Issue #13.
+     * Test that my-registration page displays proper header and content.
+     * This test specifically addresses AC1 requirements for Issue #49.
      */
-    public function test_my_registrations_page_displays_correct_content(): void
+    public function test_my_registration_page_displays_correct_content(): void
     {
         // Create verified user
         $user = User::factory()->create([
@@ -79,16 +79,16 @@ class MyRegistrationsPageTest extends TestCase
         // Test page content
         $response = $this->actingAs($user)->get('/my-registration');
         $response->assertOk();
-        $response->assertSee(__('My Registrations'));
+        $response->assertSee(__('My Registration'));
     }
 
     /**
-     * Test that my-registrations page displays empty state when no registrations exist.
-     * This test specifically addresses AC1 requirements for Issue #13.
+     * Test that my-registration page displays empty state when no registration exists.
+     * This test specifically addresses AC1 requirements for Issue #49.
      */
-    public function test_my_registrations_page_displays_empty_state(): void
+    public function test_my_registration_page_displays_empty_state(): void
     {
-        // Create verified user with no registrations
+        // Create verified user with no registration
         $user = User::factory()->create([
             'email_verified_at' => now(),
         ]);
@@ -586,6 +586,10 @@ class MyRegistrationsPageTest extends TestCase
         // AC5 Requirement: Upload form is shown for pending payments
         $content = $response->getContent();
 
+        // Verify payment section is displayed
+        $this->assertStringContainsString(__('Payment History'), $content);
+        $this->assertStringContainsString(__('Payment').' #'.$pendingPayment->id, $content);
+
         // Check that form with pending payment ID exists (for the pending payment only)
         $this->assertStringContainsString('payment_id" value="'.$pendingPayment->id.'"', $content);
         $this->assertStringContainsString(__('Payment Proof Upload'), $content);
@@ -797,5 +801,55 @@ class MyRegistrationsPageTest extends TestCase
         // Verify upload form is NOT present
         $this->assertStringNotContainsString('payment_id" value="'.$payment->id.'"', $content);
         $this->assertStringNotContainsString(__('Upload Payment Proof'), $content);
+    }
+
+    /**
+     * Test that 'Add Events' button is displayed when user has registration (AC2).
+     * This test specifically addresses AC2 requirements for Issue #49.
+     */
+    public function test_add_events_button_displayed_with_registration(): void
+    {
+        // Create verified user
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create event
+        $event = Event::factory()->create(['name' => 'Test Event']);
+
+        // Create registration for user
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        // Attach event to registration
+        $registration->events()->attach($event->code, ['price_at_registration' => 200.00]);
+
+        // Test that Add Events button is displayed
+        $response = $this->actingAs($user)->get('/my-registration');
+        $response->assertOk();
+        $response->assertSee(__('Add Events'));
+
+        // Verify button styling and structure
+        $content = $response->getContent();
+        $this->assertStringContainsString('bg-indigo-600', $content);
+        $this->assertStringContainsString('hover:bg-indigo-700', $content);
+    }
+
+    /**
+     * Test that 'Add Events' button is NOT displayed when user has no registration (AC2).
+     * This test specifically addresses AC2 requirements for Issue #49.
+     */
+    public function test_add_events_button_not_displayed_without_registration(): void
+    {
+        // Create verified user with no registration
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Test that Add Events button is NOT displayed
+        $response = $this->actingAs($user)->get('/my-registration');
+        $response->assertOk();
+        $response->assertDontSee(__('Add Events'));
     }
 }

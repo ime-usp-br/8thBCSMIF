@@ -71,7 +71,7 @@ class MyRegistrationsTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
                 ->visit('/my-registration')
-                ->waitForText(__('My Registrations'))
+                ->waitForText(__('My Registration'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
                 ->waitForText(__('Payment Proof Upload'))
@@ -111,7 +111,7 @@ class MyRegistrationsTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
                 ->visit('/my-registration')
-                ->waitForText(__('My Registrations'))
+                ->waitForText(__('My Registration'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
                 ->assertDontSee(__('Payment Proof Upload'))
@@ -150,7 +150,7 @@ class MyRegistrationsTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
                 ->visit('/my-registration')
-                ->waitForText(__('My Registrations'))
+                ->waitForText(__('My Registration'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
                 ->assertDontSee(__('Payment Proof Upload'))
@@ -179,7 +179,7 @@ class MyRegistrationsTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/my-registration')
-                ->waitForText(__('My Registrations'))
+                ->waitForText(__('My Registration'))
                 ->assertSee(__('No registrations found'))
                 ->assertSee(__('You have not registered for any events yet.'))
                 ->assertSeeLink(__('Register for Event'))
@@ -212,21 +212,18 @@ class MyRegistrationsTest extends DuskTestCase
         $registration1 = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
-            'calculated_fee' => 350.50,
             'full_name' => 'Test User One',
         ]);
 
         $registration2 = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'approved',
-            'calculated_fee' => 275.75,
             'full_name' => 'Test User One',
         ]);
 
         $registration3 = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'pending_br_proof_approval',
-            'calculated_fee' => 125.00,
             'full_name' => 'Test User One',
         ]);
 
@@ -241,7 +238,7 @@ class MyRegistrationsTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user, $registration1, $registration2, $registration3, $event1, $event2, $event3) {
             $browser->loginAs($user)
                 ->visit('/my-registration')
-                ->waitForText(__('My Registrations'))
+                ->waitForText(__('My Registration'))
 
                 // Verify all three registrations are displayed
                 ->assertSee(__('Registration').' #'.$registration1->id)
@@ -292,7 +289,6 @@ class MyRegistrationsTest extends DuskTestCase
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'approved',
-            'calculated_fee' => 625.25,
             'full_name' => 'John Doe Registration Test',
             'email' => 'john.doe@example.com',
             'nationality' => 'Brazilian',
@@ -307,7 +303,7 @@ class MyRegistrationsTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user, $registration, $event1, $event2, $event3) {
             $browser->loginAs($user)
                 ->visit('/my-registration')
-                ->waitForText(__('My Registrations'))
+                ->waitForText(__('My Registration'))
                 ->waitForText(__('Registration').' #'.$registration->id)
 
                 // Click to view registration details
@@ -376,7 +372,7 @@ class MyRegistrationsTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
                 ->visit('/my-registration')
-                ->waitForText(__('My Registrations'))
+                ->waitForText(__('My Registration'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
                 ->waitForText(__('Payment Proof Upload'))
@@ -446,7 +442,7 @@ class MyRegistrationsTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
                 ->visit('/my-registration')
-                ->waitForText(__('My Registrations'))
+                ->waitForText(__('My Registration'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
                 ->waitForText(__('Payment Proof Upload'))
@@ -532,14 +528,12 @@ class MyRegistrationsTest extends DuskTestCase
         $user1Registration1 = Registration::factory()->create([
             'user_id' => $user1->id,
             'payment_status' => 'pending_payment',
-            'calculated_fee' => 350.50,
             'full_name' => 'User One Registration',
         ]);
 
         $user1Registration2 = Registration::factory()->create([
             'user_id' => $user1->id,
             'payment_status' => 'approved',
-            'calculated_fee' => 225.75,
             'full_name' => 'User One Second Registration',
         ]);
 
@@ -547,14 +541,12 @@ class MyRegistrationsTest extends DuskTestCase
         $user2Registration1 = Registration::factory()->create([
             'user_id' => $user2->id,
             'payment_status' => 'pending_payment',
-            'calculated_fee' => 400.00,
             'full_name' => 'User Two Registration',
         ]);
 
         $user2Registration2 = Registration::factory()->create([
             'user_id' => $user2->id,
             'payment_status' => 'pending_br_proof_approval',
-            'calculated_fee' => 150.00,
             'full_name' => 'User Two Other Registration',
         ]);
 
@@ -568,7 +560,7 @@ class MyRegistrationsTest extends DuskTestCase
             // Login as user1 and verify they only see their own registrations
             $browser->loginAs($user1)
                 ->visit('/my-registration')
-                ->waitForText(__('My Registrations'))
+                ->waitForText(__('My Registration'))
 
                 // User1 should see their own registrations
                 ->assertSee(__('Registration').' #'.$user1Registration1->id)
@@ -588,7 +580,7 @@ class MyRegistrationsTest extends DuskTestCase
             // Login as user2 and verify they only see their own registrations
             $browser->loginAs($user2)
                 ->visit('/my-registration')
-                ->waitForText(__('My Registrations'))
+                ->waitForText(__('My Registration'))
 
                 // User2 should see their own registrations
                 ->assertSee(__('Registration').' #'.$user2Registration1->id)
@@ -643,7 +635,7 @@ class MyRegistrationsTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user, $registration) {
             $browser->loginAs($user)
                 ->visit('/my-registration')
-                ->waitForText(__('My Registrations'))
+                ->waitForText(__('My Registration'))
                 ->waitForText(__('Registration').' #'.$registration->id)
                 ->click("button[wire\\:click='viewRegistration({$registration->id})']")
                 ->waitForText(__('Payment Proof Upload'))

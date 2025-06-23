@@ -480,7 +480,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertNotNull($payment->payment_proof_path);
         $this->assertNotNull($payment->payment_date);
         $this->assertEquals('pending', $payment->status); // Status remains pending after upload
-        
+
         // Verify the registration status - stays pending_payment since payment status is still 'pending'
         $registration->refresh();
         $this->assertEquals('pending_payment', $registration->payment_status); // No change until all payments are non-pending
@@ -554,7 +554,7 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
         ]);
-        
+
         $payment = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 500.00,
@@ -579,7 +579,7 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $owner->id,
             'payment_status' => 'pending_payment',
         ]);
-        
+
         $payment = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 500.00,
@@ -634,7 +634,7 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
         ]);
-        
+
         $payment = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 500.00,
@@ -690,7 +690,7 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $owner->id,
             'payment_status' => 'pending_payment',
         ]);
-        
+
         $payment = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 500.00,
@@ -716,7 +716,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertNotNull($payment->payment_proof_path);
         $this->assertNotNull($payment->payment_date);
         $this->assertEquals('pending', $payment->status); // Status remains pending after upload
-        
+
         $registration->refresh();
         $this->assertEquals('pending_payment', $registration->payment_status); // No change until all payments are non-pending
 
@@ -733,7 +733,7 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $owner->id,
             'payment_status' => 'pending_payment',
         ]);
-        
+
         $payment2 = Payment::factory()->pending()->create([
             'registration_id' => $registration2->id,
             'amount' => 500.00,
@@ -754,7 +754,7 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $owner->id,
             'payment_status' => 'pending_payment',
         ]);
-        
+
         $payment3 = Payment::factory()->pending()->create([
             'registration_id' => $registration3->id,
             'amount' => 500.00,
@@ -776,7 +776,7 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $owner->id,
             'payment_status' => 'pending_payment',
         ]);
-        
+
         $payment4 = Payment::factory()->pending()->create([
             'registration_id' => $registration4->id,
             'amount' => 500.00,
@@ -796,7 +796,7 @@ class RegistrationControllerTest extends TestCase
         $payment4->refresh();
         $this->assertNull($payment4->payment_proof_path);
         $this->assertEquals('pending', $payment4->status);
-        
+
         $registration4->refresh();
         $this->assertEquals('pending_payment', $registration4->payment_status);
     }
@@ -1421,7 +1421,7 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
         ]);
-        
+
         $payment = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 500.00,
@@ -1447,7 +1447,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertNotNull($payment->payment_proof_path);
         $this->assertNotNull($payment->payment_date);
         $this->assertEquals('pending', $payment->status); // Status remains pending after upload
-        
+
         // Verify the registration status - stays pending_payment since payment status is still 'pending'
         $registration->refresh();
         $this->assertEquals('pending_payment', $registration->payment_status); // No change until all payments are non-pending
@@ -1474,7 +1474,7 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
         ]);
-        
+
         $payment = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 500.00,
@@ -1562,7 +1562,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertNotNull($payment->payment_proof_path);
         $this->assertNotNull($payment->payment_date);
         $this->assertEquals('pending', $payment->status); // Status remains pending after upload
-        
+
         // AC8: Verify registration status - stays pending_payment since payment status is still 'pending'
         $registration->refresh();
         $this->assertEquals('pending_payment', $registration->payment_status); // No change until all payments are non-pending
