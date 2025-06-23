@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\RegistrationController as AdminRegistrationController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\RegistrationModificationController;
 use Illuminate\Support\Facades\Route;
@@ -28,10 +29,15 @@ Route::post('/event-registrations', [RegistrationController::class, 'store'])
     ->middleware(['auth', 'verified'])
     ->name('event-registrations.store');
 
-// Route for uploading payment proof
+// Route for uploading payment proof (legacy route for backward compatibility)
 Route::post('/event-registrations/{registration}/upload-proof', [RegistrationController::class, 'uploadProof'])
     ->middleware(['auth', 'verified'])
     ->name('event-registrations.upload-proof');
+
+// Route for uploading payment proof to specific payment
+Route::post('/payments/{payment}/upload-proof', [PaymentController::class, 'uploadProof'])
+    ->middleware(['auth', 'verified'])
+    ->name('payments.upload-proof');
 
 // Route for modifying registration
 Route::post('/my-registration/modify/{registration}', [RegistrationModificationController::class, 'store'])
