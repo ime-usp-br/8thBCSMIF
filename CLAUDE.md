@@ -19,22 +19,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **SEMPRE** adicione testes que comprovem a funcionalidade
 - Verifique se implementação atende exatamente o comportamento descrito no AC
 
-### 3. **Quality Checks Automáticos (OBRIGATÓRIOS)**
+### 3. **Quality Checks Automáticos (OBRIGATÓRIOS ANTES DE VALIDAÇÃO)**
 ```bash
 vendor/bin/pint                     # PSR-12 formatting
 vendor/bin/phpstan analyse          # Static analysis  
 php artisan test                    # PHPUnit tests
 pytest -v --live                    # Python tests (se aplicável)
 ```
-**Todos devem passar antes de prosseguir.**
+**🔴 TODOS DEVEM PASSAR ANTES DE PROSSEGUIR PARA VALIDAÇÃO.**
+**🔴 SE QUALQUER FALHAR: CORRIGIR E REPETIR OS 4 COMANDOS.**
 
-### 4. **Validação Automática (CRÍTICO)**
+### 4. **Validação Automática (SÓ APÓS QUALITY CHECKS)**
 ```bash
 git add .
 python3 scripts/generate_context.py --stages git
 printf "y\ny\ny\n" | python3 scripts/tasks/llm_task_analyze_ac.py -i <ISSUE> -a <AC> -sc
 ```
-**⚠️ SÓ AVANCE SE analyze-ac APROVAR! Se reprovar, corrija e repita validação.**
+**⚠️ SÓ AVANCE SE analyze-ac APROVAR! Se reprovar, corrija e repita quality checks + validação.**
 
 ### 5. **Commit com Padrão Projeto**
 ```bash
@@ -831,3 +832,8 @@ Padrões confirmados na documentação:
 - Spatie Permission: `"roles middleware"`, `"blade directives"`
 - Alpine.js: `"directives events"`, `"lifecycle"`
 - Tailwind: `"components utilities"`, `"responsive design"`
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
