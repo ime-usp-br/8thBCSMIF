@@ -279,7 +279,7 @@ class PaymentControllerTest extends TestCase
         $response->assertSessionHasErrors(['payment_proof']);
         $errors = $response->getSession()->get('errors');
         $paymentProofError = $errors->get('payment_proof')[0];
-        
+
         // AC6: Error message should instruct user to contact the organization
         $this->assertStringContainsString('contact the organization', $paymentProofError);
         $this->assertStringContainsString('assistance', $paymentProofError);
@@ -321,7 +321,7 @@ class PaymentControllerTest extends TestCase
         $response->assertSessionHasErrors(['payment_proof']);
         $errors = $response->getSession()->get('errors');
         $paymentProofError = $errors->get('payment_proof')[0];
-        
+
         // AC6: Error message should instruct user to contact the organization
         $this->assertStringContainsString('contact the organization', $paymentProofError);
         $this->assertStringContainsString('assistance', $paymentProofError);
@@ -364,7 +364,7 @@ class PaymentControllerTest extends TestCase
         $response->assertSessionHasErrors(['payment_proof']);
         $errors = $response->getSession()->get('errors');
         $paymentProofError = $errors->get('payment_proof')[0];
-        
+
         // AC6: Error message should instruct user to contact the organization
         $this->assertStringContainsString('contact the organization', $paymentProofError);
         $this->assertStringContainsString('assistance', $paymentProofError);
@@ -374,7 +374,7 @@ class PaymentControllerTest extends TestCase
 
     /**
      * Test AC6: Verify error message translations contain organization contact info.
-     * This test ensures that all error message translations instruct 
+     * This test ensures that all error message translations instruct
      * the user to contact the organization for assistance.
      */
     public function test_upload_proof_error_messages_contain_organization_contact_info(): void
@@ -383,19 +383,19 @@ class PaymentControllerTest extends TestCase
         $serverError = __('Failed to upload payment proof. Please contact the organization for assistance.');
         $this->assertStringContainsString('contact the organization', $serverError);
         $this->assertStringContainsString('assistance', $serverError);
-        
+
         $requiredError = __('Payment proof file is required. Please contact the organization for assistance if you are unable to upload.');
         $this->assertStringContainsString('contact the organization', $requiredError);
         $this->assertStringContainsString('assistance', $requiredError);
-        
+
         $mimeError = __('Payment proof must be a JPG, JPEG, PNG, or PDF file. Please contact the organization for assistance if your file format is not supported.');
         $this->assertStringContainsString('contact the organization', $mimeError);
         $this->assertStringContainsString('assistance', $mimeError);
-        
+
         $sizeError = __('Payment proof file size must not exceed 10MB. Please contact the organization for assistance if you need to upload a larger file.');
         $this->assertStringContainsString('contact the organization', $sizeError);
         $this->assertStringContainsString('assistance', $sizeError);
-        
+
         // Test Portuguese translations
         app()->setLocale('pt_BR');
         $serverErrorPt = __('Failed to upload payment proof. Please contact the organization for assistance.');
