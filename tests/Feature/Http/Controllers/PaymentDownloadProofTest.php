@@ -53,11 +53,11 @@ class PaymentDownloadProofTest extends TestCase
         // Assert: Verify successful download
         $response->assertOk();
         $response->assertHeader('content-disposition');
-        
+
         // Verify the download uses a friendly filename
         $contentDisposition = $response->headers->get('content-disposition');
         $this->assertStringContainsString('payment_proof_'.$payment->id, $contentDisposition);
-        
+
         // Verify the file still exists in storage (download shouldn't remove it)
         $this->assertTrue(Storage::disk('private')->exists($filePath));
         $this->assertEquals($testContent, Storage::disk('private')->get($filePath));
