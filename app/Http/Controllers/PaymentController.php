@@ -33,6 +33,11 @@ class PaymentController extends Controller
                 'mimes:jpg,jpeg,png,pdf',
                 'max:10240', // 10MB max
             ],
+        ], [
+            'payment_proof.required' => __('Payment proof file is required. Please contact the organization for assistance if you are unable to upload.'),
+            'payment_proof.file' => __('Payment proof must be a valid file. Please contact the organization for assistance if you continue to experience issues.'),
+            'payment_proof.mimes' => __('Payment proof must be a JPG, JPEG, PNG, or PDF file. Please contact the organization for assistance if your file format is not supported.'),
+            'payment_proof.max' => __('Payment proof file size must not exceed 10MB. Please contact the organization for assistance if you need to upload a larger file.'),
         ]);
 
         // Validate that payment is in correct status for proof upload
@@ -102,7 +107,7 @@ class PaymentController extends Controller
                 'user_id' => $user?->id,
             ]);
 
-            return redirect()->back()->with('error', __('Failed to upload payment proof. Please try again.'));
+            return redirect()->back()->with('error', __('Failed to upload payment proof. Please contact the organization for assistance.'));
         }
     }
 
