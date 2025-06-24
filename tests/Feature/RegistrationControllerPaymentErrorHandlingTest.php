@@ -36,28 +36,23 @@ class RegistrationControllerPaymentErrorHandlingTest extends TestCase
         // Act: Verify the robust error handling exists by checking controller structure
         $controllerPath = app_path('Http/Controllers/RegistrationController.php');
         $controllerContent = file_get_contents($controllerPath);
-        
+
         // Assert: Verify try-catch structure exists around payment creation
-        $this->assertStringContainsString('try {', $controllerContent);
-        $this->assertStringContainsString('$registration->payments()->create(', $controllerContent);
-        $this->assertStringContainsString('} catch (\Exception $e) {', $controllerContent);
-        $this->assertStringContainsString('Log::error(\'Failed to create payment record', $controllerContent);
-        $this->assertStringContainsString('$registration->delete();', $controllerContent);
+        // Assert: Verify DB transaction and general try-catch structure
+        $this->assertStringContainsString('DB::transaction(function () use ($request, $validatedData) {', $controllerContent);
+        $this->assertStringContainsString('try {', $controllerContent); // Outer try-catch for the transaction
+        $this->assertStringContainsString('} catch (\Exception $e) {', $controllerContent); // Outer try-catch for the transaction
+        $this->assertStringContainsString('Log::error(\'Failed to create registration or payment due to a transaction error.\'', $controllerContent);
         $this->assertStringContainsString('return redirect()->back()', $controllerContent);
-        $this->assertStringContainsString('Failed to process payment information', $controllerContent);
-        
-        // Verify post-creation validation exists
-        $this->assertStringContainsString('if ($payment === null || $payment->id === null)', $controllerContent);
-        $this->assertStringContainsString('Payment creation failed - record not persisted', $controllerContent);
-        
-        // Verify error logging includes all required fields
+        $this->assertStringContainsString('Failed to process your registration', $controllerContent);
+
+        // Verify error logging includes all required fields for the transaction error
         $this->assertStringContainsString('error_message', $controllerContent);
         $this->assertStringContainsString('error_trace', $controllerContent);
-        $this->assertStringContainsString('registration_id', $controllerContent);
-        $this->assertStringContainsString('amount', $controllerContent);
-        
+        $this->assertStringContainsString('user_id', $controllerContent);
+
         // Verify user-facing error message is localized
-        $this->assertStringContainsString('__(' , $controllerContent);
+        $this->assertStringContainsString('__(', $controllerContent);
         $this->assertStringContainsString('withInput()', $controllerContent);
     }
 
@@ -73,7 +68,7 @@ class RegistrationControllerPaymentErrorHandlingTest extends TestCase
         // Arrange: Create test user and get valid events
         $user = User::factory()->create();
         $events = Event::take(2)->get();
-        
+
         $registrationData = [
             'full_name' => 'Jane Smith',
             'nationality' => 'Brazilian',
@@ -125,13 +120,13 @@ class RegistrationControllerPaymentErrorHandlingTest extends TestCase
 
         // Verify registration was created
         $this->assertEquals($initialRegistrationCount + 1, Registration::count());
-        
+
         // Get the created registration
         $registration = Registration::latest()->first();
         $this->assertNotNull($registration);
         $this->assertEquals($user->id, $registration->user_id);
         $this->assertEquals('pending_payment', $registration->payment_status);
-        
+
         // Verify payment was created successfully (this validates the happy path still works)
         $this->assertGreaterThan(0, $registration->payments()->count());
         $payment = $registration->payments()->first();
@@ -150,21 +145,19 @@ class RegistrationControllerPaymentErrorHandlingTest extends TestCase
         // Verify controller uses necessary imports for error handling
         $controllerPath = app_path('Http/Controllers/RegistrationController.php');
         $controllerContent = file_get_contents($controllerPath);
-        
+
         // Check for essential imports
         $this->assertStringContainsString('use Illuminate\Support\Facades\Log;', $controllerContent);
-        
+
         // Verify exception handling is properly structured
         $this->assertStringContainsString('\Exception $e', $controllerContent);
         $this->assertStringContainsString('$e->getMessage()', $controllerContent);
         $this->assertStringContainsString('$e->getTraceAsString()', $controllerContent);
-        
-        // Verify rollback mechanism
-        $this->assertStringContainsString('$registration->delete()', $controllerContent);
-        
+
         // Verify user feedback mechanism
         $this->assertStringContainsString('redirect()->back()', $controllerContent);
         $this->assertStringContainsString('->withInput()', $controllerContent);
         $this->assertStringContainsString('->with(\'error\'', $controllerContent);
+        $this->assertStringContainsString('Failed to process your registration', $controllerContent);
     }
 }
