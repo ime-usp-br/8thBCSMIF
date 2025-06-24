@@ -226,6 +226,7 @@ class PaymentControllerTest extends TestCase
             'registration_id' => $registration->id,
             'status' => 'completed', // Not pending
             'amount' => 100.00,
+            'payment_proof_path' => null, // Ensure it starts as null
         ]);
 
         $file = UploadedFile::fake()->create('proof.pdf', 100, 'application/pdf');
