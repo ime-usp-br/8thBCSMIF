@@ -39,6 +39,11 @@ Route::post('/payments/{payment}/upload-proof', [PaymentController::class, 'uplo
     ->middleware(['auth', 'verified'])
     ->name('payments.upload-proof');
 
+// Route for downloading payment proof for specific payment
+Route::get('/payments/{payment}/download-proof', [PaymentController::class, 'downloadProof'])
+    ->middleware(['auth', 'verified'])
+    ->name('payments.download-proof');
+
 // Route for modifying registration
 Route::post('/my-registration/modify/{registration}', [RegistrationModificationController::class, 'store'])
     ->middleware(['auth', 'verified'])
