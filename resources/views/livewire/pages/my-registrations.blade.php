@@ -208,9 +208,8 @@ new #[Layout('layouts.app')] class extends Component {
                                                     </div>
                                                 @endif
                                                 
-                                                <form action="{{ route('event-registrations.upload-proof', $registration) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
+                                                <form action="{{ route('payments.upload-proof', $payment) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
                                                     @csrf
-                                                    <input type="hidden" name="payment_id" value="{{ $payment->id }}">
                                                     
                                                     <div>
                                                         <label for="payment_proof_{{ $payment->id }}" class="block text-sm font-medium text-yellow-800 dark:text-yellow-300 mb-2">
@@ -250,13 +249,24 @@ new #[Layout('layouts.app')] class extends Component {
                                         @elseif($payment->payment_proof_path)
                                             {{-- Show uploaded proof confirmation --}}
                                             <div class="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
-                                                <div class="flex items-center">
-                                                    <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                                    </svg>
-                                                    <span class="text-green-800 dark:text-green-300 font-medium">
-                                                        {{ __('Payment proof uploaded successfully') }}
-                                                    </span>
+                                                <div class="flex items-center justify-between">
+                                                    <div class="flex items-center">
+                                                        <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        <span class="text-green-800 dark:text-green-300 font-medium">
+                                                            {{ __('Payment proof uploaded successfully') }}
+                                                        </span>
+                                                    </div>
+                                                    <a href="{{ route('payments.download-proof', $payment) }}" 
+                                                       dusk="view-payment-proof-button-{{ $payment->id }}"
+                                                       class="inline-flex items-center px-3 py-1.5 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                        {{ __('View Proof') }}
+                                                    </a>
                                                 </div>
                                                 @if($payment->payment_date)
                                                     <p class="text-sm text-green-700 dark:text-green-400 mt-2">

@@ -35,7 +35,7 @@ class MyRegistrationsUploadFormTest extends TestCase
         $this->assertStringContainsString('!$payment->payment_proof_path', $templateContent);
 
         // Check that the form exists with correct attributes
-        $this->assertStringContainsString('event-registrations.upload-proof', $templateContent);
+        $this->assertStringContainsString('payments.upload-proof', $templateContent);
         $this->assertStringContainsString('payment_proof', $templateContent);
         $this->assertStringContainsString('multipart/form-data', $templateContent);
     }
@@ -93,7 +93,7 @@ class MyRegistrationsUploadFormTest extends TestCase
         $templateContent = file_get_contents($templatePath);
 
         // AC7: Verify form action points to correct route
-        $this->assertStringContainsString('action="{{ route(\'event-registrations.upload-proof\', $registration) }}"', $templateContent);
+        $this->assertStringContainsString('action="{{ route(\'payments.upload-proof\', $payment) }}"', $templateContent);
 
         // AC7: Verify form method is POST
         $this->assertStringContainsString('method="POST"', $templateContent);

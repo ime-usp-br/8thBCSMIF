@@ -589,8 +589,8 @@ class MyRegistrationsPageTest extends TestCase
         $this->assertStringContainsString(__('Payment History'), $content);
         $this->assertStringContainsString(__('Payment').' #'.$pendingPayment->id, $content);
 
-        // Check that form with pending payment ID exists (for the pending payment only)
-        $this->assertStringContainsString('payment_id" value="'.$pendingPayment->id.'"', $content);
+        // Check that form uses the new payment-specific route
+        $this->assertStringContainsString('payments/'.$pendingPayment->id.'/upload-proof', $content);
         $this->assertStringContainsString(__('Payment Proof Upload'), $content);
         $this->assertStringContainsString('payment_proof_'.$pendingPayment->id, $content);
 
@@ -737,7 +737,7 @@ class MyRegistrationsPageTest extends TestCase
         $content = $response->getContent();
 
         // AC6 Requirement: Upload form is NOT shown for payment with proof uploaded
-        $this->assertStringNotContainsString('payment_id" value="'.$paymentWithProof->id.'"', $content);
+        $this->assertStringNotContainsString('payments/'.$paymentWithProof->id.'/upload-proof', $content);
         $this->assertStringNotContainsString('payment_proof_'.$paymentWithProof->id, $content);
 
         // Verify that confirmation message is shown instead for uploaded proof
@@ -745,7 +745,7 @@ class MyRegistrationsPageTest extends TestCase
         $this->assertStringContainsString(__('Uploaded on'), $content);
 
         // Verify upload form IS shown for payment without proof
-        $this->assertStringContainsString('payment_id" value="'.$paymentWithoutProof->id.'"', $content);
+        $this->assertStringContainsString('payments/'.$paymentWithoutProof->id.'/upload-proof', $content);
         $this->assertStringContainsString('payment_proof_'.$paymentWithoutProof->id, $content);
         $this->assertStringContainsString(__('Payment Proof Upload'), $content);
     }
