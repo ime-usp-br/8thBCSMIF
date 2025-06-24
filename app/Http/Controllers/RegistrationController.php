@@ -107,16 +107,26 @@ class RegistrationController extends Controller
 
                 // Create individual Payment record for non-free registrations
                 if ($feeData['total_fee'] > 0) {
-                    $payment = $registration->payments()->create([
-                        'amount' => $feeData['total_fee'],
-                        'status' => 'pending',
-                    ]);
+                    try {
+                        $payment = $registration->payments()->create([
+                            'amount' => $feeData['total_fee'],
+                            'status' => 'pending',
+                        ]);
 
-                    Log::info('Payment record created for registration.', [
-                        'registration_id' => $registration->id,
-                        'payment_id' => $payment->id,
-                        'amount' => $feeData['total_fee'],
-                    ]);
+                        Log::info('Payment record created for registration.', [
+                            'registration_id' => $registration->id,
+                            'payment_id' => $payment->id,
+                            'amount' => $feeData['total_fee'],
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to create payment record for registration.', [
+                            'registration_id' => $registration->id,
+                            'amount' => $feeData['total_fee'],
+                            'error_message' => $e->getMessage(),
+                            'error_trace' => $e->getTraceAsString(),
+                        ]);
+                        throw new \RuntimeException('Failed to create payment record.', 0, $e);
+                    }
                 }
 
                 // --- AC10: Sync events with price_at_registration ---
@@ -127,8 +137,18 @@ class RegistrationController extends Controller
                     }
                 }
                 if (! empty($eventSyncData)) {
-                    $registration->events()->sync($eventSyncData);
-                    Log::info('Events synced for registration.', ['registration_id' => $registration->id, 'synced_events' => array_keys($eventSyncData)]);
+                    try {
+                        $registration->events()->sync($eventSyncData);
+                        Log::info('Events synced for registration.', ['registration_id' => $registration->id, 'synced_events' => array_keys($eventSyncData)]);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to sync events for registration.', [
+                            'registration_id' => $registration->id,
+                            'synced_events' => array_keys($eventSyncData),
+                            'error_message' => $e->getMessage(),
+                            'error_trace' => $e->getTraceAsString(),
+                        ]);
+                        throw new \RuntimeException('Failed to sync events.', 0, $e);
+                    }
                 }
 
                 // --- AC11: Dispatch event/notification ---
@@ -145,9 +165,16 @@ class RegistrationController extends Controller
                 'error_trace' => $e->getTraceAsString(),
             ]);
 
+            $errorMessage = __('Failed to process your registration. Please try again or contact support.');
+            if ($e instanceof \RuntimeException && str_contains($e->getMessage(), 'Failed to create payment record.')) {
+                $errorMessage = __('Failed to create payment record for your registration. Please try again or contact support.');
+            } elseif ($e instanceof \RuntimeException && str_contains($e->getMessage(), 'Failed to sync events.')) {
+                $errorMessage = __('Failed to associate events with your registration. Please try again or contact support.');
+            }
+
             return redirect()->back()
                 ->withInput()
-                ->with('error', __('Failed to process your registration. Please try again or contact support.'));
+                ->with('error', $errorMessage);
         }
     }
 
