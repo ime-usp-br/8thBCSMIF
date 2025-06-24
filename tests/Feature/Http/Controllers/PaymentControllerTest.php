@@ -245,4 +245,161 @@ class PaymentControllerTest extends TestCase
         $payment->refresh();
         $this->assertNull($payment->payment_proof_path);
     }
+
+    /**
+     * Test AC6: Verify validation error for missing file shows organization contact message.
+     * This test ensures that when no file is provided, the error message instructs
+     * the user to contact the organization for assistance.
+     */
+    public function test_upload_proof_missing_file_shows_organization_contact_message(): void
+    {
+        // Arrange: Create test data
+        Storage::fake('private');
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $payment = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 100.00,
+        ]);
+
+        // Act: Try to upload without providing a file
+        $response = $this->actingAs($user)
+            ->post(route('payments.upload-proof', $payment), [
+                // No 'payment_proof' field provided
+            ]);
+
+        // Assert: Validation should fail with organization contact message
+        $response->assertSessionHasErrors(['payment_proof']);
+        $errors = $response->getSession()->get('errors');
+        $paymentProofError = $errors->get('payment_proof')[0];
+        
+        // AC6: Error message should instruct user to contact the organization
+        $this->assertStringContainsString('contact the organization', $paymentProofError);
+        $this->assertStringContainsString('assistance', $paymentProofError);
+    }
+
+    /**
+     * Test AC6: Verify validation error for invalid file type shows organization contact message.
+     * This test ensures that when an unsupported file type is uploaded, the error message
+     * instructs the user to contact the organization for assistance.
+     */
+    public function test_upload_proof_invalid_file_type_shows_organization_contact_message(): void
+    {
+        // Arrange: Create test data
+        Storage::fake('private');
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $payment = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 100.00,
+        ]);
+
+        // Create an unsupported file type
+        $file = UploadedFile::fake()->create('document.txt', 10, 'text/plain');
+
+        // Act: Try to upload unsupported file type
+        $response = $this->actingAs($user)
+            ->post(route('payments.upload-proof', $payment), [
+                'payment_proof' => $file,
+            ]);
+
+        // Assert: Validation should fail with organization contact message
+        $response->assertSessionHasErrors(['payment_proof']);
+        $errors = $response->getSession()->get('errors');
+        $paymentProofError = $errors->get('payment_proof')[0];
+        
+        // AC6: Error message should instruct user to contact the organization
+        $this->assertStringContainsString('contact the organization', $paymentProofError);
+        $this->assertStringContainsString('assistance', $paymentProofError);
+        $this->assertStringContainsString('file format', $paymentProofError);
+    }
+
+    /**
+     * Test AC6: Verify validation error for oversized file shows organization contact message.
+     * This test ensures that when a file exceeds the size limit, the error message
+     * instructs the user to contact the organization for assistance.
+     */
+    public function test_upload_proof_oversized_file_shows_organization_contact_message(): void
+    {
+        // Arrange: Create test data
+        Storage::fake('private');
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $payment = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 100.00,
+        ]);
+
+        // Create a file that exceeds the 10MB limit (10240 KB)
+        $file = UploadedFile::fake()->create('large_document.pdf', 10241, 'application/pdf');
+
+        // Act: Try to upload oversized file
+        $response = $this->actingAs($user)
+            ->post(route('payments.upload-proof', $payment), [
+                'payment_proof' => $file,
+            ]);
+
+        // Assert: Validation should fail with organization contact message
+        $response->assertSessionHasErrors(['payment_proof']);
+        $errors = $response->getSession()->get('errors');
+        $paymentProofError = $errors->get('payment_proof')[0];
+        
+        // AC6: Error message should instruct user to contact the organization
+        $this->assertStringContainsString('contact the organization', $paymentProofError);
+        $this->assertStringContainsString('assistance', $paymentProofError);
+        $this->assertStringContainsString('10MB', $paymentProofError);
+        $this->assertStringContainsString('larger file', $paymentProofError);
+    }
+
+    /**
+     * Test AC6: Verify error message translations contain organization contact info.
+     * This test ensures that all error message translations instruct 
+     * the user to contact the organization for assistance.
+     */
+    public function test_upload_proof_error_messages_contain_organization_contact_info(): void
+    {
+        // Test English error messages
+        $serverError = __('Failed to upload payment proof. Please contact the organization for assistance.');
+        $this->assertStringContainsString('contact the organization', $serverError);
+        $this->assertStringContainsString('assistance', $serverError);
+        
+        $requiredError = __('Payment proof file is required. Please contact the organization for assistance if you are unable to upload.');
+        $this->assertStringContainsString('contact the organization', $requiredError);
+        $this->assertStringContainsString('assistance', $requiredError);
+        
+        $mimeError = __('Payment proof must be a JPG, JPEG, PNG, or PDF file. Please contact the organization for assistance if your file format is not supported.');
+        $this->assertStringContainsString('contact the organization', $mimeError);
+        $this->assertStringContainsString('assistance', $mimeError);
+        
+        $sizeError = __('Payment proof file size must not exceed 10MB. Please contact the organization for assistance if you need to upload a larger file.');
+        $this->assertStringContainsString('contact the organization', $sizeError);
+        $this->assertStringContainsString('assistance', $sizeError);
+        
+        // Test Portuguese translations
+        app()->setLocale('pt_BR');
+        $serverErrorPt = __('Failed to upload payment proof. Please contact the organization for assistance.');
+        $this->assertStringContainsString('organização', $serverErrorPt);
+        $this->assertStringContainsString('assistência', $serverErrorPt);
+    }
 }
