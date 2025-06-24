@@ -104,11 +104,37 @@ class RegistrationController extends Controller
 
         // Create individual Payment record for non-free registrations
         if ($feeData['total_fee'] > 0) {
-            $registration->payments()->create([
-                'amount' => $feeData['total_fee'],
-                'status' => 'pending',
-            ]);
-            Log::info('Payment record created for registration.', ['registration_id' => $registration->id, 'amount' => $feeData['total_fee']]);
+            try {
+                $payment = $registration->payments()->create([
+                    'amount' => $feeData['total_fee'],
+                    'status' => 'pending',
+                ]);
+
+                // Validate payment was actually created
+                if ($payment === null || $payment->id === null) {
+                    throw new \RuntimeException('Payment creation failed - record not persisted');
+                }
+
+                Log::info('Payment record created for registration.', [
+                    'registration_id' => $registration->id,
+                    'payment_id' => $payment->id,
+                    'amount' => $feeData['total_fee'],
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to create payment record for registration.', [
+                    'registration_id' => $registration->id,
+                    'amount' => $feeData['total_fee'],
+                    'error_message' => $e->getMessage(),
+                    'error_trace' => $e->getTraceAsString(),
+                ]);
+
+                // Rollback registration and return error to user
+                $registration->delete();
+
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', __('Failed to process payment information. Please try again or contact support.'));
+            }
         }
 
         // --- AC10: Sync events with price_at_registration ---
