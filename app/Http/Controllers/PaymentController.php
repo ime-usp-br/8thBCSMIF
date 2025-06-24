@@ -10,7 +10,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PaymentController extends Controller
 {
@@ -101,5 +104,45 @@ class PaymentController extends Controller
 
             return redirect()->back()->with('error', __('Failed to upload payment proof. Please try again.'));
         }
+    }
+
+    /**
+     * Download payment proof for a specific payment.
+     * Only the owner of the payment can download their proof.
+     */
+    public function downloadProof(Payment $payment): BinaryFileResponse|StreamedResponse
+    {
+        // Validate that user owns this payment (through registration)
+        Gate::authorize('uploadProof', $payment->registration);
+
+        // Validate that payment has a proof file
+        if (! $payment->payment_proof_path) {
+            abort(404, __('Payment proof not found.'));
+        }
+
+        // Check if file exists in storage
+        if (! Storage::disk('private')->exists($payment->payment_proof_path)) {
+            abort(404, __('Payment proof file not found in storage.'));
+        }
+
+        $user = request()->user();
+        Log::info(__('Payment proof downloaded'), [
+            'registration_id' => $payment->registration->id,
+            'payment_id' => $payment->id,
+            'file_path' => $payment->payment_proof_path,
+            'user_id' => $user?->id,
+        ]);
+
+        // Get original filename for download
+        $originalFilename = basename($payment->payment_proof_path);
+
+        // Generate a user-friendly filename
+        $extension = pathinfo($originalFilename, PATHINFO_EXTENSION);
+        $friendlyFilename = 'payment_proof_'.$payment->id.'.'.($extension ?: 'pdf');
+
+        return Storage::disk('private')->download(
+            $payment->payment_proof_path,
+            $friendlyFilename
+        );
     }
 }
