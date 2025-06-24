@@ -99,12 +99,14 @@ class PaymentProofComprehensiveTest extends TestCase
             'registration_id' => $registration->id,
             'amount' => 150.00,
             'status' => 'completed',
+            'payment_proof_path' => null,
         ]);
 
         $approvedPayment = Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 200.00,
             'status' => 'approved',
+            'payment_proof_path' => null,
         ]);
 
         $file = UploadedFile::fake()->create('status_test.pdf', 100, 'application/pdf');
@@ -126,7 +128,7 @@ class PaymentProofComprehensiveTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('error');
 
-        // Test approved payment (should fail) - use fresh file for each attempt  
+        // Test approved payment (should fail) - use fresh file for each attempt
         $file3 = UploadedFile::fake()->create('status_test3.pdf', 100, 'application/pdf');
         $response = $this->actingAs($user)
             ->post(route('payments.upload-proof', $approvedPayment), [
@@ -362,14 +364,14 @@ class PaymentProofComprehensiveTest extends TestCase
 
         // Logout any previously authenticated user for this part of the test
         auth()->logout();
-        
+
         // Test unauthenticated upload access
         $response = $this->post(route('payments.upload-proof', $payment1), [
             'payment_proof' => $file,
         ]);
         $response->assertRedirect(route('login.local'));
 
-        // Test unauthenticated download access  
+        // Test unauthenticated download access
         $response = $this->get(route('payments.download-proof', $payment2));
         $response->assertRedirect(route('login.local'));
     }
