@@ -10,6 +10,109 @@ description: "Executa workflow completo Claude Code para implementar um AC espec
 
 ### **Workflow Completo Claude Code (Autônomo)**
 
+#### 0. **Pesquisa de Documentação Relevante**
+**Claude Code deve pesquisar a documentação das tecnologias relevantes antes de qualquer modificação.**
+
+<use_mcp_tool>
+<server_name>github.com/upstash/context7-mcp</server_name>
+<tool_name>get-library-docs</tool_name>
+<arguments>
+{
+  "context7CompatibleLibraryID": "/laravel/docs",
+  "tokens": 10000
+}
+</arguments>
+</use_mcp_tool>
+
+<use_mcp_tool>
+<server_name>github.com/upstash/context7-mcp</server_name>
+<tool_name>get-library-docs</tool_name>
+<arguments>
+{
+  "context7CompatibleLibraryID": "/pytest-dev/pytest",
+  "tokens": 10000
+}
+</arguments>
+</use_mcp_tool>
+
+<use_mcp_tool>
+<server_name>github.com/upstash/context7-mcp</server_name>
+<tool_name>get-library-docs</tool_name>
+<arguments>
+{
+  "context7CompatibleLibraryID": "/alpinejs/alpine",
+  "tokens": 10000
+}
+</arguments>
+</use_mcp_tool>
+
+<use_mcp_tool>
+<server_name>github.com/upstash/context7-mcp</server_name>
+<tool_name>get-library-docs</tool_name>
+<arguments>
+{
+  "context7CompatibleLibraryID": "/tailwindlabs/tailwindcss.com",
+  "tokens": 10000
+}
+</arguments>
+</use_mcp_tool>
+
+<use_mcp_tool>
+<server_name>github.com/upstash/context7-mcp</server_name>
+<tool_name>get-library-docs</tool_name>
+<arguments>
+{
+  "context7CompatibleLibraryID": "/vitejs/vite",
+  "tokens": 10000
+}
+</arguments>
+</use_mcp_tool>
+
+<use_mcp_tool>
+<server_name>github.com/upstash/context7-mcp</server_name>
+<tool_name>get-library-docs</tool_name>
+<arguments>
+{
+  "context7CompatibleLibraryID": "/livewire/livewire",
+  "tokens": 10000
+}
+</arguments>
+</use_mcp_tool>
+
+<use_mcp_tool>
+<server_name>github.com/upstash/context7-mcp</server_name>
+<tool_name>get-library-docs</tool_name>
+<arguments>
+{
+  "context7CompatibleLibraryID": "/fakerphp/faker",
+  "tokens": 10000
+}
+</arguments>
+</use_mcp_tool>
+
+<use_mcp_tool>
+<server_name>github.com/upstash/context7-mcp</server_name>
+<tool_name>get-library-docs</tool_name>
+<arguments>
+{
+  "context7CompatibleLibraryID": "/php-cs-fixer/php-cs-fixer",
+  "tokens": 10000
+}
+</arguments>
+</use_mcp_tool>
+
+<use_mcp_tool>
+<server_name>github.com/upstash/context7-mcp</server_name>
+<tool_name>get-library-docs</tool_name>
+<arguments>
+{
+  "context7CompatibleLibraryID": "/phpstan/phpstan",
+  "tokens": 10000
+}
+</arguments>
+</use_mcp_tool>
+
+
 #### 1. **TodoWrite para Tracking Transparente**
 **Claude Code deve usar TodoWrite** para criar workflow transparente das tarefas.
 
