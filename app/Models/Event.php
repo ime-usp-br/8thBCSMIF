@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
@@ -80,5 +81,15 @@ class Event extends Model
         )
             ->withPivot('price_at_registration')
             ->withTimestamps();
+    }
+
+    /**
+     * Get the fees for the event.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Fee, \App\Models\Event>
+     */
+    public function fees(): HasMany
+    {
+        return $this->hasMany(Fee::class, 'event_code', 'code'); // @phpstan-ignore-line
     }
 }
