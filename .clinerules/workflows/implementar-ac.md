@@ -11,7 +11,7 @@ description: "Workflow para implementar um AC específico autonomamente usando a
 O Cline deve analisar a issue para entender os requisitos exatos do AC especificado, prestando atenção especial a palavras-chave como "incremental", "adicionar", "modificar", e identificar dependências e padrões existentes no código.
 
 <execute_command>
-<command>gh issue view $ISSUE_NUMBER</command>
+<command>gh issue view $ISSUE_NUMBER | cat</command>
 <requires_approval>false</requires_approval>
 </execute_command>
 
