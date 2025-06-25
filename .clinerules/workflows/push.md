@@ -10,7 +10,7 @@ Este guia executa `git push` de forma incremental e segura. Cada passo é um com
 Primeiro, vamos buscar as atualizações do repositório remoto para garantir que nossas verificações locais estejam baseadas na versão mais recente.
 
 <execute_command>
-<command>git fetch</command>
+<command>git fetch --verbose</command>
 <# Sincroniza o estado do remoto. Essencial para evitar um push cego. #>
 <requires_approval>false</requires_approval>
 </execute_command>
