@@ -150,6 +150,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function submit(): void
     {
+        // Perform client-side validation with Livewire
         $this->validate([
             'full_name' => 'required|string|max:255',
             'nationality' => 'required|string|max:255',
@@ -186,43 +187,9 @@ new #[Layout('layouts.app')] class extends Component {
             'confirm_information' => 'required|accepted',
             'consent_data_processing' => 'required|accepted',
         ]);
-
-        // Prepare data for submission to RegistrationController
-        $registrationData = [
-            'full_name' => $this->full_name,
-            'nationality' => $this->nationality,
-            'date_of_birth' => $this->date_of_birth,
-            'gender' => $this->gender === 'other' ? $this->other_gender : $this->gender,
-            'document_country_origin' => $this->document_country_origin,
-            'cpf' => $this->cpf,
-            'rg_number' => $this->rg_number,
-            'passport_number' => $this->passport_number,
-            'passport_expiry_date' => $this->passport_expiry_date,
-            'email' => $this->email,
-            'phone_number' => $this->phone_number,
-            'address_street' => $this->address_street,
-            'address_city' => $this->address_city,
-            'address_state_province' => $this->address_state_province,
-            'address_country' => $this->address_country,
-            'address_postal_code' => $this->address_postal_code,
-            'affiliation' => $this->affiliation,
-            'position' => $this->position === 'other' ? $this->other_position : $this->position,
-            'is_abe_member' => $this->is_abe_member === 'yes',
-            'arrival_date' => $this->arrival_date,
-            'departure_date' => $this->departure_date,
-            'selected_event_codes' => $this->selected_event_codes,
-            'participation_format' => $this->participation_format,
-            'needs_transport_from_gru' => $this->needs_transport_from_gru,
-            'needs_transport_from_usp' => $this->needs_transport_from_usp,
-            'dietary_restrictions' => $this->dietary_restrictions === 'other' ? $this->other_dietary_restrictions : $this->dietary_restrictions,
-            'emergency_contact_name' => $this->emergency_contact_name,
-            'emergency_contact_relationship' => $this->emergency_contact_relationship,
-            'emergency_contact_phone' => $this->emergency_contact_phone,
-            'requires_visa_letter' => $this->requires_visa_letter === 'yes',
-        ];
-
-        // AC7: Validation passed - allow natural form submission to RegistrationController@store
-        // Do not prevent default form submission, let it proceed naturally to POST route
+        
+        // Validation passed - allow form submission to RegistrationController@store
+        // This method only validates; actual submission happens via HTML form
     }
 
     public function validateAndSubmit(): void
@@ -265,102 +232,10 @@ new #[Layout('layouts.app')] class extends Component {
             'consent_data_processing' => 'required|accepted',
         ]);
 
-        // If validation passes, submit directly via Livewire instead of form submission
-        $this->submitRegistration();
+        // If validation passes, trigger HTML form submission to RegistrationController@store
+        $this->js('document.getElementById("registration-form").submit();');
     }
 
-    public function submitRegistration(): void
-    {
-
-        // Prepare data for registration creation
-        $registrationData = [
-            'user_id' => auth()->id(),
-            'full_name' => $this->full_name,
-            'nationality' => $this->nationality,
-            'date_of_birth' => $this->date_of_birth ?: null,
-            'gender' => $this->gender === 'other' ? $this->other_gender : $this->gender,
-            'document_country_origin' => $this->document_country_origin,
-            'cpf' => $this->cpf ?: null,
-            'rg_number' => $this->rg_number ?: null,
-            'passport_number' => $this->passport_number ?: null,
-            'passport_expiry_date' => $this->passport_expiry_date ?: null,
-            'email' => $this->email,
-            'phone_number' => $this->phone_number ?: null,
-            'address_street' => $this->address_street ?: null,
-            'address_city' => $this->address_city ?: null,
-            'address_state_province' => $this->address_state_province ?: null,
-            'address_country' => $this->address_country,
-            'address_postal_code' => $this->address_postal_code ?: null,
-            'affiliation' => $this->affiliation ?: null,
-            'position' => $this->position === 'other' ? $this->other_position : $this->position,
-            'is_abe_member' => $this->is_abe_member === 'yes',
-            'arrival_date' => $this->arrival_date ?: null,
-            'departure_date' => $this->departure_date ?: null,
-            'participation_format' => $this->participation_format,
-            'needs_transport_from_gru' => $this->needs_transport_from_gru,
-            'needs_transport_from_usp' => $this->needs_transport_from_usp,
-            'dietary_restrictions' => $this->dietary_restrictions === 'other' ? $this->other_dietary_restrictions : $this->dietary_restrictions,
-            'emergency_contact_name' => $this->emergency_contact_name ?: null,
-            'emergency_contact_relationship' => $this->emergency_contact_relationship ?: null,
-            'emergency_contact_phone' => $this->emergency_contact_phone ?: null,
-            'requires_visa_letter' => $this->requires_visa_letter === 'yes',
-        ];
-
-        try {
-            // Determine participant category for fee calculation
-            $position = $this->position === 'other' ? $this->other_position : $this->position;
-            $isAbeMember = $this->is_abe_member === 'yes';
-
-            $participantCategory = match ($position) {
-                'undergraduate_student' => 'undergrad_student',
-                'graduate_student' => 'grad_student',
-                'professor' => $isAbeMember ? 'professor_abe' : 'professor_non_abe_professional',
-                'professional', 'researcher' => 'professor_non_abe_professional',
-                default => 'professor_non_abe_professional',
-            };
-
-            // Calculate fees
-            $feeCalculationService = app(FeeCalculationService::class);
-            $feeData = $feeCalculationService->calculateFees(
-                $participantCategory,
-                $this->selected_event_codes,
-                Carbon::now(),
-                $this->participation_format
-            );
-
-            // Add fee calculation data
-            $registrationData['registration_category_snapshot'] = $participantCategory;
-            $registrationData['calculated_fee'] = $feeData['total_fee'];
-
-            // Create registration
-            $registration = Registration::create($registrationData);
-
-            // Set payment status
-            $paymentStatus = ($feeData['total_fee'] == 0) ? 'free' : 'pending_payment';
-            $registration->update(['payment_status' => $paymentStatus]);
-
-            // Sync events with price_at_registration
-            $eventSyncData = [];
-            foreach ($feeData['details'] as $eventDetail) {
-                if (! isset($eventDetail['error'])) {
-                    $eventSyncData[$eventDetail['event_code']] = ['price_at_registration' => $eventDetail['calculated_price']];
-                }
-            }
-            if (! empty($eventSyncData)) {
-                $registration->events()->sync($eventSyncData);
-            }
-
-            // Dispatch event
-            event(new NewRegistrationCreated($registration));
-
-            // Set success state
-            $this->registration_successful = true;
-            
-        } catch (\Exception $e) {
-            // Handle errors
-            $this->addError('general', __('Failed to submit registration. Please try again.') . ' Error: ' . $e->getMessage());
-        }
-    }
 
     public function resetForm(): void
     {
@@ -424,7 +299,8 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                     @endif
 
-                <div class="space-y-8">
+                <form id="registration-form" action="{{ route('event-registrations.store') }}" method="POST" class="space-y-8">
+                    @csrf
                     {{-- Personal Information --}}
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
                         <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('1. Personal Information') }}</h2>
@@ -827,6 +703,42 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
 
 
+                    {{-- Hidden fields for Livewire data --}}
+                    <input type="hidden" name="full_name" wire:model="full_name">
+                    <input type="hidden" name="nationality" wire:model="nationality">
+                    <input type="hidden" name="date_of_birth" wire:model="date_of_birth">
+                    <input type="hidden" name="gender" x-data="{}" x-init="$watch('$wire.gender', value => $el.value = value === 'other' ? $wire.other_gender : value)">
+                    <input type="hidden" name="document_country_origin" wire:model="document_country_origin">
+                    <input type="hidden" name="cpf" wire:model="cpf">
+                    <input type="hidden" name="rg_number" wire:model="rg_number">
+                    <input type="hidden" name="passport_number" wire:model="passport_number">
+                    <input type="hidden" name="passport_expiry_date" wire:model="passport_expiry_date">
+                    <input type="hidden" name="email" wire:model="email">
+                    <input type="hidden" name="phone_number" wire:model="phone_number">
+                    <input type="hidden" name="address_street" wire:model="address_street">
+                    <input type="hidden" name="address_city" wire:model="address_city">
+                    <input type="hidden" name="address_state_province" wire:model="address_state_province">
+                    <input type="hidden" name="address_country" wire:model="address_country">
+                    <input type="hidden" name="address_postal_code" wire:model="address_postal_code">
+                    <input type="hidden" name="affiliation" wire:model="affiliation">
+                    <input type="hidden" name="position" x-data="{}" x-init="$watch('$wire.position', value => $el.value = value === 'other' ? $wire.other_position : value)">
+                    <input type="hidden" name="is_abe_member" x-data="{}" x-init="$watch('$wire.is_abe_member', value => $el.value = value === 'yes' ? '1' : '0')" value="0">
+                    <input type="hidden" name="arrival_date" wire:model="arrival_date">
+                    <input type="hidden" name="departure_date" wire:model="departure_date">
+                    @foreach($selected_event_codes as $code)
+                        <input type="hidden" name="selected_event_codes[]" value="{{ $code }}">
+                    @endforeach
+                    <input type="hidden" name="participation_format" wire:model="participation_format">
+                    <input type="hidden" name="needs_transport_from_gru" x-data="{}" x-init="$watch('$wire.needs_transport_from_gru', value => $el.value = value ? '1' : '0')" value="0">
+                    <input type="hidden" name="needs_transport_from_usp" x-data="{}" x-init="$watch('$wire.needs_transport_from_usp', value => $el.value = value ? '1' : '0')" value="0">
+                    <input type="hidden" name="dietary_restrictions" x-data="{}" x-init="$watch('$wire.dietary_restrictions', value => $el.value = value === 'other' ? $wire.other_dietary_restrictions : value)">
+                    <input type="hidden" name="emergency_contact_name" wire:model="emergency_contact_name">
+                    <input type="hidden" name="emergency_contact_relationship" wire:model="emergency_contact_relationship">
+                    <input type="hidden" name="emergency_contact_phone" wire:model="emergency_contact_phone">
+                    <input type="hidden" name="requires_visa_letter" x-data="{}" x-init="$watch('$wire.requires_visa_letter', value => $el.value = value === 'yes' ? '1' : '0')" value="0">
+                    <input type="hidden" name="confirm_information_accuracy" x-data="{}" x-init="$watch('$wire.confirm_information', value => $el.value = value ? '1' : '0')" value="0">
+                    <input type="hidden" name="confirm_data_processing_consent" x-data="{}" x-init="$watch('$wire.consent_data_processing', value => $el.value = value ? '1' : '0')" value="0">
+
                     {{-- Submit Button --}}
                     <div class="flex flex-col sm:flex-row justify-center sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
                         <button type="button" onclick="window.history.back()" class="w-full sm:w-auto px-6 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2" wire:loading.attr="disabled" wire:target="validateAndSubmit">
@@ -843,7 +755,7 @@ new #[Layout('layouts.app')] class extends Component {
                             </span>
                         </x-primary-button>
                     </div>
-                </div>
+                </form>
                 @endif
             </div>
         </div>

@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
-
     /**
      * Configura o ambiente de teste antes de cada teste na classe.
      *

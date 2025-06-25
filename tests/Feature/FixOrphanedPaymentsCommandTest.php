@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Event;
 use App\Models\Registration;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
@@ -127,7 +126,7 @@ class FixOrphanedPaymentsCommandTest extends TestCase
         // This test validates error logging behavior through command output
         // Since mocking Eloquent models is complex, we test the error handling
         // by using database constraints to trigger an error during payment creation
-        
+
         // Create a user
         $user = User::factory()->create();
 
