@@ -52,7 +52,7 @@
 
 {{ __('You can access your registration details at any time through your account on our system.') }}
 
-<x-mail::button :url="config('app.url') . '/registrations/my'">
+<x-mail::button :url="route('registrations.my')">
 {{ __('View My Registration') }}
 </x-mail::button>
 
