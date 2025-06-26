@@ -233,7 +233,7 @@ new #[Layout('layouts.app')] class extends Component {
         ]);
 
         // If validation passes, trigger HTML form submission to RegistrationController@store
-        $this->js('document.getElementById("registration-form").submit();');
+        $this->js('window.submitFormData();');
     }
 
 
@@ -299,8 +299,7 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                     @endif
 
-                <form id="registration-form" action="{{ route('event-registrations.store') }}" method="POST" class="space-y-8">
-                    @csrf
+                <div class="space-y-8">
                     {{-- Personal Information --}}
                     <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
                         <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('1. Personal Information') }}</h2>
@@ -704,40 +703,85 @@ new #[Layout('layouts.app')] class extends Component {
 
 
                     {{-- Hidden fields for Livewire data --}}
-                    <input type="hidden" name="full_name" wire:model="full_name">
-                    <input type="hidden" name="nationality" wire:model="nationality">
-                    <input type="hidden" name="date_of_birth" wire:model="date_of_birth">
-                    <input type="hidden" name="gender" x-data="{}" x-init="$watch('$wire.gender', value => $el.value = value === 'other' ? $wire.other_gender : value)">
-                    <input type="hidden" name="document_country_origin" wire:model="document_country_origin">
-                    <input type="hidden" name="cpf" wire:model="cpf">
-                    <input type="hidden" name="rg_number" wire:model="rg_number">
-                    <input type="hidden" name="passport_number" wire:model="passport_number">
-                    <input type="hidden" name="passport_expiry_date" wire:model="passport_expiry_date">
-                    <input type="hidden" name="email" wire:model="email">
-                    <input type="hidden" name="phone_number" wire:model="phone_number">
-                    <input type="hidden" name="address_street" wire:model="address_street">
-                    <input type="hidden" name="address_city" wire:model="address_city">
-                    <input type="hidden" name="address_state_province" wire:model="address_state_province">
-                    <input type="hidden" name="address_country" wire:model="address_country">
-                    <input type="hidden" name="address_postal_code" wire:model="address_postal_code">
-                    <input type="hidden" name="affiliation" wire:model="affiliation">
-                    <input type="hidden" name="position" x-data="{}" x-init="$watch('$wire.position', value => $el.value = value === 'other' ? $wire.other_position : value)">
-                    <input type="hidden" name="is_abe_member" x-data="{}" x-init="$watch('$wire.is_abe_member', value => $el.value = value === 'yes' ? '1' : '0')" value="0">
-                    <input type="hidden" name="arrival_date" wire:model="arrival_date">
-                    <input type="hidden" name="departure_date" wire:model="departure_date">
-                    @foreach($selected_event_codes as $code)
-                        <input type="hidden" name="selected_event_codes[]" value="{{ $code }}">
-                    @endforeach
-                    <input type="hidden" name="participation_format" wire:model="participation_format">
-                    <input type="hidden" name="needs_transport_from_gru" x-data="{}" x-init="$watch('$wire.needs_transport_from_gru', value => $el.value = value ? '1' : '0')" value="0">
-                    <input type="hidden" name="needs_transport_from_usp" x-data="{}" x-init="$watch('$wire.needs_transport_from_usp', value => $el.value = value ? '1' : '0')" value="0">
-                    <input type="hidden" name="dietary_restrictions" x-data="{}" x-init="$watch('$wire.dietary_restrictions', value => $el.value = value === 'other' ? $wire.other_dietary_restrictions : value)">
-                    <input type="hidden" name="emergency_contact_name" wire:model="emergency_contact_name">
-                    <input type="hidden" name="emergency_contact_relationship" wire:model="emergency_contact_relationship">
-                    <input type="hidden" name="emergency_contact_phone" wire:model="emergency_contact_phone">
-                    <input type="hidden" name="requires_visa_letter" x-data="{}" x-init="$watch('$wire.requires_visa_letter', value => $el.value = value === 'yes' ? '1' : '0')" value="0">
-                    <input type="hidden" name="confirm_information_accuracy" x-data="{}" x-init="$watch('$wire.confirm_information', value => $el.value = value ? '1' : '0')" value="0">
-                    <input type="hidden" name="confirm_data_processing_consent" x-data="{}" x-init="$watch('$wire.consent_data_processing', value => $el.value = value ? '1' : '0')" value="0">
+                    <script>
+                        document.addEventListener('livewire:init', () => {
+                            window.submitFormData = function() {
+                                // Get current Livewire component state
+                                const wire = @this;
+                                
+                                // Create form data object
+                                const formData = {
+                                    full_name: wire.full_name,
+                                    nationality: wire.nationality,
+                                    date_of_birth: wire.date_of_birth,
+                                    gender: wire.gender === 'other' ? wire.other_gender : wire.gender,
+                                    document_country_origin: wire.document_country_origin,
+                                    cpf: wire.cpf,
+                                    rg_number: wire.rg_number,
+                                    passport_number: wire.passport_number,
+                                    passport_expiry_date: wire.passport_expiry_date,
+                                    email: wire.email,
+                                    phone_number: wire.phone_number,
+                                    address_street: wire.address_street,
+                                    address_city: wire.address_city,
+                                    address_state_province: wire.address_state_province,
+                                    address_country: wire.address_country,
+                                    address_postal_code: wire.address_postal_code,
+                                    affiliation: wire.affiliation,
+                                    position: wire.position === 'other' ? wire.other_position : wire.position,
+                                    is_abe_member: wire.is_abe_member === 'yes' ? '1' : '0',
+                                    arrival_date: wire.arrival_date,
+                                    departure_date: wire.departure_date,
+                                    selected_event_codes: wire.selected_event_codes,
+                                    participation_format: wire.participation_format,
+                                    needs_transport_from_gru: wire.needs_transport_from_gru ? '1' : '0',
+                                    needs_transport_from_usp: wire.needs_transport_from_usp ? '1' : '0',
+                                    dietary_restrictions: wire.dietary_restrictions === 'other' ? wire.other_dietary_restrictions : wire.dietary_restrictions,
+                                    emergency_contact_name: wire.emergency_contact_name,
+                                    emergency_contact_relationship: wire.emergency_contact_relationship,
+                                    emergency_contact_phone: wire.emergency_contact_phone,
+                                    requires_visa_letter: wire.requires_visa_letter === 'yes' ? '1' : '0',
+                                    confirm_information_accuracy: wire.confirm_information ? '1' : '0',
+                                    confirm_data_processing_consent: wire.consent_data_processing ? '1' : '0'
+                                };
+                                
+                                // Create and submit form
+                                const form = document.createElement('form');
+                                form.method = 'POST';
+                                form.action = '{{ route('event-registrations.store') }}';
+                                
+                                // Add CSRF token
+                                const csrfToken = document.createElement('input');
+                                csrfToken.type = 'hidden';
+                                csrfToken.name = '_token';
+                                csrfToken.value = '{{ csrf_token() }}';
+                                form.appendChild(csrfToken);
+                                
+                                // Add all form data
+                                Object.keys(formData).forEach(key => {
+                                    const value = formData[key];
+                                    if (Array.isArray(value)) {
+                                        value.forEach(item => {
+                                            const input = document.createElement('input');
+                                            input.type = 'hidden';
+                                            input.name = key + '[]';
+                                            input.value = item;
+                                            form.appendChild(input);
+                                        });
+                                    } else if (value !== null && value !== undefined) {
+                                        const input = document.createElement('input');
+                                        input.type = 'hidden';
+                                        input.name = key;
+                                        input.value = value;
+                                        form.appendChild(input);
+                                    }
+                                });
+                                
+                                document.body.appendChild(form);
+                                form.submit();
+                            };
+                        });
+                    </script>
 
                     {{-- Submit Button --}}
                     <div class="flex flex-col sm:flex-row justify-center sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
@@ -755,7 +799,7 @@ new #[Layout('layouts.app')] class extends Component {
                             </span>
                         </x-primary-button>
                     </div>
-                </form>
+                </div>
                 @endif
             </div>
         </div>
