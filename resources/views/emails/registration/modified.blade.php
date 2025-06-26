@@ -8,14 +8,14 @@
 ## {{ __('Updated Registration Summary') }}
 
 **{{ __('Selected Events') }}:**
-@foreach($registration->events as $event)
-- {{ $event->name }}: R$ {{ number_format((float) $event->pivot->price_at_registration, 2, ',', '.') }}
+@foreach($feeCalculation['details'] as $eventDetail)
+- {{ $eventDetail['event_name'] }}: R$ {{ number_format($eventDetail['calculated_price'], 2, ',', '.') }}
 @endforeach
 
 @php
-    $newTotalAmount = $registration->events->sum('pivot.price_at_registration');
-    $totalPaid = $registration->payments()->where('status', 'confirmed')->sum('amount');
-    $amountDue = $newTotalAmount - $totalPaid;
+    $newTotalAmount = $feeCalculation['new_total_fee'];
+    $totalPaid = $feeCalculation['total_paid'];
+    $amountDue = $feeCalculation['amount_due'];
 @endphp
 
 **{{ __('New Total Amount') }}:** R$ {{ number_format($newTotalAmount, 2, ',', '.') }}

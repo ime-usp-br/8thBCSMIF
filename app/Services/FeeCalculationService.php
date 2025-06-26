@@ -93,10 +93,10 @@ class FeeCalculationService
                 : 'late';
 
             $feeQuery = $this->feeModel
-                    ->where('event_code', $eventCode)
-                    ->where('participant_category', $participantCategory)
-                    ->where('type', $participationType)
-                    ->where('period', $period);
+                ->where('event_code', $eventCode)
+                ->where('participant_category', $participantCategory)
+                ->where('type', $participationType)
+                ->where('period', $period);
 
             $foundFee = null;
 
@@ -111,17 +111,17 @@ class FeeCalculationService
             }
 
             if (! $foundFee) {
-                    // Fetch standard fee (or workshop fee if not discounted, or main conference fee)
-                    $feeWithoutDiscount = (clone $feeQuery)->where('is_discount_for_main_event_participant', false)->first();
-                    Log::debug('FeeCalculationService: Attempting to find standard fee.', [
-                        'query' => (clone $feeQuery)->where('is_discount_for_main_event_participant', false)->toSql(),
-                        'bindings' => (clone $feeQuery)->where('is_discount_for_main_event_participant', false)->getBindings(),
-                        'found' => $feeWithoutDiscount ? $feeWithoutDiscount->toArray() : null,
-                    ]);
-                    if ($feeWithoutDiscount) {
-                        $foundFee = $feeWithoutDiscount;
-                    }
+                // Fetch standard fee (or workshop fee if not discounted, or main conference fee)
+                $feeWithoutDiscount = (clone $feeQuery)->where('is_discount_for_main_event_participant', false)->first();
+                Log::debug('FeeCalculationService: Attempting to find standard fee.', [
+                    'query' => (clone $feeQuery)->where('is_discount_for_main_event_participant', false)->toSql(),
+                    'bindings' => (clone $feeQuery)->where('is_discount_for_main_event_participant', false)->getBindings(),
+                    'found' => $feeWithoutDiscount ? $feeWithoutDiscount->toArray() : null,
+                ]);
+                if ($feeWithoutDiscount) {
+                    $foundFee = $feeWithoutDiscount;
                 }
+            }
 
             if ($foundFee) {
                 $calculatedPrice = (float) $foundFee->price; // Fee model casts price to string, so cast back.
