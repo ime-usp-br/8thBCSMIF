@@ -57,24 +57,24 @@ Para criar a melhor mensagem de commit possível, o Cline irá analisar o estilo
 <requires_approval>false</requires_approval>
 </execute_command>
 
-**B. Issues Abertas no GitHub para Conexão de Tarefas:**
+**B. Issues Abertas no GitHub para Conexão de Tarefas (com corpo da issue):**
 <!-- Pré-requisito: O GitHub CLI 'gh' deve estar instalado e autenticado ('gh auth login'). -->
 <execute_command>
-<command>gh issue list --state open --json number,title,labels | cat</command>
-<# O Cline analisará esta lista para conectar o commit a uma tarefa existente. #>
+<command>gh issue list --state open --json number,title,labels,body | cat</command>
+<# O Cline analisará esta lista para conectar o commit a uma tarefa existente, incluindo o corpo da issue para contexto adicional. #>
 <requires_approval>false</requires_approval>
 </execute_command>
 
 ### 4. Geração da Mensagem de Commit (Ação do Cline)
-Com todo o contexto coletado (diff, segurança, histórico, issues), o Cline irá agora construir a mensagem de commit ideal.
+Com todo o contexto coletado (diff, segurança, histórico, issues, **e o corpo das issues**), o Cline irá agora construir a mensagem de commit ideal.
 
 **Instruções para o Cline:**
 1.  Sintetize o `git diff` para entender a mudança.
 2.  Use o histórico para definir o `tipo` e `escopo` corretos.
-3.  **Cruze as informações do diff com a lista de issues do GitHub.** Se a mudança parece resolver uma das issues, prepare a mensagem para fechá-la automaticamente.
+3.  **Cruze as informações do diff com a lista de issues do GitHub, incluindo o corpo das issues.** Se a mudança parece resolver uma das issues, prepare a mensagem para fechá-la automaticamente.
 4.  Escreva uma descrição clara e imperativa.
-5.  Se a mudança for complexa, adicione um corpo com bullet points.
-6.  Use palavras-chave como `Closes #<numero>`, `Fixes #<numero>` ou `Resolves #<numero>` no corpo do commit para vincular e fechar a issue no GitHub.
+5.  Se a mudança for complexa, adicione um corpo com bullet points, **incorporando informações relevantes do corpo da issue para maior clareza e contexto**.
+6.  **IMPORTANTE:** Não use palavras-chave como `Closes #<numero>`, `Fixes #<numero>` ou `Resolves #<numero>` no corpo do commit. Neste projeto, o fechamento de issues é gerenciado pelo Pull Request (PR), não pelo commit.
 7.  Use o formato **HEREDOC** para garantir a formatação correta.
 
 ### 5. Execução do Commit Final (com Aprovação do Usuário)
