@@ -20,13 +20,13 @@
 @if($registration->document_country_origin === 'BR' || $registration->document_country_origin === 'Brazil')
 ## {{ __('Payment Instructions') }}
 
-{{ __('Please make payment via bank transfer or PIX to the details below:') }}
+{{ __('Please make payment via bank transfer to the details below:') }}
 
 **{{ __('Bank Transfer Information:') }}**
 - **{{ __('Bank:') }}** Santander
 - **{{ __('Agency:') }}** 0658
 - **{{ __('Account:') }}** 13006798-9
-- **{{ __('PIX Key:') }}** 56.572.456/0001-80
+
 - **{{ __('Beneficiary') }}:** Associação Brasileira de Estatística
 - **{{ __('CNPJ') }}:** 56.572.456/0001-80
 

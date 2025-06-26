@@ -17,7 +17,7 @@ class RegistrationModifiedNotification extends Mailable
         public Registration $registration,
         public bool $forCoordinator = false
     ) {
-        //
+        $this->registration->refresh();
     }
 
     public function envelope(): Envelope

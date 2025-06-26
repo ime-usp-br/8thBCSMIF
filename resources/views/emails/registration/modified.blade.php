@@ -12,20 +12,19 @@
 - {{ $event->name }}: R$ {{ number_format((float) $event->pivot->price_at_registration, 2, ',', '.') }}
 @endforeach
 
-**{{ __('New Total Amount') }}:** R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
-
 @php
+    $newTotalAmount = $registration->events->sum('pivot.price_at_registration');
     $totalPaid = $registration->payments()->where('status', 'confirmed')->sum('amount');
-    $pendingAmount = $registration->payments()->where('status', 'pending')->sum('amount');
+    $amountDue = $newTotalAmount - $totalPaid;
 @endphp
+
+**{{ __('New Total Amount') }}:** R$ {{ number_format($newTotalAmount, 2, ',', '.') }}
 
 @if($totalPaid > 0)
 **{{ __('Amount Already Paid') }}:** R$ {{ number_format($totalPaid, 2, ',', '.') }}
 @endif
 
-@if($pendingAmount > 0)
-**{{ __('Amount Due') }}:** R$ {{ number_format($pendingAmount, 2, ',', '.') }}
-
+@if($amountDue > 0)
 ## {{ __('Payment Instructions') }}
 
 {{ __('You have a pending payment for the additional amount due from the modification. Please complete payment to finalize your registration update.') }}
@@ -35,7 +34,7 @@
 - **{{ __('Bank:') }}** Santander
 - **{{ __('Agency:') }}** 0658
 - **{{ __('Account:') }}** 13006798-9
-- **{{ __('PIX Key:') }}** 56.572.456/0001-80
+
 - **{{ __('Beneficiary') }}:** Associação Brasileira de Estatística
 - **{{ __('CNPJ') }}:** 56.572.456/0001-80
 
