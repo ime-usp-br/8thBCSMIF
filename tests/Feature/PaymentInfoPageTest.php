@@ -54,7 +54,7 @@ class PaymentInfoPageTest extends TestCase
         $response = $this->get('/payment-info');
 
         $response->assertStatus(200);
-        $response->assertSee('Payment via bank transfer or PIX');
+        $response->assertSee('Payment via bank transfer');
         $response->assertSee('Step 1: Make Payment');
         $response->assertSee('Step 2: Upload Proof');
         $response->assertSee('Step 3: Confirmation');
