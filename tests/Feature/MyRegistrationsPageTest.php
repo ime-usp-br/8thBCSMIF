@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Event;
+use App\Models\Fee;
 use App\Models\Payment;
 use App\Models\Registration;
 use App\Models\User;
@@ -117,10 +118,31 @@ class MyRegistrationsPageTest extends TestCase
         $event1 = Event::factory()->create(['name' => 'Conference Workshop']);
         $event2 = Event::factory()->create(['name' => 'Main Event']);
 
+        // Create fee records that match the expected calculation
+        Fee::factory()->create([
+            'event_code' => $event1->code,
+            'participant_category' => 'undergrad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 75.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        Fee::factory()->create([
+            'event_code' => $event2->code,
+            'participant_category' => 'undergrad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 75.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
         // Create registration for the user
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
+            'registration_category_snapshot' => 'undergrad_student', // Use specific category
+            'participation_format' => 'in-person', // Match fee record
         ]);
 
         // Attach events to registration
@@ -150,14 +172,37 @@ class MyRegistrationsPageTest extends TestCase
         // Create event
         $event = Event::factory()->create(['name' => 'Test Event']);
 
+        // Create fee records that match the expected calculation
+        Fee::factory()->create([
+            'event_code' => $event->code,
+            'participant_category' => 'undergrad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 100.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        Fee::factory()->create([
+            'event_code' => $event->code,
+            'participant_category' => 'grad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 200.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
         // Create registrations for both users
         $registration1 = Registration::factory()->create([
             'user_id' => $user1->id,
+            'registration_category_snapshot' => 'undergrad_student',
+            'participation_format' => 'in-person',
         ]);
         $registration1->events()->attach($event->code, ['price_at_registration' => 100.00]);
 
         $registration2 = Registration::factory()->create([
             'user_id' => $user2->id,
+            'registration_category_snapshot' => 'grad_student',
+            'participation_format' => 'in-person',
         ]);
         $registration2->events()->attach($event->code, ['price_at_registration' => 200.00]);
 
@@ -186,10 +231,40 @@ class MyRegistrationsPageTest extends TestCase
         $event2 = Event::factory()->create(['name' => '8th BCSMIF Conference']);
         $event3 = Event::factory()->create(['name' => 'Dependence Analysis Workshop']);
 
+        // Create fee records that match the expected calculation (total: 100.25 + 200.50 + 50.00 = 350.75)
+        Fee::factory()->create([
+            'event_code' => $event1->code,
+            'participant_category' => 'undergrad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 100.25,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        Fee::factory()->create([
+            'event_code' => $event2->code,
+            'participant_category' => 'undergrad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 200.50,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        Fee::factory()->create([
+            'event_code' => $event3->code,
+            'participant_category' => 'undergrad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 50.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
         // Create single registration with multiple events and multiple payments
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
+            'registration_category_snapshot' => 'undergrad_student',
+            'participation_format' => 'in-person',
         ]);
         $registration->events()->attach($event1->code, ['price_at_registration' => 100.25]);
         $registration->events()->attach($event2->code, ['price_at_registration' => 200.50]);
@@ -350,6 +425,25 @@ class MyRegistrationsPageTest extends TestCase
             'description' => 'Main conference with keynote speakers and presentations',
         ]);
 
+        // Create fee records that match the expected calculation (total: 80.25 + 100.50 = 180.75)
+        Fee::factory()->create([
+            'event_code' => $event1->code,
+            'participant_category' => 'undergrad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 80.25,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        Fee::factory()->create([
+            'event_code' => $event2->code,
+            'participant_category' => 'undergrad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 100.50,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
         // Create registration with detailed information
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
@@ -358,6 +452,8 @@ class MyRegistrationsPageTest extends TestCase
             'nationality' => 'Brazilian',
             'document_country_origin' => 'Brasil',
             'payment_status' => 'pending_payment',
+            'registration_category_snapshot' => 'undergrad_student',
+            'participation_format' => 'in-person',
         ]);
 
         // Attach events with different price_at_registration values
@@ -449,11 +545,23 @@ class MyRegistrationsPageTest extends TestCase
         // Create event
         $event = Event::factory()->create(['name' => 'Test Event']);
 
+        // Create fee record that matches the expected calculation
+        Fee::factory()->create([
+            'event_code' => $event->code,
+            'participant_category' => 'undergrad_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 100.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
         // Create registration
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'full_name' => 'Test User',
             'email' => 'test@example.com',
+            'registration_category_snapshot' => 'undergrad_student',
+            'participation_format' => 'in-person',
         ]);
 
         // Attach event to registration
