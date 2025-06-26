@@ -4,79 +4,77 @@ description: "Guia para formular e postar o comentário de análise de AC no Git
 
 ## Guia: Formular e Postar Comentário de Análise de AC para a Issue
 
-O Cline deve construir o comando `gh api` exato para postar o comentário de validação no GitHub, com base na última análise de AC executada e no hash do último commit.
+O Cline deve construir o comando `gh api` exato para postar o comentário de validação no GitHub, com base na análise de AC executada e no hash do commit relevante.
 
-**Argumentos esperados:** `<ISSUE_NUMBER>`
+**Argumentos esperados:** `<ISSUE_NUMBER> <AC>`
 
-### 1. Verificação de Pré-requisitos e Conteúdo da Última Análise de AC
-O Cline deve verificar a existência de resultados de análise de AC e obter o caminho para o arquivo da última análise.
+### 1. Obtenção de Detalhes da Issue no GitHub
+O Cline deve obter os detalhes da issue para verificar sua existência e contexto.
 
 <execute_command>
 <command>
-if [ -d "llm_outputs/analyze-ac" ] && [ "$(ls -A llm_outputs/analyze-ac 2>/dev/null)" ]; then
-    LATEST_ANALYSIS=$(ls -t llm_outputs/analyze-ac/*.txt | head -1)
-    echo "✅ Última análise de AC encontrada: $LATEST_ANALYSIS"
-    cat "$LATEST_ANALYSIS"
+gh issue view $ISSUE_NUMBER | cat
+</command>
+<requires_approval>false</requires_approval>
+</execute_command>
+
+### 2. Obtenção dos Últimos 5 Commits
+O Cline deve obter os hashes e mensagens dos últimos 5 commits para análise.
+
+<execute_command>
+<command>
+git log -5 --pretty=format:"%H %h %B" | cat
+</command>
+<requires_approval>false</requires_approval>
+</execute_command>
+
+### 3. Obtenção de Comentários de Issue Fechada para Referência
+O Cline deve obter os comentários da issue fechada mais recente para servir de referência de formato.
+
+<execute_command>
+<command>
+CLOSED_ISSUE_NUMBER=$(gh issue list --state closed --limit 1 --json number | jq -r '.[0].number')
+if [ -n "$CLOSED_ISSUE_NUMBER" ]; then
+    echo "Comentários da issue fechada mais recente (#$CLOSED_ISSUE_NUMBER) para referência:"
+    gh api repos/ime-usp-br/8thBCSMIF/issues/$CLOSED_ISSUE_NUMBER/comments | cat
 else
-    echo "❌ Nenhum resultado de análise de AC encontrado em llm_outputs/analyze-ac."
-    # O Cline deve ser instruído a parar e informar o usuário sobre a ausência de análise.
+    echo "Nenhuma issue fechada encontrada para referência de comentários."
 fi
 </command>
 <requires_approval>false</requires_approval>
 </execute_command>
 
-### 2. Hash do Último Commit
-O Cline deve obter o hash completo e curto do último commit.
+### 4. Execução e Obtenção do Resultado da Validação do AC com `analyze-ac`
+O Cline deve rodar o script `analyze-ac` para validar o AC e obter seu resultado.
 
 <execute_command>
 <command>
-COMMIT_HASH=$(git rev-parse HEAD)
-COMMIT_SHORT=$(git rev-parse --short HEAD)
-echo "Full: $COMMIT_HASH"
-echo "Short: $COMMIT_SHORT"
-</command>
-<requires_approval>false</requires_approval>
-</execute_command>
-
-### 3. Verificação de Padrão de Comentários (Opcional)
-O Cline pode verificar a quantidade de comentários existentes na issue para inferir o padrão, se necessário.
-
-<execute_command>
-<command>
-COMMENT_COUNT=$(gh api repos/ime-usp-br/8thBCSMIF/issues/$ISSUE_NUMBER/comments | jq length 2>/dev/null || echo "0")
-echo "Número de comentários na issue #$ISSUE_NUMBER: $COMMENT_COUNT"
-if [ "$COMMENT_COUNT" -lt 3 ]; then
-    echo "Verificando issues fechadas para exemplos de comentários..."
-    gh issue list --state closed --label feature --limit 3
-fi
-</command>
-<requires_approval>false</requires_approval>
-</execute_command>
-
-### 4. Ação: Construção e Postagem do Comentário
-O Cline deve reformatar o conteúdo da análise de AC, adicionar o rodapé com o hash do commit atual e postar o comentário no GitHub.
-
-<execute_command>
-<command>
-ISSUE_NUMBER=$ISSUE_NUMBER # Assume que ISSUE_NUMBER é uma variável de ambiente ou foi fornecida.
+printf "y\ny\ny\n" | python3 scripts/tasks/llm_task_analyze_ac.py -i $ISSUE_NUMBER -a "$AC" -sc | cat
 LATEST_ANALYSIS=$(ls -t llm_outputs/analyze-ac/*.txt | head -1)
-COMMIT_HASH=$(git rev-parse HEAD)
-COMMIT_SHORT=$(git rev-parse --short HEAD)
+cat "$LATEST_ANALYSIS"
+</command>
+<requires_approval>false</requires_approval>
+</execute_command>
 
-# 1. Copiar analyze-ac output
-cp "$LATEST_ANALYSIS" /tmp/comment.txt
+### 5. Verificação do Resultado da Validação e Construção do Comentário
+O Cline deve verificar se o AC foi atendido. Se não, o workflow deve ser encerrado. Se sim, o Cline deve construir a mensagem de comentário com base na resposta do `analyze-ac` e nos comentários de referência, adicionando o rodapé com o commit relevante.
 
-# 2. Adicionar rodapé com commit ATUAL
-echo "" >> /tmp/comment.txt
-echo "---" >> /tmp/comment.txt
-echo "**Validação realizada no commit:** [$COMMIT_SHORT](https://github.com/ime-usp-br/8thBCSMIF/commit/$COMMIT_HASH)" >> /tmp/comment.txt
+<execute_command>
+<command>
+# A LLM deve analisar a saída do comando anterior (cat "$LATEST_ANALYSIS")
+# para determinar se o AC foi "Atendido".
+# Se não foi "Atendido", a LLM deve informar o usuário e encerrar o workflow.
+# Caso contrário, a LLM deve construir a variável COMMENT_BODY
+# com base no conteúdo da análise e nos comentários de referência obtidos anteriormente.
+# As variáveis ISSUE_NUMBER, AC, FOUND_COMMIT_HASH e FOUND_COMMIT_SHORT
+# devem ser definidas pela LLM com base nas saídas dos comandos anteriores.
 
-# 3. Verificar conteúdo antes de postar
-echo "Conteúdo do comentário a ser postado:"
-cat /tmp/comment.txt
+# Exemplo de como a LLM construiria o COMMENT_BODY (este é um placeholder para a lógica da LLM):
+# COMMENT_BODY="## Conclusão sobre o Critério de Aceite $AC da Issue #$ISSUE_NUMBER\n\n**Critério de Aceite ($AC):** \"Texto exato do critério...\"\n\n**Análise:**\n\n[Conteúdo da análise do analyze-ac formatado pela LLM]\n\n**Conclusão:**\n\nO Critério de Aceite $AC foi **Atendido**.\n---\n**Validação realizada no commit:** [$FOUND_COMMIT_SHORT](https://github.com/ime-usp-br/8thBCSMIF/commit/$FOUND_COMMIT_HASH)"
 
-# 4. Postar comentário
-gh api repos/ime-usp-br/8thBCSMIF/issues/$ISSUE_NUMBER/comments -F body=@/tmp/comment.txt
+# A LLM deve então usar a variável COMMENT_BODY para postar o comentário.
+# gh api repos/ime-usp-br/8thBCSMIF/issues/$ISSUE_NUMBER/comments -F body="$COMMENT_BODY"
+echo "A LLM é responsável por analisar o resultado do analyze-ac, construir o comentário e postá-lo."
 </command>
 <requires_approval>true</requires_approval>
 </execute_command>
