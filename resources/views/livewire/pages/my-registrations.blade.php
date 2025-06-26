@@ -79,6 +79,23 @@ new #[Layout('layouts.app')] class extends Component {
                     @endif
                 </div>
                 
+                {{-- Display flash messages at the top of the page --}}
+                @if(session('success'))
+                    <div class="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                        {{ session('success') }}
+                    </div>
+                @endif
+                
+                @if($errors->any())
+                    <div class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                        <ul class="list-disc list-inside">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+                
                 @if($registration)
                     <div class="space-y-6">
                         {{-- Registration Overview --}}
@@ -210,24 +227,6 @@ new #[Layout('layouts.app')] class extends Component {
                                                 <h5 class="font-medium text-yellow-800 dark:text-yellow-300 mb-3">
                                                     {{ __('Payment Proof Upload') }}
                                                 </h5>
-                                                
-                                                {{-- Display success message --}}
-                                                @if(session('success'))
-                                                    <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-                                                        {{ session('success') }}
-                                                    </div>
-                                                @endif
-                                                
-                                                {{-- Display validation errors --}}
-                                                @if($errors->any())
-                                                    <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                                                        <ul class="list-disc list-inside">
-                                                            @foreach($errors->all() as $error)
-                                                                <li>{{ $error }}</li>
-                                                            @endforeach
-                                                        </ul>
-                                                    </div>
-                                                @endif
                                                 
                                                 <form action="{{ route('payments.upload-proof', $payment) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
                                                     @csrf
