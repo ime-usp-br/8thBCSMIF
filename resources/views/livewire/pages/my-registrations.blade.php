@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\FeeCalculationService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -21,6 +22,26 @@ new #[Layout('layouts.app')] class extends Component {
     {
         // Toggle selection - if same registration is clicked, deselect it
         $this->selectedRegistrationId = $this->selectedRegistrationId === $registrationId ? null : $registrationId;
+    }
+
+    public function calculateCorrectTotalFee($registration): float
+    {
+        if (!$registration || !$registration->registration_category_snapshot) {
+            return $registration->events->sum('pivot.price_at_registration');
+        }
+
+        $eventCodes = array_values($registration->events->pluck('code')->toArray());
+        $feeService = app(FeeCalculationService::class);
+        
+        $feeCalculation = $feeService->calculateFees(
+            $registration->registration_category_snapshot,
+            $eventCodes,
+            $registration->created_at ?? now(),
+            $registration->participation_format === 'online' ? 'online' : 'in-person',
+            $registration
+        );
+
+        return $feeCalculation['new_total_fee'] ?? $registration->events->sum('pivot.price_at_registration');
     }
 
     public function with(): array
@@ -73,7 +94,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     </p>
                                     <p class="text-gray-600 dark:text-gray-400 mb-2">
                                         <strong>{{ __('Total Fee') }}:</strong>
-                                        R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
+                                        R$ {{ number_format($this->calculateCorrectTotalFee($registration), 2, ',', '.') }}
                                     </p>
                                     <p class="text-gray-600 dark:text-gray-400">
                                         <strong>{{ __('Payment Status') }}:</strong>
@@ -554,7 +575,7 @@ new #[Layout('layouts.app')] class extends Component {
                                                         <div class="flex justify-between items-center">
                                                             <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ __('Total Registration Fee') }}</span>
                                                             <span class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                                                R$ {{ number_format($selectedRegistration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
+                                                                R$ {{ number_format($this->calculateCorrectTotalFee($selectedRegistration), 2, ',', '.') }}
                                                             </span>
                                                         </div>
                                                     </div>
