@@ -70,7 +70,7 @@ O Cline deve verificar se o AC foi atendido. Se não, o workflow deve ser encerr
 # devem ser definidas pela LLM com base nas saídas dos comandos anteriores.
 
 # Exemplo de como a LLM construiria o COMMENT_BODY (este é um placeholder para a lógica da LLM):
-# COMMENT_BODY="## Conclusão sobre o Critério de Aceite $AC da Issue #$ISSUE_NUMBER\n\n**Critério de Aceite ($AC):** \"Texto exato do critério...\"\n\n**Análise:**\n\n[Conteúdo da análise do analyze-ac formatado pela LLM]\n\n**Conclusão:**\n\nO Critério de Aceite $AC foi **Atendido**.\n---\n**Validação realizada no commit:** [$FOUND_COMMIT_SHORT](https://github.com/ime-usp-br/8thBCSMIF/commit/$FOUND_COMMIT_HASH)"
+# COMMENT_BODY="## Conclusão sobre o Critério de Aceite $AC da Issue #$ISSUE_NUMBER<br/><br/>**Critério de Aceite ($AC):** \"Texto exato do critério...\"<br/><br/>**Análise:**<br/><br/>[Conteúdo da análise do analyze-ac formatado pela LLM]<br/><br/>**Conclusão:**<br/><br/>O Critério de Aceite $AC foi **Atendido**.<br/>---<br/>**Validação realizada no commit:** [$FOUND_COMMIT_SHORT](https://github.com/ime-usp-br/8thBCSMIF/commit/$FOUND_COMMIT_HASH)"
 
 # A LLM deve então usar a variável COMMENT_BODY para postar o comentário.
 # gh api repos/ime-usp-br/8thBCSMIF/issues/$ISSUE_NUMBER/comments -F body="$COMMENT_BODY"
