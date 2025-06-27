@@ -56,25 +56,58 @@ cat "$LATEST_ANALYSIS"
 <requires_approval>false</requires_approval>
 </execute_command>
 
-### 5. Verificação do Resultado da Validação e Construção do Comentário
-O Cline deve verificar se o AC foi atendido. Se não, o workflow deve ser encerrado. Se sim, o Cline deve construir a mensagem de comentário com base na resposta do `analyze-ac` e nos comentários de referência, adicionando o rodapé com o commit relevante.
+### 5. Verificação do Resultado da Validação e Preparação do Comentário
+O Cline deve verificar se o AC foi atendido. Se não, o workflow deve ser encerrado. Se sim, o Cline deve copiar o resultado da análise do `analyze-ac` para um arquivo temporário e adicionar o rodapé com o commit relevante.
 
 <execute_command>
 <command>
 # A LLM deve analisar a saída do comando anterior (cat "$LATEST_ANALYSIS")
 # para determinar se o AC foi "Atendido".
 # Se não foi "Atendido", a LLM deve informar o usuário e encerrar o workflow.
-# Caso contrário, a LLM deve construir a variável COMMENT_BODY
-# com base no conteúdo da análise e nos comentários de referência obtidos anteriormente.
+# Caso contrário, a LLM deve construir o conteúdo do comentário.
 # As variáveis ISSUE_NUMBER, AC, FOUND_COMMIT_HASH e FOUND_COMMIT_SHORT
 # devem ser definidas pela LLM com base nas saídas dos comandos anteriores.
 
-# Exemplo de como a LLM construiria o COMMENT_BODY (este é um placeholder para a lógica da LLM):
-# COMMENT_BODY="## Conclusão sobre o Critério de Aceite $AC da Issue #$ISSUE_NUMBER<br/><br/>**Critério de Aceite ($AC):** \"Texto exato do critério...\"<br/><br/>**Análise:**<br/><br/>[Conteúdo da análise do analyze-ac formatado pela LLM]<br/><br/>**Conclusão:**<br/><br/>O Critério de Aceite $AC foi **Atendido**.<br/>---<br/>**Validação realizada no commit:** [$FOUND_COMMIT_SHORT](https://github.com/ime-usp-br/8thBCSMIF/commit/$FOUND_COMMIT_HASH)"
+# Copia o conteúdo da análise para o arquivo temporário.
+cp "$LATEST_ANALYSIS" .git/COMMENT_EDITMSG_TEMP
 
-# A LLM deve então usar a variável COMMENT_BODY para postar o comentário.
-# gh api repos/ime-usp-br/8thBCSMIF/issues/$ISSUE_NUMBER/comments -F body="$COMMENT_BODY"
-echo "A LLM é responsável por analisar o resultado do analyze-ac, construir o comentário e postá-lo."
+# A LLM deve garantir que FOUND_COMMIT_HASH e FOUND_COMMIT_SHORT estejam definidos.
+</command>
+<requires_approval>false</requires_approval>
+</execute_command>
+
+### 6. Leitura e Edição da Mensagem Temporária (Ação do Cline)
+O Cline agora lerá o conteúdo do arquivo temporário e fará quaisquer edições necessárias para garantir que a mensagem siga o padrão do projeto.
+
+<read_file>
+<path>.git/COMMENT_EDITMSG_TEMP</path>
+</read_file>
+
+**Instruções para o Cline:**
+1.  **Analise o conteúdo lido do `.git/COMMENT_EDITMSG_TEMP`.**
+2.  **Adicione o rodapé ao final do arquivo temporário usando `replace_in_file`.**
+    *   O SEARCH block deve ser vazio (ou apenas uma nova linha se necessário para garantir que esteja no final).
+    *   O REPLACE block deve conter o rodapé.
+    *   Exemplo de uso:
+        ```xml
+        <replace_in_file>
+        <path>.git/COMMENT_EDITMSG_TEMP</path>
+        <diff>
+        ------- SEARCH
+
+        =======
+
+        ---
+        **Validação realizada no commit:** [$FOUND_COMMIT_SHORT](https://github.com/ime-usp-br/8thBCSMIF/commit/$FOUND_COMMIT_HASH)
+        +++++++ REPLACE
+
+### 7. Postagem do Comentário Final (com Aprovação do Usuário)
+O Cline irá ler a mensagem final do arquivo temporário e postá-la no GitHub.
+
+<execute_command>
+<command>
+FINAL_COMMENT_BODY=$(cat .git/COMMENT_EDITMSG_TEMP)
+gh api repos/ime-usp-br/8thBCSMIF/issues/$ISSUE_NUMBER/comments -F body="$FINAL_COMMENT_BODY"
 </command>
 <requires_approval>true</requires_approval>
 </execute_command>
