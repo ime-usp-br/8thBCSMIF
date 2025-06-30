@@ -116,6 +116,7 @@ class PaymentControllerAC3Test extends TestCase
         $confirmationPattern = 'bg-green-50.*?Payment proof uploaded successfully';
         $confirmationCount = preg_match_all('/'.preg_quote('bg-green-50', '/').'.*?'.preg_quote(__('Payment proof uploaded successfully'), '/').'/s', $content);
         $this->assertEquals(2, $confirmationCount, 'Both payments should show success confirmation in their respective sections');
+
     }
 
     /**
