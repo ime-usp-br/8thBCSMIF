@@ -2,6 +2,8 @@
 description: "Guia para formular e postar o comentário de análise de AC no GitHub."
 ---
 
+**Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
+
 ## Guia: Formular e Postar Comentário de Análise de AC para a Issue
 
 O Cline deve construir o comando `gh api` exato para postar o comentário de validação no GitHub, com base na análise de AC executada e no hash do commit relevante.

@@ -2,6 +2,8 @@
 description: "Guia para executar validação completa de Acceptance Criteria (AC) seguindo o workflow do Cline."
 ---
 
+**Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
+
 ## Guia: Validação Completa de Acceptance Criteria (AC)
 
 Este guia descreve o processo de validação de um Acceptance Criteria (AC) usando as ferramentas do Cline.
@@ -12,7 +14,7 @@ Este guia descreve o processo de validação de um Acceptance Criteria (AC) usan
 O Cline deve analisar a issue para entender o contexto e os requisitos do AC.
 
 <execute_command>
-<command>gh issue view $ISSUE_NUMBER</command>
+<command>gh issue view $ISSUE_NUMBER | cat</command>
 <requires_approval>false</requires_approval>
 </execute_command>
 
@@ -23,7 +25,7 @@ O Cline deve verificar se a issue contém palavras-chave como "incremental", "ad
 O Cline deve executar todos os quality checks obrigatórios.
 
 <execute_command>
-<command>vendor/bin/pint && vendor/bin/phpstan analyse && php artisan test</command>
+<command>vendor/bin/pint | cat && vendor/bin/phpstan analyse | cat && php artisan test | cat</command>
 <requires_approval>false</requires_approval>
 </execute_command>
 

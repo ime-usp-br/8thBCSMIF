@@ -2,6 +2,8 @@
 description: "A comprehensive workflow for creating pull requests with GitHub CLI, including branch analysis, security checks, and automated PR content generation following best practices."
 ---
 
+**Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
+
 ## Guide: Intelligent and Secure Pull Request Creation
 
 This workflow automates the entire pull request creation process: it analyzes the current branch changes, performs security validation, gathers context from commit history and existing issues, and generates a standardized PR with proper title, description, and labels.
@@ -16,7 +18,7 @@ The AI assistant will first verify the current branch state and ensure it's read
 </execute_command>
 
 <execute_command>
-<command>git branch --show-current</command>
+<command>git branch --show-current | cat</command>
 <# Gets the current branch name to ensure we're not creating a PR from main/master. #>
 <requires_approval>false</requires_approval>
 </execute_command>
@@ -93,7 +95,7 @@ To create the best possible PR title and description, the AI assistant will anal
 **C. Repository Information for Labels and Assignees:**
 
 <execute_command>
-<command>gh repo view --json owner,name,defaultBranch</command>
+<command>gh repo view --json owner,name,defaultBranch | cat</command>
 <# Gets repository metadata for proper PR configuration. #>
 <requires_approval>false</requires_approval>
 </execute_command>

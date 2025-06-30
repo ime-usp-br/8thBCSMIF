@@ -2,6 +2,8 @@
 description: "Workflow atômico e robusto para executar git push, com verificações de segurança e lógica de decisão gerenciada pelo Cline."
 ---
 
+**Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
+
 ## Guia: Push Atômico e Seguro para Repositório Remoto
 
 Este guia executa `git push` de forma incremental e segura. Cada passo é um comando simples e a decisão sobre qual comando de push usar é feita pelo Cline com base no status da branch.
@@ -10,7 +12,7 @@ Este guia executa `git push` de forma incremental e segura. Cada passo é um com
 Primeiro, vamos buscar as atualizações do repositório remoto para garantir que nossas verificações locais estejam baseadas na versão mais recente.
 
 <execute_command>
-<command>git fetch --verbose</command>
+<command>git fetch --verbose | cat</command>
 <# Sincroniza o estado do remoto. Essencial para evitar um push cego. #>
 <requires_approval>false</requires_approval>
 </execute_command>
@@ -68,7 +70,7 @@ Este é o passo de decisão. O Cline executará um comando para saber se a branc
 *Execute esta etapa apenas se a verificação da Etapa 4 foi bem-sucedida.*
 
 <execute_command>
-<command>git push</command>
+<command>git push | cat</command>
 <# Comando de push padrão para uma branch que já é rastreada. Requer sua aprovação. #>
 <requires_approval>true</requires_approval>
 </execute_command>
@@ -78,7 +80,7 @@ Este é o passo de decisão. O Cline executará um comando para saber se a branc
 *Execute esta etapa apenas se a verificação da Etapa 4 falhou.*
 
 <execute_command>
-<command>git push --set-upstream origin $(git branch --show-current)</command>
+<command>git push --set-upstream origin $(git branch --show-current) | cat</command>
 <# Publica a branch no remoto e configura o rastreamento (upstream). Requer sua aprovação. #>
 <requires_approval>true</requires_approval>
 </execute_command>

@@ -2,6 +2,8 @@
 description: "A fully automated workflow to create secure, standardized commits, with automatic staging and integration with GitHub issues."
 ---
 
+**Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
+
 ## Guide: Proactive, Secure, and Integrated Commits
 
 This workflow automates the entire commit process: it stages all current changes, performs a security check, gathers context from your history and open GitHub issues, and finally generates a standard commit message for your approval.
@@ -18,7 +20,7 @@ The AI assistant will automatically add **all current changes** (modified and ne
 Now, let's confirm what has been staged.
 
 <execute_command>
-<command>git status</command>
+<command>git status | cat</command>
 <# Displays the final status so you can see exactly what will be included in the commit. #>
 <requires_approval>false</requires_approval>
 </execute_command>
@@ -57,27 +59,6 @@ To create the best possible commit message, the AI assistant will analyze the pr
 <requires_approval>false</requires_approval>
 </execute_command>
 
-<<<<<<< Updated upstream
-**B. Issues Abertas no GitHub para Conexão de Tarefas (com corpo da issue):**
-<!-- Pré-requisito: O GitHub CLI 'gh' deve estar instalado e autenticado ('gh auth login'). -->
-<execute_command>
-<command>gh issue list --state open --json number,title,labels,body | cat</command>
-<# O Cline analisará esta lista para conectar o commit a uma tarefa existente, incluindo o corpo da issue para contexto adicional. #>
-<requires_approval>false</requires_approval>
-</execute_command>
-
-### 4. Geração da Mensagem de Commit (Ação do Cline)
-Com todo o contexto coletado (diff, segurança, histórico, issues, **e o corpo das issues**), o Cline irá agora construir a mensagem de commit ideal.
-
-**Instruções para o Cline:**
-1.  Sintetize o `git diff` para entender a mudança.
-2.  Use o histórico para definir o `tipo` e `escopo` corretos.
-3.  **Cruze as informações do diff com a lista de issues do GitHub, incluindo o corpo das issues.** Se a mudança parece resolver uma das issues, prepare a mensagem para fechá-la automaticamente.
-4.  Escreva uma descrição clara e imperativa.
-5.  Se a mudança for complexa, adicione um corpo com bullet points, **incorporando informações relevantes do corpo da issue para maior clareza e contexto**.
-6.  **IMPORTANTE:** Não use palavras-chave como `Closes #<numero>`, `Fixes #<numero>` ou `Resolves #<numero>` no corpo do commit. Neste projeto, o fechamento de issues é gerenciado pelo Pull Request (PR), não pelo commit.
-7.  Use o formato **HEREDOC** para garantir a formatação correta.
-=======
 **B. Open GitHub Issues for Task Connection (with issue body):**
 <!-- Prerequisite: The GitHub CLI 'gh' must be installed and authenticated ('gh auth login'). -->
 <execute_command>
@@ -98,7 +79,6 @@ With all the context gathered (diff, security analysis, history, issues, **and t
 6.  **IMPORTANT:** Do not use keywords like `Closes #<number>`, `Fixes #<number>`, or `Resolves #<number>` in the commit message. In this project, issues are closed via Pull Requests (PRs), not commits.
 7.  **CRITICAL: Avoid problematic characters in the commit message.** Characters such as single quotes (`'`), double quotes (`"`), and backticks (`` ` ``) can be misinterpreted by the terminal, causing issues. Rephrase the message to avoid using these characters or to ensure they do not cause conflict, prioritizing clarity and command-line compatibility.
 8.  Use the **HEREDOC** format to ensure proper multi-line formatting.
->>>>>>> Stashed changes
 
 ### 5. Final Commit Execution (with User Approval)
 The AI assistant will generate the complete `git commit` command. **Your only task is to review the message and approve the execution.**
