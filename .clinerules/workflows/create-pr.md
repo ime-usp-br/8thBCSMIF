@@ -1,224 +1,168 @@
 ---
-description: "Guia para criar um Pull Request no GitHub seguindo as melhores práticas do projeto e identificando commits que serão mergeados."
+description: "A comprehensive workflow for creating pull requests with GitHub CLI, including branch analysis, security checks, and automated PR content generation following best practices."
 ---
 
-## Guia: Criação de Pull Request
+## Guide: Intelligent and Secure Pull Request Creation
 
-O Cline deve executar este workflow completo para criação de PR seguindo melhores práticas e identificando exatamente quais commits serão mergeados no branch principal.
+This workflow automates the entire pull request creation process: it analyzes the current branch changes, performs security validation, gathers context from commit history and existing issues, and generates a standardized PR with proper title, description, and labels.
 
-### 1. Análise de Branch e Commits
-
-O Cline deve detectar o número da issue a partir do nome da branch atual (se seguir o padrão `feat/X`) e identificar a branch principal (main/master). Em seguida, deve listar os commits que serão incluídos no PR.
+### 1. Branch and Repository Status Analysis
+The AI assistant will first verify the current branch state and ensure it's ready for a pull request.
 
 <execute_command>
-<command>
-CURRENT_BRANCH=$(git branch --show-current)
-if [[ "$CURRENT_BRANCH" =~ feat/([0-9]+) ]]; then
-    ISSUE_NUMBER="${BASH_REMATCH[1]}"
-    echo "✅ Issue detectada: #$ISSUE_NUMBER"
-else
-    echo "⚠️ Branch não segue padrão feat/X - forneça ISSUE_NUMBER manualmente"
-    # O Cline deve ser instruído a perguntar ao usuário ou inferir o ISSUE_NUMBER se esta mensagem for exibida.
-    # Para este guia, assumimos que o ISSUE_NUMBER será fornecido ou detectado.
-fi
-
-MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
-echo "📋 Branch principal: $MAIN_BRANCH"
-
-echo "🔍 Commits que serão incluídos no PR:"
-git log --oneline $MAIN_BRANCH..HEAD
-
-echo "📊 Total de commits: $(git rev-list --count $MAIN_BRANCH..HEAD)"
-</command>
+<command>git status | cat</command>
+<# Verifies working tree is clean and branch is ready for PR creation. #>
 <requires_approval>false</requires_approval>
 </execute_command>
 
-### 2. Verificações de Qualidade Obrigatórias
-
-O Cline deve executar os quality checks finais e verificar se a branch está atualizada com a branch principal antes de criar o PR.
-
 <execute_command>
-<command>
-echo "🔧 Executando quality checks..."
-vendor/bin/pint
-vendor/bin/phpstan analyse
-php artisan test
-pytest -v --live
-
-git fetch origin
-MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5) # Re-detectar MAIN_BRANCH para garantir
-BEHIND_COUNT=$(git rev-list --count HEAD..origin/$MAIN_BRANCH)
-if [ "$BEHIND_COUNT" -gt 0 ]; then
-    echo "⚠️ Branch está $BEHIND_COUNT commits atrás de $MAIN_BRANCH"
-    echo "❌ Faça rebase antes de criar PR: git rebase origin/$MAIN_BRANCH"
-    # O Cline deve ser instruído a parar e pedir ao usuário para fazer o rebase.
-else
-    echo "✅ Branch está atualizada"
-fi
-</command>
+<command>git branch --show-current</command>
+<# Gets the current branch name to ensure we're not creating a PR from main/master. #>
 <requires_approval>false</requires_approval>
 </execute_command>
 
-### 3. Análise da Issue para Título e Descrição
-
-O Cline deve carregar os detalhes da issue e verificar os ACs completados através dos comentários para construir o título e a descrição do PR.
+### 2. Ensure Branch is Pushed to Remote
+Before creating a PR, we need to ensure the branch exists on the remote repository.
 
 <execute_command>
-<command>
-ISSUE_NUMBER_FROM_BRANCH=$(git branch --show-current | sed -n 's/feat\/\([0-9]\+\).*/\1/p')
-ISSUE_NUMBER=${ISSUE_NUMBER_FROM_BRANCH:-$ISSUE_NUMBER} # Usa o detectado ou o fornecido
-
-echo "📋 Analisando Issue #$ISSUE_NUMBER..."
-ISSUE_DATA=$(gh issue view $ISSUE_NUMBER --json title,body,labels)
-ISSUE_TITLE=$(echo "$ISSUE_DATA" | jq -r '.title')
-
-echo "🔍 Verificando ACs completados..."
-COMPLETED_ACS=$(gh api repos/ime-usp-br/8thBCSMIF/issues/$ISSUE_NUMBER/comments | jq -r '.[] | select(.body | contains("foi **Atendido**")) | .body' | grep -o "AC[0-9]\+" | sort -u)
-
-if [ -z "$COMPLETED_ACS" ]; then
-    echo "⚠️ Nenhum AC foi validado com analyze-ac"
-    echo "❌ Execute validação dos ACs antes de criar PR"
-    # O Cline deve ser instruído a parar e pedir ao usuário para validar os ACs.
-else
-    echo "✅ ACs completados: $COMPLETED_ACS"
-fi
-</command>
+<command>git ls-remote --exit-code --heads origin $(git branch --show-current)</command>
+<# Checks if the current branch exists on the remote. If it fails, we'll need to push first. #>
 <requires_approval>false</requires_approval>
 </execute_command>
 
-### 4. Criação do PR com Template Inteligente
+**Instructions for the AI Assistant:**
+*   If the command above **failed** (non-zero exit code), the branch doesn't exist remotely. **Push the branch first** with `git push --set-upstream origin $(git branch --show-current)`.
+*   If the command **succeeded** (exit code 0), proceed to the next step.
 
-O Cline deve gerar o corpo do Pull Request dinamicamente, incluindo um resumo, os ACs implementados, a lista de commits e um checklist final.
+### 3. Gather Changes for Analysis
+The AI assistant will collect all changes that will be included in the pull request for comprehensive analysis.
+
+**A. Get Commit History for the Branch:**
 
 <execute_command>
-<command>
-ISSUE_NUMBER_FROM_BRANCH=$(git branch --show-current | sed -n 's/feat\/\([0-9]\+\).*/\1/p')
-ISSUE_NUMBER=${ISSUE_NUMBER_FROM_BRANCH:-$ISSUE_NUMBER} # Usa o detectado ou o fornecido
-ISSUE_DATA=$(gh issue view $ISSUE_NUMBER --json title,body,labels)
-ISSUE_TITLE=$(echo "$ISSUE_DATA" | jq -r '.title')
-COMPLETED_ACS=$(gh api repos/ime-usp-br/8thBCSMIF/issues/$ISSUE_NUMBER/comments | jq -r '.[] | select(.body | contains("foi **Atendido**")) | .body' | grep -o "AC[0-9]\+" | sort -u)
-MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
-
-PR_TITLE="$ISSUE_TITLE (#$ISSUE_NUMBER)"
-
-cat > /tmp/pr_body.txt << 'EOF'
-## Resumo
-
-Implementação dos critérios de aceite da issue com foco nas melhores práticas de desenvolvimento e qualidade de código.
-
-## Critérios de Aceite Implementados
-
-EOF
-
-echo "$COMPLETED_ACS" | while read -r AC; do
-    echo "- [x] $AC: Validado e implementado" >> /tmp/pr_body.txt
-done
-
-cat >> /tmp/pr_body.txt << 'EOF'
-
-## Commits Incluídos
-
-Os seguintes commits serão mergeados no branch main:
-
-EOF
-
-git log --pretty=format:"- %h: %s" $MAIN_BRANCH..HEAD >> /tmp/pr_body.txt
-
-cat >> /tmp/pr_body.txt << 'EOF'
-
-## Testes e Qualidade
-
-- [x] Todos os testes passando (PHPUnit)
-- [x] Análise estática aprovada (PHPStan)
-- [x] Código formatado (PSR-12/Pint)
-- [x] Testes Python executados (se aplicável)
-- [x] ACs validados com analyze-ac
-
-## Checklist Final
-
-- [x] Quality checks executados
-- [x] Branch atualizada com main
-- [x] Commits seguem padrão do projeto
-- [x] Sem secrets ou dados sensíveis
-- [x] Documentação atualizada (se necessário)
-
-EOF
-
-echo "" >> /tmp/pr_body.txt
-echo "Closes #$ISSUE_NUMBER" >> /tmp/pr_body.txt
-
-echo "📝 Template do PR gerado"
-</command>
+<command>git log origin/main..HEAD --pretty=format:"%C(yellow)%h %C(reset)- %s %C(green)(%cr) %C(bold blue)<%an>%C(reset)" | cat</command>
+<# Lists all commits that will be included in the PR, showing the scope of changes. #>
 <requires_approval>false</requires_approval>
 </execute_command>
 
-### 5. Execução da Criação do PR
+**B. Get Complete Diff for Security Analysis:**
 
-O Cline deve executar o comando `gh pr create` para criar o Pull Request.
+<execute_command>
+<command>git diff origin/main..HEAD | cat</command>
+<# Provides the complete diff for the AI assistant to analyze for security issues and understand the changes. #>
+<requires_approval>false</requires_approval>
+</execute_command>
+
+### 4. Critical Security Analysis (Performed by the AI Assistant)
+This is a mandatory security checkpoint. The AI assistant will analyze all changes in the pull request for sensitive data.
+
+**Instructions for the AI Assistant (Mandatory Action):**
+1.  **Analyze the complete diff from the previous command.**
+2.  **Actively search for:**
+    *   **High-risk keywords:** `password`, `secret`, `key`, `token`, `bearer`, `private`, `credential`, `.env`.
+    *   **API key patterns:** (e.g., `sk_live_`, `pk_live_`, `ghp_`, long strings with high entropy).
+    *   **Hardcoded credentials:** URLs with embedded credentials, database connection strings.
+    *   **Suspicious comments:** (e.g., `// TODO: remove password before merging`).
+3.  **IF ANYTHING SUSPICIOUS IS FOUND:**
+    *   **Stop the process immediately.**
+    *   **Clearly inform the user, showing the problematic code snippet.**
+    *   **Ask explicitly:** "I have detected what appears to be sensitive data in the changes. Do you wish to proceed with the PR creation anyway? (yes/no)"
+    *   If the answer is "no", **terminate the workflow immediately** and instruct the user to fix the issue.
+4.  **IF NOTHING IS FOUND:**
+    *   Inform the user: "✅ Security scan complete. No apparent secrets were found." and proceed to the next step.
+
+### 5. Context Gathering for PR Content Generation
+To create the best possible PR title and description, the AI assistant will analyze project patterns and open issues.
+
+**A. Recent PR History for Style Patterns:**
+
+<execute_command>
+<command>gh pr list --state merged --limit 10 --json number,title,body | cat</command>
+<# Analyzes recent PR titles and descriptions to learn the project's style and conventions. #>
+<requires_approval>false</requires_approval>
+</execute_command>
+
+**B. Open GitHub Issues for Task Connection:**
+
+<execute_command>
+<command>gh issue list --state open --json number,title,labels,body | cat</command>
+<# The AI assistant will analyze this to connect the PR to existing issues and understand the context. #>
+<requires_approval>false</requires_approval>
+</execute_command>
+
+**C. Repository Information for Labels and Assignees:**
+
+<execute_command>
+<command>gh repo view --json owner,name,defaultBranch</command>
+<# Gets repository metadata for proper PR configuration. #>
+<requires_approval>false</requires_approval>
+</execute_command>
+
+### 6. PR Content Generation (AI Assistant's Action)
+With all context gathered, the AI assistant will construct an optimal pull request with proper title, description, and metadata.
+
+**Instructions for the AI Assistant:**
+1.  **Analyze the diff and commits** to understand the scope and purpose of changes.
+2.  **Use the PR history** to determine the correct title format and description style.
+3.  **Cross-reference with open issues** to identify if this PR addresses any existing issues.
+4.  **Generate a clear, descriptive title** that follows project conventions.
+5.  **Create a comprehensive description** including:
+    *   **## Summary:** Brief overview of the changes
+    *   **## Changes Made:** Bullet points of specific modifications
+    *   **## Related Issues:** Reference relevant issues (use `Closes #number` if appropriate)
+    *   **## Testing:** Description of how changes were tested
+    *   **## Screenshots/Demo:** If applicable (UI changes)
+6.  **Suggest appropriate labels** based on the type of changes (bug, feature, documentation, etc.).
+7.  **CRITICAL:** Do not include any references to AI assistants, LLMs, or specific tools in the PR title or description.
+
+### 7. Pull Request Creation (with User Approval)
+The AI assistant will generate the complete `gh pr create` command with all necessary flags and content.
 
 <execute_command>
 <command>
-ISSUE_NUMBER_FROM_BRANCH=$(git branch --show-current | sed -n 's/feat\/\([0-9]\+\).*/\1/p')
-ISSUE_NUMBER=${ISSUE_NUMBER_FROM_BRANCH:-$ISSUE_NUMBER} # Usa o detectado ou o fornecido
-ISSUE_DATA=$(gh issue view $ISSUE_NUMBER --json title,body,labels)
-ISSUE_TITLE=$(echo "$ISSUE_DATA" | jq -r '.title')
-MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
-
-PR_TITLE="$ISSUE_TITLE (#$ISSUE_NUMBER)"
-
-gh pr create \
-    --title "$PR_TITLE" \
-    --body-file /tmp/pr_body.txt \
-    --base "$MAIN_BRANCH" \
-    --head "$(git branch --show-current)" \
-    --label "feature" \
-    --assignee "@me"
-
-PR_URL=$(gh pr view --json url -q .url)
-echo "✅ PR criado: $PR_URL"
+# The AI assistant will generate the complete gh pr create command here.
+# Example format:
+# gh pr create \
+#   --title "feat: Add user authentication system" \
+#   --body "$(cat <<'EOF'
+# ## Summary
+# Implements comprehensive user authentication with JWT tokens and role-based access control.
+#
+# ## Changes Made
+# - Add authentication middleware for Express routes
+# - Implement JWT token generation and validation
+# - Create user registration and login endpoints
+# - Add password hashing with bcrypt
+# - Implement role-based authorization
+#
+# ## Related Issues
+# Closes #42
+# Closes #38
+#
+# ## Testing
+# - Unit tests for authentication middleware
+# - Integration tests for auth endpoints
+# - Manual testing of login/logout flow
+# EOF
+# )" \
+#   --label "feature" \
+#   --label "backend" \
+#   --assignee "@me"
 </command>
+<# Review the PR title, description, and metadata generated by the AI assistant. If correct, approve to create the PR. #>
 <requires_approval>true</requires_approval>
 </execute_command>
 
-### 6. Pós-Criação: Validações e Monitoring
-
-Após a criação do PR, o Cline deve aguardar o início do CI/CD e verificar o status dos checks, fornecendo um resumo final do Pull Request.
+### 8. Post-Creation Verification
+After the PR is created, verify it was successful and provide the PR URL for easy access.
 
 <execute_command>
-<command>
-PR_URL=$(gh pr view --json url -q .url) # Re-capturar PR_URL caso não esteja disponível
-ISSUE_NUMBER_FROM_BRANCH=$(git branch --show-current | sed -n 's/feat\/\([0-9]\+\).*/\1/p')
-ISSUE_NUMBER=${ISSUE_NUMBER_FROM_BRANCH:-$ISSUE_NUMBER} # Usa o detectado ou o fornecido
-ISSUE_DATA=$(gh issue view $ISSUE_NUMBER --json title,body,labels)
-ISSUE_TITLE=$(echo "$ISSUE_DATA" | jq -r '.title')
-COMPLETED_ACS=$(gh api repos/ime-usp-br/8thBCSMIF/issues/$ISSUE_NUMBER/comments | jq -r '.[] | select(.body | contains("foi **Atendido**")) | .body' | grep -o "AC[0-9]\+" | sort -u)
-MAIN_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
-
-echo "⏳ Aguardando CI/CD iniciar..."
-sleep 10
-
-echo "🔍 Status dos checks:"
-gh pr checks $(git branch --show-current) || echo "CI/CD ainda não iniciado"
-
-echo ""
-echo "📋 RESUMO DO PULL REQUEST:"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🔗 URL: $PR_URL"
-echo "📝 Título: $PR_TITLE"
-echo "🌿 Branch: $(git branch --show-current) → $MAIN_BRANCH"
-echo "📊 Commits: $(git rev-list --count $MAIN_BRANCH..HEAD) commits serão mergeados"
-echo "🎯 Issue: #$ISSUE_NUMBER"
-echo "✅ ACs: $COMPLETED_ACS"
-echo "🚀 Status: $(gh pr view --json state -q .state)"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-rm -f /tmp/pr_body.txt
-</command>
+<command>gh pr view --json number,title,url | cat</command>
+<# Displays the created PR information including the URL for immediate access. #>
 <requires_approval>false</requires_approval>
 </execute_command>
 
-### Pré-requisitos:
-- Branch deve estar atualizada com main
-- Quality checks devem passar
-- Pelo menos um AC deve estar validado com analyze-ac
-- GitHub CLI (gh) deve estar configurado
+**Final Notes:**
+- The AI assistant will provide the direct PR URL for immediate review
+- Consider enabling auto-merge if the repository supports it and all checks pass
+- The PR will be ready for review by team members
