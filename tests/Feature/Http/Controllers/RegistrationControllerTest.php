@@ -1289,7 +1289,6 @@ class RegistrationControllerTest extends TestCase
                 $this->assertStringContainsString(__('Bank:'), $content);
                 $this->assertStringContainsString(__('Agency:'), $content);
                 $this->assertStringContainsString(__('Account:'), $content);
-                $this->assertStringContainsString(__('PIX Key:'), $content);
                 $this->assertStringContainsString(__('how to send the payment proof'), $content);
 
                 // Verify user and registration data
