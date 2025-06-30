@@ -2,6 +2,8 @@
 description: "A workflow to review a GitHub issue based on project context, documentation, and best practices. This workflow assumes the issue content is in Brazilian Portuguese (pt-BR)."
 ---
 
+**Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
+
 ## Guide: Comprehensive GitHub Issue Review
 
 This workflow guides the AI assistant in reviewing a specific GitHub issue. The goal is to ensure the issue is well-defined, actionable, and aligns with the project's current state and documentation. The review process SHALL use RFC2119 keywords to structure its feedback.
@@ -55,7 +57,7 @@ The assistant MUST identify the primary category of the issue from its labels (e
 `<execute_command>`
 `<command># The AI assistant SHOULD determine the correct file to read based on the issue's labels.`
 `# Example for a 'feature' label:`
-`cat templates/issue_bodies/feature_body.md`
+`cat templates/issue_bodies/feature_body.md | cat`
 `</command>`
 `<# Reads the appropriate issue template to ensure the review follows a standard structure. #>`
 `<requires_approval>false</requires_approval>`

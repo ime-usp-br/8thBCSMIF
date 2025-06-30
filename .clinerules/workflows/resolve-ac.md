@@ -2,6 +2,8 @@
 description: "Workflow para análise e resolução de critérios de aceite específicos de issues, fornecendo orientações estratégicas baseadas no guia de desenvolvimento do projeto."
 ---
 
+**Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
+
 ## Guia: Resolução de Critério de Aceite
 
 Este workflow analisa um critério de aceite específico de uma issue e fornece orientações estratégicas para sua implementação, seguindo rigorosamente os padrões e filosofia do projeto conforme documentado no guia de desenvolvimento.

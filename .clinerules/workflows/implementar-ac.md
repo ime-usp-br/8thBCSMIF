@@ -3,6 +3,8 @@
 description: "Workflow para implementar um AC específico autonomamente usando as ferramentas do Cline."
 ---
 
+**Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
+
 ## Workflow Completo Cline (Autônomo)
 
 **Argumentos esperados:** `<ISSUE_NUMBER> <AC_NUMBER>`
@@ -22,7 +24,7 @@ O Cline deve implementar as mudanças seguindo os padrões do projeto existentes
 O Cline deve executar os quality checks automáticos. Todos devem passar antes de prosseguir.
 
 <execute_command>
-<command>vendor/bin/pint && vendor/bin/phpstan analyse && php artisan test</command>
+<command>vendor/bin/pint | cat && vendor/bin/phpstan analyse | cat && php artisan test | cat</command>
 <requires_approval>false</requires_approval>
 </execute_command>
 

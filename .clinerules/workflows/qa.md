@@ -2,6 +2,8 @@
 description: "Guia para executar todas as verificações de qualidade obrigatórias (Pint, PHPStan, PHPUnit, Pytest)."
 ---
 
+**Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
+
 ## Guia: Quality Checks Obrigatórios
 
 O Cline deve executar todas as verificações de qualidade na ordem exata definida no projeto. Cada etapa deve ser aprovada antes de prosseguir.
@@ -10,7 +12,7 @@ O Cline deve executar todas as verificações de qualidade na ordem exata defini
 O Cline deve executar o Pint para garantir a formatação PSR-12.
 
 <execute_command>
-<command>vendor/bin/pint</command>
+<command>vendor/bin/pint | cat</command>
 <requires_approval>false</requires_approval>
 </execute_command>
 
@@ -18,7 +20,7 @@ O Cline deve executar o Pint para garantir a formatação PSR-12.
 O Cline deve executar o PHPStan para análise estática.
 
 <execute_command>
-<command>vendor/bin/phpstan analyse</command>
+<command>vendor/bin/phpstan analyse | cat</command>
 <requires_approval>false</requires_approval>
 </execute_command>
 
@@ -26,7 +28,7 @@ O Cline deve executar o PHPStan para análise estática.
 O Cline deve executar os testes de unidade e feature com PHPUnit.
 
 <execute_command>
-<command>php artisan test</command>
+<command>php artisan test | cat</command>
 <requires_approval>false</requires_approval>
 </execute_command>
 
@@ -34,7 +36,7 @@ O Cline deve executar os testes de unidade e feature com PHPUnit.
 O Cline deve executar os testes Python com Pytest.
 
 <execute_command>
-<command>pytest -v --live</command>
+<command>pytest -v --live | cat</command>
 <requires_approval>false</requires_approval>
 </execute_command>
 
