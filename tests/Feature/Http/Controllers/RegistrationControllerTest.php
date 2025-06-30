@@ -1289,7 +1289,6 @@ class RegistrationControllerTest extends TestCase
                 $this->assertStringContainsString(__('Bank:'), $content);
                 $this->assertStringContainsString(__('Agency:'), $content);
                 $this->assertStringContainsString(__('Account:'), $content);
-                $this->assertStringContainsString(__('PIX Key:'), $content);
                 $this->assertStringContainsString(__('how to send the payment proof'), $content);
 
                 // Verify user and registration data
@@ -1582,5 +1581,57 @@ class RegistrationControllerTest extends TestCase
         // Status is formatted according to: __(ucfirst(str_replace(['_', '-'], ' ', $registration->payment_status)))
         $formattedStatus = __(ucfirst(str_replace(['_', '-'], ' ', 'pending_payment')));
         $myRegistrationsResponse->assertSee($formattedStatus);
+    }
+
+    #[Test]
+    public function store_creates_payment_record_for_non_free_registration(): void
+    {
+        // Test that a payment record is created for a registration with a non-zero fee.
+        $user = User::factory()->create();
+        $user->markEmailAsVerified();
+        $this->actingAs($user);
+
+        $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
+        $event = Event::where('code', $mainConferenceCode)->firstOrFail();
+
+        // Ensure we are in a time where a fee is applicable
+        $earlyBirdDate = Carbon::parse($event->registration_deadline_early)->subDay();
+        Carbon::setTestNow($earlyBirdDate);
+
+        $validData = $this->getValidRegistrationData($user, [
+            'selected_event_codes' => [$event->code],
+            'position' => 'professional', // Position with a known fee
+            'is_abe_member' => false,
+        ]);
+
+        // Action: Post the registration data
+        $response = $this->post(route('event-registrations.store'), $validData);
+
+        // Assertions
+        $response->assertRedirect(route('registrations.my'));
+        $response->assertSessionHas('success');
+
+        // Find the created registration
+        $registration = Registration::where('user_id', $user->id)->latest()->first();
+        $this->assertNotNull($registration, 'Registration was not created.');
+
+        // Core Assertion: Verify the payment record was created
+        $this->assertDatabaseHas('payments', [
+            'registration_id' => $registration->id,
+            'status' => 'pending',
+        ]);
+
+        // Verify payment details
+        $payment = Payment::where('registration_id', $registration->id)->first();
+        $this->assertNotNull($payment, 'Payment record was not found for the registration.');
+
+        // The fee for a non-ABE professional during early bird is 1600.00
+        $this->assertEquals(1600.00, $payment->amount);
+
+        // Verify the registration's payment status reflects this
+        $this->assertEquals('pending_payment', $registration->payment_status);
+
+        // Clean up
+        Carbon::setTestNow();
     }
 }

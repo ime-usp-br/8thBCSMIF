@@ -363,7 +363,7 @@
     "Total Amount": "Valor Total",
     "Payment Status": "Status do Pagamento",
     "Payment Instructions": "Instruções para Pagamento",
-    "Please make payment via bank transfer or PIX to the details below:": "Por favor, efetue o pagamento via transferência bancária ou PIX para os dados abaixo:",
+    "Please make payment via bank transfer to the details below:": "Por favor, efetue o pagamento via transferência bancária para os dados abaixo:",
     "Bank Details": "Dados Bancários",
     "Bank": "Banco",
     "Branch": "Agência",
@@ -629,7 +629,7 @@
     "Bank:": "Banco:",
     "Agency:": "Agência:",
     "Account:": "Conta:",
-    "PIX Key:": "Chave PIX:",
+    
     "how to send the payment proof": "como enviar o comprovante de pagamento",
     "Your registration for the 8th Brazilian Congress on Statistical Modeling in Insurance and Finance (8th BCSMIF) has been successfully modified.": "Sua inscrição para o 8º Congresso Brasileiro de Modelagem Estatística em Seguros e Finanças (8º BCSMIF) foi modificada com sucesso.",
     "Updated Registration Summary": "Resumo da Inscrição Atualizada",

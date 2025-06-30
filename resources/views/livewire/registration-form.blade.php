@@ -150,6 +150,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function submit(): void
     {
+        // Perform client-side validation with Livewire
         $this->validate([
             'full_name' => 'required|string|max:255',
             'nationality' => 'required|string|max:255',
@@ -186,43 +187,9 @@ new #[Layout('layouts.app')] class extends Component {
             'confirm_information' => 'required|accepted',
             'consent_data_processing' => 'required|accepted',
         ]);
-
-        // Prepare data for submission to RegistrationController
-        $registrationData = [
-            'full_name' => $this->full_name,
-            'nationality' => $this->nationality,
-            'date_of_birth' => $this->date_of_birth,
-            'gender' => $this->gender === 'other' ? $this->other_gender : $this->gender,
-            'document_country_origin' => $this->document_country_origin,
-            'cpf' => $this->cpf,
-            'rg_number' => $this->rg_number,
-            'passport_number' => $this->passport_number,
-            'passport_expiry_date' => $this->passport_expiry_date,
-            'email' => $this->email,
-            'phone_number' => $this->phone_number,
-            'address_street' => $this->address_street,
-            'address_city' => $this->address_city,
-            'address_state_province' => $this->address_state_province,
-            'address_country' => $this->address_country,
-            'address_postal_code' => $this->address_postal_code,
-            'affiliation' => $this->affiliation,
-            'position' => $this->position === 'other' ? $this->other_position : $this->position,
-            'is_abe_member' => $this->is_abe_member === 'yes',
-            'arrival_date' => $this->arrival_date,
-            'departure_date' => $this->departure_date,
-            'selected_event_codes' => $this->selected_event_codes,
-            'participation_format' => $this->participation_format,
-            'needs_transport_from_gru' => $this->needs_transport_from_gru,
-            'needs_transport_from_usp' => $this->needs_transport_from_usp,
-            'dietary_restrictions' => $this->dietary_restrictions === 'other' ? $this->other_dietary_restrictions : $this->dietary_restrictions,
-            'emergency_contact_name' => $this->emergency_contact_name,
-            'emergency_contact_relationship' => $this->emergency_contact_relationship,
-            'emergency_contact_phone' => $this->emergency_contact_phone,
-            'requires_visa_letter' => $this->requires_visa_letter === 'yes',
-        ];
-
-        // AC7: Validation passed - allow natural form submission to RegistrationController@store
-        // Do not prevent default form submission, let it proceed naturally to POST route
+        
+        // Validation passed - allow form submission to RegistrationController@store
+        // This method only validates; actual submission happens via HTML form
     }
 
     public function validateAndSubmit(): void
@@ -265,102 +232,10 @@ new #[Layout('layouts.app')] class extends Component {
             'consent_data_processing' => 'required|accepted',
         ]);
 
-        // If validation passes, submit directly via Livewire instead of form submission
-        $this->submitRegistration();
+        // If validation passes, trigger HTML form submission to RegistrationController@store
+        $this->js('window.submitFormData();');
     }
 
-    public function submitRegistration(): void
-    {
-
-        // Prepare data for registration creation
-        $registrationData = [
-            'user_id' => auth()->id(),
-            'full_name' => $this->full_name,
-            'nationality' => $this->nationality,
-            'date_of_birth' => $this->date_of_birth ?: null,
-            'gender' => $this->gender === 'other' ? $this->other_gender : $this->gender,
-            'document_country_origin' => $this->document_country_origin,
-            'cpf' => $this->cpf ?: null,
-            'rg_number' => $this->rg_number ?: null,
-            'passport_number' => $this->passport_number ?: null,
-            'passport_expiry_date' => $this->passport_expiry_date ?: null,
-            'email' => $this->email,
-            'phone_number' => $this->phone_number ?: null,
-            'address_street' => $this->address_street ?: null,
-            'address_city' => $this->address_city ?: null,
-            'address_state_province' => $this->address_state_province ?: null,
-            'address_country' => $this->address_country,
-            'address_postal_code' => $this->address_postal_code ?: null,
-            'affiliation' => $this->affiliation ?: null,
-            'position' => $this->position === 'other' ? $this->other_position : $this->position,
-            'is_abe_member' => $this->is_abe_member === 'yes',
-            'arrival_date' => $this->arrival_date ?: null,
-            'departure_date' => $this->departure_date ?: null,
-            'participation_format' => $this->participation_format,
-            'needs_transport_from_gru' => $this->needs_transport_from_gru,
-            'needs_transport_from_usp' => $this->needs_transport_from_usp,
-            'dietary_restrictions' => $this->dietary_restrictions === 'other' ? $this->other_dietary_restrictions : $this->dietary_restrictions,
-            'emergency_contact_name' => $this->emergency_contact_name ?: null,
-            'emergency_contact_relationship' => $this->emergency_contact_relationship ?: null,
-            'emergency_contact_phone' => $this->emergency_contact_phone ?: null,
-            'requires_visa_letter' => $this->requires_visa_letter === 'yes',
-        ];
-
-        try {
-            // Determine participant category for fee calculation
-            $position = $this->position === 'other' ? $this->other_position : $this->position;
-            $isAbeMember = $this->is_abe_member === 'yes';
-
-            $participantCategory = match ($position) {
-                'undergraduate_student' => 'undergrad_student',
-                'graduate_student' => 'grad_student',
-                'professor' => $isAbeMember ? 'professor_abe' : 'professor_non_abe_professional',
-                'professional', 'researcher' => 'professor_non_abe_professional',
-                default => 'professor_non_abe_professional',
-            };
-
-            // Calculate fees
-            $feeCalculationService = app(FeeCalculationService::class);
-            $feeData = $feeCalculationService->calculateFees(
-                $participantCategory,
-                $this->selected_event_codes,
-                Carbon::now(),
-                $this->participation_format
-            );
-
-            // Add fee calculation data
-            $registrationData['registration_category_snapshot'] = $participantCategory;
-            $registrationData['calculated_fee'] = $feeData['total_fee'];
-
-            // Create registration
-            $registration = Registration::create($registrationData);
-
-            // Set payment status
-            $paymentStatus = ($feeData['total_fee'] == 0) ? 'free' : 'pending_payment';
-            $registration->update(['payment_status' => $paymentStatus]);
-
-            // Sync events with price_at_registration
-            $eventSyncData = [];
-            foreach ($feeData['details'] as $eventDetail) {
-                if (! isset($eventDetail['error'])) {
-                    $eventSyncData[$eventDetail['event_code']] = ['price_at_registration' => $eventDetail['calculated_price']];
-                }
-            }
-            if (! empty($eventSyncData)) {
-                $registration->events()->sync($eventSyncData);
-            }
-
-            // Dispatch event
-            event(new NewRegistrationCreated($registration));
-
-            // Set success state
-            $this->registration_successful = true;
-            
-        } catch (\Exception $e) {
-            // Handle errors
-            $this->addError('general', __('Failed to submit registration. Please try again.') . ' Error: ' . $e->getMessage());
-        }
-    }
 
     public function resetForm(): void
     {
@@ -826,6 +701,87 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                     </div>
 
+
+                    {{-- Hidden fields for Livewire data --}}
+                    <script>
+                        document.addEventListener('livewire:init', () => {
+                            window.submitFormData = function() {
+                                // Get current Livewire component state
+                                const wire = @this;
+                                
+                                // Create form data object
+                                const formData = {
+                                    full_name: wire.full_name,
+                                    nationality: wire.nationality,
+                                    date_of_birth: wire.date_of_birth,
+                                    gender: wire.gender === 'other' ? wire.other_gender : wire.gender,
+                                    document_country_origin: wire.document_country_origin,
+                                    cpf: wire.cpf,
+                                    rg_number: wire.rg_number,
+                                    passport_number: wire.passport_number,
+                                    passport_expiry_date: wire.passport_expiry_date,
+                                    email: wire.email,
+                                    phone_number: wire.phone_number,
+                                    address_street: wire.address_street,
+                                    address_city: wire.address_city,
+                                    address_state_province: wire.address_state_province,
+                                    address_country: wire.address_country,
+                                    address_postal_code: wire.address_postal_code,
+                                    affiliation: wire.affiliation,
+                                    position: wire.position === 'other' ? wire.other_position : wire.position,
+                                    is_abe_member: wire.is_abe_member === 'yes' ? '1' : '0',
+                                    arrival_date: wire.arrival_date,
+                                    departure_date: wire.departure_date,
+                                    selected_event_codes: wire.selected_event_codes,
+                                    participation_format: wire.participation_format,
+                                    needs_transport_from_gru: wire.needs_transport_from_gru ? '1' : '0',
+                                    needs_transport_from_usp: wire.needs_transport_from_usp ? '1' : '0',
+                                    dietary_restrictions: wire.dietary_restrictions === 'other' ? wire.other_dietary_restrictions : wire.dietary_restrictions,
+                                    emergency_contact_name: wire.emergency_contact_name,
+                                    emergency_contact_relationship: wire.emergency_contact_relationship,
+                                    emergency_contact_phone: wire.emergency_contact_phone,
+                                    requires_visa_letter: wire.requires_visa_letter === 'yes' ? '1' : '0',
+                                    confirm_information_accuracy: wire.confirm_information ? '1' : '0',
+                                    confirm_data_processing_consent: wire.consent_data_processing ? '1' : '0'
+                                };
+                                
+                                // Create and submit form
+                                const form = document.createElement('form');
+                                form.method = 'POST';
+                                form.action = '{{ route('event-registrations.store') }}';
+                                
+                                // Add CSRF token
+                                const csrfToken = document.createElement('input');
+                                csrfToken.type = 'hidden';
+                                csrfToken.name = '_token';
+                                csrfToken.value = '{{ csrf_token() }}';
+                                form.appendChild(csrfToken);
+                                
+                                // Add all form data
+                                Object.keys(formData).forEach(key => {
+                                    const value = formData[key];
+                                    if (Array.isArray(value)) {
+                                        value.forEach(item => {
+                                            const input = document.createElement('input');
+                                            input.type = 'hidden';
+                                            input.name = key + '[]';
+                                            input.value = item;
+                                            form.appendChild(input);
+                                        });
+                                    } else if (value !== null && value !== undefined) {
+                                        const input = document.createElement('input');
+                                        input.type = 'hidden';
+                                        input.name = key;
+                                        input.value = value;
+                                        form.appendChild(input);
+                                    }
+                                });
+                                
+                                document.body.appendChild(form);
+                                form.submit();
+                            };
+                        });
+                    </script>
 
                     {{-- Submit Button --}}
                     <div class="flex flex-col sm:flex-row justify-center sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-4">

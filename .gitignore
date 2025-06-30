@@ -34,3 +34,4 @@ context_selected.txt
 /__pycache__
 .claude/settings.local.json
 .env.dusk.local
+mcp-servers/*

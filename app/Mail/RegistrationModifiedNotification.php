@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Registration;
+use App\Services\FeeCalculationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -17,7 +18,7 @@ class RegistrationModifiedNotification extends Mailable
         public Registration $registration,
         public bool $forCoordinator = false
     ) {
-        //
+        $this->registration->refresh();
     }
 
     public function envelope(): Envelope
@@ -43,10 +44,23 @@ class RegistrationModifiedNotification extends Mailable
             ? 'emails.registration.modified-coordinator'
             : 'emails.registration.modified';
 
+        // Calculate fees with retroactive discounts
+        /** @var list<string> $eventCodes */
+        $eventCodes = array_values($this->registration->events->pluck('code')->toArray());
+        $feeService = app(FeeCalculationService::class);
+        $feeCalculation = $feeService->calculateFees(
+            $this->registration->registration_category_snapshot,
+            $eventCodes,
+            $this->registration->created_at ?? now(),
+            $this->registration->participation_format === 'online' ? 'online' : 'in-person',
+            $this->registration
+        );
+
         return new Content(
             markdown: $template,
             with: [
                 'registration' => $this->registration,
+                'feeCalculation' => $feeCalculation,
             ],
         );
     }

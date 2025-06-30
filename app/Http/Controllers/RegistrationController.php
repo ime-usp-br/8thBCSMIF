@@ -10,6 +10,7 @@ use App\Services\FeeCalculationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -27,108 +28,210 @@ class RegistrationController extends Controller
      */
     public function store(StoreRegistrationRequest $request): RedirectResponse
     {
+        if (config('app.debug')) {
+            Log::info('Starting registration creation process.');
+        }
         $validatedData = $request->validated();
-        Log::info('Registration data validated successfully through StoreRegistrationRequest.', $validatedData);
-
-        // --- Determine Participant Category for Fee Calculation ---
-        /** @var string $position */
-        $position = $validatedData['position'];
-        /** @var bool $isAbeMember */
-        $isAbeMember = $validatedData['is_abe_member'] ?? false;
-
-        $participantCategory = match ($position) {
-            'undergraduate_student' => 'undergrad_student',
-            'graduate_student' => 'grad_student',
-            'professor' => $isAbeMember ? 'professor_abe' : 'professor_non_abe_professional',
-            'professional', 'researcher', 'other' => 'professor_non_abe_professional',
-            default => 'professor_non_abe_professional', // Fallback
-        };
-        if ($position === 'other' || ! in_array($position, ['undergraduate_student', 'graduate_student', 'professor', 'professional', 'researcher'])) {
-            Log::warning(
-                "Unhandled or 'other' position during participant category mapping. Defaulting to 'professor_non_abe_professional'.",
-                ['position_value' => $position]
-            );
+        if (config('app.debug')) {
+            Log::info('Registration data validated successfully through StoreRegistrationRequest.', ['validated_data_keys' => array_keys($validatedData)]);
         }
 
-        // --- AC7: Calculate Fee using FeeCalculationService ---
-        $feeCalculationService = app(FeeCalculationService::class);
-        /** @var list<string> $eventCodesForFeeCalc */
-        $eventCodesForFeeCalc = $validatedData['selected_event_codes'];
-        /** @var string $participationFormatForFeeCalc */
-        $participationFormatForFeeCalc = $validatedData['participation_format'];
+        try {
+            return DB::transaction(function () use ($request, $validatedData) {
+                // --- Determine Participant Category for Fee Calculation ---
+                /** @var string $position */
+                $position = $validatedData['position'];
+                /** @var bool $isAbeMember */
+                $isAbeMember = $validatedData['is_abe_member'] ?? false;
 
-        $feeData = $feeCalculationService->calculateFees(
-            $participantCategory,
-            $eventCodesForFeeCalc,
-            Carbon::now(),
-            $participationFormatForFeeCalc
-        );
-        $user = $request->user();
-        if (! $user) {
-            throw new \RuntimeException('User must be authenticated to create registration.');
-        }
+                $participantCategory = match ($position) {
+                    'undergraduate_student' => 'undergrad_student',
+                    'graduate_student' => 'grad_student',
+                    'professor' => $isAbeMember ? 'professor_abe' : 'professor_non_abe_professional',
+                    'professional', 'researcher', 'other' => 'professor_non_abe_professional',
+                    default => 'professor_non_abe_professional', // Fallback
+                };
+                if ($position === 'other' || ! in_array($position, ['undergraduate_student', 'graduate_student', 'professor', 'professional', 'researcher'])) {
+                    Log::warning(
+                        "Unhandled or 'other' position during participant category mapping. Defaulting to 'professor_non_abe_professional'.",
+                        ['position_value' => $position]
+                    );
+                }
 
-        Log::info('Fee calculation completed for registration.', [
-            'participant_category' => $participantCategory,
-            'fee_data' => $feeData,
-            'user_id' => $user->id,
-        ]);
+                // --- AC7: Calculate Fee using FeeCalculationService ---
+                $feeCalculationService = app(FeeCalculationService::class);
+                /** @var list<string> $eventCodesForFeeCalc */
+                $eventCodesForFeeCalc = $validatedData['selected_event_codes'];
+                /** @var string $participationFormatForFeeCalc */
+                $participationFormatForFeeCalc = $validatedData['participation_format'];
 
-        // --- AC8: Create and save Registration model ---
-        // Prepare data for Registration creation. Eloquent's create method will only use
-        // attributes that are fillable in the Registration model from $validatedData.
-        $registrationPayload = array_merge(
-            $validatedData,
-            [
-                'user_id' => $user->id,
-                'registration_category_snapshot' => $participantCategory,
-                // payment_status will be handled by AC9.
-                // Other fields like invoice_sent_at, notes
-                // will be null/default on creation or handled by other processes.
-            ]
-        );
+                if (config('app.debug')) {
+                    Log::info('Preparing to calculate fees.', [
+                        'participant_category' => $participantCategory,
+                        'event_codes' => $eventCodesForFeeCalc,
+                        'participation_format' => $participationFormatForFeeCalc,
+                    ]);
+                }
 
-        $registration = Registration::create($registrationPayload);
+                $feeData = $feeCalculationService->calculateFees(
+                    $participantCategory,
+                    $eventCodesForFeeCalc,
+                    Carbon::now(),
+                    $participationFormatForFeeCalc
+                );
+                $user = $request->user();
+                if (! $user) {
+                    throw new \RuntimeException('User must be authenticated to create registration.');
+                }
 
-        Log::info('Registration created successfully.', [
-            'registration_id' => $registration->id,
-            'user_id' => $user->id,
-            'total_fee' => $feeData['total_fee'],
-            'category_snapshot' => $registration->registration_category_snapshot,
-        ]);
+                if (config('app.debug')) {
+                    Log::info('Fee calculation completed for registration.', [
+                        'participant_category' => $participantCategory,
+                        'fee_data' => $feeData,
+                        'user_id' => $user->id,
+                    ]);
+                }
 
-        // --- AC9: Set payment_status based on calculated_fee ---
-        $paymentStatus = ($feeData['total_fee'] == 0) ? 'free' : 'pending_payment';
-        $registration->update(['payment_status' => $paymentStatus]);
-        Log::info('Payment status set for registration.', ['registration_id' => $registration->id, 'payment_status' => $paymentStatus]);
+                // --- AC8: Create and save Registration model ---
+                // Prepare data for Registration creation. Eloquent's create method will only use
+                // attributes that are fillable in the Registration model from $validatedData.
+                $registrationPayload = array_merge(
+                    $validatedData,
+                    [
+                        'user_id' => $user->id,
+                        'registration_category_snapshot' => $participantCategory,
+                        // payment_status will be handled by AC9.
+                        // Other fields like invoice_sent_at, notes
+                        // will be null/default on creation or handled by other processes.
+                    ]
+                );
 
-        // Create individual Payment record for non-free registrations
-        if ($feeData['total_fee'] > 0) {
-            $registration->payments()->create([
-                'amount' => $feeData['total_fee'],
-                'status' => 'pending',
+                $registration = Registration::create($registrationPayload);
+
+                if (config('app.debug')) {
+                    Log::info('Registration created successfully.', [
+                        'registration_id' => $registration->id,
+                        'user_id' => $user->id,
+                        'total_fee' => $feeData['total_fee'],
+                        'category_snapshot' => $registration->registration_category_snapshot,
+                    ]);
+                }
+
+                // --- AC9: Set payment_status based on calculated_fee ---
+                $paymentStatus = ($feeData['total_fee'] == 0) ? 'free' : 'pending_payment';
+                $registration->update(['payment_status' => $paymentStatus]);
+                if (config('app.debug')) {
+                    Log::info('Payment status set for registration.', ['registration_id' => $registration->id, 'payment_status' => $paymentStatus]);
+                }
+
+                // Create individual Payment record for non-free registrations
+                if ($feeData['total_fee'] > 0) {
+                    if (config('app.debug')) {
+                        Log::info('Registration requires payment. Creating payment record.', [
+                            'registration_id' => $registration->id,
+                            'total_fee' => $feeData['total_fee'],
+                        ]);
+                    }
+                    try {
+                        $payment = $registration->payments()->create([
+                            'amount' => $feeData['total_fee'],
+                            'status' => 'pending',
+                        ]);
+
+                        // AC3: Add post-creation validation to confirm payment was created
+                        // The create method on a relationship will return the model instance or throw an exception.
+                        // So, if we reach here, $payment is guaranteed to be an object.
+                        // This check is redundant and removed to satisfy static analysis.
+                        // if (! $payment) {
+                        //     Log::error('Payment record was not returned after creation attempt.', [
+                        //         'registration_id' => $registration->id,
+                        //         'amount' => $feeData['total_fee'],
+                        //     ]);
+                        //     throw new \RuntimeException('Failed to create payment record: Payment object is null.');
+                        // }
+
+                        if (config('app.debug')) {
+                            Log::info('Payment record created for registration.', [
+                                'registration_id' => $registration->id,
+                                'payment_id' => $payment->id,
+                                'amount' => $feeData['total_fee'],
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        // AC2: Implement robust error handling for payment creation failures
+                        Log::error('Failed to create payment record for registration.', [
+                            'registration_id' => $registration->id,
+                            'amount' => $feeData['total_fee'],
+                            'error_message' => $e->getMessage(),
+                            'error_trace' => $e->getTraceAsString(),
+                        ]);
+                        // AC4: If payment not created, rollback registration and return clear error
+                        throw new \RuntimeException('Failed to create payment record.', 0, $e);
+                    }
+                } else {
+                    if (config('app.debug')) {
+                        Log::info('Registration is free. No payment record needed.', [
+                            'registration_id' => $registration->id,
+                            'total_fee' => $feeData['total_fee'],
+                        ]);
+                    }
+                }
+
+                // --- AC10: Sync events with price_at_registration ---
+                $eventSyncData = [];
+                foreach ($feeData['details'] as $eventDetail) {
+                    if (! isset($eventDetail['error'])) { // Only sync valid events with prices
+                        $eventSyncData[$eventDetail['event_code']] = ['price_at_registration' => $eventDetail['calculated_price']];
+                    }
+                }
+                if (! empty($eventSyncData)) {
+                    try {
+                        $registration->events()->sync($eventSyncData);
+                        if (config('app.debug')) {
+                            Log::info('Events synced for registration.', ['registration_id' => $registration->id, 'synced_events' => array_keys($eventSyncData)]);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Failed to sync events for registration.', [
+                            'registration_id' => $registration->id,
+                            'synced_events' => array_keys($eventSyncData),
+                            'error_message' => $e->getMessage(),
+                            'error_trace' => $e->getTraceAsString(),
+                        ]);
+                        throw new \RuntimeException('Failed to sync events.', 0, $e);
+                    }
+                }
+
+                // --- AC11: Dispatch event/notification ---
+                event(new NewRegistrationCreated($registration));
+                if (config('app.debug')) {
+                    Log::info('NewRegistrationCreated event dispatched.', ['registration_id' => $registration->id]);
+                }
+
+                // --- AC12: Redirect to registrations page with success message ---
+                if (config('app.debug')) {
+                    Log::info('Registration transaction completed successfully. Redirecting user.', ['registration_id' => $registration->id]);
+                }
+
+                return redirect()->route('registrations.my')->with('success', __('registrations.created_successfully'));
+            });
+        } catch (\Exception $e) {
+            Log::error('Failed to create registration or payment due to a transaction error.', [
+                'user_id' => $request->user()?->id,
+                'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString(),
             ]);
-            Log::info('Payment record created for registration.', ['registration_id' => $registration->id, 'amount' => $feeData['total_fee']]);
-        }
 
-        // --- AC10: Sync events with price_at_registration ---
-        $eventSyncData = [];
-        foreach ($feeData['details'] as $eventDetail) {
-            if (! isset($eventDetail['error'])) { // Only sync valid events with prices
-                $eventSyncData[$eventDetail['event_code']] = ['price_at_registration' => $eventDetail['calculated_price']];
+            $errorMessage = __('Failed to process your registration. Please try again or contact support.');
+            if ($e instanceof \RuntimeException && str_contains($e->getMessage(), 'Failed to create payment record.')) {
+                $errorMessage = __('Failed to create payment record for your registration. Please try again or contact support.');
+            } elseif ($e instanceof \RuntimeException && str_contains($e->getMessage(), 'Failed to sync events.')) {
+                $errorMessage = __('Failed to associate events with your registration. Please try again or contact support.');
             }
-        }
-        if (! empty($eventSyncData)) {
-            $registration->events()->sync($eventSyncData);
-            Log::info('Events synced for registration.', ['registration_id' => $registration->id, 'synced_events' => array_keys($eventSyncData)]);
-        }
 
-        // --- AC11: Dispatch event/notification ---
-        event(new NewRegistrationCreated($registration));
-        Log::info('NewRegistrationCreated event dispatched.', ['registration_id' => $registration->id]);
-
-        // --- AC12: Redirect to registrations page with success message ---
-        return redirect()->route('registrations.my')->with('success', __('registrations.created_successfully'));
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $errorMessage);
+        }
     }
 
     /**

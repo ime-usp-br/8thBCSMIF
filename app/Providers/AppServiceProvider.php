@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Console\Commands\FixOrphanedPayments;
 use App\Models\Registration;
 use App\Policies\RegistrationPolicy;
 use Illuminate\Support\Facades\Gate;
@@ -16,7 +17,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->commands([
+            FixOrphanedPayments::class,
+        ]);
     }
 
     /**

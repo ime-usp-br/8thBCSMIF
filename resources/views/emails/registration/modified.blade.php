@@ -8,24 +8,23 @@
 ## {{ __('Updated Registration Summary') }}
 
 **{{ __('Selected Events') }}:**
-@foreach($registration->events as $event)
-- {{ $event->name }}: R$ {{ number_format((float) $event->pivot->price_at_registration, 2, ',', '.') }}
+@foreach($feeCalculation['details'] as $eventDetail)
+- {{ $eventDetail['event_name'] }}: R$ {{ number_format($eventDetail['calculated_price'], 2, ',', '.') }}
 @endforeach
 
-**{{ __('New Total Amount') }}:** R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
-
 @php
-    $totalPaid = $registration->payments()->where('status', 'confirmed')->sum('amount');
-    $pendingAmount = $registration->payments()->where('status', 'pending')->sum('amount');
+    $newTotalAmount = $feeCalculation['new_total_fee'];
+    $totalPaid = $feeCalculation['total_paid'];
+    $amountDue = $feeCalculation['amount_due'];
 @endphp
+
+**{{ __('New Total Amount') }}:** R$ {{ number_format($newTotalAmount, 2, ',', '.') }}
 
 @if($totalPaid > 0)
 **{{ __('Amount Already Paid') }}:** R$ {{ number_format($totalPaid, 2, ',', '.') }}
 @endif
 
-@if($pendingAmount > 0)
-**{{ __('Amount Due') }}:** R$ {{ number_format($pendingAmount, 2, ',', '.') }}
-
+@if($amountDue > 0)
 ## {{ __('Payment Instructions') }}
 
 {{ __('You have a pending payment for the additional amount due from the modification. Please complete payment to finalize your registration update.') }}
@@ -35,7 +34,7 @@
 - **{{ __('Bank:') }}** Santander
 - **{{ __('Agency:') }}** 0658
 - **{{ __('Account:') }}** 13006798-9
-- **{{ __('PIX Key:') }}** 56.572.456/0001-80
+
 - **{{ __('Beneficiary') }}:** Associação Brasileira de Estatística
 - **{{ __('CNPJ') }}:** 56.572.456/0001-80
 
@@ -53,7 +52,7 @@
 
 {{ __('You can access your registration details at any time through your account on our system.') }}
 
-<x-mail::button :url="config('app.url') . '/registrations/my'">
+<x-mail::button :url="route('registrations.my')">
 {{ __('View My Registration') }}
 </x-mail::button>
 
