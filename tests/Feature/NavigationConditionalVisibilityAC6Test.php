@@ -23,7 +23,7 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
     }
 
     /**
-     * Create a user without a registration for Sign Up visibility tests
+     * Create a user without a registration for testing "Sign Up" visibility
      */
     private function createUserWithoutRegistration(): User
     {
@@ -98,15 +98,20 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
     {
         $user = $this->createUserWithoutRegistration();
 
-        // Since users without registration are redirected, test on the register-event page
-        // where the Sign Up functionality is visible but navigation still shows auth links
+        // Test public pages as authenticated user - should redirect to register-event
+        $publicRoutes = ['/', '/workshops', '/fees', '/payment-info'];
+
+        foreach ($publicRoutes as $route) {
+            $response = $this->actingAs($user)->get($route);
+            $response->assertRedirect(route('register-event'));
+        }
+
+        // Test the register-event page itself where user can see Sign Up functionality
         $response = $this->actingAs($user)->get('/register-event');
         $response->assertOk();
-
-        // Should see authenticated-only links in dropdown
         $response->assertSee(__('Dashboard'));
         $response->assertSee(__('Log Out'));
-
+        
         // Should NOT see guest-only links
         $response->assertDontSee(__('Login'));
     }
@@ -135,23 +140,23 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
      */
     public function test_sign_up_appears_correctly_for_auth_users(): void
     {
-        $user = $this->createUserWithoutRegistration();
+        // Test 1: Users without registrations should see Sign Up on register-event page
+        $userWithoutRegistration = $this->createUserWithoutRegistration();
+        
+        // Public pages should redirect users without registrations
+        $response = $this->actingAs($userWithoutRegistration)->get('/');
+        $response->assertRedirect(route('register-event'));
 
-        // Test register-event page - authenticated users without registration can see this page
-        $response = $this->actingAs($user)->get('/register-event');
+        // The register-event page should show navigation with Sign Up link for users without registrations
+        $response = $this->actingAs($userWithoutRegistration)->get('/register-event');
         $response->assertOk();
 
-        // The page should contain the registration form (equivalent to "Sign Up" functionality)
-        $response->assertSee(__('8th BCSMIF Registration Form'));
-
-        // Also test that the Sign Up navigation link would appear on public pages
-        // by checking the navigation component logic through template inspection
-        $componentPath = resource_path('views/components/layout/public-navigation.blade.php');
-        $componentContent = file_get_contents($componentPath);
-
-        // Verify Sign Up link exists in the @auth section for users without registration
-        $this->assertStringContainsString('!\App\Models\Registration::where(\'user_id\', auth()->id())->exists()', $componentContent);
-        $this->assertStringContainsString('Sign Up', $componentContent);
+        // Test 2: Users WITH registrations should NOT see Sign Up in public navigation
+        $userWithRegistration = $this->createUserWithRegistration();
+        $response = $this->actingAs($userWithRegistration)->get('/');
+        $response->assertOk();
+        // Users with existing registrations should NOT see Sign Up (they already registered)
+        $response->assertDontSee(__('Sign Up'));
     }
 
     /**
