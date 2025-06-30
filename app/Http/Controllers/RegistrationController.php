@@ -28,8 +28,13 @@ class RegistrationController extends Controller
      */
     public function store(StoreRegistrationRequest $request): RedirectResponse
     {
+        if (config('app.debug')) {
+            Log::info('Starting registration creation process.');
+        }
         $validatedData = $request->validated();
-        Log::info('Registration data validated successfully through StoreRegistrationRequest.', $validatedData);
+        if (config('app.debug')) {
+            Log::info('Registration data validated successfully through StoreRegistrationRequest.', ['validated_data_keys' => array_keys($validatedData)]);
+        }
 
         try {
             return DB::transaction(function () use ($request, $validatedData) {
@@ -60,6 +65,14 @@ class RegistrationController extends Controller
                 /** @var string $participationFormatForFeeCalc */
                 $participationFormatForFeeCalc = $validatedData['participation_format'];
 
+                if (config('app.debug')) {
+                    Log::info('Preparing to calculate fees.', [
+                        'participant_category' => $participantCategory,
+                        'event_codes' => $eventCodesForFeeCalc,
+                        'participation_format' => $participationFormatForFeeCalc,
+                    ]);
+                }
+
                 $feeData = $feeCalculationService->calculateFees(
                     $participantCategory,
                     $eventCodesForFeeCalc,
@@ -71,11 +84,13 @@ class RegistrationController extends Controller
                     throw new \RuntimeException('User must be authenticated to create registration.');
                 }
 
-                Log::info('Fee calculation completed for registration.', [
-                    'participant_category' => $participantCategory,
-                    'fee_data' => $feeData,
-                    'user_id' => $user->id,
-                ]);
+                if (config('app.debug')) {
+                    Log::info('Fee calculation completed for registration.', [
+                        'participant_category' => $participantCategory,
+                        'fee_data' => $feeData,
+                        'user_id' => $user->id,
+                    ]);
+                }
 
                 // --- AC8: Create and save Registration model ---
                 // Prepare data for Registration creation. Eloquent's create method will only use
@@ -93,20 +108,30 @@ class RegistrationController extends Controller
 
                 $registration = Registration::create($registrationPayload);
 
-                Log::info('Registration created successfully.', [
-                    'registration_id' => $registration->id,
-                    'user_id' => $user->id,
-                    'total_fee' => $feeData['total_fee'],
-                    'category_snapshot' => $registration->registration_category_snapshot,
-                ]);
+                if (config('app.debug')) {
+                    Log::info('Registration created successfully.', [
+                        'registration_id' => $registration->id,
+                        'user_id' => $user->id,
+                        'total_fee' => $feeData['total_fee'],
+                        'category_snapshot' => $registration->registration_category_snapshot,
+                    ]);
+                }
 
                 // --- AC9: Set payment_status based on calculated_fee ---
                 $paymentStatus = ($feeData['total_fee'] == 0) ? 'free' : 'pending_payment';
                 $registration->update(['payment_status' => $paymentStatus]);
-                Log::info('Payment status set for registration.', ['registration_id' => $registration->id, 'payment_status' => $paymentStatus]);
+                if (config('app.debug')) {
+                    Log::info('Payment status set for registration.', ['registration_id' => $registration->id, 'payment_status' => $paymentStatus]);
+                }
 
                 // Create individual Payment record for non-free registrations
                 if ($feeData['total_fee'] > 0) {
+                    if (config('app.debug')) {
+                        Log::info('Registration requires payment. Creating payment record.', [
+                            'registration_id' => $registration->id,
+                            'total_fee' => $feeData['total_fee'],
+                        ]);
+                    }
                     try {
                         $payment = $registration->payments()->create([
                             'amount' => $feeData['total_fee'],
@@ -125,11 +150,13 @@ class RegistrationController extends Controller
                         //     throw new \RuntimeException('Failed to create payment record: Payment object is null.');
                         // }
 
-                        Log::info('Payment record created for registration.', [
-                            'registration_id' => $registration->id,
-                            'payment_id' => $payment->id,
-                            'amount' => $feeData['total_fee'],
-                        ]);
+                        if (config('app.debug')) {
+                            Log::info('Payment record created for registration.', [
+                                'registration_id' => $registration->id,
+                                'payment_id' => $payment->id,
+                                'amount' => $feeData['total_fee'],
+                            ]);
+                        }
                     } catch (\Exception $e) {
                         // AC2: Implement robust error handling for payment creation failures
                         Log::error('Failed to create payment record for registration.', [
@@ -140,6 +167,13 @@ class RegistrationController extends Controller
                         ]);
                         // AC4: If payment not created, rollback registration and return clear error
                         throw new \RuntimeException('Failed to create payment record.', 0, $e);
+                    }
+                } else {
+                    if (config('app.debug')) {
+                        Log::info('Registration is free. No payment record needed.', [
+                            'registration_id' => $registration->id,
+                            'total_fee' => $feeData['total_fee'],
+                        ]);
                     }
                 }
 
@@ -153,7 +187,9 @@ class RegistrationController extends Controller
                 if (! empty($eventSyncData)) {
                     try {
                         $registration->events()->sync($eventSyncData);
-                        Log::info('Events synced for registration.', ['registration_id' => $registration->id, 'synced_events' => array_keys($eventSyncData)]);
+                        if (config('app.debug')) {
+                            Log::info('Events synced for registration.', ['registration_id' => $registration->id, 'synced_events' => array_keys($eventSyncData)]);
+                        }
                     } catch (\Exception $e) {
                         Log::error('Failed to sync events for registration.', [
                             'registration_id' => $registration->id,
@@ -167,9 +203,15 @@ class RegistrationController extends Controller
 
                 // --- AC11: Dispatch event/notification ---
                 event(new NewRegistrationCreated($registration));
-                Log::info('NewRegistrationCreated event dispatched.', ['registration_id' => $registration->id]);
+                if (config('app.debug')) {
+                    Log::info('NewRegistrationCreated event dispatched.', ['registration_id' => $registration->id]);
+                }
 
                 // --- AC12: Redirect to registrations page with success message ---
+                if (config('app.debug')) {
+                    Log::info('Registration transaction completed successfully. Redirecting user.', ['registration_id' => $registration->id]);
+                }
+
                 return redirect()->route('registrations.my')->with('success', __('registrations.created_successfully'));
             });
         } catch (\Exception $e) {
