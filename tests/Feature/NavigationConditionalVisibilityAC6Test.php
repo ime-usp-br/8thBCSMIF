@@ -111,7 +111,7 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
         $response->assertOk();
         $response->assertSee(__('Dashboard'));
         $response->assertSee(__('Log Out'));
-        
+
         // Should NOT see guest-only links
         $response->assertDontSee(__('Login'));
     }
@@ -142,7 +142,7 @@ class NavigationConditionalVisibilityAC6Test extends TestCase
     {
         // Test 1: Users without registrations should see Sign Up on register-event page
         $userWithoutRegistration = $this->createUserWithoutRegistration();
-        
+
         // Public pages should redirect users without registrations
         $response = $this->actingAs($userWithoutRegistration)->get('/');
         $response->assertRedirect(route('register-event'));
