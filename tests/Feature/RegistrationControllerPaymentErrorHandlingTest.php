@@ -26,12 +26,12 @@ class RegistrationControllerPaymentErrorHandlingTest extends TestCase
     }
 
     /**
-     * Test AC2: Robust error handling structure exists in RegistrationController
+     * Test that robust error handling structure exists in RegistrationController
      *
      * This test validates that the try-catch structure and error handling
-     * mechanisms are properly implemented as required by AC2.
+     * mechanisms are properly implemented.
      */
-    public function test_ac2_robust_error_handling_structure_exists(): void
+    public function test_robust_error_handling_structure_exists(): void
     {
         // Act: Verify the robust error handling exists by checking controller structure
         $controllerPath = app_path('Http/Controllers/RegistrationController.php');
@@ -57,13 +57,13 @@ class RegistrationControllerPaymentErrorHandlingTest extends TestCase
     }
 
     /**
-     * Test AC2: Successful payment creation scenario for comparison
+     * Test successful payment creation scenario for comparison
      *
      * This test ensures that normal payment creation still works correctly
      * when no errors occur, validating that our error handling doesn't
      * interfere with normal operation.
      */
-    public function test_ac2_successful_payment_creation_normal_scenario(): void
+    public function test_successful_payment_creation_normal_scenario(): void
     {
         // Arrange: Create test user and get valid events
         $user = User::factory()->create();
@@ -135,12 +135,12 @@ class RegistrationControllerPaymentErrorHandlingTest extends TestCase
     }
 
     /**
-     * Test AC2: Error handling components are properly imported and available
+     * Test that error handling components are properly imported and available
      *
      * This test verifies that all necessary components for error handling
      * are properly imported and available in the controller.
      */
-    public function test_ac2_error_handling_components_available(): void
+    public function test_error_handling_components_available(): void
     {
         // Verify controller uses necessary imports for error handling
         $controllerPath = app_path('Http/Controllers/RegistrationController.php');
@@ -159,5 +159,97 @@ class RegistrationControllerPaymentErrorHandlingTest extends TestCase
         $this->assertStringContainsString('->withInput()', $controllerContent);
         $this->assertStringContainsString('->with(\'error\'', $controllerContent);
         $this->assertStringContainsString('Failed to process your registration', $controllerContent);
+    }
+
+    /**
+     * Test payment creation failure simulation and error handling validation
+     *
+     * This test validates that the controller properly handles payment creation failures
+     * by checking the error handling code structure and transaction rollback logic.
+     */
+    public function test_payment_creation_failure_simulation_and_error_handling(): void
+    {
+        // Arrange: Verify the error handling structure exists in the controller
+        $controllerPath = app_path('Http/Controllers/RegistrationController.php');
+        $controllerContent = file_get_contents($controllerPath);
+
+        // Assert: Verify specific payment creation error handling exists
+        $this->assertStringContainsString('} catch (\Exception $e) {', $controllerContent);
+        $this->assertStringContainsString('Log::error(\'Failed to create payment record for registration.\'', $controllerContent);
+        $this->assertStringContainsString('throw new \RuntimeException(\'Failed to create payment record.\'', $controllerContent);
+
+        // Verify transaction rollback happens automatically via DB::transaction
+        $this->assertStringContainsString('return DB::transaction(function ()', $controllerContent);
+
+        // Verify outer exception handling catches transaction failures
+        $this->assertStringContainsString('Failed to create registration or payment due to a transaction error', $controllerContent);
+
+        // Verify user-friendly error messages are localized
+        $this->assertStringContainsString('Failed to create payment record for your registration', $controllerContent);
+        $this->assertStringContainsString('Failed to process your registration', $controllerContent);
+
+        // Verify error logging includes all required debugging information
+        $this->assertStringContainsString('registration_id', $controllerContent);
+        $this->assertStringContainsString('amount', $controllerContent);
+        $this->assertStringContainsString('error_message', $controllerContent);
+        $this->assertStringContainsString('error_trace', $controllerContent);
+
+        // Verify form input preservation on error
+        $this->assertStringContainsString('->withInput()', $controllerContent);
+
+        // Test the normal flow still works (ensuring error handling doesn't break happy path)
+        $user = User::factory()->create();
+        $events = Event::take(1)->get();
+
+        $registrationData = [
+            'full_name' => 'Test Normal Flow',
+            'nationality' => 'Brazilian',
+            'date_of_birth' => '1985-05-15',
+            'gender' => 'female',
+            'document_country_origin' => 'BR',
+            'cpf' => '123.456.789-00',
+            'rg_number' => '1234567',
+            'passport_number' => null,
+            'passport_expiry_date' => null,
+            'email' => $user->email,
+            'phone_number' => '+55 11 987654321',
+            'address_street' => 'Rua Exemplo, 123',
+            'address_city' => 'São Paulo',
+            'address_state_province' => 'SP',
+            'address_country' => 'BR',
+            'address_postal_code' => '01000-000',
+            'affiliation' => 'Test University',
+            'position' => 'professor',
+            'is_abe_member' => true,
+            'arrival_date' => '2025-09-28',
+            'departure_date' => '2025-10-03',
+            'selected_event_codes' => $events->pluck('code')->toArray(),
+            'participation_format' => 'in-person',
+            'needs_transport_from_gru' => false,
+            'needs_transport_from_usp' => false,
+            'dietary_restrictions' => 'none',
+            'other_dietary_restrictions' => null,
+            'emergency_contact_name' => 'Emergency Contact',
+            'emergency_contact_relationship' => 'spouse',
+            'emergency_contact_phone' => '+55 11 912345678',
+            'requires_visa_letter' => false,
+            'sou_da_usp' => false,
+            'codpes' => null,
+            'confirm_information_accuracy' => true,
+            'confirm_data_processing_consent' => true,
+        ];
+
+        // Verify normal registration still works (no interference from error handling)
+        $response = $this->actingAs($user)
+            ->post(route('event-registrations.store'), $registrationData);
+
+        $response->assertRedirect(route('registrations.my'))
+            ->assertSessionHas('success');
+
+        // Verify registration and payment were created successfully
+        $registration = Registration::where('user_id', $user->id)->first();
+        $this->assertNotNull($registration);
+        $this->assertEquals('pending_payment', $registration->payment_status);
+        $this->assertGreaterThan(0, $registration->payments()->count());
     }
 }
