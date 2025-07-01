@@ -310,7 +310,7 @@ class RegistrationController extends Controller
             // Dispatch ProofUploadedNotification to coordinator
             $coordinatorEmail = ProofUploadedNotification::getCoordinatorEmail();
             if ($coordinatorEmail) {
-                Mail::to($coordinatorEmail)->send(new ProofUploadedNotification($registration));
+                Mail::to($coordinatorEmail)->queue(new ProofUploadedNotification($registration));
                 Log::debug(__('Proof upload notification sent to coordinator'), [
                     'registration_id' => $registration->id,
                     'payment_id' => $payment->id,

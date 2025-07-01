@@ -79,7 +79,7 @@ class RegistrationController extends Controller
         if ($sendNotification && $registration->user) {
             $userEmail = $registration->user->email;
             if (! empty($userEmail)) {
-                Mail::to($userEmail)->send(
+                Mail::to($userEmail)->queue(
                     new PaymentStatusUpdatedNotification($registration, $oldStatus, $newStatus)
                 );
             }

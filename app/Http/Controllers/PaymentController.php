@@ -88,7 +88,7 @@ class PaymentController extends Controller
             // Dispatch ProofUploadedNotification to coordinator
             $coordinatorEmail = ProofUploadedNotification::getCoordinatorEmail();
             if ($coordinatorEmail) {
-                Mail::to($coordinatorEmail)->send(new ProofUploadedNotification($payment->registration));
+                Mail::to($coordinatorEmail)->queue(new ProofUploadedNotification($payment->registration));
                 Log::info(__('Proof upload notification sent to coordinator'), [
                     'registration_id' => $payment->registration->id,
                     'payment_id' => $payment->id,

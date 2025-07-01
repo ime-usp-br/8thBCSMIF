@@ -23,7 +23,7 @@ class SendNewRegistrationNotifications
 
         // Send notification to the user
         Mail::to($registration->user->email)
-            ->send(new NewRegistrationNotification($registration, forCoordinator: false));
+            ->queue(new NewRegistrationNotification($registration, forCoordinator: false));
 
         Log::info(__('User registration notification sent'), [
             'registration_id' => $registration->id,
@@ -34,7 +34,7 @@ class SendNewRegistrationNotifications
         $coordinatorEmail = NewRegistrationNotification::getCoordinatorEmail();
         if ($coordinatorEmail) {
             Mail::to($coordinatorEmail)
-                ->send(new NewRegistrationNotification($registration, forCoordinator: true));
+                ->queue(new NewRegistrationNotification($registration, forCoordinator: true));
 
             Log::info(__('Coordinator registration notification sent'), [
                 'registration_id' => $registration->id,

@@ -63,7 +63,7 @@ class SendEarlyBirdReminders extends Command
             foreach ($eligibleRegistrations as $registration) {
                 try {
                     Mail::to($registration->email)
-                        ->send(new EarlyBirdReminderNotification($registration, $event));
+                        ->queue(new EarlyBirdReminderNotification($registration, $event));
 
                     $totalReminders++;
                     $this->info(__('Reminder sent to: :email', ['email' => $registration->email]));
