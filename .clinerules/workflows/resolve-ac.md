@@ -1,69 +1,103 @@
 ---
-description: "Workflow para análise e resolução de critérios de aceite específicos de issues, fornecendo orientações estratégicas baseadas no guia de desenvolvimento do projeto."
+description: "Workflow para resolver um Critério de Aceite (AC) específico de uma issue, focando na análise, planejamento e implementação direta."
 ---
 
 **Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
 
-## Guia: Resolução de Critério de Aceite
+## Guia: Resolução Focada de um Critério de Aceite (AC)
 
-Este workflow analisa um critério de aceite específico de uma issue e fornece orientações estratégicas para sua implementação, seguindo rigorosamente os padrões e filosofia do projeto conforme documentado no guia de desenvolvimento.
+Este workflow guia o assistente de IA no processo de resolver um único Critério de Aceite (AC). O processo enfatiza a coleta de informações, o planejamento prévio com o usuário e a implementação focada, sem utilizar os scripts de automação do projeto.
 
-### Parâmetros
-- `$1`: Número da issue
-- `$2`: Número do critério de aceite (posição na lista de checkboxes)
+**Argumentos esperados:** `{issue_number}` `{ac_number}`
 
-### Ambiente de Execução
-**Atenção:** Todos os comandos `python` devem ser executados dentro do ambiente virtual do projeto. Ative-o com `source venv/bin/activate` antes de executar qualquer script.
+### 1. Coleta de Informações Essenciais
 
-### Instruções para o Assistente de IA
+O assistente DEVE, primeiramente, obter o contexto da tarefa e do ambiente do projeto.
 
-**1. Análise da Issue e Critério Específico**
-Recupere a issue completa e identifique o critério de aceite específico pela posição informada no parâmetro $2. Analise o contexto geral da issue e o critério específico solicitado. Para recuperar os detalhes da issue, você pode usar o `gh cli`.
+**A. Obter Detalhes da Issue:**
+O assistente DEVE ler o conteúdo completo da issue para entender o escopo do trabalho.
 
-**2. Verificação do Estado do Repositório**
-Analise o estado atual do repositório para entender se existe branch ativa para esta issue e qual o progresso atual. Se não existir branch para a issue seguindo o padrão `feature/$1-nome`, `fix/$1-nome` ou `chore/$1-nome`, instrua para:
-- Fazer checkout para `main`
-- Executar `git pull` para sincronizar
-- Criar nova branch seguindo o padrão do projeto baseado no tipo da issue
+`<execute_command>`
+`<command># O assistente de IA DEVE substituir {issue_number} pelo número real da issue.
+gh issue view {issue_number} --json title,body,labels | cat
+</command>`
+`<# Busca o conteúdo da issue para análise contextual. #>`
+`<requires_approval>false</requires_approval>`
+`</execute_command>`
 
-**3. Contexto Arquitetural do Projeto**
-Com base na documentação lida, considere sempre:
-- **Backend como fonte da verdade**: A LLM sugere, mas o backend Django executa
-- **Arquitetura de Function Calling**: Interação LLM-backend via ferramentas Pydantic
-- **Loop de interação central**: Frontend (Alpine.js) → WebSocket → Backend → LLM → Backend → Frontend
-- **Issues atômicas e commits atômicos**: Cada unidade de trabalho deve ser rastreável
-- **Stack tecnológica**: Django 5.2.3 + Channels + Alpine.js + Pydantic + SQLite
+**B. Verificar Versões de Dependências:**
+O assistente DEVE inspecionar o `composer.lock` para verificar as versões das principais bibliotecas que podem estar envolvidas na resolução do AC.
 
-**4. Análise Específica do Critério**
-Para o critério de aceite identificado, determine:
-- Qual componente da arquitetura é afetado (models, views, consumers, tools, frontend)
-- Se requer implementação de ferramentas LLM (com schemas Pydantic)
-- Se necessita de testes unitários E de integração (obrigatório conforme guia)
-- Que padrões de commit e branching devem ser seguidos
+`<read_file>`
+`<path>composer.lock</path>`
+`</read_file>`
 
-**5. Orientações Estratégicas de Alto Nível**
-Forneça orientações específicas sobre:
-- **Onde implementar**: Arquivos e diretórios específicos baseados na estrutura do projeto
-- **Como implementar**: Padrões arquiteturais a seguir (ex: Function Calling, async/await)
-- **Ordem de implementação**: Sequência lógica considerando dependências
-- **Estratégia de testes**: Como mockar a LLM e testar componentes isoladamente
-- **Critérios de pronto**: Como validar que o critério foi completamente atendido
+**Instruções para o Assistente de IA:**
+1.  Analise o conteúdo do `composer.lock`.
+2.  Identifique as bibliotecas chave para a tarefa (ex: `laravel/framework`, `livewire/livewire`, `spatie/laravel-permission`).
+3.  Compare a versão da biblioteca com a sua data de corte de conhecimento.
 
-**6. Conformidade com o Processo**
-Sempre lembre sobre:
-- Commits devem seguir formato `<tipo>(<escopo>): <descrição> (#$1)`
-- Testes são obrigatórios (unitários + integração com LLM mockada)
-- PR deve usar `Closes #$1` para fechar a issue automaticamente
-- CI deve passar (black, ruff, mypy, pytest-django) antes do merge
-- Seguir limitação de WIP (1-2 tarefas em progresso)
+**C. Consultar Documentação Externa (Condicional):**
+Se uma versão de biblioteca for posterior à sua data de corte de conhecimento, o assistente DEVE usar a ferramenta `context7` para obter documentação atualizada.
 
-**7. Considerações Específicas do RPG/LLM**
-Para este projeto específico, sempre considere:
-- Se o critério envolve interação com LLM, definir schema Pydantic para ferramentas
-- Se altera estado do jogo, implementar no backend (não confiar na LLM)
-- Se adiciona funcionalidade nova, considerar impacto no RAG e contexto
-- Se é UI, garantir que funciona com Alpine.js e WebSockets
-- Se é modelo de dados, considerar impacto no sistema de turnos e tempo de jogo
+**Exemplo de uso da ferramenta `context7` (MCP):**
+```xml
+<use_mcp_tool>
+  <server_name>github.com/upstash/context7-mcp</server_name>
+  <tool_name>get-library-docs</tool_name>
+  <arguments>
+  {
+    "context7CompatibleLibraryID": "/livewire/livewire",
+    "topic": "Events"
+  }
+  </arguments>
+</use_mcp_tool>
+```
+**Nota:** O assistente DEVE primeiro usar `resolve-library-id` se não tiver certeza do ID exato.
 
-**Resultado Esperado:**
-Orientações claras, específicas e acionáveis para implementar o critério de aceite solicitado, respeitando integralmente a arquitetura, padrões e filosofia do projeto conforme documentado.
+**D. Leitura de Documentação Interna:**
+O assistente DEVE ler os guias de desenvolvimento e padrões de código para garantir que a implementação esteja alinhada com as práticas do projeto.
+
+`<read_file>`
+`<path>docs/guia_de_desenvolvimento.md</path>`
+`</read_file>`
+
+`<read_file>`
+`<path>docs/padroes_codigo_boas_praticas.md</path>`
+`</read_file>`
+
+### 2. Fase de Planejamento (Interação com o Usuário)
+
+Com as informações coletadas, o assistente **NÃO DEVE** começar a codificar imediatamente. Em vez disso, **DEVE** entrar em um modo de planejamento.
+
+**Instruções para o Assistente de IA (Ação Obrigatória):**
+1.  Sintetize todas as informações: os requisitos da issue, o AC específico, e o conhecimento adquirido sobre as bibliotecas.
+2.  Formule um plano de implementação detalhado. O plano DEVE descrever:
+    *   Quais arquivos você pretende criar ou modificar.
+    *   As principais alterações lógicas que você fará.
+    *   Como você abordará os requisitos específicos do AC.
+3.  Apresente este plano ao usuário para aprovação.
+4.  **Aguarde a aprovação explícita do usuário antes de prosseguir.**
+
+### 3. Implementação e Codificação
+
+Após a aprovação do plano pelo usuário, o assistente DEVE executar a implementação.
+
+**Instruções para o Assistente de IA:**
+1.  **Modificar ou Criar Arquivos:** Escreva ou edite o código (PHP, Blade, etc.) conforme o plano aprovado. Utilize as ferramentas `<write_to_file>` ou `<replace_in_file>` para realizar as alterações.
+2.  **Foco Atômico:** As alterações DEVEM se limitar estritamente ao escopo do AC e do plano aprovado.
+
+### 4. Validação (Testes Pertinentes)
+
+Se for pertinente para a alteração realizada, o assistente DEVE executar os testes unitários ou de feature relevantes para garantir que a nova funcionalidade está correta e que não houve regressões.
+
+`<execute_command>`
+`<command># O assistente DEVE especificar um arquivo, filtro ou grupo para rodar apenas os testes relevantes.
+# Exemplo: ./vendor/bin/phpunit --filter=NomeDoTesteRelevanteTest
+./vendor/bin/phpunit | cat
+</command>`
+`<# Executa testes específicos para validar a implementação do AC. #>`
+`<requires_approval>false</requires_approval>`
+`</execute_command>`
+
+Ao final desta etapa, a resolução do Critério de Aceite está concluída. O workflow não cobre os passos de commit ou pull request.
