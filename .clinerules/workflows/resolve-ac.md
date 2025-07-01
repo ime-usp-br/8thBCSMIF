@@ -66,6 +66,22 @@ O assistente DEVE ler os guias de desenvolvimento e padrões de código para gar
 `<path>docs/padroes_codigo_boas_praticas.md</path>`
 `</read_file>`
 
+**E. Análise de Código Existente:**
+Com base na análise da issue e da documentação, o assistente DEVE levantar hipóteses sobre quais arquivos existentes são relevantes para a resolução do AC e ler seu conteúdo.
+
+**Instruções para o Assistente de IA:**
+1.  Liste os arquivos que você acredita que precisará modificar ou consultar.
+2.  Para cada arquivo, execute o comando `read_file`.
+
+**Exemplo (deve ser adaptado pelo assistente):**
+`<read_file>`
+`<path>app/Http/Controllers/MeuController.php</path>`
+`</read_file>`
+
+`<read_file>`
+`<path>resources/views/minha-view.blade.php</path>`
+`</read_file>`
+
 ### 2. Fase de Planejamento (Interação com o Usuário)
 
 Com as informações coletadas, o assistente **NÃO DEVE** começar a codificar imediatamente. Em vez disso, **DEVE** entrar em um modo de planejamento.
