@@ -19,8 +19,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->commands([
             FixOrphanedPayments::class,
-        ]);        
-        
+        ]);
+
         if ($this->app->environment('production')) {
             $this->app['request']->server->set('HTTPS', true);
         }

@@ -29,11 +29,11 @@ class RegistrationController extends Controller
     public function store(StoreRegistrationRequest $request): RedirectResponse
     {
         if (config('app.debug')) {
-            Log::info('Starting registration creation process.');
+            Log::debug('Starting registration creation process.');
         }
         $validatedData = $request->validated();
         if (config('app.debug')) {
-            Log::info('Registration data validated successfully through StoreRegistrationRequest.', ['validated_data_keys' => array_keys($validatedData)]);
+            Log::debug('Registration data validated successfully through StoreRegistrationRequest.', ['validated_data_keys' => array_keys($validatedData)]);
         }
 
         try {
@@ -66,7 +66,7 @@ class RegistrationController extends Controller
                 $participationFormatForFeeCalc = $validatedData['participation_format'];
 
                 if (config('app.debug')) {
-                    Log::info('Preparing to calculate fees.', [
+                    Log::debug('Preparing to calculate fees.', [
                         'participant_category' => $participantCategory,
                         'event_codes' => $eventCodesForFeeCalc,
                         'participation_format' => $participationFormatForFeeCalc,
@@ -85,7 +85,7 @@ class RegistrationController extends Controller
                 }
 
                 if (config('app.debug')) {
-                    Log::info('Fee calculation completed for registration.', [
+                    Log::debug('Fee calculation completed for registration.', [
                         'participant_category' => $participantCategory,
                         'fee_data' => $feeData,
                         'user_id' => $user->id,
@@ -109,7 +109,7 @@ class RegistrationController extends Controller
                 $registration = Registration::create($registrationPayload);
 
                 if (config('app.debug')) {
-                    Log::info('Registration created successfully.', [
+                    Log::debug('Registration created successfully.', [
                         'registration_id' => $registration->id,
                         'user_id' => $user->id,
                         'total_fee' => $feeData['total_fee'],
@@ -121,13 +121,13 @@ class RegistrationController extends Controller
                 $paymentStatus = ($feeData['total_fee'] == 0) ? 'free' : 'pending_payment';
                 $registration->update(['payment_status' => $paymentStatus]);
                 if (config('app.debug')) {
-                    Log::info('Payment status set for registration.', ['registration_id' => $registration->id, 'payment_status' => $paymentStatus]);
+                    Log::debug('Payment status set for registration.', ['registration_id' => $registration->id, 'payment_status' => $paymentStatus]);
                 }
 
                 // Create individual Payment record for non-free registrations
                 if ($feeData['total_fee'] > 0) {
                     if (config('app.debug')) {
-                        Log::info('Registration requires payment. Creating payment record.', [
+                        Log::debug('Registration requires payment. Creating payment record.', [
                             'registration_id' => $registration->id,
                             'total_fee' => $feeData['total_fee'],
                         ]);
@@ -151,7 +151,7 @@ class RegistrationController extends Controller
                         // }
 
                         if (config('app.debug')) {
-                            Log::info('Payment record created for registration.', [
+                            Log::debug('Payment record created for registration.', [
                                 'registration_id' => $registration->id,
                                 'payment_id' => $payment->id,
                                 'amount' => $feeData['total_fee'],
@@ -170,7 +170,7 @@ class RegistrationController extends Controller
                     }
                 } else {
                     if (config('app.debug')) {
-                        Log::info('Registration is free. No payment record needed.', [
+                        Log::debug('Registration is free. No payment record needed.', [
                             'registration_id' => $registration->id,
                             'total_fee' => $feeData['total_fee'],
                         ]);
@@ -188,7 +188,7 @@ class RegistrationController extends Controller
                     try {
                         $registration->events()->sync($eventSyncData);
                         if (config('app.debug')) {
-                            Log::info('Events synced for registration.', ['registration_id' => $registration->id, 'synced_events' => array_keys($eventSyncData)]);
+                            Log::debug('Events synced for registration.', ['registration_id' => $registration->id, 'synced_events' => array_keys($eventSyncData)]);
                         }
                     } catch (\Exception $e) {
                         Log::error('Failed to sync events for registration.', [
@@ -204,12 +204,12 @@ class RegistrationController extends Controller
                 // --- AC11: Dispatch event/notification ---
                 event(new NewRegistrationCreated($registration));
                 if (config('app.debug')) {
-                    Log::info('NewRegistrationCreated event dispatched.', ['registration_id' => $registration->id]);
+                    Log::debug('NewRegistrationCreated event dispatched.', ['registration_id' => $registration->id]);
                 }
 
                 // --- AC12: Redirect to registrations page with success message ---
                 if (config('app.debug')) {
-                    Log::info('Registration transaction completed successfully. Redirecting user.', ['registration_id' => $registration->id]);
+                    Log::debug('Registration transaction completed successfully. Redirecting user.', ['registration_id' => $registration->id]);
                 }
 
                 return redirect()->route('registrations.my')->with('success', __('registrations.created_successfully'));
@@ -290,7 +290,7 @@ class RegistrationController extends Controller
             ]);
 
             $user = $request->user();
-            Log::info(__('Payment proof uploaded successfully'), [
+            Log::debug(__('Payment proof uploaded successfully'), [
                 'registration_id' => $registration->id,
                 'payment_id' => $payment->id,
                 'file_path' => $path,
@@ -311,7 +311,7 @@ class RegistrationController extends Controller
             $coordinatorEmail = ProofUploadedNotification::getCoordinatorEmail();
             if ($coordinatorEmail) {
                 Mail::to($coordinatorEmail)->send(new ProofUploadedNotification($registration));
-                Log::info(__('Proof upload notification sent to coordinator'), [
+                Log::debug(__('Proof upload notification sent to coordinator'), [
                     'registration_id' => $registration->id,
                     'payment_id' => $payment->id,
                     'coordinator_email' => $coordinatorEmail,
