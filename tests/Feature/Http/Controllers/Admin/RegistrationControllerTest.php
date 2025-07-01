@@ -92,14 +92,40 @@ class RegistrationControllerTest extends TestCase
         $event1 = \App\Models\Event::factory()->create([
             'code' => 'BCSMIF2025',
             'name' => '8th BCSMIF Conference',
+            'is_main_conference' => true,
+            'registration_deadline_early' => now()->addDays(30),
+            'registration_deadline_late' => now()->addDays(60),
         ]);
         $event2 = \App\Models\Event::factory()->create([
             'code' => 'RAA2025',
             'name' => 'RAA Workshop 2025',
+            'is_main_conference' => false,
+            'registration_deadline_early' => now()->addDays(30),
+            'registration_deadline_late' => now()->addDays(60),
+        ]);
+
+        // Create fees for the test events to match the expected behavior
+        \App\Models\Fee::factory()->create([
+            'event_code' => 'BCSMIF2025',
+            'participant_category' => 'graduate_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 100.50,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+        \App\Models\Fee::factory()->create([
+            'event_code' => 'RAA2025',
+            'participant_category' => 'graduate_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 50.25,
+            'is_discount_for_main_event_participant' => false,
         ]);
 
         $registration = Registration::factory()->create([
             'full_name' => 'Test User',
+            'registration_category_snapshot' => 'graduate_student',
+            'participation_format' => 'in-person',
         ]);
 
         $registration->events()->attach([

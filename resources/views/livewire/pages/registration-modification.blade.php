@@ -151,7 +151,7 @@ new #[Layout('layouts.app')] class extends Component {
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{ __('Total Fee') }}:</p>
-                                <p class="text-lg font-semibold">R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}</p>
+                                <p class="text-lg font-semibold">R$ {{ number_format($registration->calculateCorrectTotalFee(), 2, ',', '.') }}</p>
                             </div>
                         </div>
                     </div>
@@ -224,7 +224,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <div class="text-center">
                                     <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Original Value') }}</p>
                                     <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                        R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
+                                        R$ {{ number_format($registration->calculateCorrectTotalFee(), 2, ',', '.') }}
                                     </p>
                                 </div>
                                 <div class="text-center">

@@ -39,13 +39,31 @@ class RegistrationsListTest extends TestCase
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
-        $event = Event::factory()->create(['code' => 'BCSMIF2025', 'name' => '8th BCSMIF']);
+        $event = Event::factory()->create([
+            'code' => 'BCSMIF2025', 
+            'name' => '8th BCSMIF',
+            'is_main_conference' => true,
+            'registration_deadline_early' => now()->addDays(30),
+            'registration_deadline_late' => now()->addDays(60),
+        ]);
         $user = User::factory()->create(['name' => 'Test User', 'email' => 'test@example.com']);
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'full_name' => 'John Test Doe',
             'email' => 'john@example.com',
             'payment_status' => 'pending_payment',
+            'registration_category_snapshot' => 'graduate_student',
+            'participation_format' => 'in-person',
+        ]);
+
+        // Create fee for the test event to match the expected behavior
+        \App\Models\Fee::factory()->create([
+            'event_code' => 'BCSMIF2025',
+            'participant_category' => 'graduate_student',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 100.50,
+            'is_discount_for_main_event_participant' => false,
         ]);
 
         $registration->events()->attach($event->code, ['price_at_registration' => 100.50]);

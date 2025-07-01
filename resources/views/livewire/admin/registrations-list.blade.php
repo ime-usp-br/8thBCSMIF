@@ -86,7 +86,7 @@
                                     </div>
                                     <div>
                                         <span class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('Fee') }}:</span>
-                                        <span class="text-sm font-semibold text-gray-900 dark:text-gray-100 ml-1">R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}</span>
+                                        <span class="text-sm font-semibold text-gray-900 dark:text-gray-100 ml-1">R$ {{ number_format($registration->calculateCorrectTotalFee(), 2, ',', '.') }}</span>
                                     </div>
                                 </div>
                                 
@@ -179,7 +179,7 @@
                                         </div>
                                     </td>
                                     <td class="px-4 xl:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
+                                        R$ {{ number_format($registration->calculateCorrectTotalFee(), 2, ',', '.') }}
                                     </td>
                                     <td class="px-4 xl:px-6 py-4 whitespace-nowrap">
                                         @php

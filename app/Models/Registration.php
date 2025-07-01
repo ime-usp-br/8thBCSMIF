@@ -168,4 +168,36 @@ class Registration extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    /**
+     * Calculate the correct total fee for this registration using FeeCalculationService.
+     * This method applies retroactive discounts and ensures consistency across all pages.
+     *
+     * @return float The calculated total fee with any applicable discounts
+     */
+    public function calculateCorrectTotalFee(): float
+    {
+        $fallbackSum = $this->events->sum('pivot.price_at_registration');
+        $fallbackFee = is_numeric($fallbackSum) ? (float) $fallbackSum : 0.0;
+
+        if (! $this->registration_category_snapshot) {
+            return $fallbackFee;
+        }
+
+        /** @var list<string> $eventCodes */
+        $eventCodes = array_values($this->events->pluck('code')->toArray());
+        $feeService = app(\App\Services\FeeCalculationService::class);
+
+        $feeCalculation = $feeService->calculateFees(
+            $this->registration_category_snapshot,
+            $eventCodes,
+            $this->created_at ?? now(),
+            $this->participation_format === 'online' ? 'online' : 'in-person',
+            $this
+        );
+
+        $newTotalFee = $feeCalculation['new_total_fee'] ?? null;
+
+        return is_numeric($newTotalFee) ? (float) $newTotalFee : $fallbackFee;
+    }
 }
