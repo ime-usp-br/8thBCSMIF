@@ -65,8 +65,8 @@ class StoreRegistrationRequest extends FormRequest
             'cpf' => [
                 'nullable',
                 'string',
-                'max:14',
                 Rule::requiredIf($isBrazilianDocument),
+                ...$isBrazilianDocument ? ['max:14'] : [],
             ],
             'rg_number' => [
                 'nullable',

@@ -40,7 +40,7 @@ class RegistrationsListTest extends TestCase
         $admin->assignRole('admin');
 
         $event = Event::factory()->create([
-            'code' => 'BCSMIF2025', 
+            'code' => 'BCSMIF2025',
             'name' => '8th BCSMIF',
             'is_main_conference' => true,
             'registration_deadline_early' => now()->addDays(30),
