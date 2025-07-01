@@ -25,19 +25,7 @@ gh issue view {issue_number} --json title,body,labels | cat
 `<requires_approval>false</requires_approval>`
 `</execute_command>`
 
-**B. Verificar Versões de Dependências:**
-O assistente DEVE inspecionar o `composer.lock` para verificar as versões das principais bibliotecas que podem estar envolvidas na resolução do AC.
-
-`<read_file>`
-`<path>composer.lock</path>`
-`</read_file>`
-
-**Instruções para o Assistente de IA:**
-1.  Analise o conteúdo do `composer.lock`.
-2.  Identifique as bibliotecas chave para a tarefa (ex: `laravel/framework`, `livewire/livewire`, `spatie/laravel-permission`).
-3.  Compare a versão da biblioteca com a sua data de corte de conhecimento.
-
-**C. Consultar Documentação Externa (Condicional):**
+**B. Consultar Documentação Externa (Condicional):**
 Se uma versão de biblioteca for posterior à sua data de corte de conhecimento, o assistente DEVE usar a ferramenta `context7` para obter documentação atualizada.
 
 **Exemplo de uso da ferramenta `context7` (MCP):**
@@ -55,7 +43,7 @@ Se uma versão de biblioteca for posterior à sua data de corte de conhecimento,
 ```
 **Nota:** O assistente DEVE primeiro usar `resolve-library-id` se não tiver certeza do ID exato.
 
-**D. Leitura de Documentação Interna:**
+**C. Leitura de Documentação Interna:**
 O assistente DEVE ler os guias de desenvolvimento e padrões de código para garantir que a implementação esteja alinhada com as práticas do projeto.
 
 `<read_file>`
@@ -66,7 +54,7 @@ O assistente DEVE ler os guias de desenvolvimento e padrões de código para gar
 `<path>docs/padroes_codigo_boas_praticas.md</path>`
 `</read_file>`
 
-**E. Análise de Código Existente:**
+**D. Análise de Código Existente:**
 Com base na análise da issue e da documentação, o assistente DEVE levantar hipóteses sobre quais arquivos existentes são relevantes para a resolução do AC e ler seu conteúdo.
 
 **Instruções para o Assistente de IA:**
