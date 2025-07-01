@@ -27,20 +27,6 @@
                     </select>
                 </div>
                 
-                <!-- Payment Status Filter -->
-                <div>
-                    <label for="filterPaymentStatus" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {{ __('Filter by Payment Status') }}
-                    </label>
-                    <select wire:model.live="filterPaymentStatus" id="filterPaymentStatus" 
-                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri sm:text-sm transition-colors duration-200">
-                        <option value="">{{ __('All Statuses') }}</option>
-                        <option value="pending_payment">{{ __('Pending Payment') }}</option>
-                        <option value="paid_br">{{ __('Paid (BR)') }}</option>
-                        <option value="paid_int">{{ __('Paid (International)') }}</option>
-                        <option value="cancelled">{{ __('Cancelled') }}</option>
-                    </select>
-                </div>
             </div>
             
             @if($registrations->count() > 0)
@@ -105,6 +91,29 @@
                                         @endif
                                     </div>
                                 </div>
+
+                                <!-- Payment Statuses -->
+                                <div class="mb-4">
+                                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400 block mb-1">{{ __('Payment Statuses') }}:</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        @php
+                                            $paymentStatusColors = [
+                                                'pending' => 'bg-yellow-100 text-yellow-800',
+                                                'paid' => 'bg-green-100 text-green-800',
+                                                'pending_approval' => 'bg-blue-100 text-blue-800',
+                                                'cancelled' => 'bg-red-100 text-red-800',
+                                                'refunded' => 'bg-gray-100 text-gray-800',
+                                            ];
+                                        @endphp
+                                        @forelse($registration->payments as $payment)
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $paymentStatusColors[$payment->status] ?? 'bg-gray-100 text-gray-800' }}">
+                                                {{ __($payment->status) }}
+                                            </span>
+                                        @empty
+                                            <span class="text-gray-400 dark:text-gray-500 text-sm">{{ __('No payments') }}</span>
+                                        @endforelse
+                                    </div>
+                                </div>
                                 
                                 <!-- Date and Actions -->
                                 <div class="flex justify-between items-center pt-3 border-t border-gray-100">
@@ -142,7 +151,10 @@
                                     {{ __('Fee') }}
                                 </th>
                                 <th scope="col" class="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    {{ __('Status') }}
+                                    {{ __('Registration Status') }}
+                                </th>
+                                <th scope="col" class="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    {{ __('Payment Statuses') }}
                                 </th>
                                 <th scope="col" class="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">
                                     {{ __('Date') }}
@@ -183,22 +195,42 @@
                                     </td>
                                     <td class="px-4 xl:px-6 py-4 whitespace-nowrap">
                                         @php
-                                            $statusColors = [
+                                            $regStatusColors = [
                                                 'pending_payment' => 'bg-yellow-100 text-yellow-800',
                                                 'paid_br' => 'bg-green-100 text-green-800',
                                                 'paid_int' => 'bg-green-100 text-green-800',
                                                 'cancelled' => 'bg-red-100 text-red-800',
                                             ];
-                                            $statusLabels = [
+                                            $regStatusLabels = [
                                                 'pending_payment' => __('Pending Payment'),
                                                 'paid_br' => __('Paid (BR)'),
                                                 'paid_int' => __('Paid (International)'),
                                                 'cancelled' => __('Cancelled'),
                                             ];
                                         @endphp
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$registration->payment_status] ?? 'bg-gray-100 text-gray-800' }}">
-                                            {{ $statusLabels[$registration->payment_status] ?? $registration->payment_status }}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $regStatusColors[$registration->payment_status] ?? 'bg-gray-100 text-gray-800' }}">
+                                            {{ $regStatusLabels[$registration->payment_status] ?? $registration->payment_status }}
                                         </span>
+                                    </td>
+                                    <td class="px-4 xl:px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                                        <div class="flex flex-wrap gap-1">
+                                            @php
+                                                $paymentStatusColors = [
+                                                    'pending' => 'bg-yellow-100 text-yellow-800',
+                                                    'paid' => 'bg-green-100 text-green-800',
+                                                    'pending_approval' => 'bg-blue-100 text-blue-800',
+                                                    'cancelled' => 'bg-red-100 text-red-800',
+                                                    'refunded' => 'bg-gray-100 text-gray-800',
+                                                ];
+                                            @endphp
+                                            @forelse($registration->payments as $payment)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $paymentStatusColors[$payment->status] ?? 'bg-gray-100 text-gray-800' }}">
+                                                    {{ __($payment->status) }}
+                                                </span>
+                                            @empty
+                                                <span class="text-gray-400 dark:text-gray-500 text-xs">{{ __('No payments') }}</span>
+                                            @endforelse
+                                        </div>
                                     </td>
                                     <td class="px-4 xl:px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 hidden xl:table-cell">
                                         {{ $registration->created_at->format('d/m/Y H:i') }}

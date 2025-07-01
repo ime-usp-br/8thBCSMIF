@@ -12,19 +12,14 @@ class RegistrationsList extends Component
 
     public string $filterEventCode = '';
 
-    public string $filterPaymentStatus = '';
-
     public function render(): \Illuminate\View\View
     {
         $registrations = Registration::query()
-            ->with(['user', 'events'])
+            ->with(['user', 'events', 'payments'])
             ->when($this->filterEventCode, function ($query, $eventCode) {
                 $query->whereHas('events', function ($eventQuery) use ($eventCode) {
                     $eventQuery->where('code', $eventCode);
                 });
-            })
-            ->when($this->filterPaymentStatus, function ($query, $paymentStatus) {
-                $query->where('payment_status', $paymentStatus);
             })
             ->orderBy('created_at', 'desc')
             ->paginate(15);
@@ -35,11 +30,6 @@ class RegistrationsList extends Component
     }
 
     public function updatedFilterEventCode(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedFilterPaymentStatus(): void
     {
         $this->resetPage();
     }
