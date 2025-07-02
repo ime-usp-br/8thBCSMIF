@@ -22,7 +22,8 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         if ($this->app->environment('production')) {
-            $this->app['request']->server->set('HTTPS', true);
+            $request = $this->app->make('request');
+            $request->server->set('HTTPS', true);
         }
     }
 
