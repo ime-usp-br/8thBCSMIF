@@ -6,6 +6,7 @@ use App\Exceptions\ReplicadoServiceException;
 use App\Services\ReplicadoService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class StoreRegistrationRequest extends FormRequest
@@ -48,7 +49,26 @@ class StoreRegistrationRequest extends FormRequest
                                 $fail(__('validation.custom.codpes.replicado_validation_failed'));
                             }
                         } catch (ReplicadoServiceException $e) {
+                            if (config('app.debug')) {
+                                Log::warning('ReplicadoService validation failed', [
+                                    'codpes' => $value,
+                                    'email' => $this->input('email'),
+                                    'error' => $e->getMessage(),
+                                ]);
+                            }
                             $fail(__('validation.custom.codpes.replicado_service_unavailable'));
+                        } catch (\Exception $e) {
+                            if (config('app.debug')) {
+                                Log::error('Unexpected error during USP validation', [
+                                    'codpes' => $value,
+                                    'email' => $this->input('email'),
+                                    'error' => $e->getMessage(),
+                                    'trace' => $e->getTraceAsString(),
+                                ]);
+                                $fail(__('validation.custom.codpes.replicado_service_unavailable').' Debug: '.$e->getMessage());
+                            } else {
+                                $fail(__('validation.custom.codpes.replicado_service_unavailable'));
+                            }
                         }
                     }
                 },

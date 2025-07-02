@@ -72,6 +72,9 @@ new #[Layout('layouts.app')] class extends Component {
     
     // Success state
     public bool $registration_successful = false;
+    
+    // Error handling state
+    public string $general_error_message = '';
 
     public function mount(): void
     {
@@ -127,25 +130,40 @@ new #[Layout('layouts.app')] class extends Component {
             return;
         }
 
-        // Map position to participant category
-        $participantCategory = match ($this->position) {
-            'undergraduate_student' => 'undergrad_student',
-            'graduate_student' => 'grad_student',
-            'researcher', 'professor' => $this->is_abe_member === 'yes' ? 'professor_abe' : 'professor_non_abe_professional',
-            'professional' => 'professor_non_abe_professional',
-            default => 'professor_non_abe_professional'
-        };
+        try {
+            // Map position to participant category
+            $participantCategory = match ($this->position) {
+                'undergraduate_student' => 'undergrad_student',
+                'graduate_student' => 'grad_student',
+                'researcher', 'professor' => $this->is_abe_member === 'yes' ? 'professor_abe' : 'professor_non_abe_professional',
+                'professional' => 'professor_non_abe_professional',
+                default => 'professor_non_abe_professional'
+            };
 
-        $feeCalculationService = app(FeeCalculationService::class);
-        $feeCalculation = $feeCalculationService->calculateFees(
-            $participantCategory,
-            $this->selected_event_codes,
-            Carbon::now(),
-            $this->participation_format ?: 'in-person'
-        );
+            $feeCalculationService = app(FeeCalculationService::class);
+            $feeCalculation = $feeCalculationService->calculateFees(
+                $participantCategory,
+                $this->selected_event_codes,
+                Carbon::now(),
+                $this->participation_format ?: 'in-person'
+            );
 
-        $this->fee_details = $feeCalculation['details'];
-        $this->total_fee = $feeCalculation['total_fee'];
+            $this->fee_details = $feeCalculation['details'];
+            $this->total_fee = $feeCalculation['total_fee'];
+            
+            // Clear any previous fee calculation errors
+            $this->resetErrorBag(['general', 'selected_event_codes']);
+            
+        } catch (\Exception $e) {
+            $this->fee_details = [];
+            $this->total_fee = 0.0;
+            
+            if (config('app.debug')) {
+                $this->addError('general', __('Fee calculation error: ') . $e->getMessage());
+            } else {
+                $this->addError('general', __('Unable to calculate registration fees. Please try again or contact support.'));
+            }
+        }
     }
 
     public function submit(): void
@@ -194,46 +212,75 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function validateAndSubmit(): void
     {
-        // Perform Livewire validation first
-        $this->validate([
-            'full_name' => 'required|string|max:255',
-            'nationality' => 'required|string|max:255',
-            'date_of_birth' => 'required|date|before:today',
-            'gender' => 'required|string|in:male,female,other,prefer_not_to_say',
-            'other_gender' => 'required_if:gender,other|string|max:255',
-            'document_country_origin' => 'required|string|max:2',
-            'cpf' => 'required_if:document_country_origin,BR|nullable|string|max:20',
-            'rg_number' => 'required_if:document_country_origin,BR|nullable|string|max:20',
-            'passport_number' => 'required_unless:document_country_origin,BR|nullable|string|max:50',
-            'passport_expiry_date' => 'required_unless:document_country_origin,BR|nullable|date|after:today',
-            'email' => 'required|email|max:255',
-            'phone_number' => 'required|string|max:20',
-            'address_street' => 'required|string|max:255',
-            'address_city' => 'required|string|max:255',
-            'address_state_province' => 'required|string|max:255',
-            'address_country' => 'required|string|max:2',
-            'address_postal_code' => 'required|string|max:20',
-            'affiliation' => 'required|string|max:255',
-            'position' => 'required|string|in:undergraduate_student,graduate_student,researcher,professor,professional,other',
-            'other_position' => 'required_if:position,other|string|max:255',
-            'is_abe_member' => 'required|string|in:yes,no',
-            'arrival_date' => 'required|date|after_or_equal:today',
-            'departure_date' => 'required|date|after:arrival_date',
-            'selected_event_codes' => 'required|array|min:1',
-            'selected_event_codes.*' => 'exists:events,code',
-            'participation_format' => 'required|string|in:in-person,online',
-            'dietary_restrictions' => 'required|string|in:none,vegetarian,vegan,gluten_free,other',
-            'other_dietary_restrictions' => 'required_if:dietary_restrictions,other|string|max:255',
-            'emergency_contact_name' => 'required|string|max:255',
-            'emergency_contact_relationship' => 'required|string|max:255',
-            'emergency_contact_phone' => 'required|string|max:20',
-            'requires_visa_letter' => 'required_unless:document_country_origin,BR|nullable|string|in:yes,no',
-            'confirm_information' => 'required|accepted',
-            'consent_data_processing' => 'required|accepted',
-        ]);
+        try {
+            // Perform Livewire validation first
+            $this->validate([
+                'full_name' => 'required|string|max:255',
+                'nationality' => 'required|string|max:255',
+                'date_of_birth' => 'required|date|before:today',
+                'gender' => 'required|string|in:male,female,other,prefer_not_to_say',
+                'other_gender' => 'required_if:gender,other|string|max:255',
+                'document_country_origin' => 'required|string|max:2',
+                'cpf' => 'required_if:document_country_origin,BR|nullable|string|max:20',
+                'rg_number' => 'required_if:document_country_origin,BR|nullable|string|max:20',
+                'passport_number' => 'required_unless:document_country_origin,BR|nullable|string|max:50',
+                'passport_expiry_date' => 'required_unless:document_country_origin,BR|nullable|date|after:today',
+                'email' => 'required|email|max:255',
+                'phone_number' => 'required|string|max:20',
+                'address_street' => 'required|string|max:255',
+                'address_city' => 'required|string|max:255',
+                'address_state_province' => 'required|string|max:255',
+                'address_country' => 'required|string|max:2',
+                'address_postal_code' => 'required|string|max:20',
+                'affiliation' => 'required|string|max:255',
+                'position' => 'required|string|in:undergraduate_student,graduate_student,researcher,professor,professional,other',
+                'other_position' => 'required_if:position,other|string|max:255',
+                'is_abe_member' => 'required|string|in:yes,no',
+                'arrival_date' => 'required|date|after_or_equal:today',
+                'departure_date' => 'required|date|after:arrival_date',
+                'selected_event_codes' => 'required|array|min:1',
+                'selected_event_codes.*' => 'exists:events,code',
+                'participation_format' => 'required|string|in:in-person,online',
+                'dietary_restrictions' => 'required|string|in:none,vegetarian,vegan,gluten_free,other',
+                'other_dietary_restrictions' => 'required_if:dietary_restrictions,other|string|max:255',
+                'emergency_contact_name' => 'required|string|max:255',
+                'emergency_contact_relationship' => 'required|string|max:255',
+                'emergency_contact_phone' => 'required|string|max:20',
+                'requires_visa_letter' => 'required_unless:document_country_origin,BR|nullable|string|in:yes,no',
+                'confirm_information' => 'required|accepted',
+                'consent_data_processing' => 'required|accepted',
+            ]);
 
-        // If validation passes, trigger HTML form submission to RegistrationController@store
-        $this->js('window.submitFormData();');
+            // Clear any previous general errors
+            $this->clearGeneralError();
+            
+            // Validate that we have selected events and can calculate fees
+            if (empty($this->selected_event_codes)) {
+                $this->showGeneralError(__('You must select at least one event to register.'));
+                return;
+            }
+
+            // Validate fee calculation works
+            if ($this->total_fee < 0) {
+                $this->showGeneralError(__('Unable to calculate registration fees. Please try again or contact support.'));
+                return;
+            }
+
+            // If validation passes, redirect to controller with data
+            $this->submitRegistration();
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Livewire validation errors are automatically handled
+            // Just re-throw to let Livewire handle the display
+            throw $e;
+        } catch (\Exception $e) {
+            // Handle unexpected errors
+            if (config('app.debug')) {
+                $this->showGeneralError(__('An error occurred during validation: ') . $e->getMessage());
+            } else {
+                $this->showGeneralError(__('An unexpected error occurred. Please try again or contact support.'));
+            }
+        }
     }
 
 
@@ -248,7 +295,7 @@ new #[Layout('layouts.app')] class extends Component {
             'participation_format', 'needs_transport_from_gru', 'needs_transport_from_usp',
             'dietary_restrictions', 'other_dietary_restrictions', 'emergency_contact_name',
             'emergency_contact_relationship', 'emergency_contact_phone', 'requires_visa_letter',
-            'confirm_information', 'consent_data_processing', 'registration_successful'
+            'confirm_information', 'consent_data_processing', 'registration_successful', 'general_error_message'
         ]);
         
         // Re-initialize defaults
@@ -256,6 +303,101 @@ new #[Layout('layouts.app')] class extends Component {
         $this->address_country = 'BR';
         if (auth()->user()) {
             $this->email = auth()->user()->email;
+        }
+    }
+
+    public function showGeneralError(string $message): void
+    {
+        $this->general_error_message = $message;
+    }
+
+    public function clearGeneralError(): void
+    {
+        $this->general_error_message = '';
+    }
+
+    public function submitRegistration(): void
+    {
+        try {
+            // Create the JS to submit form dynamically with current component data
+            $this->js('
+                const formData = {
+                    full_name: "' . addslashes($this->full_name) . '",
+                    nationality: "' . addslashes($this->nationality) . '",
+                    date_of_birth: "' . addslashes($this->date_of_birth) . '",
+                    gender: "' . addslashes($this->gender === 'other' ? $this->other_gender : $this->gender) . '",
+                    document_country_origin: "' . addslashes($this->document_country_origin) . '",
+                    cpf: "' . addslashes($this->cpf) . '",
+                    rg_number: "' . addslashes($this->rg_number) . '",
+                    passport_number: "' . addslashes($this->passport_number) . '",
+                    passport_expiry_date: "' . addslashes($this->passport_expiry_date) . '",
+                    email: "' . addslashes($this->email) . '",
+                    phone_number: "' . addslashes($this->phone_number) . '",
+                    address_street: "' . addslashes($this->address_street) . '",
+                    address_city: "' . addslashes($this->address_city) . '",
+                    address_state_province: "' . addslashes($this->address_state_province) . '",
+                    address_country: "' . addslashes($this->address_country) . '",
+                    address_postal_code: "' . addslashes($this->address_postal_code) . '",
+                    affiliation: "' . addslashes($this->affiliation) . '",
+                    position: "' . addslashes($this->position === 'other' ? $this->other_position : $this->position) . '",
+                    is_abe_member: "' . ($this->is_abe_member === 'yes' ? '1' : '0') . '",
+                    arrival_date: "' . addslashes($this->arrival_date) . '",
+                    departure_date: "' . addslashes($this->departure_date) . '",
+                    selected_event_codes: ' . json_encode($this->selected_event_codes) . ',
+                    participation_format: "' . addslashes($this->participation_format) . '",
+                    needs_transport_from_gru: "' . ($this->needs_transport_from_gru ? '1' : '0') . '",
+                    needs_transport_from_usp: "' . ($this->needs_transport_from_usp ? '1' : '0') . '",
+                    dietary_restrictions: "' . addslashes($this->dietary_restrictions === 'other' ? $this->other_dietary_restrictions : $this->dietary_restrictions) . '",
+                    emergency_contact_name: "' . addslashes($this->emergency_contact_name) . '",
+                    emergency_contact_relationship: "' . addslashes($this->emergency_contact_relationship) . '",
+                    emergency_contact_phone: "' . addslashes($this->emergency_contact_phone) . '",
+                    requires_visa_letter: "' . ($this->requires_visa_letter === 'yes' ? '1' : '0') . '",
+                    confirm_information_accuracy: "' . ($this->confirm_information ? '1' : '0') . '",
+                    confirm_data_processing_consent: "' . ($this->consent_data_processing ? '1' : '0') . '"
+                };
+                
+                // Create and submit form
+                const form = document.createElement("form");
+                form.method = "POST";
+                form.action = "' . route('event-registrations.store') . '";
+                
+                // Add CSRF token
+                const csrfToken = document.createElement("input");
+                csrfToken.type = "hidden";
+                csrfToken.name = "_token";
+                csrfToken.value = "' . csrf_token() . '";
+                form.appendChild(csrfToken);
+                
+                // Add all form data
+                Object.keys(formData).forEach(key => {
+                    const value = formData[key];
+                    if (Array.isArray(value)) {
+                        value.forEach(item => {
+                            const input = document.createElement("input");
+                            input.type = "hidden";
+                            input.name = key + "[]";
+                            input.value = item;
+                            form.appendChild(input);
+                        });
+                    } else if (value !== null && value !== undefined) {
+                        const input = document.createElement("input");
+                        input.type = "hidden";
+                        input.name = key;
+                        input.value = value;
+                        form.appendChild(input);
+                    }
+                });
+                
+                document.body.appendChild(form);
+                form.submit();
+            ');
+
+        } catch (\Exception $e) {
+            if (config('app.debug')) {
+                $this->showGeneralError(__('Registration submission error: ') . $e->getMessage());
+            } else {
+                $this->showGeneralError(__('An error occurred during registration. Please try again or contact support.'));
+            }
         }
     }
 }; ?>
@@ -292,12 +434,27 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
                 @else
                     {{-- General Error Display --}}
-                    @if($errors->has('general'))
-                        <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    @if($errors->has('general') || !empty($general_error_message))
+                        <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert" dusk="general-error-message">
                             <strong class="font-bold">{{ __('Error!') }}</strong>
-                            <span class="block sm:inline">{{ $errors->first('general') }}</span>
+                            <span class="block sm:inline">
+                                @if($errors->has('general'))
+                                    {{ $errors->first('general') }}
+                                @else
+                                    {{ $general_error_message }}
+                                @endif
+                            </span>
                         </div>
                     @endif
+
+                    {{-- Session Error Display (from Controller) --}}
+                    @if(session('error'))
+                        <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+                            <strong class="font-bold">{{ __('Error!') }}</strong>
+                            <span class="block sm:inline">{{ session('error') }}</span>
+                        </div>
+                    @endif
+
 
                 <div class="space-y-8">
                     {{-- Personal Information --}}
@@ -702,86 +859,6 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
 
 
-                    {{-- Hidden fields for Livewire data --}}
-                    <script>
-                        document.addEventListener('livewire:init', () => {
-                            window.submitFormData = function() {
-                                // Get current Livewire component state
-                                const wire = @this;
-                                
-                                // Create form data object
-                                const formData = {
-                                    full_name: wire.full_name,
-                                    nationality: wire.nationality,
-                                    date_of_birth: wire.date_of_birth,
-                                    gender: wire.gender === 'other' ? wire.other_gender : wire.gender,
-                                    document_country_origin: wire.document_country_origin,
-                                    cpf: wire.cpf,
-                                    rg_number: wire.rg_number,
-                                    passport_number: wire.passport_number,
-                                    passport_expiry_date: wire.passport_expiry_date,
-                                    email: wire.email,
-                                    phone_number: wire.phone_number,
-                                    address_street: wire.address_street,
-                                    address_city: wire.address_city,
-                                    address_state_province: wire.address_state_province,
-                                    address_country: wire.address_country,
-                                    address_postal_code: wire.address_postal_code,
-                                    affiliation: wire.affiliation,
-                                    position: wire.position === 'other' ? wire.other_position : wire.position,
-                                    is_abe_member: wire.is_abe_member === 'yes' ? '1' : '0',
-                                    arrival_date: wire.arrival_date,
-                                    departure_date: wire.departure_date,
-                                    selected_event_codes: wire.selected_event_codes,
-                                    participation_format: wire.participation_format,
-                                    needs_transport_from_gru: wire.needs_transport_from_gru ? '1' : '0',
-                                    needs_transport_from_usp: wire.needs_transport_from_usp ? '1' : '0',
-                                    dietary_restrictions: wire.dietary_restrictions === 'other' ? wire.other_dietary_restrictions : wire.dietary_restrictions,
-                                    emergency_contact_name: wire.emergency_contact_name,
-                                    emergency_contact_relationship: wire.emergency_contact_relationship,
-                                    emergency_contact_phone: wire.emergency_contact_phone,
-                                    requires_visa_letter: wire.requires_visa_letter === 'yes' ? '1' : '0',
-                                    confirm_information_accuracy: wire.confirm_information ? '1' : '0',
-                                    confirm_data_processing_consent: wire.consent_data_processing ? '1' : '0'
-                                };
-                                
-                                // Create and submit form
-                                const form = document.createElement('form');
-                                form.method = 'POST';
-                                form.action = '{{ route('event-registrations.store') }}';
-                                
-                                // Add CSRF token
-                                const csrfToken = document.createElement('input');
-                                csrfToken.type = 'hidden';
-                                csrfToken.name = '_token';
-                                csrfToken.value = '{{ csrf_token() }}';
-                                form.appendChild(csrfToken);
-                                
-                                // Add all form data
-                                Object.keys(formData).forEach(key => {
-                                    const value = formData[key];
-                                    if (Array.isArray(value)) {
-                                        value.forEach(item => {
-                                            const input = document.createElement('input');
-                                            input.type = 'hidden';
-                                            input.name = key + '[]';
-                                            input.value = item;
-                                            form.appendChild(input);
-                                        });
-                                    } else if (value !== null && value !== undefined) {
-                                        const input = document.createElement('input');
-                                        input.type = 'hidden';
-                                        input.name = key;
-                                        input.value = value;
-                                        form.appendChild(input);
-                                    }
-                                });
-                                
-                                document.body.appendChild(form);
-                                form.submit();
-                            };
-                        });
-                    </script>
 
                     {{-- Submit Button --}}
                     <div class="flex flex-col sm:flex-row justify-center sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-4">

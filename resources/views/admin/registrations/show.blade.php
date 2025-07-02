@@ -34,12 +34,7 @@
 
     <div class="py-6 sm:py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {{-- Display success message --}}
-            @if(session('success'))
-                <div class="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-                    {{ session('success') }}
-                </div>
-            @endif
+            {{-- Success messages are handled by the global layout --}}
             <!-- Back to List Button -->
             <div class="mb-6">
                 <a href="{{ route('admin.registrations.index') }}" 

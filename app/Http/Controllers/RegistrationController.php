@@ -73,15 +73,31 @@ class RegistrationController extends Controller
                     ]);
                 }
 
-                $feeData = $feeCalculationService->calculateFees(
-                    $participantCategory,
-                    $eventCodesForFeeCalc,
-                    Carbon::now(),
-                    $participationFormatForFeeCalc
-                );
+                try {
+                    $feeData = $feeCalculationService->calculateFees(
+                        $participantCategory,
+                        $eventCodesForFeeCalc,
+                        Carbon::now(),
+                        $participationFormatForFeeCalc
+                    );
+                } catch (\Exception $e) {
+                    if (config('app.debug')) {
+                        Log::error('Fee calculation failed during registration', [
+                            'participant_category' => $participantCategory,
+                            'event_codes' => $eventCodesForFeeCalc,
+                            'participation_format' => $participationFormatForFeeCalc,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
+                    }
+                    throw new \RuntimeException(__('Unable to calculate registration fees. Please try again or contact support.'), 0, $e);
+                }
                 $user = $request->user();
                 if (! $user) {
-                    throw new \RuntimeException('User must be authenticated to create registration.');
+                    if (config('app.debug')) {
+                        Log::error('Unauthenticated user attempted registration creation');
+                    }
+                    throw new \RuntimeException(__('You must be logged in to create a registration. Please log in and try again.'));
                 }
 
                 if (config('app.debug')) {
@@ -222,10 +238,19 @@ class RegistrationController extends Controller
             ]);
 
             $errorMessage = __('Failed to process your registration. Please try again or contact support.');
-            if ($e instanceof \RuntimeException && str_contains($e->getMessage(), 'Failed to create payment record.')) {
-                $errorMessage = __('Failed to create payment record for your registration. Please try again or contact support.');
-            } elseif ($e instanceof \RuntimeException && str_contains($e->getMessage(), 'Failed to sync events.')) {
-                $errorMessage = __('Failed to associate events with your registration. Please try again or contact support.');
+            if ($e instanceof \RuntimeException) {
+                if (str_contains($e->getMessage(), 'Failed to create payment record.')) {
+                    $errorMessage = __('Failed to create payment record for your registration. Please try again or contact support.');
+                } elseif (str_contains($e->getMessage(), 'Failed to sync events.')) {
+                    $errorMessage = __('Failed to associate events with your registration. Please try again or contact support.');
+                } elseif (str_contains($e->getMessage(), 'Unable to calculate registration fees')) {
+                    $errorMessage = __('Unable to calculate registration fees. Please verify your event selections and try again.');
+                } elseif (str_contains($e->getMessage(), 'You must be logged in')) {
+                    $errorMessage = __('You must be logged in to create a registration. Please log in and try again.');
+                } else {
+                    // Use the localized message from the exception if it's already localized
+                    $errorMessage = $e->getMessage();
+                }
             }
 
             return redirect()->back()

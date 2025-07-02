@@ -28,6 +28,25 @@
             {{-- A seção do logo padrão foi removida daqui e será colocada individualmente --}}
             {{-- ou mantida nas páginas específicas que ainda o usam (register, forgot-password) --}}
 
+            {{-- Global Flash Messages for Guest Layout --}}
+            @if(session('error') || session('success'))
+                <div class="w-full sm:max-w-md mb-4 px-6">
+                    @if(session('error'))
+                        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                            <strong class="font-bold">{{ __('Error!') }}</strong>
+                            <span class="block sm:inline">{{ session('error') }}</span>
+                        </div>
+                    @endif
+                    
+                    @if(session('success'))
+                        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                            <strong class="font-bold">{{ __('Success!') }}</strong>
+                            <span class="block sm:inline">{{ session('success') }}</span>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
             <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg">
                 {{ $slot }}
             </div>
