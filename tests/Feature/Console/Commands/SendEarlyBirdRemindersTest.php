@@ -83,8 +83,8 @@ class SendEarlyBirdRemindersTest extends TestCase
             ->expectsOutput(__('Early bird reminders sent: :count', ['count' => 1]))
             ->assertExitCode(0);
 
-        Mail::assertSent(EarlyBirdReminderNotification::class, 1);
-        Mail::assertSent(EarlyBirdReminderNotification::class, function ($mail) use ($registration, $event) {
+        Mail::assertQueued(EarlyBirdReminderNotification::class, 1);
+        Mail::assertQueued(EarlyBirdReminderNotification::class, function ($mail) use ($registration, $event) {
             return $mail->registration->id === $registration->id &&
                    $mail->event->id === $event->id;
         });
@@ -216,9 +216,9 @@ class SendEarlyBirdRemindersTest extends TestCase
             ->expectsOutput(__('Early bird reminders sent: :count', ['count' => 1]))
             ->assertExitCode(0);
 
-        // Only one email should be sent (for the eligible registration)
-        Mail::assertSent(EarlyBirdReminderNotification::class, 1);
-        Mail::assertSent(EarlyBirdReminderNotification::class, function ($mail) use ($registrationEligible, $eventWithDeadline) {
+        // Only one email should be queued (for the eligible registration)
+        Mail::assertQueued(EarlyBirdReminderNotification::class, 1);
+        Mail::assertQueued(EarlyBirdReminderNotification::class, function ($mail) use ($registrationEligible, $eventWithDeadline) {
             return $mail->registration->id === $registrationEligible->id &&
                    $mail->event->id === $eventWithDeadline->id;
         });

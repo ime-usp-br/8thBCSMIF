@@ -485,13 +485,13 @@ class RegistrationControllerTest extends TestCase
         $registration->refresh();
         $this->assertEquals('pending_payment', $registration->payment_status); // No change until all payments are non-pending
 
-        // AC10: Verify ProofUploadedNotification was sent to coordinator
-        Mail::assertSent(ProofUploadedNotification::class, function ($mail) use ($registration) {
+        // AC10: Verify ProofUploadedNotification was queued to coordinator
+        Mail::assertQueued(ProofUploadedNotification::class, function ($mail) use ($registration) {
             return $mail->registration->id === $registration->id;
         });
 
-        // Verify that exactly one notification was sent
-        Mail::assertSent(ProofUploadedNotification::class, 1);
+        // Verify that exactly one notification was queued
+        Mail::assertQueued(ProofUploadedNotification::class, 1);
     }
 
     #[Test]
@@ -724,7 +724,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertTrue(Storage::disk('private')->exists($payment->payment_proof_path));
 
         // Test notification dispatch
-        Mail::assertSent(ProofUploadedNotification::class, function ($mail) use ($registration) {
+        Mail::assertQueued(ProofUploadedNotification::class, function ($mail) use ($registration) {
             return $mail->registration->id === $registration->id;
         });
 
@@ -1232,22 +1232,22 @@ class RegistrationControllerTest extends TestCase
         $registration = Registration::where('user_id', $user->id)->latest()->first();
         $this->assertNotNull($registration);
 
-        // AC9: Verify NewRegistrationNotification is sent to the user
-        Mail::assertSent(NewRegistrationNotification::class, function ($mail) use ($registration) {
+        // AC9: Verify NewRegistrationNotification is queued to the user
+        Mail::assertQueued(NewRegistrationNotification::class, function ($mail) use ($registration) {
             return $mail->registration->id === $registration->id
                 && $mail->forCoordinator === false
                 && $mail->hasTo('participant@example.com');
         });
 
-        // AC9: Verify NewRegistrationNotification is sent to the coordinator
-        Mail::assertSent(NewRegistrationNotification::class, function ($mail) use ($registration) {
+        // AC9: Verify NewRegistrationNotification is queued to the coordinator
+        Mail::assertQueued(NewRegistrationNotification::class, function ($mail) use ($registration) {
             return $mail->registration->id === $registration->id
                 && $mail->forCoordinator === true
                 && $mail->hasTo('coordinator@bcsmif.com');
         });
 
-        // AC9: Verify exactly 2 notifications were sent (user + coordinator)
-        Mail::assertSent(NewRegistrationNotification::class, 2);
+        // AC9: Verify exactly 2 notifications were queued (user + coordinator)
+        Mail::assertQueued(NewRegistrationNotification::class, 2);
     }
 
     #[Test]
@@ -1280,7 +1280,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertNotNull($registration);
 
         // AC12: Verify NewRegistrationNotification content for Brazilian user includes payment instructions
-        Mail::assertSent(NewRegistrationNotification::class, function ($mail) use ($registration) {
+        Mail::assertQueued(NewRegistrationNotification::class, function ($mail) use ($registration) {
             if ($mail->registration->id === $registration->id && $mail->forCoordinator === false) {
                 $content = $mail->render();
 
@@ -1336,7 +1336,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertNotNull($registration);
 
         // AC12: Verify NewRegistrationNotification content for international user includes invoice information
-        Mail::assertSent(NewRegistrationNotification::class, function ($mail) use ($registration) {
+        Mail::assertQueued(NewRegistrationNotification::class, function ($mail) use ($registration) {
             if ($mail->registration->id === $registration->id && $mail->forCoordinator === false) {
                 $content = $mail->render();
 
@@ -1383,7 +1383,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertNotNull($registration);
 
         // AC12: Verify NewRegistrationNotification coordinator version contains admin panel link
-        Mail::assertSent(NewRegistrationNotification::class, function ($mail) use ($registration, $user) {
+        Mail::assertQueued(NewRegistrationNotification::class, function ($mail) use ($registration, $user) {
             if ($mail->registration->id === $registration->id && $mail->forCoordinator === true) {
                 $content = $mail->render();
 
@@ -1492,7 +1492,7 @@ class RegistrationControllerTest extends TestCase
         $response->assertRedirect();
 
         // AC12: Verify ProofUploadedNotification contains correct link for admin visualization
-        Mail::assertSent(ProofUploadedNotification::class, function ($mail) use ($registration) {
+        Mail::assertQueued(ProofUploadedNotification::class, function ($mail) use ($registration) {
             $content = $mail->render();
 
             // Verify admin link is correct
@@ -1566,8 +1566,8 @@ class RegistrationControllerTest extends TestCase
         $registration->refresh();
         $this->assertEquals('pending_payment', $registration->payment_status); // No change until all payments are non-pending
 
-        // AC8: Verify notification was sent (additional verification)
-        Mail::assertSent(ProofUploadedNotification::class, function ($mail) use ($registration) {
+        // AC8: Verify notification was queued (additional verification)
+        Mail::assertQueued(ProofUploadedNotification::class, function ($mail) use ($registration) {
             return $mail->registration->id === $registration->id;
         });
 

@@ -138,16 +138,16 @@ class RegistrationModificationControllerTest extends TestCase
 
         $response->assertRedirect(route('registrations.my'));
 
-        // Check that notification was sent to participant (2 emails total)
-        Mail::assertSent(RegistrationModifiedNotification::class, 2);
+        // Check that notification was queued to participant (2 emails total)
+        Mail::assertQueued(RegistrationModifiedNotification::class, 2);
 
         // Check participant email
-        Mail::assertSent(RegistrationModifiedNotification::class, function ($mail) use ($registration) {
+        Mail::assertQueued(RegistrationModifiedNotification::class, function ($mail) use ($registration) {
             return $mail->registration->id === $registration->id && ! $mail->forCoordinator;
         });
 
         // Check coordinator email
-        Mail::assertSent(RegistrationModifiedNotification::class, function ($mail) use ($registration) {
+        Mail::assertQueued(RegistrationModifiedNotification::class, function ($mail) use ($registration) {
             return $mail->registration->id === $registration->id && $mail->forCoordinator;
         });
     }
