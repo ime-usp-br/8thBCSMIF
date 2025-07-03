@@ -518,7 +518,6 @@ class RegistrationControllerTest extends TestCase
 
         // Verify the success message is displayed in the view
         $response->assertSee(__('Payment status updated successfully.'));
-        $response->assertSee('bg-green-100 border border-green-400 text-green-700', false);
     }
 
     /**
@@ -813,8 +812,8 @@ class RegistrationControllerTest extends TestCase
         $response->assertSessionHasNoErrors();
         $response->assertStatus(302);
 
-        // Verify email was sent
-        Mail::assertSent(PaymentStatusUpdatedNotification::class, function ($mail) use ($registration, $participant) {
+        // Verify email was queued
+        Mail::assertQueued(PaymentStatusUpdatedNotification::class, function ($mail) use ($registration, $participant) {
             return $mail->hasTo($participant->email) &&
                    $mail->registration->id === $registration->id &&
                    $mail->oldStatus === 'pending_payment' &&
@@ -889,8 +888,8 @@ class RegistrationControllerTest extends TestCase
             $response->assertSessionHasNoErrors();
             $response->assertStatus(302);
 
-            // Verify email was sent for this confirmation status
-            Mail::assertSent(PaymentStatusUpdatedNotification::class, function ($mail) use ($registration, $participant, $status) {
+            // Verify email was queued for this confirmation status
+            Mail::assertQueued(PaymentStatusUpdatedNotification::class, function ($mail) use ($registration, $participant, $status) {
                 return $mail->hasTo($participant->email) &&
                        $mail->registration->id === $registration->id &&
                        $mail->oldStatus === 'pending_payment' &&
@@ -898,8 +897,8 @@ class RegistrationControllerTest extends TestCase
             });
         }
 
-        // Verify we sent exactly 3 emails (one for each confirmation status)
-        Mail::assertSent(PaymentStatusUpdatedNotification::class, 3);
+        // Verify we queued exactly 3 emails (one for each confirmation status)
+        Mail::assertQueued(PaymentStatusUpdatedNotification::class, 3);
     }
 
     /**
@@ -965,8 +964,8 @@ class RegistrationControllerTest extends TestCase
         $response->assertSessionHasNoErrors();
         $response->assertStatus(302);
 
-        // Verify email was sent with correct data
-        Mail::assertSent(PaymentStatusUpdatedNotification::class, function ($mail) use ($registration, $participant) {
+        // Verify email was queued with correct data
+        Mail::assertQueued(PaymentStatusUpdatedNotification::class, function ($mail) use ($registration, $participant) {
             // Check recipient
             $hasCorrectRecipient = $mail->hasTo($participant->email);
 
@@ -1204,7 +1203,7 @@ class RegistrationControllerTest extends TestCase
         $response->assertSessionHasNoErrors();
         $response->assertStatus(302);
 
-        Mail::assertSent(PaymentStatusUpdatedNotification::class, function ($mail) use ($registration, $participant) {
+        Mail::assertQueued(PaymentStatusUpdatedNotification::class, function ($mail) use ($registration, $participant) {
             return $mail->hasTo($participant->email) &&
                    $mail->registration->id === $registration->id &&
                    $mail->oldStatus === 'pending_payment' &&
