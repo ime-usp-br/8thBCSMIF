@@ -98,20 +98,34 @@
                                     <div class="flex flex-wrap gap-1">
                                         @php
                                             $paymentStatusColors = [
-                                                'pending' => 'bg-yellow-100 text-yellow-800',
-                                                'paid' => 'bg-green-100 text-green-800',
-                                                'pending_approval' => 'bg-blue-100 text-blue-800',
-                                                'cancelled' => 'bg-red-100 text-red-800',
-                                                'refunded' => 'bg-gray-100 text-gray-800',
+                                                'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+                                                'paid' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                                                'pending_approval' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+                                                'cancelled' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                                                'refunded' => 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200',
                                             ];
+                                            $payments = $registration->payments;
+                                            $limit = 3;
+                                            $totalPayments = $payments->count();
                                         @endphp
-                                        @forelse($registration->payments as $payment)
+                                        @forelse($payments->take($limit) as $payment)
                                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $paymentStatusColors[$payment->status] ?? 'bg-gray-100 text-gray-800' }}">
                                                 {{ __($payment->status) }}
                                             </span>
                                         @empty
                                             <span class="text-gray-400 dark:text-gray-500 text-sm">{{ __('No payments') }}</span>
                                         @endforelse
+
+                                        @if($totalPayments > $limit)
+                                            @php
+                                                $remainingCount = $totalPayments - $limit;
+                                                $tooltipText = $payments->slice($limit)->pluck('status')->map(fn($status) => __($status))->implode(', ');
+                                            @endphp
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200"
+                                                  title="{{ __('Remaining') }}: {{ $tooltipText }}">
+                                                +{{ $remainingCount }}
+                                            </span>
+                                        @endif
                                     </div>
                                 </div>
                                 
@@ -213,23 +227,37 @@
                                         </span>
                                     </td>
                                     <td class="px-4 xl:px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                                        <div class="flex flex-wrap gap-1">
+                                        <div class="flex flex-wrap items-center gap-1">
                                             @php
                                                 $paymentStatusColors = [
-                                                    'pending' => 'bg-yellow-100 text-yellow-800',
-                                                    'paid' => 'bg-green-100 text-green-800',
-                                                    'pending_approval' => 'bg-blue-100 text-blue-800',
-                                                    'cancelled' => 'bg-red-100 text-red-800',
-                                                    'refunded' => 'bg-gray-100 text-gray-800',
+                                                    'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+                                                    'paid' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                                                    'pending_approval' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+                                                    'cancelled' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                                                    'refunded' => 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200',
                                                 ];
+                                                $payments = $registration->payments;
+                                                $limit = 3;
+                                                $totalPayments = $payments->count();
                                             @endphp
-                                            @forelse($registration->payments as $payment)
+                                            @forelse($payments->take($limit) as $payment)
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $paymentStatusColors[$payment->status] ?? 'bg-gray-100 text-gray-800' }}">
                                                     {{ __($payment->status) }}
                                                 </span>
                                             @empty
                                                 <span class="text-gray-400 dark:text-gray-500 text-xs">{{ __('No payments') }}</span>
                                             @endforelse
+
+                                            @if($totalPayments > $limit)
+                                                @php
+                                                    $remainingCount = $totalPayments - $limit;
+                                                    $tooltipText = $payments->slice($limit)->pluck('status')->map(fn($status) => __($status))->implode(', ');
+                                                @endphp
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200 cursor-help"
+                                                      title="{{ __('Remaining') }}: {{ $tooltipText }}">
+                                                    +{{ $remainingCount }}
+                                                </span>
+                                            @endif
                                         </div>
                                     </td>
                                     <td class="px-4 xl:px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 hidden xl:table-cell">
