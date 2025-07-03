@@ -279,7 +279,7 @@ class RegistrationsListTest extends TestCase
             ->assertSee('Both Events User');
     }
 
-    public function test_displays_individual_payment_statuses(): void
+    public function test_displays_individual_payment_statuses_with_correct_colors(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
@@ -305,9 +305,17 @@ class RegistrationsListTest extends TestCase
         Livewire::actingAs($admin)
             ->test(RegistrationsList::class)
             ->assertSee('Multi Payment User')
-            ->assertSee(__('paid'))
-            ->assertSee(__('pending'))
-            ->assertSee(__('pending_approval'));
+            ->assertSeeHtmlInOrder([
+                '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">',
+                __('paid'),
+                '</span>',
+                '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">',
+                __('pending'),
+                '</span>',
+                '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">',
+                __('pending_approval'),
+                '</span>',
+            ]);
     }
 
     public function test_component_filters_reset_pagination(): void
