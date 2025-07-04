@@ -1,0 +1,64 @@
+TITLE: [BUG][Formulário] Campo 'País' não funciona com a opção 'Other'
+TYPE: bug
+LABELS: bcsmif,bug,critical,form,ui,livewire,validation,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+BUG_CONTEXT:
+Durante o preenchimento do formulário de inscrição, se um usuário internacional seleciona "Other" na lista de países (tanto para "País de Residência" quanto para "País de Origem do Documento"), nenhum campo de texto adicional aparece. Isso impede que o usuário especifique seu país e, consequentemente, bloqueia a submissão do formulário, tornando o registro impossível para qualquer pessoa de um país não listado.
+BUG_DESCRIPTION:
+O componente Livewire/Volt responsável pelo formulário de inscrição (`registration-form.blade.php`) não possui a lógica de frontend para exibir condicionalmente um campo de texto quando a opção "Other" é selecionada em um dos dropdowns de país. Além disso, o backend (provavelmente o `StoreRegistrationRequest`) não está preparado para receber e validar este valor condicional.
+REPRODUCTION_STEPS:
+1. Acesse a página do formulário de inscrição.
+2. Navegue até a seção "Identification Details" ou "Contact Information".
+3. No campo "Country of residence" ou "Document Country of Origin", selecione a opção "Other".
+4. Observe que nenhum campo de texto adicional aparece para inserir o nome do país.
+5. Tente preencher o resto do formulário e submeter. A submissão falhará ou salvará dados incompletos.
+EXPECTED_BEHAVIOR:
+Ao selecionar "Other" em qualquer um dos campos de país, um novo campo de texto deve aparecer imediatamente, permitindo que o usuário digite o nome de seu país. Este campo deve ser obrigatório se "Other" estiver selecionado, e o valor digitado deve ser salvo na coluna correspondente do banco de dados (`address_country` ou `document_country_origin`).
+ACTUAL_BEHAVIOR:
+Nada acontece ao selecionar "Other". O formulário não pode ser submetido corretamente, pois a informação do país fica em um estado inválido.
+PROPOSED_SOLUTION:
+1.  **Frontend (Livewire/Alpine.js):**
+    *   No componente `registration-form.blade.php`, adicionar um campo `<x-text-input>` para cada dropdown de país.
+    *   Utilizar `x-show` (Alpine.js) ou `@if` (Livewire) para exibir condicionalmente o campo de texto somente quando o valor do `wire:model` correspondente for 'OTHER'.
+    *   O campo de texto deve ser `required` condicionalmente.
+2.  **Backend (Controller/FormRequest):**
+    *   Modificar a lógica do `StoreRegistrationRequest` (ou onde a validação ocorre). Se o valor do dropdown for 'OTHER', a validação deve ser aplicada a um novo campo (ex: `other_address_country`).
+    *   No `RegistrationController` (ou service), antes de salvar, verificar se o país é 'OTHER'. Se for, usar o valor do campo de texto `other_address_country` para preencher a coluna `address_country` no banco de dados. Fazer o mesmo para `document_country_origin`.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: No formulário, ao selecionar "Other" no campo "Country of residence", um campo de texto para inserir o país aparece.
+- [ ] AC2: No formulário, ao selecionar "Other" no campo "Document Country of Origin", um campo de texto para inserir o país aparece.
+- [ ] AC3: O campo de texto para o país "Other" é obrigatório se a opção "Other" estiver selecionada.
+- [ ] AC4: O `StoreRegistrationRequest` é atualizado para validar o campo de texto condicional.
+- [ ] AC5: O valor digitado no campo de texto "Other" é salvo corretamente na coluna `address_country` ou `document_country_origin` do banco de dados.
+- [ ] AC6: Um teste de Browser (Dusk) é criado para verificar a lógica de exibição do campo de texto e a submissão bem-sucedida do formulário com um país "Other".
+- [ ] AC7: Código PHP/Blade segue os padrões do projeto (Pint e PHPStan).
+- [ ] AC8: O bug é classificado como 'critical' e priorizado.
+------
+TITLE: [FEATURE][Formulário] Atualizar e Internacionalizar a Lista de Países
+TYPE: feature
+LABELS: bcsmif,feature,ux,localization,form,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+FEATURE_MOTIVATION:
+A lista de países atual no formulário de inscrição é limitada e focada na América Latina. Dado o perfil internacional do evento, com palestrantes da Europa e de outras regiões, é essencial atualizar a lista para ser mais relevante para o público esperado e melhorar a experiência do usuário através da internacionalização.
+FEATURE_DESCRIPTION:
+Esta tarefa consiste em substituir a lista de países atual por uma nova lista mais abrangente, focada nos principais países da Europa e América do Norte, mas mantendo a opção "Other". Os nomes dos países devem ser exibidos de forma bilíngue (Português / Inglês) e o valor salvo no banco de dados deve ser o nome em inglês.
+PROPOSED_SOLUTION:
+1.  **Criar um Arquivo de Configuração ou Helper:** Para gerenciar a lista de países, criar um arquivo em `config/countries.php` ou uma classe Helper. Isso evita hardcoding na view.
+2.  **Definir a Nova Lista:** A nova lista no arquivo de configuração deve conter os países prioritários: Brasil, EUA, Canadá, Grécia, Emirados Árabes Unidos, Bélgica, Itália, Azerbaijão, Chile, e outros 3 países europeus importantes (ex: Alemanha, França, Reino Unido). A opção "Other" deve ser mantida.
+3.  **Implementar Localização:**
+    *   Criar arquivos de tradução, ex: `lang/en/countries.php` e `lang/pt_BR/countries.php`.
+    *   Cada arquivo conterá um array associativo `['Germany' => 'Germany', 'Brazil' => 'Brazil']` (en) e `['Germany' => 'Alemanha', 'Brazil' => 'Brasil']` (pt_BR).
+    *   Na view, iterar sobre a lista do arquivo de configuração. O `value` da `<option>` será o nome em inglês (chave), e o texto exibido será `{{ __('countries.' . $countryNameEn) }} / {{ $countryNameEn }}`.
+4.  **View (Componente):** O componente Livewire/Volt do formulário de inscrição lerá a lista de países do arquivo de configuração e a passará para a view. A ordenação será alfabética pelo nome em inglês.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: A lista de países no formulário de inscrição é substituída pela nova lista focada em Europa/América do Norte, mantendo Brasil e Chile.
+- [ ] AC2: A lista inclui Grécia, Emirados Árabes Unidos, Bélgica, Itália, Azerbaijão, Alemanha, França e Reino Unido.
+- [ ] AC3: A lista de países no dropdown está ordenada alfabeticamente pelo nome em inglês.
+- [ ] AC4: A opção "Other" ("Outro") permanece disponível na lista.
+- [ ] AC5: Cada país no dropdown é exibido em formato bilíngue (ex: "Alemanha / Germany") usando o sistema de tradução do Laravel `__()`.
+- [ ] AC6: Novos arquivos de tradução (`lang/en/countries.php`, `lang/pt_BR/countries.php`) são criados para os nomes dos países.
+- [ ] AC7: Ao salvar a inscrição, o nome completo do país **em inglês** é armazenado nas colunas `address_country` e `document_country_origin`.
+- [ ] AC8: Um teste de Browser (Dusk) verifica se o dropdown de países contém os novos valores e se o formato bilíngue está sendo exibido.
+- [ ] AC9: Código PHP/Blade segue os padrões do projeto (Pint e PHPStan).
