@@ -45,6 +45,12 @@
                                     {{ __('Create Account') }}
                                 </a>
                             @endguest
+                            <a href="https://8bcsmif.ime.usp.br/" target="_blank" class="bg-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-300 text-center inline-flex items-center justify-center">
+                                {{ __('Event Official Website') }}
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                </svg>
+                            </a>
                             <a href="#details" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-900 transition duration-300">
                                 {{ __('Learn More') }}
                             </a>
