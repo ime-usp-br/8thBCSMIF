@@ -1,0 +1,81 @@
+TITLE: [FEATURE][Emails] Aprimorar Conteúdo dos Emails de Inscrição e Lembretes
+TYPE: feature
+LABELS: bcsmif,feature,backend,email,localization,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE:
+FEATURE_MOTIVATION: A comunicação por email com os participantes precisa ser mais precisa e útil, fornecendo informações específicas para diferentes tipos de participantes (internacionais, alunos de graduação) e incluindo lembretes contextuais sobre prazos de pagamento.
+FEATURE_DESCRIPTION: Esta tarefa consiste em refinar o conteúdo e a lógica dos emails transacionais do sistema:
+1.  **Email para Internacionais:** O email de confirmação para participantes internacionais deve informar claramente de onde a fatura (invoice) será enviada.
+2.  **Email para Alunos de Graduação:** O email para alunos de graduação (com taxa zero) deve instruí-los a enviar um comprovante de matrícula em vez de um comprovante de pagamento.
+3.  **Lembrete Early Bird:** Os emails de confirmação (tanto da inscrição inicial quanto da adição de novos eventos) devem incluir um lembrete sutil sobre o prazo de pagamento do "early bird" se a inscrição for feita durante este período e houver um valor pendente.
+PROPOSED_SOLUTION:
+-   **Modificar Mailable `NewRegistrationNotification`:**
+    -   Na view Blade do email, adicionar uma lógica condicional:
+        -   Se o participante for internacional (verificado via `document_country_origin != 'BR'`), exibir o texto em inglês: "Thank you for your registration. Your invoice for international payment will be sent shortly from `assoc.bras.estatistica@gmail.com`. Please check your inbox and spam folder."
+        -   Se o participante for aluno de graduação com taxa zero (`position == 'undergraduate_student'` e `total_fee == 0`), exibir o texto: "Como aluno de graduação, sua taxa é zero. No lugar do comprovante de pagamento, solicitamos que envie um comprovante de matrícula válido."
+    -   No método `envelope()` do Mailable, adicionar lógica para incluir `assoc.bras.estatistica@gmail.com` em Cópia (CC) apenas se o participante for internacional.
+-   **Modificar Mailables `NewRegistrationNotification` e `RegistrationModifiedNotification`:**
+    -   Em ambas as views, adicionar um bloco condicional que verifica se `now() <= registration.events->first()->registration_deadline_early` e se há um valor a ser pago. Se verdadeiro, exibir um texto de lembrete sobre o prazo para pagamento com desconto.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: O email de confirmação enviado a um participante internacional contém o texto exato: "Thank you for your registration. Your invoice for international payment will be sent shortly from `assoc.bras.estatistica@gmail.com`. Please check your inbox and spam folder."
+- [ ] AC2: O email do `assoc.bras.estatistica@gmail.com` é adicionado em CC (Cópia) apenas nos emails de confirmação de participantes internacionais.
+- [ ] AC3: O email de confirmação para um aluno de graduação com taxa zero contém o texto exato: "Como aluno de graduação, sua taxa é zero. No lugar do comprovante de pagamento, solicitamos que envie um comprovante de matrícula válido."
+- [ ] AC4: A lógica para identificar um aluno de graduação para o email customizado verifica se `position` é 'undergraduate_student' E se `total_fee` é zero.
+- [ ] AC5: Os emails de confirmação de inscrição e de modificação incluem um lembrete sutil sobre o prazo de pagamento do "early bird" quando a inscrição/modificação é feita durante este período e resulta em um valor pendente.
+- [ ] AC6: Testes de Feature (PHPUnit com `Mail::fake()`) são criados para validar o conteúdo e os destinatários (incluindo CC) de cada variação de email (internacional, graduação, com lembrete early bird).
+- [ ] AC7: Código PHP/Blade segue os padrões do projeto (Pint e PHPStan).
+------
+TITLE: [CHORE][Fees] Refinar Categorias de Participantes e Atualizar Tabela de Taxas
+TYPE: chore
+LABELS: bcsmif,chore,database,ui,fees,todo
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE:
+CHORE_MOTIVATION: Clarificar a estrutura de taxas para "Profissionais" e garantir que a interface do usuário reflita com precisão o modelo de dados, evitando a criação de categorias desnecessárias para participantes internacionais, já que os preços são os mesmos.
+CHORE_DESCRIPTION: Esta tarefa visa ajustar a forma como as categorias de participantes são tratadas e exibidas, sem alterar a estrutura de preços.
+1.  Confirmar que a categoria `professor_non_abe_professional` no banco de dados (`fees` table) será usada para abranger tanto Professores não-membros da ABE quanto outros Profissionais.
+2.  Atualizar a página de visualização de taxas (`/fees`) para refletir essa nomenclatura agrupada, tornando-a mais clara para o usuário.
+PROPOSED_SOLUTION:
+-   **Backend:** Não são necessárias alterações no `FeeCalculationService` ou no `FeesTableSeeder`, pois a lógica atual já suporta o agrupamento. O foco é na apresentação.
+-   **Frontend:** Modificar o arquivo `resources/views/fees.blade.php`. Localizar a linha da tabela que exibe "Professor - ABE non-member / Professional" e alterar o texto para algo como "Professional / Professor (non-ABE)", conforme a decisão de agrupar sob uma única linha.
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: A lógica de backend (ex: no `RegistrationController` e `FeeCalculationService`) continua a mapear a seleção "Professional" do formulário para a categoria `professor_non_abe_professional` para cálculo de taxas.
+- [ ] AC2: A tabela de preços na página `/fees` é atualizada para ter uma única linha que represente claramente o grupo "Professional / Professor (non-ABE)".
+- [ ] AC3: Está confirmado e documentado que não existe uma categoria de preço separada para "International Participant"; a diferenciação ocorre apenas no método de pagamento.
+- [ ] AC4: Um teste de Browser (Dusk) é atualizado ou criado para verificar se o novo texto "Professional / Professor (non-ABE)" está presente na página `/fees`.
+- [ ] AC5: Código PHP/Blade segue os padrões do projeto (Pint e PHPStan).
+------
+TITLE: [FEATURE][Upload] Universalizar Upload de Documentos e Lógica de Inscrição Adicional
+TYPE: feature
+LABELS: bcsmif,feature,backend,ui,upload,payment,priority:high
+ASSIGNEE: @me
+PROJECT: 8thBCSMIF
+MILESTONE:
+FEATURE_MOTIVATION: O fluxo de upload de documentos e adição posterior de eventos precisa ser mais flexível para acomodar todos os tipos de participantes (brasileiros, internacionais, alunos de graduação) e fornecer uma experiência de usuário clara e consistente.
+FEATURE_DESCRIPTION: Esta tarefa refatora e expande a funcionalidade de upload e modificação de inscrição:
+1.  Permitir que todos os participantes (incluindo internacionais) possam fazer upload de um documento.
+2.  Diferenciar o tipo de documento solicitado (comprovante de pagamento vs. comprovante de matrícula) na UI.
+3.  Implementar a lógica de negócios para lidar com uploads de participantes internacionais.
+4.  Refinar a lógica de adição de eventos para alunos de graduação.
+5.  Melhorar a UI da página "Minha Inscrição" para mostrar um histórico de pagamentos.
+PROPOSED_SOLUTION:
+-   **Backend (`PaymentController@uploadProof`):**
+    -   Remover qualquer restrição que impeça participantes não-brasileiros de fazer upload.
+    -   Adicionar lógica para definir o `payment->status` como `pending_int_proof_approval` se o `registration->document_country_origin` não for 'BR'.
+-   **Frontend (Componente `my-registrations`):**
+    -   Adicionar lógica condicional para exibir o label do formulário de upload como "Anexar Comprovação de Matrícula" se `registration->total_fee == 0`, e "Proof of Payment" caso contrário.
+    -   Na lógica de adição de eventos, verificar se o usuário é um aluno de graduação e se um documento já foi enviado. Se sim, não solicitar um novo upload.
+    -   Refatorar a exibição para mostrar uma lista de todos os pagamentos (`$registration->payments`), cada um com seu status e um formulário de upload individual se estiver pendente.
+-   **Admin Panel:**
+    -   Na view de detalhes da inscrição, ao exibir o link do comprovante, adicionar uma lógica condicional: se `registration->total_fee == 0`, exibir o texto "Baixar Comprovante de Matrícula"; caso contrário, "Baixar Comprovante de Pagamento".
+ACCEPTANCE_CRITERIA:
+- [ ] AC1: O label do formulário de upload na página "Minha Inscrição" é exibido como "Anexar Comprovação de Matrícula" para alunos de graduação com taxa zero.
+- [ ] AC2: O label do formulário de upload é exibido como "Proof of Payment" para todos os outros participantes pagantes.
+- [ ] AC3: Alunos de graduação que já enviaram seu comprovante de matrícula podem adicionar novos eventos (gratuitos) sem serem solicitados a fazer um novo upload.
+- [ ] AC4: Participantes internacionais podem fazer upload de um comprovante, e o status do pagamento correspondente é atualizado para `pending_int_proof_approval`.
+- [ ] AC5: As regras de validação de arquivo (tipo, tamanho) são aplicadas a todos os uploads, independentemente do tipo de documento.
+- [ ] AC6: O painel do administrador diferencia entre "Comprovante de Pagamento" e "Comprovante de Matrícula" com base na taxa total da inscrição.
+- [ ] AC7: A página "Minha Inscrição" exibe corretamente um histórico de todos os pagamentos e seus status, com um formulário de upload para cada pagamento pendente.
+- [ ] AC8: Testes de Feature (PHPUnit) e Browser (Dusk) são criados/atualizados para cobrir os novos fluxos de upload para internacionais e alunos de graduação, bem como a lógica de adição de eventos.
+- [ ] AC9: Código PHP/Blade segue os padrões do projeto (Pint e PHPStan).

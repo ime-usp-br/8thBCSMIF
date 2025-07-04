@@ -111,6 +111,20 @@ class RegistrationController extends Controller
                 // --- AC8: Create and save Registration model ---
                 // Prepare data for Registration creation. Eloquent's create method will only use
                 // attributes that are fillable in the Registration model from $validatedData.
+
+                // Process "Other" country fields - replace "OTHER" with custom values
+                if (isset($validatedData['document_country_origin']) && $validatedData['document_country_origin'] === 'OTHER') {
+                    if (! empty($validatedData['other_document_country_origin'])) {
+                        $validatedData['document_country_origin'] = $validatedData['other_document_country_origin'];
+                    }
+                }
+
+                if (isset($validatedData['address_country']) && $validatedData['address_country'] === 'OTHER') {
+                    if (! empty($validatedData['other_address_country'])) {
+                        $validatedData['address_country'] = $validatedData['other_address_country'];
+                    }
+                }
+
                 $registrationPayload = array_merge(
                     $validatedData,
                     [

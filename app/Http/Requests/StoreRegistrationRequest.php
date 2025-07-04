@@ -82,6 +82,7 @@ class StoreRegistrationRequest extends FormRequest
 
             // Identification Details
             'document_country_origin' => ['required', 'string', 'max:255'],
+            'other_document_country_origin' => ['nullable', 'string', 'max:255', 'required_if:document_country_origin,OTHER'],
             'cpf' => [
                 'nullable',
                 'string',
@@ -114,6 +115,7 @@ class StoreRegistrationRequest extends FormRequest
             'address_city' => ['nullable', 'string', 'max:255'],
             'address_state_province' => ['nullable', 'string', 'max:255'],
             'address_country' => ['required', 'string', 'max:255'],
+            'other_address_country' => ['nullable', 'string', 'max:255', 'required_if:address_country,OTHER'],
             'address_postal_code' => ['nullable', 'string', 'max:20'],
 
             // Professional Details
@@ -171,6 +173,8 @@ class StoreRegistrationRequest extends FormRequest
             'selected_event_codes.*.exists' => __('validation.custom.registration.selected_event_code_invalid'),
             'participation_format.required' => __('validation.custom.registration.participation_format_required'),
             'other_dietary_restrictions.required_if' => __('validation.custom.registration.other_dietary_restrictions_required_if'),
+            'other_document_country_origin.required_if' => __('validation.custom.registration.other_document_country_origin_required_if'),
+            'other_address_country.required_if' => __('validation.custom.registration.other_address_country_required_if'),
             'confirm_information_accuracy.accepted' => __('validation.custom.registration.confirm_information_accuracy_accepted'),
             'confirm_data_processing_consent.accepted' => __('validation.custom.registration.confirm_data_processing_consent_accepted'),
             'departure_date.after_or_equal' => __('validation.custom.registration.departure_date_after_or_equal_arrival_date'),
@@ -197,6 +201,7 @@ class StoreRegistrationRequest extends FormRequest
             'date_of_birth' => __('Date of Birth'),
             'gender' => __('Gender'),
             'document_country_origin' => __('Document Country of Origin'),
+            'other_document_country_origin' => __('Other Document Country of Origin'),
             'cpf' => __('CPF'),
             'rg_number' => __('RG Number'),
             'passport_number' => __('Passport Number'),
@@ -207,6 +212,7 @@ class StoreRegistrationRequest extends FormRequest
             'address_city' => __('City'),
             'address_state_province' => __('State/Province'),
             'address_country' => __('Country of Residence'),
+            'other_address_country' => __('Other Country of Residence'),
             'address_postal_code' => __('Postal Code'),
             'affiliation' => __('Affiliation'),
             'position' => __('Position'),
