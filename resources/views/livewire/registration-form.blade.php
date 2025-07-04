@@ -17,7 +17,7 @@ new #[Layout('layouts.app')] class extends Component {
     public string $other_gender = '';
 
     // Identification Details
-    public string $document_country_origin = 'BR';
+    public string $document_country_origin = 'Brazil';
     public string $other_document_country_origin = '';
     public string $cpf = '';
     public string $rg_number = '';
@@ -30,7 +30,7 @@ new #[Layout('layouts.app')] class extends Component {
     public string $address_street = '';
     public string $address_city = '';
     public string $address_state_province = '';
-    public string $address_country = 'BR';
+    public string $address_country = 'Brazil';
     public string $other_address_country = '';
     public string $address_postal_code = '';
 
@@ -83,20 +83,17 @@ new #[Layout('layouts.app')] class extends Component {
         // Load available events
         $this->available_events = Event::all()->pluck('name', 'code')->toArray();
         
-        // Load countries (simplified list for now)
-        $this->countries = [
-            'AR' => __('Argentina'),
-            'BR' => __('Brazil'),
-            'CA' => __('Canada'),
-            'CL' => __('Chile'),
-            'CO' => __('Colombia'),
-            'US' => __('United States'),
-            'MX' => __('Mexico'),
-            'PE' => __('Peru'),
-            'UY' => __('Uruguay'),
-            'VE' => __('Venezuela'),
-            'OTHER' => __('Other'),
-        ];
+        // Load countries from config with bilingual display
+        $countries = config('countries.countries');
+        $this->countries = [];
+        
+        foreach ($countries as $englishName => $displayName) {
+            if ($englishName === 'Other') {
+                $this->countries['OTHER'] = __('countries.' . $englishName) . ' / ' . $englishName;
+            } else {
+                $this->countries[$englishName] = __('countries.' . $englishName) . ' / ' . $englishName;
+            }
+        }
 
         // Pre-fill email if user is logged in
         if (auth()->user()) {
@@ -178,10 +175,10 @@ new #[Layout('layouts.app')] class extends Component {
             'gender' => 'required|string|in:male,female,other,prefer_not_to_say',
             'other_gender' => 'required_if:gender,other|string|max:255',
             'document_country_origin' => 'required|string',
-            'cpf' => 'required_if:document_country_origin,BR|nullable|string|max:20',
-            'rg_number' => 'required_if:document_country_origin,BR|nullable|string|max:20',
-            'passport_number' => 'required_unless:document_country_origin,BR|nullable|string|max:50',
-            'passport_expiry_date' => 'required_unless:document_country_origin,BR|nullable|date|after:today',
+            'cpf' => 'required_if:document_country_origin,Brazil|nullable|string|max:20',
+            'rg_number' => 'required_if:document_country_origin,Brazil|nullable|string|max:20',
+            'passport_number' => 'required_unless:document_country_origin,Brazil|nullable|string|max:50',
+            'passport_expiry_date' => 'required_unless:document_country_origin,Brazil|nullable|date|after:today',
             'email' => 'required|email|max:255',
             'phone_number' => 'required|string|max:20',
             'address_street' => 'required|string|max:255',
@@ -204,7 +201,7 @@ new #[Layout('layouts.app')] class extends Component {
             'emergency_contact_name' => 'required|string|max:255',
             'emergency_contact_relationship' => 'required|string|max:255',
             'emergency_contact_phone' => 'required|string|max:20',
-            'requires_visa_letter' => 'required_unless:document_country_origin,BR|nullable|string|in:yes,no',
+            'requires_visa_letter' => 'required_unless:document_country_origin,Brazil|nullable|string|in:yes,no',
             'confirm_information' => 'required|accepted',
             'consent_data_processing' => 'required|accepted',
         ]);
@@ -225,10 +222,10 @@ new #[Layout('layouts.app')] class extends Component {
                 'other_gender' => 'required_if:gender,other|string|max:255',
                 'document_country_origin' => 'required|string',
                 'other_document_country_origin' => 'required_if:document_country_origin,OTHER|string|max:255',
-                'cpf' => 'required_if:document_country_origin,BR|nullable|string|max:20',
-                'rg_number' => 'required_if:document_country_origin,BR|nullable|string|max:20',
-                'passport_number' => 'required_unless:document_country_origin,BR|nullable|string|max:50',
-                'passport_expiry_date' => 'required_unless:document_country_origin,BR|nullable|date|after:today',
+                'cpf' => 'required_if:document_country_origin,Brazil|nullable|string|max:20',
+                'rg_number' => 'required_if:document_country_origin,Brazil|nullable|string|max:20',
+                'passport_number' => 'required_unless:document_country_origin,Brazil|nullable|string|max:50',
+                'passport_expiry_date' => 'required_unless:document_country_origin,Brazil|nullable|date|after:today',
                 'email' => 'required|email|max:255',
                 'phone_number' => 'required|string|max:20',
                 'address_street' => 'required|string|max:255',
@@ -251,7 +248,7 @@ new #[Layout('layouts.app')] class extends Component {
                 'emergency_contact_name' => 'required|string|max:255',
                 'emergency_contact_relationship' => 'required|string|max:255',
                 'emergency_contact_phone' => 'required|string|max:20',
-                'requires_visa_letter' => 'required_unless:document_country_origin,BR|nullable|string|in:yes,no',
+                'requires_visa_letter' => 'required_unless:document_country_origin,Brazil|nullable|string|in:yes,no',
                 'confirm_information' => 'required|accepted',
                 'consent_data_processing' => 'required|accepted',
             ]);
@@ -323,8 +320,8 @@ new #[Layout('layouts.app')] class extends Component {
         ]);
         
         // Re-initialize defaults
-        $this->document_country_origin = 'BR';
-        $this->address_country = 'BR';
+        $this->document_country_origin = 'Brazil';
+        $this->address_country = 'Brazil';
         if (auth()->user()) {
             $this->email = auth()->user()->email;
         }
@@ -556,7 +553,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 @endif
                             </div>
 
-                            @if($document_country_origin === 'BR')
+                            @if($document_country_origin === 'Brazil')
                                 <div>
                                     <x-input-label for="cpf" :value="__('CPF')" />
                                     <x-text-input wire:model="cpf" id="cpf" class="block mt-1 w-full" type="text" placeholder="000.000.000-00" required dusk="cpf-input" />
@@ -853,7 +850,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
 
                     {{-- Visa Support --}}
-                    @if($document_country_origin !== 'BR')
+                    @if($document_country_origin !== 'Brazil')
                         <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
                             <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('8. Visa Support') }}</h2>
                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ __('(For international participants only)') }}</p>

@@ -59,7 +59,7 @@ class CountryOtherFieldTest extends DuskTestCase
                 ->select('#document_country_origin', 'OTHER')
                 ->waitFor('[dusk="other-document-country-input"]')
                 ->assertVisible('[dusk="other-document-country-input"]')
-                ->select('#document_country_origin', 'BR')
+                ->select('#document_country_origin', 'Brazil')
                 ->waitUntilMissing('[dusk="other-document-country-input"]')
                 ->assertDontSee('[dusk="other-document-country-input"]');
         });
@@ -105,7 +105,7 @@ class CountryOtherFieldTest extends DuskTestCase
                 ->select('[dusk="country-select"]', 'OTHER')
                 ->waitFor('[dusk="other-address-country-input"]')
                 ->assertVisible('[dusk="other-address-country-input"]')
-                ->select('[dusk="country-select"]', 'US')
+                ->select('[dusk="country-select"]', 'United States')
                 ->waitUntilMissing('[dusk="other-address-country-input"]')
                 ->assertDontSee('[dusk="other-address-country-input"]');
         });

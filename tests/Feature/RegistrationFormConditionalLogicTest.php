@@ -27,7 +27,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
 
         $component = Livewire::test('registration-form')
-            ->set('document_country_origin', 'BR');
+            ->set('document_country_origin', 'Brazil');
 
         $component->assertSee(__('CPF'))
             ->assertSee(__('RG (ID) Number'))
@@ -134,7 +134,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
 
         $component = Livewire::test('registration-form')
-            ->set('document_country_origin', 'BR');
+            ->set('document_country_origin', 'Brazil');
 
         $component->assertDontSee(__('8. Visa Support'))
             ->assertDontSee(__('Do you require an invitation letter to get a Brazilian visa?'));
@@ -147,7 +147,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
 
         // Start with Brazil
         $component = Livewire::test('registration-form')
-            ->set('document_country_origin', 'BR');
+            ->set('document_country_origin', 'Brazil');
 
         $component->assertSee(__('CPF'))
             ->assertSee(__('RG (ID) Number'))
@@ -168,7 +168,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
 
         $component = Livewire::test('registration-form')
-            ->set('document_country_origin', 'BR')
+            ->set('document_country_origin', 'Brazil')
             ->set('full_name', 'Test User')
             ->set('nationality', 'Brazilian')
             ->set('date_of_birth', '1990-01-01')
@@ -253,7 +253,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
 
         $component = Livewire::test('registration-form')
-            ->set('document_country_origin', 'BR');
+            ->set('document_country_origin', 'Brazil');
 
         $component->assertDontSee(__('Please specify the country'));
     }
