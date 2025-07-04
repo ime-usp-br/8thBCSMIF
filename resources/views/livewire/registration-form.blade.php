@@ -83,15 +83,15 @@ new #[Layout('layouts.app')] class extends Component {
         // Load available events
         $this->available_events = Event::all()->pluck('name', 'code')->toArray();
         
-        // Load countries from config with bilingual display
+        // Load countries from config using Laravel localization
         $countries = config('countries.countries');
         $this->countries = [];
         
         foreach ($countries as $englishName => $displayName) {
             if ($englishName === 'Other') {
-                $this->countries['OTHER'] = __('countries.' . $englishName) . ' / ' . $englishName;
+                $this->countries['OTHER'] = __('countries.' . $englishName);
             } else {
-                $this->countries[$englishName] = __('countries.' . $englishName) . ' / ' . $englishName;
+                $this->countries[$englishName] = __('countries.' . $englishName);
             }
         }
 
