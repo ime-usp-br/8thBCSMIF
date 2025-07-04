@@ -1238,4 +1238,65 @@ class RegistrationFormTest extends DuskTestCase
             $browser->assertPathIs('/register-event');
         });
     }
+
+    /**
+     * Test that departure date can be equal to arrival date (same day)
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('registration-form')]
+    public function registration_form_accepts_same_day_departure_date(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/register-event')
+                ->waitForText(__('Registration Form'));
+
+            // Fill form with minimal valid data
+            $browser->type('@full-name-input', 'Test User')
+                ->type('@nationality-input', 'Brazilian')
+                ->type('@date-of-birth-input', '01/31/1990')
+                ->click('@gender-male')
+                ->select('@document-country-origin-select', 'BR')
+                ->waitFor('@cpf-input')
+                ->waitFor('@rg-number-input')
+                ->type('@cpf-input', '123.456.789-00')
+                ->type('@rg-number-input', '12.345.678-9')
+                ->type('@phone-number-input', '+55 11 987654321')
+                ->type('@street-address-input', 'Test Street, 123')
+                ->type('@city-input', 'São Paulo')
+                ->type('@state-province-input', 'SP')
+                ->select('@country-select', 'BR')
+                ->type('@postal-code-input', '01000-000')
+                ->type('@affiliation-input', 'Universidade de São Paulo')
+                ->click('@position-undergraduate')
+                ->click('@is-abe-member-no');
+
+            // Set arrival and departure dates to the same day
+            $browser->type('@arrival-date-input', '09/28/2025')
+                ->type('@departure-date-input', '09/28/2025')
+                ->check('@event-BCSMIF2025')
+                ->click('@participation-format-in-person')
+                ->click('@dietary-restrictions-none')
+                ->pause(300) // Allow Livewire to process
+                ->type('@emergency-contact-name-input', 'Parent Name')
+                ->type('@emergency-contact-relationship-input', 'Parent')
+                ->type('@emergency-contact-phone-input', '+55 11 987654321')
+                ->check('@confirm-information-checkbox')
+                ->check('@consent-data-processing-checkbox');
+
+            // Submit form - should succeed with same-day departure
+            $browser->click('@submit-registration-button')
+                ->pause(3000) // Give time for Livewire validation and form submission
+                ->waitForLocation('/my-registration', 30);
+
+            // Verify successful redirection (no validation errors)
+            $browser->assertPathIs('/my-registration');
+        });
+    }
 }

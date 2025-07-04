@@ -176,7 +176,7 @@ new #[Layout('layouts.app')] class extends Component {
             'date_of_birth' => 'required|date|before:today',
             'gender' => 'required|string|in:male,female,other,prefer_not_to_say',
             'other_gender' => 'required_if:gender,other|string|max:255',
-            'document_country_origin' => 'required|string|max:2',
+            'document_country_origin' => 'required|string',
             'cpf' => 'required_if:document_country_origin,BR|nullable|string|max:20',
             'rg_number' => 'required_if:document_country_origin,BR|nullable|string|max:20',
             'passport_number' => 'required_unless:document_country_origin,BR|nullable|string|max:50',
@@ -193,7 +193,7 @@ new #[Layout('layouts.app')] class extends Component {
             'other_position' => 'required_if:position,other|string|max:255',
             'is_abe_member' => 'required|string|in:yes,no',
             'arrival_date' => 'required|date|after_or_equal:today',
-            'departure_date' => 'required|date|after:arrival_date',
+            'departure_date' => 'required|date|after_or_equal:arrival_date',
             'selected_event_codes' => 'required|array|min:1',
             'selected_event_codes.*' => 'exists:events,code',
             'participation_format' => 'required|string|in:in-person,online',
@@ -221,7 +221,7 @@ new #[Layout('layouts.app')] class extends Component {
                 'date_of_birth' => 'required|date|before:today',
                 'gender' => 'required|string|in:male,female,other,prefer_not_to_say',
                 'other_gender' => 'required_if:gender,other|string|max:255',
-                'document_country_origin' => 'required|string|max:2',
+                'document_country_origin' => 'required|string',
                 'cpf' => 'required_if:document_country_origin,BR|nullable|string|max:20',
                 'rg_number' => 'required_if:document_country_origin,BR|nullable|string|max:20',
                 'passport_number' => 'required_unless:document_country_origin,BR|nullable|string|max:50',
@@ -238,7 +238,7 @@ new #[Layout('layouts.app')] class extends Component {
                 'other_position' => 'required_if:position,other|string|max:255',
                 'is_abe_member' => 'required|string|in:yes,no',
                 'arrival_date' => 'required|date|after_or_equal:today',
-                'departure_date' => 'required|date|after:arrival_date',
+                'departure_date' => 'required|date|after_or_equal:arrival_date',
                 'selected_event_codes' => 'required|array|min:1',
                 'selected_event_codes.*' => 'exists:events,code',
                 'participation_format' => 'required|string|in:in-person,online',
@@ -272,6 +272,15 @@ new #[Layout('layouts.app')] class extends Component {
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Livewire validation errors are automatically handled
+            // Scroll to first error after a small delay to ensure DOM is updated
+            $this->js('
+                setTimeout(() => {
+                    const firstError = document.querySelector("[class*=\"text-red-\"], .text-red-600, .text-red-500");
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
+                }, 100);
+            ');
             // Just re-throw to let Livewire handle the display
             throw $e;
         } catch (\Exception $e) {
@@ -281,6 +290,16 @@ new #[Layout('layouts.app')] class extends Component {
             } else {
                 $this->showGeneralError(__('An unexpected error occurred. Please try again or contact support.'));
             }
+            
+            // Scroll to general error message
+            $this->js('
+                setTimeout(() => {
+                    const generalError = document.querySelector("[dusk=\"general-error-message\"]");
+                    if (generalError) {
+                        generalError.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
+                }, 100);
+            ');
         }
     }
 
