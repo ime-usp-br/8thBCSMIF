@@ -224,6 +224,7 @@ new #[Layout('layouts.app')] class extends Component {
                 'gender' => 'required|string|in:male,female,other,prefer_not_to_say',
                 'other_gender' => 'required_if:gender,other|string|max:255',
                 'document_country_origin' => 'required|string',
+                'other_document_country_origin' => 'required_if:document_country_origin,OTHER|string|max:255',
                 'cpf' => 'required_if:document_country_origin,BR|nullable|string|max:20',
                 'rg_number' => 'required_if:document_country_origin,BR|nullable|string|max:20',
                 'passport_number' => 'required_unless:document_country_origin,BR|nullable|string|max:50',
