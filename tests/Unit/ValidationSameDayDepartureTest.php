@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
 use Illuminate\Support\Facades\Validator;
+use Tests\TestCase;
 
 class ValidationSameDayDepartureTest extends TestCase
 {

@@ -31,6 +31,7 @@ new #[Layout('layouts.app')] class extends Component {
     public string $address_city = '';
     public string $address_state_province = '';
     public string $address_country = 'BR';
+    public string $other_address_country = '';
     public string $address_postal_code = '';
 
     // Professional Details
@@ -308,9 +309,9 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $this->reset([
             'full_name', 'nationality', 'date_of_birth', 'gender', 'other_gender',
-            'document_country_origin', 'cpf', 'rg_number', 'passport_number', 'passport_expiry_date',
+            'document_country_origin', 'other_document_country_origin', 'cpf', 'rg_number', 'passport_number', 'passport_expiry_date',
             'email', 'phone_number', 'address_street', 'address_city', 'address_state_province', 
-            'address_country', 'address_postal_code', 'affiliation', 'position', 'other_position',
+            'address_country', 'other_address_country', 'address_postal_code', 'affiliation', 'position', 'other_position',
             'is_abe_member', 'arrival_date', 'departure_date', 'selected_event_codes', 
             'participation_format', 'needs_transport_from_gru', 'needs_transport_from_usp',
             'dietary_restrictions', 'other_dietary_restrictions', 'emergency_contact_name',
@@ -346,7 +347,7 @@ new #[Layout('layouts.app')] class extends Component {
                     nationality: "' . addslashes($this->nationality) . '",
                     date_of_birth: "' . addslashes($this->date_of_birth) . '",
                     gender: "' . addslashes($this->gender === 'other' ? $this->other_gender : $this->gender) . '",
-                    document_country_origin: "' . addslashes($this->document_country_origin) . '",
+                    document_country_origin: "' . addslashes($this->document_country_origin === 'OTHER' ? $this->other_document_country_origin : $this->document_country_origin) . '",
                     cpf: "' . addslashes($this->cpf) . '",
                     rg_number: "' . addslashes($this->rg_number) . '",
                     passport_number: "' . addslashes($this->passport_number) . '",
@@ -356,7 +357,7 @@ new #[Layout('layouts.app')] class extends Component {
                     address_street: "' . addslashes($this->address_street) . '",
                     address_city: "' . addslashes($this->address_city) . '",
                     address_state_province: "' . addslashes($this->address_state_province) . '",
-                    address_country: "' . addslashes($this->address_country) . '",
+                    address_country: "' . addslashes($this->address_country === 'OTHER' ? $this->other_address_country : $this->address_country) . '",
                     address_postal_code: "' . addslashes($this->address_postal_code) . '",
                     affiliation: "' . addslashes($this->affiliation) . '",
                     position: "' . addslashes($this->position === 'other' ? $this->other_position : $this->position) . '",
@@ -617,12 +618,18 @@ new #[Layout('layouts.app')] class extends Component {
 
                             <div>
                                 <x-input-label for="address_country" :value="__('Country')" />
-                                <select wire:model="address_country" id="address_country" class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-usp-blue-pri dark:focus:border-usp-blue-sec focus:ring-usp-blue-pri dark:focus:ring-usp-blue-sec rounded-md shadow-sm block mt-1 w-full" required dusk="country-select">
+                                <select wire:model.live="address_country" id="address_country" class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-usp-blue-pri dark:focus:border-usp-blue-sec focus:ring-usp-blue-pri dark:focus:ring-usp-blue-sec rounded-md shadow-sm block mt-1 w-full" required dusk="country-select">
                                     @foreach($countries as $code => $name)
                                         <option value="{{ $code }}">{{ $name }}</option>
                                     @endforeach
                                 </select>
                                 <x-input-error :messages="$errors->get('address_country')" class="mt-2" />
+                                @if($address_country === 'OTHER')
+                                    <div class="mt-2">
+                                        <x-text-input wire:model="other_address_country" placeholder="{{ __('Please specify the country') }}" class="block w-full" type="text" required dusk="other-address-country-input" />
+                                        <x-input-error :messages="$errors->get('other_address_country')" class="mt-2" />
+                                    </div>
+                                @endif
                             </div>
 
                             <div>

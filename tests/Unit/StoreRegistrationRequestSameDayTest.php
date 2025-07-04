@@ -21,7 +21,7 @@ class StoreRegistrationRequestSameDayTest extends TestCase
             'departure_date' => '2025-09-28', // Same day as arrival
         ];
 
-        $request = new StoreRegistrationRequest();
+        $request = new StoreRegistrationRequest;
         $rules = $request->rules();
 
         // Extract only the rules we need for this test
@@ -46,7 +46,7 @@ class StoreRegistrationRequestSameDayTest extends TestCase
             'departure_date' => '2025-09-27', // Before arrival
         ];
 
-        $request = new StoreRegistrationRequest();
+        $request = new StoreRegistrationRequest;
         $rules = $request->rules();
 
         // Extract only the rules we need for this test
