@@ -18,6 +18,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     // Identification Details
     public string $document_country_origin = 'BR';
+    public string $other_document_country_origin = '';
     public string $cpf = '';
     public string $rg_number = '';
     public string $passport_number = '';
@@ -524,6 +525,12 @@ new #[Layout('layouts.app')] class extends Component {
                                     @endforeach
                                 </select>
                                 <x-input-error :messages="$errors->get('document_country_origin')" class="mt-2" />
+                                @if($document_country_origin === 'OTHER')
+                                    <div class="mt-2">
+                                        <x-text-input wire:model="other_document_country_origin" placeholder="{{ __('Please specify the country') }}" class="block w-full" type="text" required dusk="other-document-country-input" />
+                                        <x-input-error :messages="$errors->get('other_document_country_origin')" class="mt-2" />
+                                    </div>
+                                @endif
                             </div>
 
                             @if($document_country_origin === 'BR')
