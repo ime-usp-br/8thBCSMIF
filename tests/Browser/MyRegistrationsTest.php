@@ -692,6 +692,88 @@ class MyRegistrationsTest extends DuskTestCase
     }
 
     /**
+     * AC9: Test Dusk validates the UI behavior for registration modification blocking
+     * when payment has pending_br_proof_approval status: tooltip display and click prevention.
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('my-registrations')]
+    #[Group('payment-blocking')]
+    public function add_events_button_blocking_behavior_when_payment_pending_approval(): void
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create an event for the registration
+        $event = Event::where('code', 'BCSMIF2025')->firstOrFail();
+
+        // Create a registration with pending_br_proof_approval payment
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'payment_status' => 'pending_br_proof_approval',
+            'document_country_origin' => 'Brasil',
+        ]);
+
+        // Associate the event with the registration
+        $registration->events()->attach($event->code, ['price_at_registration' => 500.00]);
+
+        // Create a payment with pending_br_proof_approval status to trigger blocking
+        $registration->payments()->create([
+            'amount' => 500.00,
+            'status' => 'pending_br_proof_approval',
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user, $registration) {
+            $browser->loginAs($user)
+                ->visit('/my-registration')
+                ->waitForText(__('My Registration'))
+                ->waitForText(__('Registration').' #'.$registration->id)
+
+                // AC2 & AC3: Verify tooltip icon is displayed next to "Add Events" button
+                ->assertSeeIn('a[href="#"]', __('Add Events'))
+                ->assertPresent('div.relative svg.text-blue-500.cursor-help')
+
+                // AC3: Verify tooltip text content by hovering over the info icon
+                ->mouseover('div.relative svg.text-blue-500.cursor-help')
+                ->waitForText(__('Your registration is being analyzed. To add new events, please wait for payment confirmation or contact the organization.'))
+                ->assertSee(__('Your registration is being analyzed. To add new events, please wait for payment confirmation or contact the organization.'))
+
+                // AC4: Test click blocking - click on "Add Events" button should be prevented
+                ->click('a[href="#"]')
+                ->pause(1000) // Wait for Alpine.js to process the click
+
+                // Verify we stayed on the same page (navigation was prevented)
+                ->assertPathIs('/my-registration')
+
+                // AC4: Verify alert message appears when clicking the blocked button
+                ->waitForText(__('Your registration is being analyzed. To add new events, please wait for payment confirmation or contact the organization.'))
+                ->assertPresent('div[x-data*="showBlockAlert"]')
+                ->assertSee(__('Your registration is being analyzed. To add new events, please wait for payment confirmation or contact the organization.'))
+
+                // Test that close button works on the alert
+                ->press(__('Close'))
+                ->pause(500);
+
+            // AC6: Test normal behavior when payment is approved
+            // Update payment status to approved to test unblocked state
+            $registration->payments()->update(['status' => 'paid_br']);
+            $registration->update(['payment_status' => 'approved']);
+
+            $browser->refresh()
+                ->waitForText(__('My Registration'))
+
+                // Verify tooltip icon is NOT displayed when unblocked
+                ->assertMissing('div.relative svg.text-blue-500.cursor-help')
+
+                // Verify "Add Events" button works normally (navigates to modification page)
+                ->clickLink(__('Add Events'))
+                ->waitForLocation('/registrations/modify')
+                ->assertPathIs('/registrations/modify');
+        });
+    }
+
+    /**
      * AC5: Test Dusk simulates clicking the "View Proof" button and verifies
      * that the user can successfully download their previously uploaded payment proof.
      */
