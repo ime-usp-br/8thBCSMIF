@@ -29,6 +29,11 @@ class RegistrationPolicy
      */
     public function modify(User $user, Registration $registration): bool
     {
+        // AC7: Administrators can modify registrations regardless of block status
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
         // User must own the registration
         if ($user->id !== $registration->user_id) {
             return false;
