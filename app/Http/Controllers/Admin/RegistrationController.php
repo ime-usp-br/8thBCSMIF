@@ -73,6 +73,19 @@ class RegistrationController extends Controller
             'notes' => $updatedNotes,
         ]);
 
+        // AC6: Update individual Payment records to automatically remove blocks
+        if ($newStatus === 'paid_br') {
+            // When payment is approved, update all pending_br_proof_approval payments to paid_br
+            $registration->payments()
+                ->where('status', 'pending_br_proof_approval')
+                ->update(['status' => 'paid_br']);
+        } elseif ($newStatus === 'pending_payment') {
+            // When payment is rejected, update all pending_br_proof_approval payments to pending_payment
+            $registration->payments()
+                ->where('status', 'pending_br_proof_approval')
+                ->update(['status' => 'pending_payment']);
+        }
+
         // Send email notification if requested, especially for confirmations
         $sendNotification = isset($validated['send_notification']) && $validated['send_notification'] === '1';
         // @phpstan-ignore-next-line
