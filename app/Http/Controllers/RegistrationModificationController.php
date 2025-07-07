@@ -15,7 +15,7 @@ class RegistrationModificationController extends Controller
 {
     public function store(Registration $registration, Request $request): RedirectResponse
     {
-        Gate::authorize('update', $registration);
+        Gate::authorize('modify', $registration);
 
         $validatedData = $request->validate([
             'selected_event_codes' => 'required|array|min:1',
