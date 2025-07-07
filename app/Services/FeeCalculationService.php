@@ -68,7 +68,7 @@ class FeeCalculationService
         $totalPaid = 0.0;
         if ($registration) {
             $totalPaid = (float) $registration->payments()
-                ->where('status', 'paid')
+                ->whereIn('status', ['paid', 'paid_br', 'paid_int'])
                 ->sum('amount');
         }
 
