@@ -48,15 +48,72 @@ new #[Layout('layouts.app')] class extends Component {
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
                     <h2 class="text-2xl font-bold mb-4 sm:mb-0">{{ __('My Registration') }}</h2>
                     @if($registration)
-                        <a href="{{ route('registrations.modify') }}" 
-                           class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                           wire:navigate>
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                            </svg>
-                            {{ __('Add Events') }}
-                        </a>
+                        @php
+                            $hasPendingApproval = $registration->payments()->where('status', 'pending_br_proof_approval')->exists();
+                        @endphp
+                        <div class="flex items-center space-x-2">
+                            <a href="{{ route('registrations.modify') }}" 
+                               class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 {{ $hasPendingApproval ? 'opacity-75 cursor-not-allowed' : '' }}"
+                               wire:navigate
+                               @if($hasPendingApproval)
+                                   @click.prevent="$dispatch('show-block-message')"
+                               @endif>
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                {{ __('Add Events') }}
+                            </a>
+                            @if($hasPendingApproval)
+                                <div class="relative" x-data="{ showTooltip: false }">
+                                    <svg class="w-5 h-5 text-blue-500 cursor-help" 
+                                         fill="currentColor" 
+                                         viewBox="0 0 20 20"
+                                         @mouseenter="showTooltip = true" 
+                                         @mouseleave="showTooltip = false">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                    </svg>
+                                    <div x-show="showTooltip" 
+                                         x-transition:enter="transition ease-out duration-200"
+                                         x-transition:enter-start="opacity-0 scale-95"
+                                         x-transition:enter-end="opacity-100 scale-100"
+                                         x-transition:leave="transition ease-in duration-150"
+                                         x-transition:leave-start="opacity-100 scale-100"
+                                         x-transition:leave-end="opacity-0 scale-95"
+                                         class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg whitespace-nowrap z-10"
+                                         style="display: none;">
+                                        {{ __('Your registration is being analyzed. To add new events, please wait for payment confirmation or contact the organization.') }}
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
                     @endif
+                </div>
+                
+                {{-- Block message alert --}}
+                <div x-data="{ showBlockAlert: false }" 
+                     @show-block-message.window="showBlockAlert = true"
+                     x-show="showBlockAlert"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     class="mb-6 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg"
+                     style="display: none;">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-blue-600 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                        <div class="flex-1">
+                            <p>{{ __('Your registration is being analyzed. To add new events, please wait for payment confirmation or contact the organization.') }}</p>
+                            <button @click="showBlockAlert = false" 
+                                    class="mt-2 text-blue-600 hover:text-blue-800 underline text-sm">
+                                {{ __('Close') }}
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 
                 {{-- Error messages only (success messages handled by global layout) --}}
@@ -130,6 +187,8 @@ new #[Layout('layouts.app')] class extends Component {
                                         <div class="w-8 h-8 rounded-full flex items-center justify-center
                                             @if($payment->status === 'pending')
                                                 bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-400
+                                            @elseif($payment->status === 'pending_br_proof_approval')
+                                                bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400
                                             @elseif($payment->status === 'approved')
                                                 bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400
                                             @elseif($payment->status === 'rejected')
@@ -141,6 +200,10 @@ new #[Layout('layouts.app')] class extends Component {
                                             @if($payment->status === 'pending')
                                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                                                </svg>
+                                            @elseif($payment->status === 'pending_br_proof_approval')
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clip-rule="evenodd" />
                                                 </svg>
                                             @elseif($payment->status === 'approved')
                                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -171,6 +234,8 @@ new #[Layout('layouts.app')] class extends Component {
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                                     @if($payment->status === 'pending')
                                                         bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
+                                                    @elseif($payment->status === 'pending_br_proof_approval')
+                                                        bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
                                                     @elseif($payment->status === 'approved')
                                                         bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
                                                     @elseif($payment->status === 'rejected')
@@ -179,7 +244,7 @@ new #[Layout('layouts.app')] class extends Component {
                                                         bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300
                                                     @endif
                                                 ">
-                                                    {{ __(ucfirst($payment->status)) }}
+                                                    {{ __(ucfirst(str_replace(['_', '-'], ' ', $payment->status))) }}
                                                 </span>
                                             </div>
                                         </div>
@@ -196,7 +261,7 @@ new #[Layout('layouts.app')] class extends Component {
                                         @endif
                                         
                                         {{-- Payment Proof Upload Form - Conditionally displayed for pending payments without proof --}}
-                                        @if($payment->status === 'pending' && $registration->document_country_origin === 'Brazil' && !$payment->payment_proof_path)
+                                        @if(in_array($payment->status, ['pending']) && $registration->document_country_origin === 'Brazil' && !$payment->payment_proof_path)
                                             <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
                                                 <h5 class="font-medium text-yellow-800 dark:text-yellow-300 mb-3">
                                                     {{ __('Payment Proof Upload') }}

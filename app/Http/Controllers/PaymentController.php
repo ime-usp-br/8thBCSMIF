@@ -60,10 +60,11 @@ class PaymentController extends Controller
 
             $path = $uploadedFile->storeAs("proofs/{$payment->registration->id}", $filename, 'private');
 
-            // Update payment with proof details
+            // Update payment with proof details and status
             $payment->update([
                 'payment_proof_path' => $path,
                 'payment_date' => Carbon::now(),
+                'status' => 'pending_br_proof_approval',
                 'notes' => __('Payment proof uploaded by user'),
             ]);
 
@@ -78,7 +79,7 @@ class PaymentController extends Controller
             // Check if all payments for this registration have proof uploaded
             $pendingPayments = $payment->registration->payments()->where('status', 'pending')->count();
             if ($pendingPayments === 0) {
-                // Update registration status if all payments have been submitted
+                // Update registration status if all payments have been submitted for approval
                 $payment->registration->update([
                     'payment_uploaded_at' => Carbon::now(),
                     'payment_status' => 'pending_br_proof_approval',
