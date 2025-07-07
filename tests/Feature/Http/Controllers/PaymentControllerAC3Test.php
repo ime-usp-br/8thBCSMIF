@@ -31,7 +31,7 @@ class PaymentControllerAC3Test extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
         ]);
 
         // Create multiple payments for the same registration
@@ -138,7 +138,7 @@ class PaymentControllerAC3Test extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
         ]);
 
         // Payment with proof already uploaded
@@ -202,7 +202,7 @@ class PaymentControllerAC3Test extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
         ]);
 
         $payment = Payment::factory()->pending()->create([

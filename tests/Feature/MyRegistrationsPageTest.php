@@ -353,7 +353,7 @@ class MyRegistrationsPageTest extends TestCase
             'full_name' => 'John Doe',
             'email' => 'john@example.com',
             'nationality' => 'Brazilian',
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
             'payment_status' => 'pending_payment',
         ]);
 
@@ -450,7 +450,7 @@ class MyRegistrationsPageTest extends TestCase
             'full_name' => 'Maria Silva',
             'email' => 'maria.silva@university.br',
             'nationality' => 'Brazilian',
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
             'payment_status' => 'pending_payment',
             'registration_category_snapshot' => 'undergrad_student',
             'participation_format' => 'in-person',
@@ -662,7 +662,7 @@ class MyRegistrationsPageTest extends TestCase
         // Create registration for Brazilian user
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
         ]);
 
         // Attach event to registration
@@ -772,7 +772,7 @@ class MyRegistrationsPageTest extends TestCase
         // Create registration for Brazilian user
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
         ]);
 
         // Attach event to registration
@@ -815,7 +815,7 @@ class MyRegistrationsPageTest extends TestCase
         // Create registration for Brazilian user
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
         ]);
 
         // Attach event to registration
@@ -875,7 +875,7 @@ class MyRegistrationsPageTest extends TestCase
         // Create registration for Brazilian user
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
         ]);
 
         // Attach event to registration

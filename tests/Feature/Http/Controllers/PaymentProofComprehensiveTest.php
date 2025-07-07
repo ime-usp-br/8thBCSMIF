@@ -42,7 +42,7 @@ class PaymentProofComprehensiveTest extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
         ]);
 
         $payment = Payment::factory()->pending()->create([
@@ -293,7 +293,7 @@ class PaymentProofComprehensiveTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
         ]);
 
         // Payment without proof (should show upload form)
@@ -424,7 +424,7 @@ class PaymentProofComprehensiveTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
         $registration = Registration::factory()->create(['user_id' => $user->id]);
 
-        // Test multiple uploads to same payment (should replace, not accumulate)
+        // Test that re-uploading is prevented after initial upload
         $payment = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 100.00,
@@ -433,7 +433,7 @@ class PaymentProofComprehensiveTest extends TestCase
         $file1 = UploadedFile::fake()->create('first_upload.pdf', 100, 'application/pdf');
         $file2 = UploadedFile::fake()->create('second_upload.pdf', 100, 'application/pdf');
 
-        // First upload
+        // First upload should succeed
         $response = $this->actingAs($user)
             ->post(route('payments.upload-proof', $payment), [
                 'payment_proof' => $file1,
@@ -443,22 +443,23 @@ class PaymentProofComprehensiveTest extends TestCase
         $payment->refresh();
         $firstPath = $payment->payment_proof_path;
         $this->assertNotNull($firstPath);
+        $this->assertEquals('pending_br_proof_approval', $payment->status);
 
-        // Second upload (should replace first)
+        // Second upload should be rejected since payment is no longer pending
         $response = $this->actingAs($user)
             ->post(route('payments.upload-proof', $payment), [
                 'payment_proof' => $file2,
             ]);
         $response->assertRedirect();
+        $response->assertSessionHas('error');
 
         $payment->refresh();
-        $secondPath = $payment->payment_proof_path;
-        $this->assertNotNull($secondPath);
-        $this->assertNotEquals($firstPath, $secondPath);
+        $this->assertEquals($firstPath, $payment->payment_proof_path); // Path should remain unchanged
+        $this->assertEquals('pending_br_proof_approval', $payment->status); // Status should remain unchanged
 
         // Verify file path structure is consistent
-        $this->assertStringStartsWith("proofs/{$registration->id}/", $secondPath);
-        $this->assertStringContainsString("_payment_{$payment->id}_", $secondPath);
-        $this->assertTrue(Storage::disk('private')->exists($secondPath));
+        $this->assertStringStartsWith("proofs/{$registration->id}/", $firstPath);
+        $this->assertStringContainsString("_payment_{$payment->id}_", $firstPath);
+        $this->assertTrue(Storage::disk('private')->exists($firstPath));
     }
 }

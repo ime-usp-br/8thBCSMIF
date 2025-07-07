@@ -30,7 +30,7 @@ class PaymentControllerAC4Test extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
         ]);
 
         // Payment with proof uploaded
@@ -87,7 +87,7 @@ class PaymentControllerAC4Test extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
         ]);
 
         // Multiple payments with proofs uploaded
@@ -155,7 +155,7 @@ class PaymentControllerAC4Test extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
         ]);
 
         $payment = Payment::factory()->create([
@@ -207,7 +207,7 @@ class PaymentControllerAC4Test extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'document_country_origin' => 'Brasil',
+            'document_country_origin' => 'Brazil',
         ]);
 
         $payment = Payment::factory()->create([

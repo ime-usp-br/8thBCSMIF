@@ -53,7 +53,7 @@ class RegistrationControllerTest extends TestCase
             'nationality' => 'Brazilian',
             'date_of_birth' => '1990-01-01',
             'gender' => 'male',
-            'document_country_origin' => 'BR', // For CPF/RG
+            'document_country_origin' => 'Brazil', // For CPF/RG
             'cpf' => '123.456.789-00',
             'rg_number' => '1234567',
             'passport_number' => null,
@@ -1068,7 +1068,7 @@ class RegistrationControllerTest extends TestCase
 
         // Test Brasil document without CPF
         $invalidBrazilData = $this->getValidRegistrationData($user, [
-            'document_country_origin' => 'BR',
+            'document_country_origin' => 'Brazil',
             'cpf' => null,
             'rg_number' => null,
             'passport_number' => null,
@@ -1145,7 +1145,7 @@ class RegistrationControllerTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'full_name' => 'João Silva',
-            'document_country_origin' => 'BR',
+            'document_country_origin' => 'Brazil',
             'payment_status' => 'pending_payment',
         ]);
 
@@ -1270,7 +1270,7 @@ class RegistrationControllerTest extends TestCase
             'selected_event_codes' => [$event->code],
             'position' => 'graduate_student',
             'email' => 'brazilian@example.com',
-            'document_country_origin' => 'BR', // Brazilian user
+            'document_country_origin' => 'Brazil', // Brazilian user
         ]);
 
         $response = $this->post(route('event-registrations.store'), $validData);
