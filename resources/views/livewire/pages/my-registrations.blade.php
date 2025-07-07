@@ -196,7 +196,7 @@ new #[Layout('layouts.app')] class extends Component {
                                         @endif
                                         
                                         {{-- Payment Proof Upload Form - Conditionally displayed for pending payments without proof --}}
-                                        @if($payment->status === 'pending' && in_array($registration->document_country_origin, ['Brasil', 'BR']) && !$payment->payment_proof_path)
+                                        @if($payment->status === 'pending' && $registration->document_country_origin === 'Brazil' && !$payment->payment_proof_path)
                                             <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
                                                 <h5 class="font-medium text-yellow-800 dark:text-yellow-300 mb-3">
                                                     {{ __('Payment Proof Upload') }}

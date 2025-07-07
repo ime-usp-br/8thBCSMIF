@@ -26,7 +26,7 @@ class StoreRegistrationRequest extends FormRequest
      */
     public function rules(): array
     {
-        $isBrazilianDocument = $this->input('document_country_origin') === 'BR';
+        $isBrazilianDocument = $this->input('document_country_origin') === 'Brazil';
         $isUspUser = $this->input('sou_da_usp') === true || $this->input('sou_da_usp') === '1' || $this->input('sou_da_usp') === 'true';
 
         return [
