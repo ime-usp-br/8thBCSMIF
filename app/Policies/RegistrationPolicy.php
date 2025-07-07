@@ -22,4 +22,21 @@ class RegistrationPolicy
     {
         return $user->id === $registration->user_id;
     }
+
+    /**
+     * Determine whether the user can modify the registration (add events).
+     * Blocked when any payment has status 'pending_br_proof_approval'.
+     */
+    public function modify(User $user, Registration $registration): bool
+    {
+        // User must own the registration
+        if ($user->id !== $registration->user_id) {
+            return false;
+        }
+
+        // Check if any payment has status 'pending_br_proof_approval'
+        return ! $registration->payments()
+            ->where('status', 'pending_br_proof_approval')
+            ->exists();
+    }
 }

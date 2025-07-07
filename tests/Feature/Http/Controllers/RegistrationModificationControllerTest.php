@@ -91,6 +91,89 @@ class RegistrationModificationControllerTest extends TestCase
     }
 
     #[Test]
+    public function store_blocks_modification_when_payment_pending_br_proof_approval(): void
+    {
+        $user = User::factory()->create();
+        $registration = Registration::factory()->for($user)->create();
+        $event = Event::first(); // Use seeded event
+
+        // Create a payment with pending_br_proof_approval status
+        $registration->payments()->create([
+            'amount' => 100.00,
+            'status' => 'pending_br_proof_approval',
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->post(route('registration.modify', $registration), [
+            'selected_event_codes' => [$event->code],
+        ]);
+
+        // Should be forbidden (403) due to policy blocking modification
+        $response->assertStatus(403);
+    }
+
+    #[Test]
+    public function store_allows_modification_when_payment_has_other_status(): void
+    {
+        Mail::fake();
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $user = User::factory()->create();
+        $registration = Registration::factory()->for($user)->create([
+            'registration_category_snapshot' => 'grad_student',
+            'participation_format' => 'in-person',
+        ]);
+        $event = Event::first(); // Use seeded event
+
+        // Create a payment with different status (not pending_br_proof_approval)
+        $registration->payments()->create([
+            'amount' => 100.00,
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->post(route('registration.modify', $registration), [
+            'selected_event_codes' => [$event->code],
+        ]);
+
+        // Should succeed because payment is not pending_br_proof_approval
+        $response->assertRedirect(route('registrations.my'));
+        $response->assertSessionHas('success', __('Registration modified successfully'));
+    }
+
+    #[Test]
+    public function store_allows_modification_when_payment_approved(): void
+    {
+        Mail::fake();
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $user = User::factory()->create();
+        $registration = Registration::factory()->for($user)->create([
+            'registration_category_snapshot' => 'grad_student',
+            'participation_format' => 'in-person',
+        ]);
+        $event = Event::first(); // Use seeded event
+
+        // Create a payment with paid_br status (approved)
+        $registration->payments()->create([
+            'amount' => 100.00,
+            'status' => 'paid_br',
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->post(route('registration.modify', $registration), [
+            'selected_event_codes' => [$event->code],
+        ]);
+
+        // Should succeed because payment is approved
+        $response->assertRedirect(route('registrations.my'));
+        $response->assertSessionHas('success', __('Registration modified successfully'));
+    }
+
+    #[Test]
     public function store_processes_modification_successfully(): void
     {
         Mail::fake();
