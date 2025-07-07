@@ -17,7 +17,7 @@
 @if($registration->events->sum('pivot.price_at_registration') > 0)
 **{{ __('Payment Status') }}:** {{ ucfirst(str_replace('_', ' ', $registration->payment_status)) }}
 
-@if($registration->document_country_origin === 'BR' || $registration->document_country_origin === 'Brazil')
+@if($registration->document_country_origin === 'Brazil')
 ## {{ __('Payment Instructions') }}
 
 {{ __('Please make payment via bank transfer to the details below:') }}

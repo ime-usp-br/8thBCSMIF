@@ -23,7 +23,7 @@
 
 **{{ __('Total Amount Due') }}:** R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
 
-@if($registration->document_country_origin === 'BR' || $registration->document_country_origin === 'Brazil')
+@if($registration->document_country_origin === 'Brazil')
 ## {{ __('Payment Instructions') }}
 
 {{ __('Please make payment via bank transfer to the details below:') }}

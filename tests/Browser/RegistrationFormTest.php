@@ -143,7 +143,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->assertVisible('#passport_expiry_date');
 
             // AC2: Change back to Brazil and verify CPF/RG fields reappear
-            $browser->select('@document-country-origin-select', 'BR')
+            $browser->select('@document-country-origin-select', 'Brazil')
                 ->waitFor('@cpf-input')
                 ->waitFor('@rg-number-input')
                 ->waitUntilMissing('#passport_number')
@@ -172,7 +172,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->waitForText(__('Registration Form'));
 
             // AC2: Test that Brazilian fields are required when BR is selected
-            $browser->select('@document-country-origin-select', 'BR')
+            $browser->select('@document-country-origin-select', 'Brazil')
                 ->waitFor('@cpf-input')
                 ->waitFor('@rg-number-input');
 
@@ -190,7 +190,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->assertAttribute('#passport_expiry_date', 'required', 'true');
 
             // AC2: Switch back to Brazil and verify CPF/RG are required again
-            $browser->select('@document-country-origin-select', 'BR')
+            $browser->select('@document-country-origin-select', 'Brazil')
                 ->waitFor('@cpf-input')
                 ->waitFor('@rg-number-input')
                 ->assertAttribute('@cpf-input', 'required', 'true')
@@ -399,7 +399,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->click('@gender-male');
 
             // 2. Identification Details (Brazilian)
-            $browser->select('@document-country-origin-select', 'BR')
+            $browser->select('@document-country-origin-select', 'Brazil')
                 ->waitFor('@cpf-input')
                 ->waitFor('@rg-number-input')
                 ->type('@cpf-input', '123.456.789-00')
@@ -410,7 +410,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@street-address-input', 'Test Street, 123')
                 ->type('@city-input', 'São Paulo')
                 ->type('@state-province-input', 'SP')
-                ->select('@country-select', 'BR')
+                ->select('@country-select', 'Brazil')
                 ->type('@postal-code-input', '01000-000');
 
             // 4. Professional Details
@@ -686,7 +686,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->waitForText(__('Registration Form'));
 
             // AC6: Test conditional field validation by submitting form without filling conditionally required fields
-            $browser->select('@document-country-origin-select', 'BR')
+            $browser->select('@document-country-origin-select', 'Brazil')
                 ->waitFor('@cpf-input')
                 ->waitFor('@rg-number-input')
                 ->click('@submit-registration-button')
@@ -834,7 +834,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@nationality-input', 'Brazilian')
                 ->type('@date-of-birth-input', '01/31/1990')
                 ->click('@gender-male')
-                ->select('@document-country-origin-select', 'BR')
+                ->select('@document-country-origin-select', 'Brazil')
                 ->waitFor('@cpf-input')
                 ->waitFor('@rg-number-input')
                 ->type('@cpf-input', '123.456.789-00')
@@ -843,7 +843,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@street-address-input', 'Test Street, 123')
                 ->type('@city-input', 'São Paulo')
                 ->type('@state-province-input', 'SP')
-                ->select('@country-select', 'BR')
+                ->select('@country-select', 'Brazil')
                 ->type('@postal-code-input', '01000-000')
                 ->type('@affiliation-input', 'Universidade de São Paulo')
                 ->click('@position-undergraduate')
@@ -962,7 +962,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@nationality-input', 'Brazilian')
                 ->type('@date-of-birth-input', '01/31/1990')
                 ->click('@gender-male')
-                ->select('@document-country-origin-select', 'BR')
+                ->select('@document-country-origin-select', 'Brazil')
                 ->waitFor('@cpf-input')
                 ->waitFor('@rg-number-input')
                 ->type('@cpf-input', '123.456.789-00')
@@ -971,7 +971,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@street-address-input', 'Test Street, 123')
                 ->type('@city-input', 'São Paulo')
                 ->type('@state-province-input', 'SP')
-                ->select('@country-select', 'BR')
+                ->select('@country-select', 'Brazil')
                 ->type('@postal-code-input', '01000-000')
                 ->type('@affiliation-input', 'Universidade de São Paulo')
                 ->click('@position-undergraduate')
@@ -1021,7 +1021,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@nationality-input', 'Brazilian')
                 ->type('@date-of-birth-input', '01/31/1990')
                 ->click('@gender-male')
-                ->select('@document-country-origin-select', 'BR')
+                ->select('@document-country-origin-select', 'Brazil')
                 ->waitFor('@cpf-input')
                 ->waitFor('@rg-number-input')
                 ->type('@cpf-input', '123.456.789-00')
@@ -1030,7 +1030,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@street-address-input', 'Test Street, 123')
                 ->type('@city-input', 'São Paulo')
                 ->type('@state-province-input', 'SP')
-                ->select('@country-select', 'BR')
+                ->select('@country-select', 'Brazil')
                 ->type('@postal-code-input', '01000-000')
                 ->type('@affiliation-input', 'Universidade de São Paulo')
                 ->click('@position-undergraduate')
@@ -1262,7 +1262,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@nationality-input', 'Brazilian')
                 ->type('@date-of-birth-input', '01/31/1990')
                 ->click('@gender-male')
-                ->select('@document-country-origin-select', 'BR')
+                ->select('@document-country-origin-select', 'Brazil')
                 ->waitFor('@cpf-input')
                 ->waitFor('@rg-number-input')
                 ->type('@cpf-input', '123.456.789-00')
@@ -1271,7 +1271,7 @@ class RegistrationFormTest extends DuskTestCase
                 ->type('@street-address-input', 'Test Street, 123')
                 ->type('@city-input', 'São Paulo')
                 ->type('@state-province-input', 'SP')
-                ->select('@country-select', 'BR')
+                ->select('@country-select', 'Brazil')
                 ->type('@postal-code-input', '01000-000')
                 ->type('@affiliation-input', 'Universidade de São Paulo')
                 ->click('@position-undergraduate')

@@ -29,7 +29,7 @@
 
 {{ __('You have a pending payment for the additional amount due from the modification. Please complete payment to finalize your registration update.') }}
 
-@if($registration->document_country_origin === 'BR' || $registration->document_country_origin === 'Brazil')
+@if($registration->document_country_origin === 'Brazil')
 **{{ __('Bank Transfer Information:') }}**
 - **{{ __('Bank:') }}** Santander
 - **{{ __('Agency:') }}** 0658

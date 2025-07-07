@@ -31,7 +31,7 @@ class MyRegistrationsUploadFormTest extends TestCase
 
         // Check that the AC6 conditional logic exists in the template
         $this->assertStringContainsString('$payment->status === \'pending\'', $templateContent);
-        $this->assertStringContainsString('in_array($registration->document_country_origin, [\'Brasil\', \'BR\'])', $templateContent);
+        $this->assertStringContainsString('$registration->document_country_origin === \'Brazil\'', $templateContent);
         $this->assertStringContainsString('!$payment->payment_proof_path', $templateContent);
 
         // Check that the form exists with correct attributes
