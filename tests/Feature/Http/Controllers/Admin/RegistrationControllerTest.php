@@ -1225,4 +1225,221 @@ class RegistrationControllerTest extends TestCase
 
         Mail::assertNotSent(PaymentStatusUpdatedNotification::class);
     }
+
+    /**
+     * AC6 Issue #75: Test that individual Payment records are updated when admin changes registration status to paid_br
+     */
+    public function test_admin_update_status_to_paid_br_updates_individual_payment_records(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $registration = Registration::factory()->create(['payment_status' => 'pending_br_proof_approval']);
+
+        // Create individual payment records with pending_br_proof_approval status
+        $payment1 = $registration->payments()->create([
+            'amount' => 100.00,
+            'status' => 'pending_br_proof_approval',
+        ]);
+        $payment2 = $registration->payments()->create([
+            'amount' => 50.00,
+            'status' => 'pending_br_proof_approval',
+        ]);
+        $payment3 = $registration->payments()->create([
+            'amount' => 25.00,
+            'status' => 'pending', // Different status - should not be affected
+        ]);
+
+        // Update registration status to paid_br
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        // Verify registration status was updated
+        $registration->refresh();
+        $this->assertEquals('paid_br', $registration->payment_status);
+
+        // Verify individual payment records with pending_br_proof_approval were updated to paid_br
+        $payment1->refresh();
+        $this->assertEquals('paid_br', $payment1->status);
+
+        $payment2->refresh();
+        $this->assertEquals('paid_br', $payment2->status);
+
+        // Verify payment with different status was not affected
+        $payment3->refresh();
+        $this->assertEquals('pending', $payment3->status);
+    }
+
+    /**
+     * AC6 Issue #75: Test that individual Payment records are updated when admin changes registration status to pending_payment
+     */
+    public function test_admin_update_status_to_pending_payment_updates_individual_payment_records(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $registration = Registration::factory()->create(['payment_status' => 'pending_br_proof_approval']);
+
+        // Create individual payment records with pending_br_proof_approval status
+        $payment1 = $registration->payments()->create([
+            'amount' => 100.00,
+            'status' => 'pending_br_proof_approval',
+        ]);
+        $payment2 = $registration->payments()->create([
+            'amount' => 50.00,
+            'status' => 'pending_br_proof_approval',
+        ]);
+        $payment3 = $registration->payments()->create([
+            'amount' => 25.00,
+            'status' => 'paid_br', // Different status - should not be affected
+        ]);
+
+        // Update registration status to pending_payment (rejection)
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'pending_payment',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        // Verify registration status was updated
+        $registration->refresh();
+        $this->assertEquals('pending_payment', $registration->payment_status);
+
+        // Verify individual payment records with pending_br_proof_approval were updated to pending_payment
+        $payment1->refresh();
+        $this->assertEquals('pending_payment', $payment1->status);
+
+        $payment2->refresh();
+        $this->assertEquals('pending_payment', $payment2->status);
+
+        // Verify payment with different status was not affected
+        $payment3->refresh();
+        $this->assertEquals('paid_br', $payment3->status);
+    }
+
+    /**
+     * AC6 Issue #75: Test that other registration status changes do not affect individual Payment records
+     */
+    public function test_admin_update_status_to_other_statuses_does_not_affect_individual_payment_records(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $registration = Registration::factory()->create(['payment_status' => 'pending_payment']);
+
+        // Create individual payment records with pending_br_proof_approval status
+        $payment1 = $registration->payments()->create([
+            'amount' => 100.00,
+            'status' => 'pending_br_proof_approval',
+        ]);
+        $payment2 = $registration->payments()->create([
+            'amount' => 50.00,
+            'status' => 'pending',
+        ]);
+
+        // Test various status changes that should NOT affect individual payments
+        $statusesToTest = ['invoice_sent_int', 'paid_int', 'free', 'cancelled', 'pending_br_proof_approval'];
+
+        foreach ($statusesToTest as $status) {
+            // Reset registration status
+            $registration->update(['payment_status' => 'pending_payment']);
+
+            $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+                'payment_status' => $status,
+            ]);
+
+            $response->assertSessionHasNoErrors();
+            $response->assertStatus(302);
+
+            // Verify registration status was updated
+            $registration->refresh();
+            $this->assertEquals($status, $registration->payment_status);
+
+            // Verify individual payment records were NOT affected
+            $payment1->refresh();
+            $this->assertEquals('pending_br_proof_approval', $payment1->status,
+                "Payment 1 status should not change when registration status changes to {$status}");
+
+            $payment2->refresh();
+            $this->assertEquals('pending', $payment2->status,
+                "Payment 2 status should not change when registration status changes to {$status}");
+        }
+    }
+
+    /**
+     * AC6 Issue #75: Test that automatic block removal works - modification should be allowed after status change to paid_br
+     */
+    public function test_admin_update_status_to_paid_br_automatically_removes_modification_block(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $user = User::factory()->create();
+        $registration = Registration::factory()->for($user)->create(['payment_status' => 'pending_br_proof_approval']);
+
+        // Create payment with pending_br_proof_approval status (blocks modification)
+        $payment = $registration->payments()->create([
+            'amount' => 100.00,
+            'status' => 'pending_br_proof_approval',
+        ]);
+
+        // Verify modification is initially blocked
+        $this->assertFalse($user->can('modify', $registration), 'Modification should be blocked when payment status is pending_br_proof_approval');
+
+        // Admin updates status to paid_br
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'paid_br',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        // Verify payment status was updated
+        $payment->refresh();
+        $this->assertEquals('paid_br', $payment->status);
+
+        // Verify modification is now allowed (block automatically removed)
+        $this->assertTrue($user->can('modify', $registration), 'Modification should be allowed after payment status changes to paid_br');
+    }
+
+    /**
+     * AC6 Issue #75: Test that automatic block removal works - modification should be allowed after status change to pending_payment
+     */
+    public function test_admin_update_status_to_pending_payment_automatically_removes_modification_block(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $user = User::factory()->create();
+        $registration = Registration::factory()->for($user)->create(['payment_status' => 'pending_br_proof_approval']);
+
+        // Create payment with pending_br_proof_approval status (blocks modification)
+        $payment = $registration->payments()->create([
+            'amount' => 100.00,
+            'status' => 'pending_br_proof_approval',
+        ]);
+
+        // Verify modification is initially blocked
+        $this->assertFalse($user->can('modify', $registration), 'Modification should be blocked when payment status is pending_br_proof_approval');
+
+        // Admin updates status to pending_payment (rejection)
+        $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
+            'payment_status' => 'pending_payment',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        // Verify payment status was updated
+        $payment->refresh();
+        $this->assertEquals('pending_payment', $payment->status);
+
+        // Verify modification is now allowed (block automatically removed)
+        $this->assertTrue($user->can('modify', $registration), 'Modification should be allowed after payment status changes to pending_payment');
+    }
 }
