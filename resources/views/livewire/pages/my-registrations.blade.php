@@ -26,8 +26,8 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function with(): array
     {
-        // Load the single registration with payments and events eager-loaded
-        $registration = Auth::user()->registration()->with(['payments', 'events'])->first();
+        // Load the single registration with payments, events and enrollment proof eager-loaded
+        $registration = Auth::user()->registration()->with(['payments', 'events', 'enrollmentProof'])->first();
         
         $selectedRegistration = null;
         if ($this->selectedRegistrationId && $registration && $this->selectedRegistrationId === $registration->id) {
@@ -340,6 +340,108 @@ new #[Layout('layouts.app')] class extends Component {
                                 </div>
                                 @endforeach
                             </div>
+                        </div>
+                        @endif
+
+                        {{-- Enrollment Proof Section - For Undergraduate Students Only --}}
+                        @if($registration->registration_category_snapshot === 'undergraduate_student')
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                            <h4 class="text-lg font-semibold mb-4 border-l-4 border-purple-500 pl-3">{{ __('Enrollment Proof') }}</h4>
+                            
+                            @php
+                                $enrollmentProof = $registration->enrollmentProof;
+                            @endphp
+                            
+                            @if(!$enrollmentProof || !$enrollmentProof->file_path)
+                                {{-- Upload Form for Enrollment Proof --}}
+                                <div class="p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg">
+                                    <h5 class="font-medium text-purple-800 dark:text-purple-300 mb-3">
+                                        {{ __('Enrollment Proof Upload') }}
+                                    </h5>
+                                    
+                                    <form action="{{ route('enrollment-proofs.upload', $registration) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
+                                        @csrf
+                                        
+                                        <div>
+                                            <label for="enrollment_proof_{{ $registration->id }}" class="block text-sm font-medium text-purple-800 dark:text-purple-300 mb-2">
+                                                {{ __('Enrollment Proof Document') }}
+                                            </label>
+                                            <input 
+                                                type="file" 
+                                                id="enrollment_proof_{{ $registration->id }}" 
+                                                name="enrollment_proof" 
+                                                accept=".jpg,.jpeg,.png,.pdf"
+                                                class="block w-full text-sm text-gray-500 dark:text-gray-400
+                                                       file:mr-4 file:py-2 file:px-4
+                                                       file:rounded-full file:border-0
+                                                       file:text-sm file:font-semibold
+                                                       file:bg-purple-100 file:text-purple-800
+                                                       hover:file:bg-purple-200
+                                                       dark:file:bg-purple-900 dark:file:text-purple-300
+                                                       dark:hover:file:bg-purple-800"
+                                                required
+                                            >
+                                            <p class="mt-1 text-xs text-purple-700 dark:text-purple-400">
+                                                {{ __('Accepted formats: JPG, JPEG, PNG, PDF. Maximum size: 10MB.') }}
+                                            </p>
+                                        </div>
+                                        
+                                        <div class="flex justify-end">
+                                            <button 
+                                                type="submit" 
+                                                dusk="upload-enrollment-proof-button-{{ $registration->id }}"
+                                                class="inline-flex items-center px-3 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 focus:bg-purple-700 active:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                            >
+                                                {{ __('Upload Enrollment Proof') }}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            @else
+                                {{-- Show uploaded enrollment proof confirmation --}}
+                                <div class="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                            </svg>
+                                            <span class="text-green-800 dark:text-green-300 font-medium">
+                                                {{ __('Enrollment proof uploaded successfully') }}
+                                            </span>
+                                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                @if($enrollmentProof->status === 'pending_approval')
+                                                    bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                                                @elseif($enrollmentProof->status === 'approved')
+                                                    bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                                                @elseif($enrollmentProof->status === 'rejected')
+                                                    bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
+                                                @endif
+                                            ">
+                                                {{ __(ucfirst(str_replace(['_', '-'], ' ', $enrollmentProof->status))) }}
+                                            </span>
+                                        </div>
+                                        <a href="{{ route('enrollment-proofs.download', $registration) }}" 
+                                           dusk="view-enrollment-proof-button-{{ $registration->id }}"
+                                           class="inline-flex items-center px-3 py-1.5 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            {{ __('View Proof') }}
+                                        </a>
+                                    </div>
+                                    @if($enrollmentProof->uploaded_at)
+                                        <p class="text-sm text-green-700 dark:text-green-400 mt-2">
+                                            {{ __('Uploaded on') }}: {{ $enrollmentProof->uploaded_at->format('d/m/Y H:i') }}
+                                        </p>
+                                    @endif
+                                    @if($enrollmentProof->status === 'rejected' && $enrollmentProof->rejection_reason)
+                                        <p class="text-sm text-red-700 dark:text-red-400 mt-2">
+                                            <strong>{{ __('Rejection Reason') }}:</strong> {{ $enrollmentProof->rejection_reason }}
+                                        </p>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                         @endif
 

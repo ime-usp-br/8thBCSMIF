@@ -253,7 +253,7 @@ class EnrollmentProofController extends Controller
     {
         // Load the registration relationship
         $proof->load('registration');
-        
+
         // Validate that user owns this registration
         Gate::authorize('uploadProof', $proof->registration);
 
