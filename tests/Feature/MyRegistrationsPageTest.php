@@ -713,10 +713,10 @@ class MyRegistrationsPageTest extends TestCase
     }
 
     /**
-     * Test that upload form is NOT displayed for non-Brazilian users (AC5).
-     * This test specifically addresses AC5 requirements for Issue #49.
+     * Test that upload form IS displayed for international users with pending payments (AC7).
+     * This test addresses AC7 requirements for Issue #80 - international participants need payment proof upload.
      */
-    public function test_upload_form_not_displayed_for_non_brazilian_users(): void
+    public function test_upload_form_displayed_for_international_users_with_pending_payments(): void
     {
         // Create verified user
         $user = User::factory()->create([
@@ -726,33 +726,36 @@ class MyRegistrationsPageTest extends TestCase
         // Create event
         $event = Event::factory()->create(['name' => 'Test Event']);
 
-        // Create registration for non-Brazilian user
+        // Create registration for international user
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'document_country_origin' => 'Argentina', // Non-Brazilian
+            'document_country_origin' => 'Argentina', // International user
+            'registration_category_snapshot' => 'grad_student', // Non-undergraduate
         ]);
 
         // Attach event to registration
         $registration->events()->attach($event->code, ['price_at_registration' => 200.00]);
 
-        // Create pending payment (but user is not Brazilian)
+        // Create pending payment for international user
         $pendingPayment = Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 200.00,
             'status' => 'pending',
         ]);
 
-        // Test that the page does NOT display upload form for non-Brazilian users
+        // Test that the page DOES display upload form for international users
         $response = $this->actingAs($user)->get('/my-registration');
         $response->assertOk();
 
-        // AC5 Requirement: Upload form is NOT shown for non-Brazilian users
-        $response->assertDontSee(__('Payment Proof Upload'));
-        $response->assertDontSee('payment_proof_'.$pendingPayment->id);
-
-        // Verify form elements are not present
         $content = $response->getContent();
-        $this->assertStringNotContainsString('payment_id" value="'.$pendingPayment->id.'"', $content);
+
+        // Verify payment is loaded in the view
+        $this->assertStringContainsString('Payment #'.$pendingPayment->id, $content);
+
+        // AC7 Requirement: Upload form IS shown for international users with pending payments
+        $this->assertStringContainsString(__('Payment Proof Upload'), $content);
+        $this->assertStringContainsString('payment_proof_'.$pendingPayment->id, $content);
+        $this->assertStringContainsString('payments/'.$pendingPayment->id.'/upload-proof', $content);
     }
 
     /**
