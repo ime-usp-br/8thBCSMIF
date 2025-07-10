@@ -29,9 +29,9 @@ class MyRegistrationsUploadFormTest extends TestCase
         $templatePath = resource_path('views/livewire/pages/my-registrations.blade.php');
         $templateContent = file_get_contents($templatePath);
 
-        // Check that the AC6 conditional logic exists in the template
+        // Check that the AC7 conditional logic exists in the template (updated for international support)
         $this->assertStringContainsString('$payment->status === \'pending\'', $templateContent);
-        $this->assertStringContainsString('$registration->document_country_origin === \'Brazil\'', $templateContent);
+        $this->assertStringNotContainsString('$registration->document_country_origin === \'Brazil\'', $templateContent); // Removed Brazil restriction for AC7
         $this->assertStringContainsString('!$payment->payment_proof_path', $templateContent);
 
         // Check that the form exists with correct attributes
