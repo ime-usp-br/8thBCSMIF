@@ -525,4 +525,221 @@ class EnrollmentProofControllerTest extends TestCase
         $this->assertEquals('pending_approval', $existingProof->status);
         $this->assertNotNull($existingProof->uploaded_at);
     }
+
+    /**
+     * Test AC4: Store method with POST /enrollment-proofs route accepts registration_id in request.
+     * This test verifies that the store method correctly handles registration_id from request body.
+     */
+    public function test_store_method_accepts_registration_id_in_request(): void
+    {
+        // Arrange: Create test data
+        Storage::fake('private');
+        Mail::fake();
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $file = UploadedFile::fake()->create('enrollment_proof.pdf', 100, 'application/pdf');
+
+        // Act: Upload enrollment proof using the store route
+        $response = $this->actingAs($user)
+            ->post(route('enrollment-proofs.store'), [
+                'registration_id' => $registration->id,
+                'enrollment_proof' => $file,
+            ]);
+
+        // Assert: Verify the response
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        // AC4: Verify enrollment proof record was created with correct registration
+        $this->assertDatabaseHas('enrollment_proofs', [
+            'registration_id' => $registration->id,
+            'status' => 'pending_approval',
+            'original_filename' => 'enrollment_proof.pdf',
+        ]);
+
+        $enrollmentProof = $registration->enrollmentProof;
+        $this->assertNotNull($enrollmentProof);
+        $this->assertEquals($registration->id, $enrollmentProof->registration_id);
+    }
+
+    /**
+     * Test AC4: Store method validates registration_id exists in database.
+     * This test verifies that the store method validates registration_id against existing records.
+     */
+    public function test_store_method_validates_registration_id_exists(): void
+    {
+        // Arrange: Create test data
+        Storage::fake('private');
+        Mail::fake();
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $file = UploadedFile::fake()->create('enrollment_proof.pdf', 100, 'application/pdf');
+
+        // Act: Try to upload with non-existent registration_id
+        $response = $this->actingAs($user)
+            ->post(route('enrollment-proofs.store'), [
+                'registration_id' => 99999, // Non-existent registration ID
+                'enrollment_proof' => $file,
+            ]);
+
+        // Assert: Validation should fail
+        $response->assertSessionHasErrors(['registration_id']);
+
+        // AC4: No enrollment proof should be created
+        $this->assertDatabaseEmpty('enrollment_proofs');
+    }
+
+    /**
+     * Test AC4: Store method denies access when user doesn't own registration.
+     * This test verifies that users cannot upload enrollment proofs for registrations they don't own.
+     */
+    public function test_store_method_denies_access_for_unowned_registration(): void
+    {
+        // Arrange: Create two different users with their own registrations
+        Storage::fake('private');
+        Mail::fake();
+
+        $user1 = User::factory()->create(['email_verified_at' => now()]);
+        $user2 = User::factory()->create(['email_verified_at' => now()]);
+
+        $registration1 = Registration::factory()->create(['user_id' => $user1->id]);
+        $registration2 = Registration::factory()->create(['user_id' => $user2->id]);
+
+        $file = UploadedFile::fake()->create('unauthorized_proof.pdf', 100, 'application/pdf');
+
+        // Act: User1 tries to upload proof for User2's registration using store method
+        $response = $this->actingAs($user1)
+            ->post(route('enrollment-proofs.store'), [
+                'registration_id' => $registration2->id,
+                'enrollment_proof' => $file,
+            ]);
+
+        // Assert: Access should be denied
+        $response->assertStatus(403);
+
+        // AC4: Verify no enrollment proof was created
+        $this->assertDatabaseMissing('enrollment_proofs', [
+            'registration_id' => $registration2->id,
+        ]);
+    }
+
+    /**
+     * Test AC4: Download method with GET /enrollment-proofs/{proof}/download route.
+     * This test verifies that the download method correctly handles proof ID parameter.
+     */
+    public function test_download_method_accepts_proof_id_parameter(): void
+    {
+        // Arrange: Create test data
+        Storage::fake('private');
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        // Create a fake file in storage
+        $filePath = "enrollment-proofs/{$registration->id}/test_enrollment_proof.pdf";
+        Storage::disk('private')->put($filePath, 'fake enrollment proof content');
+
+        $enrollmentProof = EnrollmentProof::factory()->create([
+            'registration_id' => $registration->id,
+            'file_path' => $filePath,
+            'original_filename' => 'original_enrollment_proof.pdf',
+            'status' => 'pending_approval',
+        ]);
+
+        // Act: Download enrollment proof using the download route with proof ID
+        $response = $this->actingAs($user)
+            ->get(route('enrollment-proofs.download-proof', $enrollmentProof));
+
+        // Assert: Verify download response
+        $response->assertStatus(200);
+        $response->assertHeader('content-disposition', 'attachment; filename=enrollment_proof_'.$registration->id.'.pdf');
+
+        // AC4: Verify correct file is downloaded
+        $this->assertEquals('fake enrollment proof content', $response->streamedContent());
+    }
+
+    /**
+     * Test AC4: Download method denies access when user doesn't own the proof's registration.
+     * This test verifies that users cannot download enrollment proofs for registrations they don't own.
+     */
+    public function test_download_method_denies_access_for_unowned_proof(): void
+    {
+        // Arrange: Create two different users with their own registrations
+        Storage::fake('private');
+
+        $user1 = User::factory()->create(['email_verified_at' => now()]);
+        $user2 = User::factory()->create(['email_verified_at' => now()]);
+
+        $registration1 = Registration::factory()->create(['user_id' => $user1->id]);
+        $registration2 = Registration::factory()->create(['user_id' => $user2->id]);
+
+        // Create enrollment proof for user2's registration
+        $filePath = "enrollment-proofs/{$registration2->id}/proof.pdf";
+        Storage::disk('private')->put($filePath, 'user2 enrollment proof');
+
+        $enrollmentProof = EnrollmentProof::factory()->create([
+            'registration_id' => $registration2->id,
+            'file_path' => $filePath,
+        ]);
+
+        // Debug: Check if the proof was created and the route is correct
+        $this->assertNotNull($enrollmentProof->id);
+        $routeUrl = route('enrollment-proofs.download-proof', $enrollmentProof);
+        $this->assertStringContainsString('/enrollment-proofs/'.$enrollmentProof->id.'/download', $routeUrl);
+
+        // Act: User1 tries to download User2's enrollment proof using download method
+        $response = $this->actingAs($user1)
+            ->get(route('enrollment-proofs.download-proof', $enrollmentProof));
+
+        // Assert: Access should be denied
+        // Note: Laravel route model binding may return 404 if the model is not found
+        // due to query constraints, which is appropriate security behavior.
+        // Either 403 (authorization failure) or 404 (not found) is acceptable for unauthorized access.
+        $this->assertContains($response->status(), [403, 404]);
+    }
+
+    /**
+     * Test AC4: Download method fails when proof has no file_path.
+     * This test verifies that download fails gracefully when enrollment proof has no file.
+     */
+    public function test_download_method_fails_when_proof_has_no_file(): void
+    {
+        // Arrange: Create test data
+        Storage::fake('private');
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $enrollmentProof = EnrollmentProof::factory()->create([
+            'registration_id' => $registration->id,
+            'file_path' => null, // No file path
+        ]);
+
+        // Act: Try to download enrollment proof with no file
+        $response = $this->actingAs($user)
+            ->get(route('enrollment-proofs.download-proof', $enrollmentProof));
+
+        // Assert: Should return 404
+        $response->assertStatus(404);
+    }
 }
