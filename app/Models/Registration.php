@@ -56,6 +56,8 @@ use Illuminate\Support\Carbon; // For date type hints in PHPDoc
  * @property-read int|null $events_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Payment> $payments
  * @property-read int|null $payments_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EnrollmentProof> $enrollmentProofs
+ * @property-read int|null $enrollment_proofs_count
  */
 class Registration extends Model
 {
@@ -167,6 +169,16 @@ class Registration extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * The enrollment proofs that belong to this registration.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\EnrollmentProof, $this>
+     */
+    public function enrollmentProofs(): HasMany
+    {
+        return $this->hasMany(EnrollmentProof::class);
     }
 
     /**

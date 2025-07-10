@@ -310,4 +310,72 @@ class RegistrationTest extends TestCase
 
         $this->assertCount(0, $registration->events);
     }
+
+    #[Test]
+    public function registration_has_enrollment_proofs_relationship(): void
+    {
+        $registration = Registration::factory()->create();
+
+        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $registration->enrollmentProofs());
+    }
+
+    #[Test]
+    public function registration_enrollment_proofs_relationship_returns_empty_collection_by_default(): void
+    {
+        $registration = Registration::factory()->create();
+
+        $this->assertCount(0, $registration->enrollmentProofs);
+        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $registration->enrollmentProofs);
+    }
+
+    #[Test]
+    public function registration_can_have_associated_enrollment_proofs(): void
+    {
+        $registration = Registration::factory()->create();
+
+        // Create an enrollment proof for this registration
+        $enrollmentProof = \App\Models\EnrollmentProof::factory()->create([
+            'registration_id' => $registration->id,
+            'status' => 'pending_approval',
+            'file_path' => 'uploads/enrollment/proof.pdf',
+        ]);
+
+        $registration->refresh();
+
+        $this->assertCount(1, $registration->enrollmentProofs);
+        $this->assertEquals($enrollmentProof->id, $registration->enrollmentProofs->first()->id);
+        $this->assertEquals('pending_approval', $registration->enrollmentProofs->first()->status);
+        $this->assertEquals('uploads/enrollment/proof.pdf', $registration->enrollmentProofs->first()->file_path);
+    }
+
+    #[Test]
+    public function registration_can_have_multiple_enrollment_proofs(): void
+    {
+        $registration = Registration::factory()->create();
+
+        // Create multiple enrollment proofs for this registration
+        $enrollmentProof1 = \App\Models\EnrollmentProof::factory()->create([
+            'registration_id' => $registration->id,
+            'status' => 'approved',
+            'file_path' => 'uploads/enrollment/proof1.pdf',
+        ]);
+
+        $enrollmentProof2 = \App\Models\EnrollmentProof::factory()->create([
+            'registration_id' => $registration->id,
+            'status' => 'pending_approval',
+            'file_path' => 'uploads/enrollment/proof2.pdf',
+        ]);
+
+        $registration->refresh();
+
+        $this->assertCount(2, $registration->enrollmentProofs);
+
+        $enrollmentProofIds = $registration->enrollmentProofs->pluck('id')->toArray();
+        $this->assertContains($enrollmentProof1->id, $enrollmentProofIds);
+        $this->assertContains($enrollmentProof2->id, $enrollmentProofIds);
+
+        $statuses = $registration->enrollmentProofs->pluck('status')->toArray();
+        $this->assertContains('approved', $statuses);
+        $this->assertContains('pending_approval', $statuses);
+    }
 }
