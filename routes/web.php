@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\RegistrationController as AdminRegistrationController;
+use App\Http\Controllers\EnrollmentProofController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\RegistrationModificationController;
@@ -43,6 +44,16 @@ Route::post('/payments/{payment}/upload-proof', [PaymentController::class, 'uplo
 Route::get('/payments/{payment}/download-proof', [PaymentController::class, 'downloadProof'])
     ->middleware(['auth', 'verified'])
     ->name('payments.download-proof');
+
+// Route for uploading enrollment proof to specific registration
+Route::post('/enrollment-proofs/{registration}', [EnrollmentProofController::class, 'uploadProof'])
+    ->middleware(['auth', 'verified'])
+    ->name('enrollment-proofs.upload');
+
+// Route for downloading enrollment proof for specific registration
+Route::get('/enrollment-proofs/{registration}/download', [EnrollmentProofController::class, 'downloadProof'])
+    ->middleware(['auth', 'verified'])
+    ->name('enrollment-proofs.download');
 
 // Route for modifying registration
 Route::post('/my-registration/modify/{registration}', [RegistrationModificationController::class, 'store'])
