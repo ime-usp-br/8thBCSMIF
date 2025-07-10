@@ -959,4 +959,97 @@ class MyRegistrationsPageTest extends TestCase
         $response->assertOk();
         $response->assertDontSee(__('Add Events'));
     }
+
+    /**
+     * Test that enrollment proof document label is displayed correctly for undergraduate students (AC6).
+     * This test specifically addresses AC6 requirements for Issue #80.
+     */
+    public function test_enrollment_proof_document_label_displayed_for_undergraduate_students(): void
+    {
+        // Create verified user
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create event
+        $event = Event::factory()->create(['name' => 'Test Event']);
+
+        // Create registration for undergraduate student
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'registration_category_snapshot' => 'undergraduate_student',
+            'document_country_origin' => 'Brazil',
+        ]);
+
+        // Attach event to registration
+        $registration->events()->attach($event->code, ['price_at_registration' => 0.00]);
+
+        // Test that the enrollment proof section is displayed with correct label
+        $response = $this->actingAs($user)->get('/my-registration');
+        $response->assertOk();
+
+        // AC6 Requirement: Enrollment proof section is shown for undergraduate students
+        $response->assertSee(__('Enrollment Proof'));
+
+        // AC6 Requirement: Label uses correct translation key
+        $response->assertSee(__('Enrollment Proof Document'));
+
+        // Verify form elements are present for enrollment proof upload
+        $content = $response->getContent();
+        $this->assertStringContainsString('enrollment-proofs', $content);
+        $this->assertStringContainsString('enrollment_proof', $content);
+    }
+
+    /**
+     * Test that enrollment proof document label translations work correctly (AC6).
+     * This test specifically addresses AC6 requirements for Issue #80.
+     */
+    public function test_enrollment_proof_document_label_translations(): void
+    {
+        // Test English translation
+        app()->setLocale('en');
+        $this->assertEquals('Enrollment Proof Document', __('Enrollment Proof Document'));
+
+        // Test Portuguese translation
+        app()->setLocale('pt_BR');
+        $this->assertEquals('Anexar Comprovação de Matrícula', __('Enrollment Proof Document'));
+    }
+
+    /**
+     * Test that enrollment proof section is NOT displayed for non-undergraduate students (AC6).
+     * This test specifically addresses AC6 requirements for Issue #80.
+     */
+    public function test_enrollment_proof_section_not_displayed_for_non_undergraduate_students(): void
+    {
+        // Create verified user
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create event
+        $event = Event::factory()->create(['name' => 'Test Event']);
+
+        // Create registration for graduate student (not undergraduate)
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'registration_category_snapshot' => 'graduate_student',
+            'document_country_origin' => 'Brazil',
+        ]);
+
+        // Attach event to registration
+        $registration->events()->attach($event->code, ['price_at_registration' => 600.00]);
+
+        // Test that the enrollment proof section is NOT displayed
+        $response = $this->actingAs($user)->get('/my-registration');
+        $response->assertOk();
+
+        // AC6 Requirement: Enrollment proof section is NOT shown for non-undergraduate students
+        $response->assertDontSee(__('Enrollment Proof'));
+        $response->assertDontSee(__('Enrollment Proof Document'));
+
+        // Verify enrollment proof form elements are not present
+        $content = $response->getContent();
+        $this->assertStringNotContainsString('enrollment-proofs', $content);
+        $this->assertStringNotContainsString('enrollment_proof', $content);
+    }
 }
