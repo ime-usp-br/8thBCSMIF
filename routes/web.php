@@ -55,6 +55,15 @@ Route::get('/enrollment-proofs/{registration}/download', [EnrollmentProofControl
     ->middleware(['auth', 'verified'])
     ->name('enrollment-proofs.download');
 
+// AC4: Routes for enrollment proof operations
+Route::post('/enrollment-proofs', [EnrollmentProofController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('enrollment-proofs.store');
+
+Route::get('/enrollment-proofs/{proof}/download', [EnrollmentProofController::class, 'download'])
+    ->middleware(['auth', 'verified'])
+    ->name('enrollment-proofs.download-proof');
+
 // Route for modifying registration
 Route::post('/my-registration/modify/{registration}', [RegistrationModificationController::class, 'store'])
     ->middleware(['auth', 'verified'])
