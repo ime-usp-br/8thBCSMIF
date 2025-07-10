@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Carbon; // For date type hints in PHPDoc
 
@@ -58,6 +59,7 @@ use Illuminate\Support\Carbon; // For date type hints in PHPDoc
  * @property-read int|null $payments_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\EnrollmentProof> $enrollmentProofs
  * @property-read int|null $enrollment_proofs_count
+ * @property-read \App\Models\EnrollmentProof|null $enrollmentProof
  */
 class Registration extends Model
 {
@@ -179,6 +181,16 @@ class Registration extends Model
     public function enrollmentProofs(): HasMany
     {
         return $this->hasMany(EnrollmentProof::class);
+    }
+
+    /**
+     * Get the latest enrollment proof for this registration.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\EnrollmentProof, $this>
+     */
+    public function enrollmentProof(): HasOne
+    {
+        return $this->hasOne(EnrollmentProof::class)->latestOfMany();
     }
 
     /**

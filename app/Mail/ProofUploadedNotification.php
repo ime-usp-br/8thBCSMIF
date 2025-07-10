@@ -19,7 +19,8 @@ class ProofUploadedNotification extends Mailable implements ShouldQueue
      * Create a new message instance.
      */
     public function __construct(
-        public Registration $registration
+        public Registration $registration,
+        public string $proofType = 'payment'
     ) {
         //
     }
@@ -29,8 +30,13 @@ class ProofUploadedNotification extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
+        $subject = match ($this->proofType) {
+            'enrollment' => __('Enrollment Proof Uploaded - 8th BCSMIF'),
+            default => __('Payment Proof Uploaded - 8th BCSMIF'),
+        };
+
         $envelope = new Envelope(
-            subject: __('Payment Proof Uploaded - 8th BCSMIF'),
+            subject: $subject,
         );
 
         // Add coordinator email as recipient
