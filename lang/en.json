@@ -629,5 +629,22 @@
     "View My Registration": "View My Registration",
     "Add Events": "Add Events",
     "Your registration is being analyzed. To add new events, please wait for payment confirmation or contact the organization.": "Your registration is being analyzed. To add new events, please wait for payment confirmation or contact the organization.",
-    "Event Official Website": "Event Official Website"
+    "Event Official Website": "Event Official Website",
+    "Enrollment Proof Uploaded - 8th BCSMIF": "Enrollment Proof Uploaded - 8th BCSMIF",
+    "Upload Notification": "Upload Notification",
+    "The participant": "The participant",
+    "from registration": "from registration",
+    "uploaded an enrollment proof": "uploaded an enrollment proof",
+    "uploaded a payment proof": "uploaded a payment proof",
+    "Participant": "Participant",
+    "Document": "Document",
+    "Upload Date": "Upload Date",
+    "Price at registration": "Price at registration",
+    "Financial Information": "Financial Information",
+    "Required Action": "Required Action",
+    "To view the attached enrollment proof and approve/reject it, please access the admin panel": "To view the attached enrollment proof and approve/reject it, please access the admin panel",
+    "To view the attached payment proof and approve/reject the payment, please access the admin panel": "To view the attached payment proof and approve/reject the payment, please access the admin panel",
+    "View Enrollment Proof in Admin Panel": "View Enrollment Proof in Admin Panel",
+    "View Payment Proof in Admin Panel": "View Payment Proof in Admin Panel",
+    "System": "System"
 }

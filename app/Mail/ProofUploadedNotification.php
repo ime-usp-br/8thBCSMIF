@@ -55,6 +55,9 @@ class ProofUploadedNotification extends Mailable implements ShouldQueue
     {
         return new Content(
             markdown: 'emails.registration.proof-uploaded',
+            with: [
+                'proofType' => $this->proofType,
+            ],
         );
     }
 

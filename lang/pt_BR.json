@@ -664,5 +664,22 @@
     "View My Registration": "Ver Minha Inscrição",
     "Add Events": "Adicionar Eventos",
     "Your registration is being analyzed. To add new events, please wait for payment confirmation or contact the organization.": "Sua inscrição está sendo analisada. Para adicionar novos eventos, por favor, aguarde a confirmação do seu pagamento ou entre em contato com a organização.",
-    "Event Official Website": "Site Oficial do Evento"
+    "Event Official Website": "Site Oficial do Evento",
+    "Enrollment Proof Uploaded - 8th BCSMIF": "Comprovante de Matrícula Enviado - 8th BCSMIF",
+    "Upload Notification": "Notificação de Upload",
+    "The participant": "O participante",
+    "from registration": "da inscrição",
+    "uploaded an enrollment proof": "anexou um comprovante de matrícula",
+    "uploaded a payment proof": "anexou um comprovante de pagamento",
+    "Participant": "Participante",
+    "Document": "Documento",
+    "Upload Date": "Data de Upload",
+    "Price at registration": "Preço na inscrição",
+    "Financial Information": "Informações Financeiras",
+    "Required Action": "Ação Necessária",
+    "To view the attached enrollment proof and approve/reject it, please access the admin panel": "Para visualizar o comprovante de matrícula anexado e aprová-lo/rejeitá-lo, acesse o painel administrativo",
+    "To view the attached payment proof and approve/reject the payment, please access the admin panel": "Para visualizar o comprovante de pagamento anexado e aprovar/rejeitar o pagamento, acesse o painel administrativo",
+    "View Enrollment Proof in Admin Panel": "Visualizar Comprovante de Matrícula no Painel Admin",
+    "View Payment Proof in Admin Panel": "Visualizar Comprovante de Pagamento no Painel Admin",
+    "System": "Sistema"
 }
