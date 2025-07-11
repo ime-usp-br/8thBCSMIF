@@ -287,4 +287,73 @@ class EnrollmentProofController extends Controller
             $friendlyFilename
         );
     }
+
+    /**
+     * Approve an enrollment proof.
+     *
+     * @param \App\Models\EnrollmentProof $enrollmentProof
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function approve(EnrollmentProof $enrollmentProof)
+    {
+        // Check authorization (following existing pattern)
+        Gate::authorize('manageEnrollmentProofs');
+
+        if (! $enrollmentProof->approve(auth()->user())) {
+            return response()->json([
+                'message' => __('Cannot approve this enrollment proof. It may already be processed.'),
+            ], 422);
+        }
+
+        Log::info(__('Enrollment proof approved'), [
+            'enrollment_proof_id' => $enrollmentProof->id,
+            'registration_id' => $enrollmentProof->registration_id,
+            'approved_by' => auth()->id(),
+        ]);
+
+        return response()->json([
+            'message' => __('Enrollment proof approved successfully.'),
+            'proof' => $enrollmentProof->fresh()->load('approvedBy'),
+        ]);
+    }
+
+    /**
+     * Reject an enrollment proof with a reason.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\EnrollmentProof $enrollmentProof
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function reject(Request $request, EnrollmentProof $enrollmentProof)
+    {
+        // Check authorization
+        Gate::authorize('manageEnrollmentProofs');
+
+        // Validate rejection reason
+        $request->validate([
+            'reason' => 'required|string|min:10|max:500',
+        ], [
+            'reason.required' => __('A rejection reason is required.'),
+            'reason.min' => __('Rejection reason must be at least 10 characters.'),
+            'reason.max' => __('Rejection reason cannot exceed 500 characters.'),
+        ]);
+
+        if (! $enrollmentProof->reject(auth()->user(), $request->reason)) {
+            return response()->json([
+                'message' => __('Cannot reject this enrollment proof. It may already be processed.'),
+            ], 422);
+        }
+
+        Log::info(__('Enrollment proof rejected'), [
+            'enrollment_proof_id' => $enrollmentProof->id,
+            'registration_id' => $enrollmentProof->registration_id,
+            'approved_by' => auth()->id(),
+            'rejection_reason' => $request->reason,
+        ]);
+
+        return response()->json([
+            'message' => __('Enrollment proof rejected.'),
+            'proof' => $enrollmentProof->fresh()->load('approvedBy'),
+        ]);
+    }
 }
