@@ -1,41 +1,59 @@
 <x-mail::message>
-# {{ __('Comprovante de Pagamento Enviado - 8th BCSMIF') }}
+@if(isset($proofType) && $proofType === 'enrollment')
+# {{ __('Enrollment Proof Uploaded - 8th BCSMIF') }}
+@else
+# {{ __('Payment Proof Uploaded - 8th BCSMIF') }}
+@endif
 
-## {{ __('Notificação de Upload') }}
+## {{ __('Upload Notification') }}
 
-{{ __('O participante') }} **{{ $registration->full_name }}** ({{ $registration->user->email }}) {{ __('da inscrição') }} **#{{ $registration->id }}** {{ __('anexou um comprovante de pagamento') }}.
+@if(isset($proofType) && $proofType === 'enrollment')
+{{ __('The participant') }} **{{ $registration->full_name }}** ({{ $registration->user->email }}) {{ __('from registration') }} **#{{ $registration->id }}** {{ __('uploaded an enrollment proof') }}.
+@else
+{{ __('The participant') }} **{{ $registration->full_name }}** ({{ $registration->user->email }}) {{ __('from registration') }} **#{{ $registration->id }}** {{ __('uploaded a payment proof') }}.
+@endif
 
-## {{ __('Detalhes da Inscrição') }}
+## {{ __('Registration Details') }}
 
-**{{ __('Participante') }}:** {{ $registration->full_name }}  
-**{{ __('E-mail') }}:** {{ $registration->user->email }}  
-**{{ __('Documento') }}:** {{ $registration->cpf ?: $registration->passport_number }} ({{ $registration->document_country_origin }})  
-**{{ __('Data de Upload') }}:** {{ now()->format('d/m/Y H:i') }}
+**{{ __('Participant') }}:** {{ $registration->full_name }}  
+**{{ __('Email') }}:** {{ $registration->user->email }}  
+**{{ __('Document') }}:** {{ $registration->cpf ?: $registration->passport_number }} ({{ $registration->document_country_origin }})  
+**{{ __('Upload Date') }}:** {{ now()->format('d/m/Y H:i') }}
 
-## {{ __('Eventos Selecionados') }}
+## {{ __('Selected Events') }}
 
 @foreach($registration->events as $event)
 - **{{ $event->name }}**  
-  {{ __('Preço na inscrição') }}: R$ {{ number_format((float) $event->pivot->price_at_registration, 2, ',', '.') }}
+  {{ __('Price at registration') }}: R$ {{ number_format((float) $event->pivot->price_at_registration, 2, ',', '.') }}
 @endforeach
 
-## {{ __('Informações Financeiras') }}
+@if(!isset($proofType) || $proofType !== 'enrollment')
+## {{ __('Financial Information') }}
 
 @if($registration->events->isNotEmpty())
-**{{ __('Valor Total') }}:** R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}  
+**{{ __('Total Amount') }}:** R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}  
 @endif
-**{{ __('Status do Pagamento') }}:** {{ ucfirst(str_replace('_', ' ', $registration->payment_status)) }}
+**{{ __('Payment Status') }}:** {{ ucfirst(str_replace('_', ' ', $registration->payment_status)) }}
+@endif
 
-## {{ __('Ação Necessária') }}
+## {{ __('Required Action') }}
 
-{{ __('Para visualizar o comprovante anexado e aprovar/rejeitar o pagamento, acesse o painel administrativo') }}:
+@if(isset($proofType) && $proofType === 'enrollment')
+{{ __('To view the attached enrollment proof and approve/reject it, please access the admin panel') }}:
+@else
+{{ __('To view the attached payment proof and approve/reject the payment, please access the admin panel') }}:
+@endif
 
 <x-mail::button :url="config('app.url') . '/admin/registrations/' . $registration->id">
-{{ __('Visualizar Comprovante no Painel Admin') }}
+@if(isset($proofType) && $proofType === 'enrollment')
+{{ __('View Enrollment Proof in Admin Panel') }}
+@else
+{{ __('View Payment Proof in Admin Panel') }}
+@endif
 </x-mail::button>
 
 ---
 
-**{{ __('ID da Inscrição') }}:** #{{ $registration->id }}  
-**{{ __('Sistema') }}:** {{ config('app.name') }}
+**{{ __('Registration ID') }}:** #{{ $registration->id }}  
+**{{ __('System') }}:** {{ config('app.name') }}
 </x-mail::message>
