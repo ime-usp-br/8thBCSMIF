@@ -1,4 +1,13 @@
 {
+    "Cannot approve this enrollment proof. It may already be processed.": "Cannot approve this enrollment proof. It may already be processed.",
+    "Enrollment proof approved successfully.": "Enrollment proof approved successfully.",
+    "Cannot reject this enrollment proof. It may already be processed.": "Cannot reject this enrollment proof. It may already be processed.",
+    "Enrollment proof rejected.": "Enrollment proof rejected.",
+    "A rejection reason is required.": "A rejection reason is required.",
+    "Rejection reason must be at least 10 characters.": "Rejection reason must be at least 10 characters.",
+    "Rejection reason cannot exceed 500 characters.": "Rejection reason cannot exceed 500 characters.",
+    "Enrollment proof approved": "Enrollment proof approved",
+    "Enrollment proof rejected": "Enrollment proof rejected",
     "(and :count more error)": "(and :count more error)",
     "(and :count more errors)": "(and :count more error)|(and :count more errors)|(and :count more errors)",
     "A decryption key is required.": "A decryption key is required.",

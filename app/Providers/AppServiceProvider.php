@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Console\Commands\FixOrphanedPayments;
 use App\Models\Registration;
+use App\Models\User;
 use App\Policies\RegistrationPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
@@ -46,5 +47,9 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::policy(Registration::class, RegistrationPolicy::class);
+
+        Gate::define('manageEnrollmentProofs', function (User $user) {
+            return $user->hasRole(['coordinator', 'admin']);
+        });
     }
 }

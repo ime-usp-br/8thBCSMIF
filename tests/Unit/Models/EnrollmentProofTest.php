@@ -160,4 +160,80 @@ class EnrollmentProofTest extends TestCase
         $enrollmentProofWithoutReason = EnrollmentProof::factory()->create(['rejection_reason' => null]);
         $this->assertNull($enrollmentProofWithoutReason->rejection_reason);
     }
+
+    #[Test]
+    public function can_approve_pending_enrollment_proof(): void
+    {
+        $proof = EnrollmentProof::factory()->create(['status' => 'pending_approval']);
+        $approver = User::factory()->create();
+
+        $result = $proof->approve($approver);
+
+        $this->assertTrue($result);
+        $this->assertEquals(EnrollmentProof::STATUS_APPROVED, $proof->fresh()->status);
+        $this->assertEquals($approver->id, $proof->fresh()->approved_by);
+        $this->assertNotNull($proof->fresh()->approved_at);
+        $this->assertNull($proof->fresh()->rejection_reason);
+    }
+
+    #[Test]
+    public function cannot_approve_already_processed_proof(): void
+    {
+        $approvedProof = EnrollmentProof::factory()->create(['status' => 'approved']);
+        $rejectedProof = EnrollmentProof::factory()->create(['status' => 'rejected']);
+        $approver = User::factory()->create();
+
+        $this->assertFalse($approvedProof->approve($approver));
+        $this->assertFalse($rejectedProof->approve($approver));
+    }
+
+    #[Test]
+    public function can_reject_pending_proof_with_reason(): void
+    {
+        $proof = EnrollmentProof::factory()->create(['status' => 'pending_approval']);
+        $approver = User::factory()->create();
+        $reason = 'Document quality is insufficient for verification';
+
+        $result = $proof->reject($approver, $reason);
+
+        $this->assertTrue($result);
+        $this->assertEquals(EnrollmentProof::STATUS_REJECTED, $proof->fresh()->status);
+        $this->assertEquals($approver->id, $proof->fresh()->approved_by);
+        $this->assertEquals($reason, $proof->fresh()->rejection_reason);
+        $this->assertNotNull($proof->fresh()->approved_at);
+    }
+
+    #[Test]
+    public function status_check_helper_methods(): void
+    {
+        $pendingProof = EnrollmentProof::factory()->create(['status' => 'pending_approval']);
+        $approvedProof = EnrollmentProof::factory()->create(['status' => 'approved']);
+        $rejectedProof = EnrollmentProof::factory()->create(['status' => 'rejected']);
+
+        // Test pending proof
+        $this->assertTrue($pendingProof->isPending());
+        $this->assertFalse($pendingProof->isApproved());
+        $this->assertFalse($pendingProof->isRejected());
+
+        // Test approved proof
+        $this->assertTrue($approvedProof->isApproved());
+        $this->assertFalse($approvedProof->isPending());
+        $this->assertFalse($approvedProof->isRejected());
+
+        // Test rejected proof
+        $this->assertTrue($rejectedProof->isRejected());
+        $this->assertFalse($rejectedProof->isPending());
+        $this->assertFalse($rejectedProof->isApproved());
+    }
+
+    #[Test]
+    public function get_valid_statuses(): void
+    {
+        $statuses = EnrollmentProof::getValidStatuses();
+
+        $this->assertContains('pending_approval', $statuses);
+        $this->assertContains('approved', $statuses);
+        $this->assertContains('rejected', $statuses);
+        $this->assertCount(3, $statuses);
+    }
 }

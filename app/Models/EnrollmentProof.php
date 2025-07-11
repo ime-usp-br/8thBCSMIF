@@ -29,6 +29,10 @@ class EnrollmentProof extends Model
     /** @use HasFactory<\Database\Factories\EnrollmentProofFactory> */
     use HasFactory;
 
+    const STATUS_PENDING_APPROVAL = 'pending_approval';
+    const STATUS_APPROVED = 'approved';
+    const STATUS_REJECTED = 'rejected';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -76,5 +80,94 @@ class EnrollmentProof extends Model
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Get all valid status values.
+     *
+     * @return array<string>
+     */
+    public static function getValidStatuses(): array
+    {
+        return [
+            self::STATUS_PENDING_APPROVAL,
+            self::STATUS_APPROVED,
+            self::STATUS_REJECTED,
+        ];
+    }
+
+    /**
+     * Approve this enrollment proof.
+     *
+     * @param \App\Models\User $approver The user performing the approval
+     * @return bool True if successfully approved, false if already processed
+     */
+    public function approve(User $approver): bool
+    {
+        if ($this->status !== self::STATUS_PENDING_APPROVAL) {
+            return false; // Can only approve pending proofs
+        }
+
+        $this->update([
+            'status' => self::STATUS_APPROVED,
+            'approved_by' => $approver->id,
+            'approved_at' => now(),
+            'rejection_reason' => null, // Clear any previous rejection
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Reject this enrollment proof with a reason.
+     *
+     * @param \App\Models\User $approver The user performing the rejection
+     * @param string $reason The reason for rejection
+     * @return bool True if successfully rejected, false if already processed
+     */
+    public function reject(User $approver, string $reason): bool
+    {
+        if ($this->status !== self::STATUS_PENDING_APPROVAL) {
+            return false; // Can only reject pending proofs
+        }
+
+        $this->update([
+            'status' => self::STATUS_REJECTED,
+            'approved_by' => $approver->id,
+            'approved_at' => now(),
+            'rejection_reason' => $reason,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Check if the enrollment proof is pending approval.
+     *
+     * @return bool
+     */
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING_APPROVAL;
+    }
+
+    /**
+     * Check if the enrollment proof is approved.
+     *
+     * @return bool
+     */
+    public function isApproved(): bool
+    {
+        return $this->status === self::STATUS_APPROVED;
+    }
+
+    /**
+     * Check if the enrollment proof is rejected.
+     *
+     * @return bool
+     */
+    public function isRejected(): bool
+    {
+        return $this->status === self::STATUS_REJECTED;
     }
 }

@@ -64,6 +64,14 @@ Route::get('/enrollment-proofs/{proof}/download', [EnrollmentProofController::cl
     ->middleware(['auth', 'verified'])
     ->name('enrollment-proofs.download-proof');
 
+// AC10: Status workflow routes
+Route::patch('/enrollment-proofs/{enrollmentProof}/approve', [EnrollmentProofController::class, 'approve'])
+    ->middleware(['auth', 'role:coordinator|admin'])
+    ->name('enrollment-proofs.approve');
+Route::patch('/enrollment-proofs/{enrollmentProof}/reject', [EnrollmentProofController::class, 'reject'])
+    ->middleware(['auth', 'role:coordinator|admin'])
+    ->name('enrollment-proofs.reject');
+
 // Route for modifying registration
 Route::post('/my-registration/modify/{registration}', [RegistrationModificationController::class, 'store'])
     ->middleware(['auth', 'verified'])
