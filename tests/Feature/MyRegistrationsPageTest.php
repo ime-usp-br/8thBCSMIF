@@ -1055,4 +1055,55 @@ class MyRegistrationsPageTest extends TestCase
         $this->assertStringNotContainsString('enrollment-proofs', $content);
         $this->assertStringNotContainsString('enrollment_proof', $content);
     }
+
+    /**
+     * Test that enrollment proof upload form works even when there's no Payment (taxa R$ 0,00).
+     * This test specifically addresses AC8 requirements for Issue #80.
+     */
+    public function test_enrollment_proof_form_works_without_payment_zero_fee(): void
+    {
+        // Create verified user
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create free event for undergraduate students
+        $freeEvent = Event::factory()->create(['name' => 'Free Workshop for Students']);
+
+        // Create registration for undergraduate student with zero fee
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'registration_category_snapshot' => 'undergraduate_student',
+            'document_country_origin' => 'Brazil',
+            'payment_status' => 'approved', // No payment needed, directly approved
+        ]);
+
+        // Attach free event to registration (R$ 0,00)
+        $registration->events()->attach($freeEvent->code, ['price_at_registration' => 0.00]);
+
+        // Ensure no payments exist for this registration (taxa R$ 0,00)
+        $this->assertCount(0, $registration->payments);
+        $this->assertEquals(0.00, $registration->calculateCorrectTotalFee());
+
+        // Test that enrollment proof section IS displayed despite no payments
+        $response = $this->actingAs($user)->get('/my-registration');
+        $response->assertOk();
+
+        // AC8 Requirement: Enrollment proof form works even when no Payment exists
+        $response->assertSee(__('Enrollment Proof'));
+        $response->assertSee(__('Enrollment Proof Document'));
+
+        // Verify form elements are present for enrollment proof upload
+        $content = $response->getContent();
+        $this->assertStringContainsString('enrollment-proofs', $content);
+        $this->assertStringContainsString('enrollment_proof', $content);
+        $this->assertStringContainsString(__('Upload Enrollment Proof'), $content);
+
+        // Verify the upload form action points to enrollment proof route
+        $this->assertStringContainsString('enrollment-proofs/'.$registration->id, $content);
+
+        // Verify no payment upload forms are present (since no payments exist)
+        $this->assertStringNotContainsString(__('Payment Proof Upload'), $content);
+        $this->assertStringNotContainsString('payment_proof', $content);
+    }
 }

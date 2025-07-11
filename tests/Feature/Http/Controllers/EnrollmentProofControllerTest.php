@@ -742,4 +742,69 @@ class EnrollmentProofControllerTest extends TestCase
         // Assert: Should return 404
         $response->assertStatus(404);
     }
+
+    /**
+     * Test AC8: Enrollment proof upload works even when registration has zero fee (no Payment).
+     * This test specifically addresses AC8 requirements for Issue #80 - undergraduate students
+     * with zero fees should still be able to upload enrollment proofs.
+     */
+    public function test_upload_proof_works_with_zero_fee_no_payment(): void
+    {
+        // Arrange: Create test data
+        Storage::fake('private');
+        Mail::fake();
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create registration for undergraduate student with zero total fee
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'registration_category_snapshot' => 'undergraduate_student',
+            'payment_status' => 'approved', // Directly approved as free
+        ]);
+
+        // Ensure no payments exist for this registration (taxa R$ 0,00)
+        $this->assertCount(0, $registration->payments);
+
+        // Create a fake file for upload
+        $file = UploadedFile::fake()->create('enrollment_proof_zero_fee.pdf', 100, 'application/pdf');
+
+        // Act: Upload enrollment proof despite having no payments
+        $response = $this->actingAs($user)
+            ->post(route('enrollment-proofs.upload', $registration), [
+                'enrollment_proof' => $file,
+            ]);
+
+        // Assert: Upload should succeed
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        // AC8: Verify enrollment proof record was created despite zero fee
+        $this->assertEquals(1, EnrollmentProof::where('registration_id', $registration->id)->count());
+
+        $enrollmentProof = $registration->fresh()->enrollmentProof;
+        $this->assertNotNull($enrollmentProof);
+        $this->assertEquals('enrollment_proof_zero_fee.pdf', $enrollmentProof->original_filename);
+        $this->assertEquals('pending_approval', $enrollmentProof->status);
+        $this->assertNotNull($enrollmentProof->uploaded_at);
+
+        // AC8: Verify file was stored correctly
+        $this->assertTrue(Storage::disk('private')->exists($enrollmentProof->file_path));
+
+        // AC8: Verify notification was sent despite no payment (if coordinator email is configured)
+        // Note: This assertion may be skipped if no coordinator email is configured in the environment
+        if (config('app.coordinator_email')) {
+            Mail::assertQueued(\App\Mail\ProofUploadedNotification::class, function ($mail) use ($registration) {
+                return $mail->registration->id === $registration->id && $mail->type === 'enrollment';
+            });
+        } else {
+            // If no coordinator email configured, verify the upload still succeeded
+            Mail::assertNothingQueued();
+        }
+
+        // AC8: Confirm registration still has no payments
+        $this->assertCount(0, $registration->fresh()->payments);
+    }
 }
