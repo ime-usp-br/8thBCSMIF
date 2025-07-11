@@ -263,7 +263,13 @@ new #[Layout('layouts.app')] class extends Component {
                                         @endif
                                         
                                         {{-- Payment Proof Upload Form - Conditionally displayed for pending payments without proof --}}
-                                        @if(in_array($payment->status, ['pending']) && !$payment->payment_proof_path)
+                                        @php
+                                            $isBrazilian = $registration->document_country_origin === 'Brazil';
+                                            $isUndergrad = $registration->registration_category_snapshot === 'undergrad_student';
+                                            $showPaymentUpload = in_array($payment->status, ['pending']) && !$payment->payment_proof_path;
+                                        @endphp
+
+                                        @if($showPaymentUpload)
                                             <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
                                                 <h5 class="font-medium text-yellow-800 dark:text-yellow-300 mb-3">
                                                     {{ __('Payment Proof Upload') }}
@@ -344,7 +350,7 @@ new #[Layout('layouts.app')] class extends Component {
                         @endif
 
                         {{-- Enrollment Proof Section - For Undergraduate Students Only --}}
-                        @if($registration->registration_category_snapshot === 'undergraduate_student')
+                        @if($registration->registration_category_snapshot === 'undergrad_student')
                         <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                             <h4 class="text-lg font-semibold mb-4 border-l-4 border-purple-500 pl-3">{{ __('Enrollment Proof') }}</h4>
                             

@@ -1491,6 +1491,8 @@ class RegistrationControllerTest extends TestCase
 
         $response->assertRedirect();
 
+        app()->setLocale('pt_BR');
+
         // AC12: Verify ProofUploadedNotification contains correct link for admin visualization
         Mail::assertQueued(ProofUploadedNotification::class, function ($mail) use ($registration) {
             $content = $mail->render();
@@ -1498,7 +1500,7 @@ class RegistrationControllerTest extends TestCase
             // Verify admin link is correct
             $adminUrl = config('app.url').'/admin/registrations/'.$registration->id;
             $this->assertStringContainsString($adminUrl, $content);
-            $this->assertStringContainsString(__('Visualizar Comprovante no Painel Admin'), $content);
+            $this->assertStringContainsString('Visualizar Comprovante de Pagamento no Painel Admin', $content);
 
             // Verify registration and user information
             $this->assertStringContainsString('#'.$registration->id, $content);

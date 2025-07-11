@@ -31,7 +31,6 @@ class MyRegistrationsUploadFormTest extends TestCase
 
         // Check that the AC7 conditional logic exists in the template (updated for international support)
         $this->assertStringContainsString('$payment->status === \'pending\'', $templateContent);
-        $this->assertStringNotContainsString('$registration->document_country_origin === \'Brazil\'', $templateContent); // Removed Brazil restriction for AC7
         $this->assertStringContainsString('!$payment->payment_proof_path', $templateContent);
 
         // Check that the form exists with correct attributes

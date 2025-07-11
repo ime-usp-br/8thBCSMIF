@@ -70,6 +70,11 @@ class RegistrationModificationController extends Controller
             $registration->events()->attach($newEventData);
         }
 
+        // Auto-approve payments for grad students in workshops
+        if ($registration->registration_category_snapshot === 'grad_student') {
+            $this->autoApproveWorkshopPayments($registration);
+        }
+
         // Send notification to the participant (user)
         Mail::to($registration->user->email)->queue(new RegistrationModifiedNotification($registration));
 
@@ -87,5 +92,35 @@ class RegistrationModificationController extends Controller
         ]);
 
         return redirect()->route('registrations.my')->with('success', __('Registration modified successfully'));
+    }
+
+    /**
+     * Auto-approves payments for workshops for a given registration.
+     *
+     * This method is called for graduate student registrations to automatically
+     * create a payment with 'approved' status for any new workshop events.
+     */
+    private function autoApproveWorkshopPayments(Registration $registration): void
+    {
+        $events = $registration->events()->where('is_main_conference', false)->get();
+
+        foreach ($events as $event) {
+            // Check if a payment for this workshop already exists
+            $existingPayment = $registration->payments()
+                ->whereHas('events', function ($query) use ($event) {
+                    $query->where('event_code', $event->code);
+                })
+                ->exists();
+
+            if (!$existingPayment) {
+                $payment = $registration->payments()->create([
+                    'amount' => 0.00,
+                    'status' => 'approved',
+                    'payment_date' => now(),
+                    'notes' => __('Free workshop for graduate students'),
+                ]);
+                $payment->events()->attach($event->code);
+            }
+        }
     }
 }
