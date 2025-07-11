@@ -980,7 +980,7 @@ class MyRegistrationsPageTest extends TestCase
         // Create registration for undergraduate student
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'registration_category_snapshot' => 'undergraduate_student',
+            'registration_category_snapshot' => 'undergrad_student',
             'document_country_origin' => 'Brazil',
         ]);
 
@@ -992,10 +992,10 @@ class MyRegistrationsPageTest extends TestCase
         $response->assertOk();
 
         // AC6 Requirement: Enrollment proof section is shown for undergraduate students
-        $response->assertSee(__('Enrollment Proof'));
+        $response->assertSee('Enrollment Proof');
 
         // AC6 Requirement: Label uses correct translation key
-        $response->assertSee(__('Enrollment Proof Document'));
+        $response->assertSee('Enrollment Proof Document');
 
         // Verify form elements are present for enrollment proof upload
         $content = $response->getContent();
@@ -1073,9 +1073,9 @@ class MyRegistrationsPageTest extends TestCase
         // Create registration for undergraduate student with zero fee
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'registration_category_snapshot' => 'undergraduate_student',
+            'registration_category_snapshot' => 'undergrad_student',
             'document_country_origin' => 'Brazil',
-            'payment_status' => 'approved', // No payment needed, directly approved
+            'payment_status' => 'free', // No payment needed, directly approved
         ]);
 
         // Attach free event to registration (R$ 0,00)
@@ -1090,20 +1090,20 @@ class MyRegistrationsPageTest extends TestCase
         $response->assertOk();
 
         // AC8 Requirement: Enrollment proof form works even when no Payment exists
-        $response->assertSee(__('Enrollment Proof'));
-        $response->assertSee(__('Enrollment Proof Document'));
+        $response->assertSee('Enrollment Proof');
+        $response->assertSee('Enrollment Proof Document');
 
         // Verify form elements are present for enrollment proof upload
         $content = $response->getContent();
         $this->assertStringContainsString('enrollment-proofs', $content);
         $this->assertStringContainsString('enrollment_proof', $content);
-        $this->assertStringContainsString(__('Upload Enrollment Proof'), $content);
+        $this->assertStringContainsString('Upload Enrollment Proof', $content);
 
         // Verify the upload form action points to enrollment proof route
         $this->assertStringContainsString('enrollment-proofs/'.$registration->id, $content);
 
         // Verify no payment upload forms are present (since no payments exist)
-        $this->assertStringNotContainsString(__('Payment Proof Upload'), $content);
+        $this->assertStringNotContainsString('Payment Proof Upload', $content);
         $this->assertStringNotContainsString('payment_proof', $content);
     }
 }

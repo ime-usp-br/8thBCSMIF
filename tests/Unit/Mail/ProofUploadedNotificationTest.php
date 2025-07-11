@@ -96,6 +96,8 @@ class ProofUploadedNotificationTest extends TestCase
             'document_country_origin' => 'BR',
         ]);
 
+        app()->setLocale('pt_BR');
+
         $mailable = new ProofUploadedNotification($registration);
         $rendered = $mailable->render();
 
@@ -109,10 +111,10 @@ class ProofUploadedNotificationTest extends TestCase
         $this->assertStringContainsString($adminUrl, $rendered);
 
         // Verifica que contém texto sobre o upload
-        $this->assertStringContainsString(__('anexou um comprovante de pagamento'), $rendered);
+        $this->assertStringContainsString('anexou um comprovante de pagamento', $rendered);
 
         // Verifica que contém botão para visualizar comprovante
-        $this->assertStringContainsString(__('Visualizar Comprovante no Painel Admin'), $rendered);
+        $this->assertStringContainsString('Visualizar Comprovante de Pagamento no Painel Admin', $rendered);
     }
 
     #[Test]

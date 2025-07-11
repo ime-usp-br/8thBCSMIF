@@ -237,6 +237,11 @@ class RegistrationController extends Controller
                     Log::debug('NewRegistrationCreated event dispatched.', ['registration_id' => $registration->id]);
                 }
 
+                // --- AC13: Auto-approve payments for grad students in workshops ---
+                if ($registration->registration_category_snapshot === 'grad_student') {
+                    $this->autoApproveWorkshopPayments($registration);
+                }
+
                 // --- AC12: Redirect to registrations page with success message ---
                 if (config('app.debug')) {
                     Log::debug('Registration transaction completed successfully. Redirecting user.', ['registration_id' => $registration->id]);
@@ -369,6 +374,36 @@ class RegistrationController extends Controller
             ]);
 
             return redirect()->back()->with('error', __('Failed to upload payment proof. Please try again.'));
+        }
+    }
+
+    /**
+     * Auto-approves payments for workshops for a given registration.
+     *
+     * This method is called for graduate student registrations to automatically
+     * create a payment with 'approved' status for any workshop events.
+     */
+    private function autoApproveWorkshopPayments(Registration $registration): void
+    {
+        $events = $registration->events()->where('is_main_conference', false)->get();
+
+        foreach ($events as $event) {
+            // Check if a payment for this workshop already exists
+            $existingPayment = $registration->payments()
+                ->whereHas('events', function ($query) use ($event) {
+                    $query->where('event_code', $event->code);
+                })
+                ->exists();
+
+            if (!$existingPayment) {
+                $payment = $registration->payments()->create([
+                    'amount' => 0.00,
+                    'status' => 'approved',
+                    'payment_date' => now(),
+                    'notes' => __('Free workshop for graduate students'),
+                ]);
+                $payment->events()->attach($event->code);
+            }
         }
     }
 }
