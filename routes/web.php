@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\EnrollmentProofController as AdminEnrollmentProofController;
 use App\Http\Controllers\Admin\RegistrationController as AdminRegistrationController;
 use App\Http\Controllers\EnrollmentProofController;
 use App\Http\Controllers\PaymentController;
@@ -96,6 +97,16 @@ Route::prefix('admin/registrations')
         Route::get('/{registration}', [AdminRegistrationController::class, 'show'])->name('show');
         Route::get('/{registration}/download-proof', [AdminRegistrationController::class, 'downloadProof'])->name('download-proof');
         Route::patch('/{registration}/update-status', [AdminRegistrationController::class, 'updateStatus'])->name('update-status');
+    });
+
+// Admin routes for enrollment proof management
+Route::prefix('admin/enrollment-proofs')
+    ->middleware(['auth', 'role:admin'])
+    ->name('admin.enrollment-proofs.')
+    ->group(function () {
+        Route::get('/', [AdminEnrollmentProofController::class, 'index'])->name('index');
+        Route::get('/{enrollmentProof}', [AdminEnrollmentProofController::class, 'show'])->name('show');
+        Route::get('/{enrollmentProof}/download', [AdminEnrollmentProofController::class, 'download'])->name('download');
     });
 
 require __DIR__.'/auth.php';
