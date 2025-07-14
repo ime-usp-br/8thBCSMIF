@@ -774,6 +774,124 @@ class MyRegistrationsTest extends DuskTestCase
     }
 
     /**
+     * AC14: Test Dusk verifies that upload form is NOT displayed for auto-approved workshop payments
+     * for graduate students and shows the appropriate informative message instead.
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('my-registrations')]
+    #[Group('auto-approved-payments')]
+    public function upload_form_not_displayed_for_auto_approved_workshop_payments(): void
+    {
+        Storage::fake('private');
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create a workshop event
+        $workshop = Event::factory()->workshop()->create();
+
+        // Create a registration for a graduate student
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'registration_category_snapshot' => 'grad_student',
+            'document_country_origin' => 'Brasil',
+        ]);
+
+        // Associate the workshop with the registration at zero cost
+        $registration->events()->attach($workshop->code, ['price_at_registration' => 0.00]);
+
+        // Create an auto-approved payment for the workshop (amount 0, status 'approved')
+        $payment = $registration->payments()->create([
+            'amount' => 0.00,
+            'status' => 'approved',
+            'payment_proof_path' => null, // No proof uploaded
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user, $registration, $payment) {
+            $browser->loginAs($user)
+                ->visit('/my-registration')
+                ->waitForText(__('My Registration'))
+                ->waitForText(__('Registration').' #'.$registration->id)
+
+                // Expand to see payment details
+                ->click("button[wire\\:click='viewRegistration({$registration->id})']")
+                ->waitForText(__('Payment History'))
+
+                // AC14 VERIFICATION: Verify the upload form is NOT displayed
+                ->assertDontSee(__('Payment Proof Upload'))
+                ->assertMissing('input[name="payment_proof"]')
+                ->assertMissing('@upload-payment-proof-button-'.$payment->id)
+
+                // AC14 VERIFICATION: Verify informative message IS displayed
+                ->assertSee(__('This workshop is free for graduate students and has been automatically approved.'))
+
+                // Verify the payment shows as approved
+                ->assertSee(__('Approved'));
+        });
+    }
+
+    /**
+     * AC14: Test Dusk verifies that upload form IS displayed for regular pending payments
+     * (sanity check to ensure existing functionality still works).
+     */
+    #[Test]
+    #[Group('dusk')]
+    #[Group('my-registrations')]
+    #[Group('auto-approved-payments')]
+    public function upload_form_displayed_for_regular_pending_payments(): void
+    {
+        Storage::fake('private');
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Create a main conference event
+        $event = Event::factory()->mainConference()->create();
+
+        // Create a registration for a professor (who needs to pay)
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'registration_category_snapshot' => 'professor',
+            'document_country_origin' => 'Brasil',
+        ]);
+
+        // Associate the conference with the registration at normal cost
+        $registration->events()->attach($event->code, ['price_at_registration' => 1000.00]);
+
+        // Create a standard pending payment
+        $payment = $registration->payments()->create([
+            'amount' => 1000.00,
+            'status' => 'pending',
+            'payment_proof_path' => null,
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user, $registration, $payment) {
+            $browser->loginAs($user)
+                ->visit('/my-registration')
+                ->waitForText(__('My Registration'))
+                ->waitForText(__('Registration').' #'.$registration->id)
+
+                // Expand to see payment details
+                ->click("button[wire\\:click='viewRegistration({$registration->id})']")
+                ->waitForText(__('Payment History'))
+
+                // AC14 VERIFICATION: Verify the upload form IS displayed for regular payments
+                ->assertSee(__('Payment Proof Upload'))
+                ->assertVisible('input[name="payment_proof"]')
+                ->assertVisible('@upload-payment-proof-button-'.$payment->id)
+
+                // AC14 VERIFICATION: Verify auto-approved message is NOT displayed
+                ->assertDontSee(__('This workshop is free for graduate students and has been automatically approved.'))
+
+                // Verify the payment shows as pending
+                ->assertSee(__('Pending'));
+        });
+    }
+
+    /**
      * AC5: Test Dusk simulates clicking the "View Proof" button and verifies
      * that the user can successfully download their previously uploaded payment proof.
      */
