@@ -236,4 +236,166 @@ class CombinedRegistrationTest extends TestCase
         $autoApprovedPayment = $registration->payments()->where('status', 'approved')->first();
         $this->assertNull($autoApprovedPayment, 'Undergrad students should not get auto-approved payments');
     }
+
+    /**
+     * AC16: Test that graduate students with multiple workshops get auto-approved payment for each workshop.
+     */
+    #[Test]
+    public function graduate_student_multiple_workshops_gets_auto_approved_payments(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // Get existing workshop events
+        $workshop1 = Event::where('code', 'WDA2025')->first();
+        $workshop2 = Event::where('code', 'RAA2025')->first();
+
+        // Ensure both events exist
+        $this->assertNotNull($workshop1, 'WDA2025 workshop should exist');
+        $this->assertNotNull($workshop2, 'RAA2025 workshop should exist');
+        $this->assertEquals('WDA2025', $workshop1->code);
+        $this->assertEquals('RAA2025', $workshop2->code);
+
+        // Create registration for grad student with multiple workshops
+        $response = $this->actingAs($user)->post(route('event-registrations.store'),
+            $this->getValidRegistrationData($user, [$workshop1->code, $workshop2->code])
+        );
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('registrations', [
+            'user_id' => $user->id,
+            'registration_category_snapshot' => 'grad_student',
+        ]);
+
+        $registration = Registration::where('user_id', $user->id)->first();
+
+        // Debug: Check what events are actually attached
+        $attachedEvents = $registration->events->pluck('code')->toArray();
+        $this->assertContains($workshop1->code, $attachedEvents, 'WDA2025 workshop should be attached to registration');
+        $this->assertContains($workshop2->code, $attachedEvents, 'RAA2025 workshop should be attached to registration');
+
+        // Verify registration has both workshop events
+        $this->assertTrue($registration->events->contains('code', $workshop1->code));
+        $this->assertTrue($registration->events->contains('code', $workshop2->code));
+
+        // Verify auto-approved payments were created for both workshops
+        $autoApprovedPayments = $registration->payments()->where('status', 'approved')->get();
+        $this->assertGreaterThanOrEqual(2, $autoApprovedPayments->count(), 'Should have auto-approved payment for each workshop');
+
+        // Verify each workshop has its own auto-approved payment
+        $workshop1Payment = $autoApprovedPayments->filter(function ($payment) use ($workshop1) {
+            return $payment->events->contains('code', $workshop1->code);
+        })->first();
+        $this->assertNotNull($workshop1Payment, 'Workshop 1 should have auto-approved payment');
+        $this->assertEquals(0.00, $workshop1Payment->amount);
+        $this->assertStringContainsString('Free workshop for graduate students', $workshop1Payment->notes);
+
+        $workshop2Payment = $autoApprovedPayments->filter(function ($payment) use ($workshop2) {
+            return $payment->events->contains('code', $workshop2->code);
+        })->first();
+        $this->assertNotNull($workshop2Payment, 'Workshop 2 should have auto-approved payment');
+        $this->assertEquals(0.00, $workshop2Payment->amount);
+        $this->assertStringContainsString('Free workshop for graduate students', $workshop2Payment->notes);
+    }
+
+    /**
+     * AC16: Test that adding workshop via registration modification creates auto-approved payment.
+     */
+    #[Test]
+    public function graduate_student_modification_adding_workshop_gets_auto_approved_payment(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // Create initial registration for grad student (main conference only)
+        $mainConference = Event::where('code', 'BCSMIF2025')->first() ?? Event::factory()->mainConference()->create([
+            'code' => 'BCSMIF2025',
+            'name' => '8th Brazilian Conference on Statistical Modeling in Insurance and Finance',
+            'is_main_conference' => true,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('event-registrations.store'),
+            $this->getValidRegistrationData($user, [$mainConference->code])
+        );
+
+        $response->assertRedirect();
+        $registration = Registration::where('user_id', $user->id)->first();
+
+        // Verify initial state: only main conference, no auto-approved payments
+        $this->assertTrue($registration->events->contains('code', $mainConference->code));
+        $initialAutoApprovedCount = $registration->payments()->where('status', 'approved')->count();
+
+        // Now add workshop via modification
+        $workshop = Event::where('code', 'WDA2025')->first() ?? Event::factory()->workshop()->create([
+            'code' => 'WDA2025',
+            'name' => 'Workshop on Data Analysis 2025',
+            'is_main_conference' => false,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('registration.modify', $registration), [
+            'selected_event_codes' => [$mainConference->code, $workshop->code],
+        ]);
+
+        $response->assertRedirect();
+        $registration->refresh();
+
+        // Verify workshop was added
+        $this->assertTrue($registration->events->contains('code', $workshop->code));
+
+        // Verify auto-approved payment was created for the workshop
+        $autoApprovedPayments = $registration->payments()->where('status', 'approved')->get();
+        $this->assertGreaterThan($initialAutoApprovedCount, $autoApprovedPayments->count(), 'Auto-approved payment should be created for added workshop');
+
+        $workshopPayment = $autoApprovedPayments->filter(function ($payment) use ($workshop) {
+            return $payment->events->contains('code', $workshop->code);
+        })->first();
+        $this->assertNotNull($workshopPayment, 'Workshop should have auto-approved payment');
+        $this->assertEquals(0.00, $workshopPayment->amount);
+        $this->assertEquals('approved', $workshopPayment->status);
+        $this->assertStringContainsString('Free workshop for graduate students', $workshopPayment->notes);
+    }
+
+    /**
+     * AC16: Test duplicate payment prevention for workshop auto-approval.
+     */
+    #[Test]
+    public function graduate_student_duplicate_workshop_payment_prevention(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // Get workshop event
+        $workshop = Event::where('code', 'WDA2025')->first() ?? Event::factory()->workshop()->create([
+            'code' => 'WDA2025',
+            'name' => 'Workshop on Data Analysis 2025',
+            'is_main_conference' => false,
+        ]);
+
+        // Create registration for grad student with workshop
+        $response = $this->actingAs($user)->post(route('event-registrations.store'),
+            $this->getValidRegistrationData($user, [$workshop->code])
+        );
+
+        $response->assertRedirect();
+        $registration = Registration::where('user_id', $user->id)->first();
+
+        // Verify auto-approved payment was created
+        $initialPaymentCount = $registration->payments()->count();
+        $this->assertGreaterThan(0, $initialPaymentCount);
+
+        // Simulate modification that includes the same workshop again
+        $response = $this->actingAs($user)->post(route('registration.modify', $registration), [
+            'selected_event_codes' => [$workshop->code],
+        ]);
+
+        $response->assertRedirect();
+        $registration->refresh();
+
+        // Verify no duplicate payment was created
+        $finalPaymentCount = $registration->payments()->count();
+        $this->assertEquals($initialPaymentCount, $finalPaymentCount, 'No duplicate payment should be created for same workshop');
+
+        // Verify still only one auto-approved payment for this workshop
+        $workshopPayments = $registration->payments()->whereHas('events', function ($query) use ($workshop) {
+            $query->where('event_code', $workshop->code);
+        })->get();
+        $this->assertEquals(1, $workshopPayments->count(), 'Should have exactly one payment for the workshop');
+    }
 }

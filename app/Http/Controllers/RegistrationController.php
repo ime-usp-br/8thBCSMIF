@@ -209,10 +209,16 @@ class RegistrationController extends Controller
 
                 // --- AC10: Sync events with price_at_registration ---
                 $eventSyncData = [];
+                if (config('app.debug')) {
+                    Log::debug('Fee calculation result details:', ['details' => $feeData['details']]);
+                }
                 foreach ($feeData['details'] as $eventDetail) {
                     if (! isset($eventDetail['error'])) { // Only sync valid events with prices
                         $eventSyncData[$eventDetail['event_code']] = ['price_at_registration' => $eventDetail['calculated_price']];
                     }
+                }
+                if (config('app.debug')) {
+                    Log::debug('Event sync data prepared:', ['eventSyncData' => $eventSyncData]);
                 }
                 if (! empty($eventSyncData)) {
                     try {
