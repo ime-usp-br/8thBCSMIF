@@ -67,6 +67,9 @@ new class extends Component
                             <x-dropdown-link :href="route('admin.registrations.index')" wire:navigate>
                                 {{ __('Registrations') }}
                             </x-dropdown-link>
+                            <x-dropdown-link :href="route('admin.enrollment-proofs.index')" wire:navigate>
+                                {{ __('Enrollment Proofs') }}
+                            </x-dropdown-link>
                         @endif
 
                         <!-- Authentication -->
