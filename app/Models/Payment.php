@@ -69,7 +69,7 @@ class Payment extends Model
     /**
      * The events that this payment is for.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Event>
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Models\Event, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
      */
     public function events(): BelongsToMany
     {

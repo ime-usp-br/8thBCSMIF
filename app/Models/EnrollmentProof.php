@@ -30,7 +30,9 @@ class EnrollmentProof extends Model
     use HasFactory;
 
     const STATUS_PENDING_APPROVAL = 'pending_approval';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
 
     /**
@@ -99,7 +101,7 @@ class EnrollmentProof extends Model
     /**
      * Approve this enrollment proof.
      *
-     * @param \App\Models\User $approver The user performing the approval
+     * @param  \App\Models\User  $approver  The user performing the approval
      * @return bool True if successfully approved, false if already processed
      */
     public function approve(User $approver): bool
@@ -121,8 +123,8 @@ class EnrollmentProof extends Model
     /**
      * Reject this enrollment proof with a reason.
      *
-     * @param \App\Models\User $approver The user performing the rejection
-     * @param string $reason The reason for rejection
+     * @param  \App\Models\User  $approver  The user performing the rejection
+     * @param  string  $reason  The reason for rejection
      * @return bool True if successfully rejected, false if already processed
      */
     public function reject(User $approver, string $reason): bool
@@ -143,8 +145,6 @@ class EnrollmentProof extends Model
 
     /**
      * Check if the enrollment proof is pending approval.
-     *
-     * @return bool
      */
     public function isPending(): bool
     {
@@ -153,8 +153,6 @@ class EnrollmentProof extends Model
 
     /**
      * Check if the enrollment proof is approved.
-     *
-     * @return bool
      */
     public function isApproved(): bool
     {
@@ -163,8 +161,6 @@ class EnrollmentProof extends Model
 
     /**
      * Check if the enrollment proof is rejected.
-     *
-     * @return bool
      */
     public function isRejected(): bool
     {

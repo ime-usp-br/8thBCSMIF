@@ -112,7 +112,7 @@ class RegistrationModificationController extends Controller
                 })
                 ->exists();
 
-            if (!$existingPayment) {
+            if (! $existingPayment) {
                 $payment = $registration->payments()->create([
                     'amount' => 0.00,
                     'status' => 'approved',
