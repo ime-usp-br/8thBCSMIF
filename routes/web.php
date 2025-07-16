@@ -109,4 +109,15 @@ Route::prefix('admin/enrollment-proofs')
         Route::get('/{enrollmentProof}/download', [AdminEnrollmentProofController::class, 'download'])->name('download');
     });
 
+// Admin routes for reports (AC20)
+Route::prefix('admin/reports')
+    ->middleware(['auth', 'role:admin'])
+    ->name('admin.reports.')
+    ->group(function () {
+        Route::get('/', [ReportsController::class, 'index'])->name('index');
+        Route::get('/enrollment-proofs', [ReportsController::class, 'enrollmentProofs'])->name('enrollment-proofs');
+        Route::get('/payments', [ReportsController::class, 'payments'])->name('payments');
+        Route::get('/auto-approved', [ReportsController::class, 'autoApproved'])->name('auto-approved');
+    });
+
 require __DIR__.'/auth.php';
