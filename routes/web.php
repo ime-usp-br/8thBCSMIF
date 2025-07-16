@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\EnrollmentProofController as AdminEnrollmentProofController;
 use App\Http\Controllers\Admin\RegistrationController as AdminRegistrationController;
+use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\EnrollmentProofController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RegistrationController;

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\EnrollmentProof;
 use App\Models\Payment;
-use App\Models\Registration;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
