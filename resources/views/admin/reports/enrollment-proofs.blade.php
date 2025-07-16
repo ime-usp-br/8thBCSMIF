@@ -178,12 +178,12 @@
                                                 {{ $proof->created_at->format('d/m/Y H:i') }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <a href="{{ route('admin.enrollment-proofs.show', $proof) }}" 
+                                                <a href="{{ route('admin.registrations.show', $proof->registration) }}" 
                                                    class="text-usp-blue-pri hover:text-usp-blue-pri/80 mr-3">
                                                     {{ __('View') }}
                                                 </a>
                                                 @if($proof->file_path)
-                                                <a href="{{ route('admin.enrollment-proofs.download', $proof) }}" 
+                                                <a href="{{ route('admin.registrations.download-enrollment-proof', $proof->registration) }}" 
                                                    class="text-gray-600 hover:text-gray-900">
                                                     {{ __('Download') }}
                                                 </a>
@@ -227,12 +227,12 @@
                                         {{ $proof->created_at->format('d/m/Y H:i') }}
                                     </div>
                                     <div class="flex space-x-2">
-                                        <a href="{{ route('admin.enrollment-proofs.show', $proof) }}" 
+                                        <a href="{{ route('admin.registrations.show', $proof->registration) }}" 
                                            class="text-xs text-usp-blue-pri hover:text-usp-blue-pri/80">
                                             {{ __('View') }}
                                         </a>
                                         @if($proof->file_path)
-                                        <a href="{{ route('admin.enrollment-proofs.download', $proof) }}" 
+                                        <a href="{{ route('admin.registrations.download-enrollment-proof', $proof->registration) }}" 
                                            class="text-xs text-gray-600 hover:text-gray-900">
                                             {{ __('Download') }}
                                         </a>

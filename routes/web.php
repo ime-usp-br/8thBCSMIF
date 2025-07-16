@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Admin\EnrollmentProofController as AdminEnrollmentProofController;
 use App\Http\Controllers\Admin\RegistrationController as AdminRegistrationController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\EnrollmentProofController;
@@ -98,17 +97,15 @@ Route::prefix('admin/registrations')
         Route::get('/{registration}', [AdminRegistrationController::class, 'show'])->name('show');
         Route::get('/{registration}/download-proof', [AdminRegistrationController::class, 'downloadProof'])->name('download-proof');
         Route::patch('/{registration}/update-status', [AdminRegistrationController::class, 'updateStatus'])->name('update-status');
+
+        // Enrollment proof management integrated into registrations
+        Route::get('/{registration}/enrollment-proof/download', [AdminRegistrationController::class, 'downloadEnrollmentProof'])->name('download-enrollment-proof');
+        Route::patch('/{registration}/enrollment-proof/approve', [AdminRegistrationController::class, 'approveEnrollmentProof'])->name('approve-enrollment-proof');
+        Route::patch('/{registration}/enrollment-proof/reject', [AdminRegistrationController::class, 'rejectEnrollmentProof'])->name('reject-enrollment-proof');
     });
 
-// Admin routes for enrollment proof management
-Route::prefix('admin/enrollment-proofs')
-    ->middleware(['auth', 'role:admin'])
-    ->name('admin.enrollment-proofs.')
-    ->group(function () {
-        Route::get('/', [AdminEnrollmentProofController::class, 'index'])->name('index');
-        Route::get('/{enrollmentProof}', [AdminEnrollmentProofController::class, 'show'])->name('show');
-        Route::get('/{enrollmentProof}/download', [AdminEnrollmentProofController::class, 'download'])->name('download');
-    });
+// Admin routes for enrollment proof management (integrated into registrations)
+// Removed separate interface - now integrated in admin/registrations
 
 // Admin routes for reports (AC20)
 Route::prefix('admin/reports')

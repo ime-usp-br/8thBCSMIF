@@ -27,6 +27,21 @@
                     </select>
                 </div>
                 
+                <!-- Enrollment Proof Filter -->
+                <div>
+                    <label for="filterEnrollmentProofStatus" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {{ __('Filter by Enrollment Proof') }}
+                    </label>
+                    <select wire:model.live="filterEnrollmentProofStatus" id="filterEnrollmentProofStatus" 
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri sm:text-sm transition-colors duration-200">
+                        <option value="">{{ __('All Statuses') }}</option>
+                        <option value="none">{{ __('No Proof') }}</option>
+                        <option value="pending_approval">{{ __('Pending Approval') }}</option>
+                        <option value="approved">{{ __('Approved') }}</option>
+                        <option value="rejected">{{ __('Rejected') }}</option>
+                    </select>
+                </div>
+                
             </div>
             
             @if($registrations->count() > 0)
@@ -91,6 +106,32 @@
                                         @endif
                                     </div>
                                 </div>
+
+                                <!-- Enrollment Proof Status -->
+                                @if($registration->registration_category_snapshot === 'undergraduate_student')
+                                <div class="mb-4">
+                                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400 block mb-1">{{ __('Enrollment Proof') }}:</span>
+                                    @if($registration->enrollmentProof)
+                                        @php
+                                            $proofStatusColors = [
+                                                'pending_approval' => 'bg-yellow-100 text-yellow-800',
+                                                'approved' => 'bg-green-100 text-green-800',
+                                                'rejected' => 'bg-red-100 text-red-800',
+                                            ];
+                                            $proofStatusLabels = [
+                                                'pending_approval' => __('Pending Approval'),
+                                                'approved' => __('Approved'),
+                                                'rejected' => __('Rejected'),
+                                            ];
+                                        @endphp
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $proofStatusColors[$registration->enrollmentProof->status] ?? 'bg-gray-100 text-gray-800' }}">
+                                            {{ $proofStatusLabels[$registration->enrollmentProof->status] ?? $registration->enrollmentProof->status }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400 dark:text-gray-500 text-sm">{{ __('No proof uploaded') }}</span>
+                                    @endif
+                                </div>
+                                @endif
 
                                 <!-- Payment Statuses -->
                                 <div class="mb-4">
@@ -169,6 +210,9 @@
                                 </th>
                                 <th scope="col" class="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                     {{ __('Payment Statuses') }}
+                                </th>
+                                <th scope="col" class="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    {{ __('Enrollment Proof') }}
                                 </th>
                                 <th scope="col" class="px-4 xl:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">
                                     {{ __('Date') }}
@@ -259,6 +303,31 @@
                                                 </span>
                                             @endif
                                         </div>
+                                    </td>
+                                    <td class="px-4 xl:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                        @if($registration->registration_category_snapshot === 'undergraduate_student')
+                                            @if($registration->enrollmentProof)
+                                                @php
+                                                    $proofStatusColors = [
+                                                        'pending_approval' => 'bg-yellow-100 text-yellow-800',
+                                                        'approved' => 'bg-green-100 text-green-800',
+                                                        'rejected' => 'bg-red-100 text-red-800',
+                                                    ];
+                                                    $proofStatusLabels = [
+                                                        'pending_approval' => __('Pending'),
+                                                        'approved' => __('Approved'),
+                                                        'rejected' => __('Rejected'),
+                                                    ];
+                                                @endphp
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $proofStatusColors[$registration->enrollmentProof->status] ?? 'bg-gray-100 text-gray-800' }}">
+                                                    {{ $proofStatusLabels[$registration->enrollmentProof->status] ?? $registration->enrollmentProof->status }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400 dark:text-gray-500 text-xs">{{ __('No proof') }}</span>
+                                            @endif
+                                        @else
+                                            <span class="text-gray-400 dark:text-gray-500 text-xs">{{ __('N/A') }}</span>
+                                        @endif
                                     </td>
                                     <td class="px-4 xl:px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 hidden xl:table-cell">
                                         {{ $registration->created_at->format('d/m/Y H:i') }}

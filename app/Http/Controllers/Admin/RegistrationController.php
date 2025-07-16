@@ -8,7 +8,9 @@ use App\Models\Registration;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -23,7 +25,7 @@ class RegistrationController extends Controller
 
     public function show(Registration $registration): View
     {
-        $registration->load(['user', 'events']);
+        $registration->load(['user', 'events', 'enrollmentProof']);
 
         return view('admin.registrations.show', compact('registration'));
     }
@@ -100,5 +102,94 @@ class RegistrationController extends Controller
 
         return redirect()->route('admin.registrations.show', $registration)
             ->with('success', __('Payment status updated successfully.'));
+    }
+
+    public function downloadEnrollmentProof(Registration $registration): BinaryFileResponse|StreamedResponse|Response
+    {
+        // Check authorization
+        Gate::authorize('manageEnrollmentProofs');
+
+        // Check if registration has enrollment proof
+        if (! $registration->enrollmentProof) {
+            abort(404, __('No enrollment proof found for this registration.'));
+        }
+
+        $enrollmentProof = $registration->enrollmentProof;
+
+        // Validate that enrollment proof has a file
+        if (! $enrollmentProof->file_path) {
+            abort(404, __('Enrollment proof file not found.'));
+        }
+
+        // Check if file exists in storage
+        if (! Storage::disk('private')->exists($enrollmentProof->file_path)) {
+            abort(404, __('Enrollment proof file not found in storage.'));
+        }
+
+        // Get original filename for download
+        $originalFilename = $enrollmentProof->original_filename ?: basename($enrollmentProof->file_path);
+
+        // Generate a user-friendly filename for admin download
+        $extension = pathinfo($originalFilename, PATHINFO_EXTENSION);
+        $friendlyFilename = 'enrollment_proof_reg_'.$registration->id.'_'.time().'.'.($extension ?: 'pdf');
+
+        return Storage::disk('private')->download(
+            $enrollmentProof->file_path,
+            $friendlyFilename
+        );
+    }
+
+    public function approveEnrollmentProof(Registration $registration): RedirectResponse
+    {
+        // Check authorization
+        Gate::authorize('manageEnrollmentProofs');
+
+        // Check if registration has enrollment proof
+        if (! $registration->enrollmentProof) {
+            abort(404, __('No enrollment proof found for this registration.'));
+        }
+
+        $enrollmentProof = $registration->enrollmentProof;
+
+        // Update enrollment proof status
+        $enrollmentProof->update([
+            'status' => 'approved',
+            'approved_at' => now(),
+            'approved_by' => auth()->id(),
+            'rejection_reason' => null,
+        ]);
+
+        return redirect()->route('admin.registrations.show', $registration)
+            ->with('success', __('Enrollment proof approved successfully.'));
+    }
+
+    public function rejectEnrollmentProof(Request $request, Registration $registration): RedirectResponse
+    {
+        // Check authorization
+        Gate::authorize('manageEnrollmentProofs');
+
+        // Validate rejection reason
+        /** @var array{reason: string} $validated */
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        // Check if registration has enrollment proof
+        if (! $registration->enrollmentProof) {
+            abort(404, __('No enrollment proof found for this registration.'));
+        }
+
+        $enrollmentProof = $registration->enrollmentProof;
+
+        // Update enrollment proof status
+        $enrollmentProof->update([
+            'status' => 'rejected',
+            'approved_at' => now(),
+            'approved_by' => auth()->id(),
+            'rejection_reason' => $validated['reason'],
+        ]);
+
+        return redirect()->route('admin.registrations.show', $registration)
+            ->with('success', __('Enrollment proof rejected successfully.'));
     }
 }
