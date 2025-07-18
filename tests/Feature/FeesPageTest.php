@@ -41,7 +41,8 @@ class FeesPageTest extends TestCase
         $response->assertSee(__('Undergraduate Student'));
         $response->assertSee(__('Graduate Student'));
         $response->assertSee(__('Professor - ABE member'));
-        $response->assertSee(__('Professor - ABE non-member / Professional'));
+        $response->assertSee(__('Professor (non-ABE)'));
+        $response->assertSee(__('Professional / Foreign Participant'));
     }
 
     /**

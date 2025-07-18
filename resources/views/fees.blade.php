@@ -92,7 +92,15 @@
                                     </tr>
                                     <tr class="bg-gray-50 border-b dark:bg-gray-700 dark:border-gray-600">
                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                            {{ __('Professor - ABE non-member / Professional') }}
+                                            {{ __('Professor (non-ABE)') }}
+                                        </th>
+                                        <td class="px-6 py-4 text-center font-semibold">R$ 1,600</td>
+                                        <td class="px-6 py-4 text-center font-semibold">R$ 2,000</td>
+                                        <td class="px-6 py-4 text-center font-semibold">R$ 800</td>
+                                    </tr>
+                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                            {{ __('Professional / Foreign Participant') }}
                                         </th>
                                         <td class="px-6 py-4 text-center font-semibold">R$ 1,600</td>
                                         <td class="px-6 py-4 text-center font-semibold">R$ 2,000</td>
@@ -160,7 +168,24 @@
                                     </tr>
                                     <tr class="bg-gray-50 border-b dark:bg-gray-700 dark:border-gray-600">
                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                            {{ __('Professor - ABE non-member / Professional') }}
+                                            {{ __('Professor (non-ABE)') }}
+                                        </th>
+                                        <td class="px-6 py-4 text-center">
+                                            <span class="font-semibold">R$ 700</span>
+                                            <span class="text-sm text-purple-600 dark:text-purple-400 block">(R$ 500)*</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            <span class="font-semibold">R$ 850</span>
+                                            <span class="text-sm text-purple-600 dark:text-purple-400 block">(R$ 650)*</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            <span class="font-semibold">R$ 350</span>
+                                            <span class="text-sm text-purple-600 dark:text-purple-400 block">(R$ 200)*</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                            {{ __('Professional / Foreign Participant') }}
                                         </th>
                                         <td class="px-6 py-4 text-center">
                                             <span class="font-semibold">R$ 700</span>
