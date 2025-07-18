@@ -1192,8 +1192,8 @@ class RegistrationControllerTest extends TestCase
         $mailable = new \App\Mail\NewRegistrationNotification($registration);
         $renderedContent = $mailable->render();
 
-        // AC4: Verify international invoice message is included
-        $this->assertStringContainsString('invoice com detalhes para pagamento internacional será enviada', $renderedContent);
+        // AC4: Verify international invoice message is included (AC1 requirement)
+        $this->assertStringContainsString('Obrigado pela sua inscrição. Sua fatura para pagamento internacional será enviada em breve de assoc.bras.estatistica@gmail.com. Por favor, verifique sua caixa de entrada e pasta de spam.', $renderedContent);
 
         // Should NOT contain Brazilian payment instructions for international users
         $this->assertStringNotContainsString('Instruções para Pagamento', $renderedContent);
@@ -1340,9 +1340,9 @@ class RegistrationControllerTest extends TestCase
             if ($mail->registration->id === $registration->id && $mail->forCoordinator === false) {
                 $content = $mail->render();
 
-                // Verify international payment instructions are included
-                $this->assertStringContainsString(__('Invoice Information'), $content);
-                $this->assertStringContainsString(__('An invoice with details for international payment will be sent to your email shortly.'), $content);
+                // Verify international payment instructions are included (AC1 requirement)
+                $this->assertStringContainsString('Invoice Information', $content);
+                $this->assertStringContainsString('Thank you for your registration. Your invoice for international payment will be sent shortly from assoc.bras.estatistica@gmail.com. Please check your inbox and spam folder.', $content);
 
                 // Verify user and registration data
                 $this->assertStringContainsString($registration->full_name, $content);

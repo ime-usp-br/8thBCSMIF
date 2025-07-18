@@ -34,7 +34,7 @@
 {{ __('After making payment, access your account in the system and upload the payment proof. Your status will be updated once confirmation is processed.') }}
 @else
 **{{ __('Invoice Information') }}:**
-{{ __('An invoice with details for international payment will be sent to your email shortly.') }}
+{{ __('Thank you for your registration. Your invoice for international payment will be sent shortly from assoc.bras.estatistica@gmail.com. Please check your inbox and spam folder.') }}
 @endif
 @else
 **{{ __('Payment Status') }}:** {{ __('Fee exempt') }}
