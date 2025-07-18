@@ -116,7 +116,7 @@ class EmailVerificationTest extends TestCase
     {
         // Seed roles needed for registration
         $this->seed(RoleSeeder::class);
-        
+
         Notification::fake();
 
         // Simulate user registration using Livewire

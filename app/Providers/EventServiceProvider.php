@@ -24,12 +24,12 @@ class EventServiceProvider extends ServiceProvider
     {
         // Don't call parent::boot() to avoid any automatic registration
         // parent::boot();
-        
+
         // Use booted callback to ensure this happens after all providers are loaded
         $this->app->booted(function () {
             // Clear any existing listeners for Registered event
             Event::forget(Registered::class);
-            
+
             // Register only our custom listener
             Event::listen(Registered::class, SendSingleEmailVerificationNotification::class);
         });
