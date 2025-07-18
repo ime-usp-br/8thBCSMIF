@@ -737,10 +737,9 @@ class MyRegistrationsPageTest extends TestCase
         $registration->events()->attach($event->code, ['price_at_registration' => 200.00]);
 
         // Create pending payment for international user
-        $pendingPayment = Payment::factory()->create([
+        $pendingPayment = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 200.00,
-            'status' => 'pending',
         ]);
 
         // Test that the page DOES display upload form for international users
