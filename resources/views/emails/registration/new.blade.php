@@ -43,6 +43,12 @@
 **{{ __('Payment Status') }}:** {{ __('Fee exempt') }}
 @endif
 
+@if(isset($showEarlyBirdReminder) && $showEarlyBirdReminder && isset($earlyBirdDeadline))
+## {{ __('Early Bird Reminder') }}
+
+{{ __('Don\'t miss the early bird discount! Complete your payment before') }} **{{ $earlyBirdDeadline->format('d/m/Y') }}** {{ __('to secure the reduced rates shown above.') }}
+@endif
+
 ## {{ __('Next Steps') }}
 
 {{ __('Keep this email for your records. We will contact you soon with more information about the event.') }}

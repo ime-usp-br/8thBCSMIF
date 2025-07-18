@@ -62,12 +62,20 @@ class RegistrationModifiedNotification extends Mailable implements ShouldQueue
             $this->registration
         );
 
+        $data = [
+            'registration' => $this->registration,
+            'feeCalculation' => $feeCalculation,
+        ];
+
+        // Add early bird reminder data for participant emails only
+        if (! $this->forCoordinator) {
+            $data['showEarlyBirdReminder'] = $this->shouldShowEarlyBirdReminder($feeCalculation);
+            $data['earlyBirdDeadline'] = $this->getEarlyBirdDeadline();
+        }
+
         return new Content(
             markdown: $template,
-            with: [
-                'registration' => $this->registration,
-                'feeCalculation' => $feeCalculation,
-            ],
+            with: $data,
         );
     }
 
@@ -84,5 +92,35 @@ class RegistrationModifiedNotification extends Mailable implements ShouldQueue
         $email = config('mail.coordinator_email');
 
         return is_string($email) ? $email : null;
+    }
+
+    /**
+     * Determine if early bird reminder should be shown.
+     *
+     * @param  array<string, mixed>  $feeCalculation
+     */
+    private function shouldShowEarlyBirdReminder(array $feeCalculation): bool
+    {
+        // Check if there's an amount due
+        if ($feeCalculation['amount_due'] <= 0) {
+            return false;
+        }
+
+        // Get the early bird deadline from the first event
+        $earlyBirdDeadline = $this->getEarlyBirdDeadline();
+        if (! $earlyBirdDeadline) {
+            return false;
+        }
+
+        // Check if we're still within the early bird period
+        return now() <= $earlyBirdDeadline;
+    }
+
+    /**
+     * Get the early bird deadline from registration events.
+     */
+    private function getEarlyBirdDeadline(): ?\Illuminate\Support\Carbon
+    {
+        return $this->registration->events->first()?->registration_deadline_early;
     }
 }
