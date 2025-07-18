@@ -17,7 +17,7 @@ class SendSingleEmailVerificationNotification
         if ($event->user instanceof MustVerifyEmail && ! $event->user->hasVerifiedEmail()) {
             /** @var User $user */
             $user = $event->user;
-            
+
             // Use cache to prevent duplicate emails within a short timeframe
             $cacheKey = 'verification_email_sent_'.$user->id;
 
