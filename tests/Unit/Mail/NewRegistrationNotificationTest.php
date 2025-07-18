@@ -237,4 +237,129 @@ class NewRegistrationNotificationTest extends TestCase
         $this->assertInstanceOf(Envelope::class, $envelope);
         $this->assertEmpty($envelope->cc);
     }
+
+    #[Test]
+    public function email_contains_undergraduate_message_for_undergraduate_student_with_zero_fee(): void
+    {
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'position' => 'undergraduate_student',
+            'document_country_origin' => 'Brazil',
+        ]);
+
+        // Create event with zero fee for undergraduate
+        $event = Event::first();
+        $registration->events()->attach($event->code, [
+            'price_at_registration' => 0.00,
+        ]);
+
+        $mailable = new NewRegistrationNotification($registration, forCoordinator: false);
+        $rendered = $mailable->render();
+
+        $this->assertStringContainsString(__('As an undergraduate student, your tuition fee is zero. Instead of proof of payment, we ask that you submit a valid proof of enrollment.'), $rendered);
+        $this->assertStringContainsString(__('Enrollment Information'), $rendered);
+    }
+
+    #[Test]
+    public function email_does_not_contain_undergraduate_message_for_undergraduate_student_with_fee(): void
+    {
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'position' => 'undergraduate_student',
+            'document_country_origin' => 'Brazil',
+        ]);
+
+        // Create event with fee for undergraduate
+        $event = Event::first();
+        $registration->events()->attach($event->code, [
+            'price_at_registration' => 100.00,
+        ]);
+
+        $mailable = new NewRegistrationNotification($registration, forCoordinator: false);
+        $rendered = $mailable->render();
+
+        $this->assertStringNotContainsString(__('As an undergraduate student, your tuition fee is zero. Instead of proof of payment, we ask that you submit a valid proof of enrollment.'), $rendered);
+        $this->assertStringContainsString(__('Payment Instructions'), $rendered);
+    }
+
+    #[Test]
+    public function email_does_not_contain_undergraduate_message_for_non_undergraduate_with_zero_fee(): void
+    {
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'position' => 'postgraduate_student',
+            'document_country_origin' => 'Brazil',
+        ]);
+
+        // Create event with zero fee for non-undergraduate
+        $event = Event::first();
+        $registration->events()->attach($event->code, [
+            'price_at_registration' => 0.00,
+        ]);
+
+        $mailable = new NewRegistrationNotification($registration, forCoordinator: false);
+        $rendered = $mailable->render();
+
+        $this->assertStringNotContainsString(__('As an undergraduate student, your tuition fee is zero. Instead of proof of payment, we ask that you submit a valid proof of enrollment.'), $rendered);
+        $this->assertStringContainsString(__('Fee exempt'), $rendered);
+    }
+
+    #[Test]
+    public function email_contains_exact_undergraduate_text_as_specified_in_ac3(): void
+    {
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'position' => 'undergraduate_student',
+            'document_country_origin' => 'Brazil',
+        ]);
+
+        // Create event with zero fee
+        $event = Event::first();
+        $registration->events()->attach($event->code, [
+            'price_at_registration' => 0.00,
+        ]);
+
+        $mailable = new NewRegistrationNotification($registration, forCoordinator: false);
+        $rendered = $mailable->render();
+
+        // Test exact text as specified in AC3
+        $this->assertStringContainsString('As an undergraduate student, your tuition fee is zero. Instead of proof of payment, we ask that you submit a valid proof of enrollment.', $rendered);
+    }
+
+    #[Test]
+    public function email_does_not_show_bank_information_for_undergraduate_student_with_zero_fee(): void
+    {
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'position' => 'undergraduate_student',
+            'document_country_origin' => 'Brazil',
+        ]);
+
+        // Create event with zero fee
+        $event = Event::first();
+        $registration->events()->attach($event->code, [
+            'price_at_registration' => 0.00,
+        ]);
+
+        $mailable = new NewRegistrationNotification($registration, forCoordinator: false);
+        $rendered = $mailable->render();
+
+        // Should not contain bank transfer information
+        $this->assertStringNotContainsString(__('Payment Instructions'), $rendered);
+        $this->assertStringNotContainsString(__('Bank Transfer Information:'), $rendered);
+        $this->assertStringNotContainsString('Santander', $rendered);
+        $this->assertStringNotContainsString('0658', $rendered);
+        $this->assertStringNotContainsString('13006798-9', $rendered);
+        $this->assertStringNotContainsString('Associação Brasileira de Estatística', $rendered);
+        $this->assertStringNotContainsString(__('how to send the payment proof'), $rendered);
+
+        // Should contain enrollment information instead
+        $this->assertStringContainsString(__('Enrollment Information'), $rendered);
+        $this->assertStringContainsString(__('As an undergraduate student, your tuition fee is zero. Instead of proof of payment, we ask that you submit a valid proof of enrollment.'), $rendered);
+    }
 }
