@@ -1146,6 +1146,8 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $user->id,
             'full_name' => 'João Silva',
             'document_country_origin' => 'Brazil',
+            'position' => 'postgraduate_student',
+            'registration_category_snapshot' => 'grad_student',
             'payment_status' => 'pending_payment',
         ]);
 
@@ -1181,6 +1183,8 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $user->id,
             'full_name' => 'John Doe',
             'document_country_origin' => 'US',
+            'position' => 'postgraduate_student',
+            'registration_category_snapshot' => 'grad_student',
             'payment_status' => 'pending_payment',
         ]);
 
