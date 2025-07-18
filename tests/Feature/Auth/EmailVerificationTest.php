@@ -3,9 +3,11 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Auth\Notifications\VerifyEmail as VerifyEmailNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
@@ -105,5 +107,77 @@ class EmailVerificationTest extends TestCase
         Notification::assertNothingSent();
         // Garante que a mensagem de status não foi definida
         $this->assertNull(session('status'));
+    }
+
+    /**
+     * Test that only one verification email is sent during registration.
+     */
+    public function test_single_verification_email_sent_during_registration(): void
+    {
+        // Seed roles needed for registration
+        $this->seed(RoleSeeder::class);
+        
+        Notification::fake();
+
+        // Simulate user registration using Livewire
+        $response = Livewire::test('pages.auth.register')
+            ->set('name', 'Test User')
+            ->set('email', 'test@example.com')
+            ->set('password', 'Password123!')
+            ->set('password_confirmation', 'Password123!')
+            ->set('sou_da_usp', false)
+            ->call('register');
+
+        $response->assertRedirect('/my-registration');
+
+        // Verify user was created
+        $user = User::where('email', 'test@example.com')->first();
+        $this->assertNotNull($user);
+
+        // Check that exactly one verification notification was sent
+        Notification::assertSentTo($user, VerifyEmailNotification::class);
+        Notification::assertSentToTimes($user, VerifyEmailNotification::class, 1);
+    }
+
+    /**
+     * Test that no duplicate verification emails are sent when Registered event is fired multiple times.
+     */
+    public function test_no_duplicate_emails_when_registered_event_fired_multiple_times(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'email_verified_at' => null,
+        ]);
+
+        // Clear cache before test
+        Cache::flush();
+
+        // Fire the Registered event multiple times
+        event(new \Illuminate\Auth\Events\Registered($user));
+        event(new \Illuminate\Auth\Events\Registered($user));
+        event(new \Illuminate\Auth\Events\Registered($user));
+
+        // Should only send one verification email due to caching mechanism
+        Notification::assertSentTo($user, VerifyEmailNotification::class);
+        Notification::assertSentToTimes($user, VerifyEmailNotification::class, 1);
+    }
+
+    /**
+     * Test that no verification email is sent to already verified users.
+     */
+    public function test_no_verification_email_sent_to_already_verified_users(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        // Fire the Registered event
+        event(new \Illuminate\Auth\Events\Registered($user));
+
+        // Should not send any verification email
+        Notification::assertNotSentTo($user, VerifyEmailNotification::class);
     }
 }
