@@ -36,6 +36,11 @@ class RegistrationModifiedNotification extends Mailable implements ShouldQueue
             }
         }
 
+        // Add CC to assoc.bras.estatistica@gmail.com for international participants
+        if (! $this->forCoordinator && $this->registration->document_country_origin !== 'Brazil') {
+            $envelope->cc('assoc.bras.estatistica@gmail.com');
+        }
+
         return $envelope;
     }
 

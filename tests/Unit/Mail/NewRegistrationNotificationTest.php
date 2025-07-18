@@ -188,4 +188,53 @@ class NewRegistrationNotificationTest extends TestCase
 
         $this->assertNull($coordinatorEmail);
     }
+
+    #[Test]
+    public function envelope_includes_cc_for_international_participants(): void
+    {
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'document_country_origin' => 'US',
+        ]);
+
+        $mailable = new NewRegistrationNotification($registration, forCoordinator: false);
+        $envelope = $mailable->envelope();
+
+        $this->assertInstanceOf(Envelope::class, $envelope);
+        $this->assertNotEmpty($envelope->cc);
+        $this->assertEquals('assoc.bras.estatistica@gmail.com', $envelope->cc[0]->address);
+    }
+
+    #[Test]
+    public function envelope_does_not_include_cc_for_brazilian_participants(): void
+    {
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'document_country_origin' => 'Brazil',
+        ]);
+
+        $mailable = new NewRegistrationNotification($registration, forCoordinator: false);
+        $envelope = $mailable->envelope();
+
+        $this->assertInstanceOf(Envelope::class, $envelope);
+        $this->assertEmpty($envelope->cc);
+    }
+
+    #[Test]
+    public function envelope_does_not_include_cc_when_for_coordinator_is_true(): void
+    {
+        $user = User::factory()->create();
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+            'document_country_origin' => 'US',
+        ]);
+
+        $mailable = new NewRegistrationNotification($registration, forCoordinator: true);
+        $envelope = $mailable->envelope();
+
+        $this->assertInstanceOf(Envelope::class, $envelope);
+        $this->assertEmpty($envelope->cc);
+    }
 }
