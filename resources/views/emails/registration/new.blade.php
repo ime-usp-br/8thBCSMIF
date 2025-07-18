@@ -12,12 +12,12 @@
 - {{ $event->name }}: R$ {{ number_format((float) $event->pivot->price_at_registration, 2, ',', '.') }}
 @endforeach
 
-**{{ __('Total Amount') }}:** R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}
+**{{ __('Total Amount') }}:** R$ {{ number_format($registration->calculateCorrectTotalFee(), 2, ',', '.') }}
 
-@if($registration->position === 'undergraduate_student' && $registration->events->sum('pivot.price_at_registration') == 0)
+@if($registration->position === 'undergraduate_student' && $registration->calculateCorrectTotalFee() == 0)
 **{{ __('Enrollment Information') }}:**
 {{ __('As an undergraduate student, your tuition fee is zero. Instead of proof of payment, we ask that you submit a valid proof of enrollment.') }}
-@elseif($registration->events->sum('pivot.price_at_registration') > 0)
+@elseif($registration->calculateCorrectTotalFee() > 0)
 **{{ __('Payment Status') }}:** {{ ucfirst(str_replace('_', ' ', $registration->payment_status)) }}
 
 @if($registration->document_country_origin === 'Brazil')

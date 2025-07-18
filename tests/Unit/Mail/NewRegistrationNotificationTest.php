@@ -245,6 +245,7 @@ class NewRegistrationNotificationTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'position' => 'undergraduate_student',
+            'registration_category_snapshot' => 'undergrad_student',
             'document_country_origin' => 'Brazil',
         ]);
 
@@ -267,11 +268,12 @@ class NewRegistrationNotificationTest extends TestCase
         $user = User::factory()->create();
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'position' => 'undergraduate_student',
+            'position' => 'postgraduate_student', // Changed to postgraduate to actually have a fee
+            'registration_category_snapshot' => 'grad_student', // Set correct fee category
             'document_country_origin' => 'Brazil',
         ]);
 
-        // Create event with fee for undergraduate
+        // Create event with fee for postgraduate
         $event = Event::first();
         $registration->events()->attach($event->code, [
             'price_at_registration' => 100.00,
@@ -314,6 +316,7 @@ class NewRegistrationNotificationTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'position' => 'undergraduate_student',
+            'registration_category_snapshot' => 'undergrad_student',
             'document_country_origin' => 'Brazil',
         ]);
 
@@ -337,6 +340,7 @@ class NewRegistrationNotificationTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'position' => 'undergraduate_student',
+            'registration_category_snapshot' => 'undergrad_student',
             'document_country_origin' => 'Brazil',
         ]);
 
