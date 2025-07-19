@@ -391,3 +391,104 @@ mcp__context7__get-library-docs "/spatie/laravel-permission" --topic "middleware
 - Spatie Permission: `"roles middleware"`, `"blade directives"`
 - Alpine.js: `"directives events"`, `"lifecycle"`
 - Tailwind: `"components utilities"`, `"responsive design"`
+
+### File Organization
+```
+8thBCSMIF/                           # Project root
+├── app/                             # Application core (Laravel MVC)
+│   ├── Console/
+│   │   └── Commands/                # Custom Artisan commands for admin tasks
+│   ├── Events/                      # Laravel events for system notifications
+│   ├── Exceptions/                  # Custom exception classes for error handling
+│   ├── Http/
+│   │   ├── Controllers/             # Thin controllers following single responsibility
+│   │   ├── Middleware/              # Custom middleware for request filtering
+│   │   └── Requests/                # Form request validation classes
+│   ├── Listeners/                   # Event listeners for automated responses
+│   ├── Livewire/                    # Livewire components (TALL stack)
+│   │   ├── Actions/                 # Livewire action components
+│   │   ├── Admin/                   # Administrative interface components
+│   │   └── Forms/                   # Interactive form components
+│   ├── Mail/                        # Email notification classes
+│   ├── Models/                      # Eloquent models for database entities
+│   ├── Policies/                    # Authorization policy classes
+│   ├── Providers/                   # Service providers for dependency injection
+│   ├── Services/                    # Business logic services (single responsibility)
+│   └── View/
+│       └── Components/              # View component classes
+├── bootstrap/                       # Laravel bootstrap files
+│   ├── app.php
+│   ├── cache/                       # Bootstrap cache files
+│   └── providers.php
+├── config/                          # Configuration files
+│   ├── app.php                      # Application configuration
+│   ├── auth.php                     # Authentication configuration
+│   ├── countries.php                # Country list for registration forms
+│   ├── database.php                 # Database connections
+│   ├── fee_calculation.php          # Fee calculation business rules
+│   ├── permission.php               # Spatie permission package settings
+│   └── services.php                 # External service configurations (USP)
+├── database/                        # Database schema and data
+│   ├── factories/                   # Model factories for testing
+│   ├── migrations/                  # Database schema migrations
+│   ├── seeders/                     # Database seeders for initial data
+│   └── testing/                     # Test database files
+├── docs/                            # Project documentation
+│   ├── adr/                         # Architecture Decision Records
+│   ├── laravel_12/                  # Laravel 12 framework documentation
+│   └── *.md                         # Project-specific documentation
+├── lang/                            # Internationalization files
+│   ├── en/                          # English translations
+│   └── pt_BR/                       # Portuguese (Brazil) translations
+├── resources/                       # Frontend assets and templates
+│   ├── css/                         # Stylesheets (Tailwind CSS)
+│   ├── images/                      # Static images and logos
+│   │   ├── ime/                     # IME institutional logos
+│   │   └── usp/                     # USP institutional logos
+│   ├── js/                          # JavaScript files (Alpine.js)
+│   └── views/                       # Blade templates
+│       ├── admin/                   # Administrative interface views
+│       ├── components/              # Reusable Blade components
+│       ├── emails/                  # Email templates
+│       ├── layouts/                 # Page layout templates
+│       ├── livewire/                # Livewire component templates
+│       └── mail/                    # Mail layout templates
+├── routes/                          # Route definitions
+│   ├── auth.php                     # Authentication routes
+│   ├── console.php                  # Artisan command routes
+│   └── web.php                      # Web application routes
+├── scripts/                         # Python automation and AI integration
+│   ├── llm_core/                    # Core LLM interaction modules
+│   ├── tasks/                       # Specific LLM task implementations
+│   └── *.py                         # Main automation scripts
+├── storage/                         # File storage and caching
+│   ├── app/                         # Application file storage
+│   ├── framework/                   # Framework cache and session files
+│   └── logs/                        # Application log files
+├── tests/                           # Comprehensive test suite
+│   ├── Browser/                     # Dusk browser/UI tests
+│   ├── Fakes/                       # Test doubles for external services (USP)
+│   ├── Feature/                     # Integration/feature tests
+│   ├── Unit/                        # Unit tests for isolated components
+│   ├── python/                      # Python script tests
+│   └── fixtures/                    # Test data files
+├── templates/                       # Template files for automation
+│   ├── context_selectors/           # Context selection templates for LLM tasks
+│   ├── issue_bodies/                # GitHub issue body templates
+│   ├── meta-prompts/                # Meta-prompting templates for AI
+│   └── prompts/                     # Standard prompt templates
+├── context_llm/                     # LLM context generation and storage
+│   ├── code/                        # Generated context snapshots
+│   ├── common/                      # Shared context documentation
+│   └── temp/                        # Temporary context files
+├── llm_outputs/                     # Generated LLM task outputs
+│   ├── analyze-ac/                  # Analysis outputs
+│   ├── commit-mesage/               # Commit message generation
+│   ├── review-issue/                # Issue review outputs
+│   └── update-doc/                  # Documentation updates
+├── planos/                          # Development planning documents
+├── public/                          # Web server document root
+│   ├── build/                       # Compiled assets (Vite)
+│   └── js/                          # Public JavaScript files
+└── vendor/                          # Composer dependencies (auto-generated)
+```
