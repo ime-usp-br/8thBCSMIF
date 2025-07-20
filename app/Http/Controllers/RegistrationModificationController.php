@@ -81,7 +81,7 @@ class RegistrationModificationController extends Controller
         // Send notification to the coordinator
         $coordinatorEmail = RegistrationModifiedNotification::getCoordinatorEmail();
         if ($coordinatorEmail) {
-            Mail::queue(new RegistrationModifiedNotification($registration, forCoordinator: true));
+            Mail::to($coordinatorEmail)->queue(new RegistrationModifiedNotification($registration, forCoordinator: true));
         }
 
         Log::info('Registration modified successfully', [

@@ -28,14 +28,6 @@ class RegistrationModifiedNotification extends Mailable implements ShouldQueue
             subject: __('Registration Modified - 8th BCSMIF'),
         );
 
-        // Add coordinator email as recipient when sending coordinator notification
-        if ($this->forCoordinator) {
-            $coordinatorEmail = config('mail.coordinator_email');
-            if (is_string($coordinatorEmail)) {
-                $envelope->to($coordinatorEmail);
-            }
-        }
-
         // Add CC to assoc.bras.estatistica@gmail.com for international participants
         if (! $this->forCoordinator && $this->registration->document_country_origin !== 'Brazil') {
             $envelope->cc('assoc.bras.estatistica@gmail.com');
