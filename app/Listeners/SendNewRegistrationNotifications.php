@@ -10,11 +10,40 @@ use Illuminate\Support\Facades\Mail;
 class SendNewRegistrationNotifications
 {
     /**
+     * Keep track of processed registrations to avoid duplicates within the same request
+     *
+     * @var array<string, array<int, int>>
+     */
+    private static array $processedInCurrentRequest = [];
+
+    /**
      * Handle the event.
      */
     public function handle(NewRegistrationCreated $event): void
     {
         $registration = $event->registration;
+
+        // Reset static cache between different requests/tests
+        $currentRequestId = spl_object_hash($event);
+        if (! isset(self::$processedInCurrentRequest[$currentRequestId])) {
+            self::$processedInCurrentRequest[$currentRequestId] = [];
+        }
+
+        // Prevent duplicate processing for the same registration in the same request
+        $registrationKey = (int) $registration->id;
+        $processedIds = self::$processedInCurrentRequest[$currentRequestId];
+
+        if (in_array($registrationKey, $processedIds, true)) {
+            Log::warning(__('Duplicate registration notification prevented'), [
+                'registration_id' => $registration->id,
+                'request_id' => $currentRequestId,
+            ]);
+
+            return;
+        }
+
+        // Mark as processed for this request
+        self::$processedInCurrentRequest[$currentRequestId][] = $registrationKey;
 
         Log::info(__('Sending registration notifications'), [
             'registration_id' => $registration->id,

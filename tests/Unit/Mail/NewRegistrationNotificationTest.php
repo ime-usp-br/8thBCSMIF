@@ -310,7 +310,7 @@ class NewRegistrationNotificationTest extends TestCase
     }
 
     #[Test]
-    public function email_contains_exact_undergraduate_text_as_specified_in_ac3(): void
+    public function email_contains_exact_undergraduate_text_for_notification(): void
     {
         $user = User::factory()->create();
         $registration = Registration::factory()->create([

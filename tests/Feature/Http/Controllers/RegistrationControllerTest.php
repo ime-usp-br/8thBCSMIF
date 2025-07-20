@@ -670,7 +670,7 @@ class RegistrationControllerTest extends TestCase
     }
 
     #[Test]
-    public function ac11_comprehensive_upload_proof_feature_tests_using_storage_fake(): void
+    public function comprehensive_upload_proof_feature_tests_using_storage_fake(): void
     {
         // AC11: Testes de Feature (PHPUnit) usando Storage::fake('private') e UploadedFile::fake() cobrem:
         // - Upload bem-sucedido de um arquivo válido.

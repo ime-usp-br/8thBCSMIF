@@ -10,7 +10,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
-class PaymentControllerAC3Test extends TestCase
+class PaymentControllerUploadFormHidingTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -20,7 +20,7 @@ class PaymentControllerAC3Test extends TestCase
      *
      * This test specifically addresses AC3 requirements for Issue #51.
      */
-    public function test_ac3_upload_form_hidden_after_successful_payment_specific_upload(): void
+    public function test_upload_form_hidden_after_successful_payment_specific_upload(): void
     {
         // Arrange: Create test data with multiple payments
         Storage::fake('private');
@@ -127,7 +127,7 @@ class PaymentControllerAC3Test extends TestCase
      *
      * This test specifically addresses the payment-specific aspect of AC3 for Issue #51.
      */
-    public function test_ac3_upload_form_hiding_is_payment_specific(): void
+    public function test_upload_form_hiding_is_payment_specific(): void
     {
         // Arrange: Create test data with three payments in different states
         Storage::fake('private');
@@ -191,7 +191,7 @@ class PaymentControllerAC3Test extends TestCase
      *
      * This test specifically verifies the complete AC3 workflow for Issue #51.
      */
-    public function test_ac3_complete_form_hiding_workflow(): void
+    public function test_complete_form_hiding_workflow(): void
     {
         // Arrange: Create test data
         Storage::fake('private');

@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class PublicNavigationAC2Test extends TestCase
+class PublicNavigationLinksTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -14,7 +14,7 @@ class PublicNavigationAC2Test extends TestCase
      * "Workshops" (/workshops), "Taxas" (/fees), "Pagamento" (/payment-info),
      * "Login" (login.local) e "Inscrever-se" (register-event).
      */
-    public function test_ac2_public_navigation_contains_all_required_functional_links(): void
+    public function test_public_navigation_contains_all_required_functional_links(): void
     {
         // Test that the public navigation component renders on home page
         $response = $this->get('/');
@@ -44,7 +44,7 @@ class PublicNavigationAC2Test extends TestCase
     /**
      * Test that navigation component contains proper route helpers.
      */
-    public function test_ac2_navigation_uses_proper_route_helpers(): void
+    public function test_navigation_uses_proper_route_helpers(): void
     {
         $componentPath = resource_path('views/components/layout/public-navigation.blade.php');
         $this->assertFileExists($componentPath);
@@ -63,7 +63,7 @@ class PublicNavigationAC2Test extends TestCase
     /**
      * Test that links text matches AC2 requirements.
      */
-    public function test_ac2_navigation_displays_correct_link_text(): void
+    public function test_navigation_displays_correct_link_text(): void
     {
         $response = $this->get('/');
         $response->assertStatus(200);

@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class NavigationConditionalVisibilityAC6Test extends TestCase
+class NavigationConditionalVisibilityTest extends TestCase
 {
     use RefreshDatabase;
 

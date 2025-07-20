@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
-class PaymentControllerAC4Test extends TestCase
+class PaymentControllerViewProofButtonTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -19,7 +19,7 @@ class PaymentControllerAC4Test extends TestCase
      *
      * This test specifically addresses AC4 requirements for Issue #51.
      */
-    public function test_ac4_view_proof_button_appears_for_payments_with_uploaded_proof(): void
+    public function test_view_proof_button_appears_for_payments_with_uploaded_proof(): void
     {
         // Arrange: Create test data
         Storage::fake('private');
@@ -76,7 +76,7 @@ class PaymentControllerAC4Test extends TestCase
      *
      * This test ensures the AC4 functionality works correctly with multiple payments.
      */
-    public function test_ac4_multiple_payments_with_proofs_show_multiple_view_buttons(): void
+    public function test_multiple_payments_with_proofs_show_multiple_view_buttons(): void
     {
         // Arrange: Create test data with multiple payments with proofs
         Storage::fake('private');
@@ -144,7 +144,7 @@ class PaymentControllerAC4Test extends TestCase
      *
      * This test ensures the button has the correct visual styling and structure.
      */
-    public function test_ac4_view_proof_button_styling_and_structure(): void
+    public function test_view_proof_button_styling_and_structure(): void
     {
         // Arrange: Create test data
         Storage::fake('private');
@@ -196,7 +196,7 @@ class PaymentControllerAC4Test extends TestCase
      *
      * This test ensures the button is positioned correctly within the layout.
      */
-    public function test_ac4_view_proof_button_layout_structure(): void
+    public function test_view_proof_button_layout_structure(): void
     {
         // Arrange: Create test data
         Storage::fake('private');

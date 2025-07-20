@@ -22,7 +22,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Don't call parent::boot() to avoid any automatic registration
+        // Don't call parent::boot() to avoid automatic registration
         // parent::boot();
 
         // Use booted callback to ensure this happens after all providers are loaded
@@ -32,6 +32,9 @@ class EventServiceProvider extends ServiceProvider
 
             // Register only our custom listener
             Event::listen(Registered::class, SendSingleEmailVerificationNotification::class);
+
+            // Register NewRegistrationCreated listener manually (ONCE ONLY)
+            Event::listen(\App\Events\NewRegistrationCreated::class, \App\Listeners\SendNewRegistrationNotifications::class);
         });
     }
 

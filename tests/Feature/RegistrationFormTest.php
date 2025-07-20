@@ -286,7 +286,7 @@ class RegistrationFormTest extends TestCase
      * 5. Radio button groups have proper names and required attributes
      * 6. Error feedback components are properly placed
      */
-    public function test_ac6_frontend_validation_attributes_and_error_feedback(): void
+    public function test_frontend_validation_attributes_and_error_feedback(): void
     {
         $user = User::factory()->create();
 
@@ -338,7 +338,7 @@ class RegistrationFormTest extends TestCase
      * - International users: Passport fields are required
      * - "Other" fields become required when "other" is selected
      */
-    public function test_ac6_conditional_required_fields_validation(): void
+    public function test_conditional_required_fields_validation(): void
     {
         $user = User::factory()->create();
 
@@ -355,7 +355,7 @@ class RegistrationFormTest extends TestCase
      *
      * This test ensures that error messages are properly displayed using x-input-error components
      */
-    public function test_ac6_visual_error_feedback_display(): void
+    public function test_visual_error_feedback_display(): void
     {
         $user = User::factory()->create();
 
@@ -375,7 +375,7 @@ class RegistrationFormTest extends TestCase
      * 2. The form includes all necessary hidden fields for data submission
      * 3. The form can be submitted to create a new registration
      */
-    public function test_ac7_component_submits_data_to_registration_controller(): void
+    public function test_component_submits_data_to_registration_controller(): void
     {
         $user = User::factory()->create();
 

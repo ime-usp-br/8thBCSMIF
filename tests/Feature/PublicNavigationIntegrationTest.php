@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class PublicNavigationIntegrationAC3Test extends TestCase
+class PublicNavigationIntegrationTest extends TestCase
 {
     use RefreshDatabase;
 
