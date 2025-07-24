@@ -132,18 +132,28 @@ CNPJ 56.572.456/0001-80
 
 **Tabela de valores. Incluir no site?**
 
-|  | Until 08/15/2025 | After 08/15/2025 |  |
-| :---- | :---: | :---: | ----- |
-| **8th BCSMIF** | In-person |  | Online |
+The registration fees include transportation with conferece busses, conference materials, the welcome reception, coffee breaks, the excursion on October 1 as well as the conference dinner on October 2. For accompanying persons the coffee breaks are excluded.
+
+|     | In-person |     | Online |
+| --- | --- | --- | --- |
+| Until September 5 | After September 5 |
+| --- | --- | --- | --- |
+| **8th BCSMIF** |     |     |     |
 | Undergraduate Student | Free | Free | Free |
 | Graduate Student | R$ 600 | R$ 700 | R$ 200 |
-| Professor \- ABE member | R$ 1200 | R$ 1400 | R$ 400 |
-| Professor \- ABE non-member Professional | R$ 1600 | R$ 2000 | R$ 800 |
-|  | Until 08/15/2025 | After 08/15/2025 |  |
-| **Workshop (each one)** | In-person |  | Online |
+| Professor - ABE member | R$ 1200 | R$ 1400 | R$ 400 |
+| Professor - ABE non-member | R$ 1400 | R$ 1700 | R$ 600 |
+| Professional or Foreign Participant | R$ 1600 | R$ 2000 | R$ 800 |
+| Accompanying person | R$ 500 | R$ 600 |     |
+| **Workshop (each one)** |     |     |     |
 | Undergraduate Student | Free | Free | Free |
 | Graduate Student | Free | Free | Free |
-| Professor \- ABE member | R$ 250 (R$ 100\) | R$ 350 (R$ 200\) | R$ 150 (R$ 100\) |
-| Professor \- ABE non-member Professional | R$ 700 (R$ 500\) | R$ 850 (R$ 650\) | R$ 350 (R$ 200\) |
-| \*The numbers in parentheses refer to the 8th BCSMIF participants. |  |  |  |
+| Professor - ABE member | R$ 250 (R$ 100) | R$ 350 (R$ 200) | R$ 150 (R$ 100) |
+| Professor - ABE non-member | R$ 500 (R$ 300) | R$ 650 (R$ 450) | R$ 250 (R$ 150) |
+| Professional or Foreign Participant | R$ 700 (R$ 500) | R$ 850 (R$ 650) | R$ 350 (R$ 200) |
 
+Please be advised that the registration form will be available for completion from August 4th onwards on the registration website. During the registration process, the relevant payment information will be automatically provided.
+
+The amounts in parentheses refer to the participants registrated for the 8th BCSMIF and interested to attend the workshop.
+
+Note to undergraduate and graduate students: To be eligible for the student rate, an official certificate or document provided by the school for proof of current enrollment must be submitted.
