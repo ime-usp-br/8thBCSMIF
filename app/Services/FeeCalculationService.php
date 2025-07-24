@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Event;
 use App\Models\Fee;
 use App\Models\Registration;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -61,6 +62,9 @@ class FeeCalculationService
         $feeDetails = [];
         $totalFee = 0.0;
 
+        // Apply student validation logic - students without approved validation pay non-student rates
+        $effectiveParticipantCategory = $this->getEffectiveParticipantCategory($participantCategory, $registration);
+
         $mainConferenceCode = config('fee_calculation.main_conference_code', 'BCSMIF2025');
         $isAttendingMainConference = in_array($mainConferenceCode, $eventCodes);
 
@@ -94,7 +98,7 @@ class FeeCalculationService
 
             $feeQuery = $this->feeModel
                 ->where('event_code', $eventCode)
-                ->where('participant_category', $participantCategory)
+                ->where('participant_category', $effectiveParticipantCategory)
                 ->where('type', $participationType)
                 ->where('period', $period);
 
@@ -136,7 +140,8 @@ class FeeCalculationService
             } else {
                 Log::warning('FeeCalculationService: Fee configuration not found.', [
                     'event_code' => $eventCode,
-                    'participant_category' => $participantCategory,
+                    'participant_category' => $effectiveParticipantCategory,
+                    'original_participant_category' => $participantCategory,
                     'type' => $participationType,
                     'period' => $period,
                     'is_main_conference_event' => $event->is_main_conference,
@@ -165,5 +170,62 @@ class FeeCalculationService
         }
 
         return $result;
+    }
+
+    /**
+     * Determines the effective participant category considering student validation status.
+     *
+     * For student categories, checks if the user has approved student validation status.
+     * If not approved, changes student categories to their non-student equivalent
+     * to ensure they pay standard rates instead of student rates.
+     *
+     * @param  string  $participantCategory  The original participant category
+     * @param  \App\Models\Registration|null  $registration  The registration to check user status
+     * @return string The effective participant category for fee calculation
+     */
+    protected function getEffectiveParticipantCategory(string $participantCategory, ?Registration $registration = null): string
+    {
+        // If not a student category, return as-is
+        if (! in_array($participantCategory, ['undergrad_student', 'grad_student'])) {
+            return $participantCategory;
+        }
+
+        // If no registration provided, use original category (for new registrations, testing, etc.)
+        if (! $registration) {
+            return $participantCategory;
+        }
+
+        $user = $registration->user;
+
+        // Only apply validation logic if user requires validation
+        if ($user->requiresStudentValidation()) {
+            // Check if student validation is approved
+            if (! $user->hasStudentValidationApproved()) {
+                Log::info('FeeCalculationService: Student validation not approved, applying non-student rates.', [
+                    'user_id' => $user->id,
+                    'student_validation_status' => $user->student_validation_status,
+                    'original_category' => $participantCategory,
+                ]);
+
+                return $this->convertStudentCategoryToNonStudent($participantCategory);
+            }
+        }
+
+        // Student validation is approved or not required, use original category
+        return $participantCategory;
+    }
+
+    /**
+     * Converts student categories to their non-student equivalent for pricing.
+     *
+     * @param  string  $studentCategory  The student category to convert
+     * @return string The equivalent non-student category
+     */
+    protected function convertStudentCategoryToNonStudent(string $studentCategory): string
+    {
+        return match ($studentCategory) {
+            'undergrad_student', 'grad_student' => 'professional_foreign',
+            default => $studentCategory,
+        };
     }
 }

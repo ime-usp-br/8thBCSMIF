@@ -140,11 +140,20 @@ new #[Layout('layouts.app')] class extends Component {
             };
 
             $feeCalculationService = app(FeeCalculationService::class);
+            
+            // For student validation logic, we need to pass a mock registration with the current user
+            $mockRegistration = null;
+            if (auth()->check() && in_array($participantCategory, ['undergrad_student', 'grad_student'])) {
+                $mockRegistration = new Registration();
+                $mockRegistration->setRelation('user', auth()->user());
+            }
+            
             $feeCalculation = $feeCalculationService->calculateFees(
                 $participantCategory,
                 $this->selected_event_codes,
                 Carbon::now(),
-                $this->participation_format ?: 'in-person'
+                $this->participation_format ?: 'in-person',
+                $mockRegistration
             );
 
             $this->fee_details = $feeCalculation['details'];

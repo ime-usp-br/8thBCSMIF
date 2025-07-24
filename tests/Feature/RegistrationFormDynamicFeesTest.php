@@ -45,9 +45,13 @@ class RegistrationFormDynamicFeesTest extends TestCase
     #[\PHPUnit\Framework\Attributes\Test]
     public function fee_calculation_updates_when_changing_participant_position(): void
     {
-        $user = User::factory()->create(['email_verified_at' => now()]);
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+            'student_validation_status' => User::STUDENT_STATUS_APPROVED,
+        ]);
 
-        $component = Livewire::test('registration-form')
+        $component = Livewire::actingAs($user)
+            ->test('registration-form')
             ->set('selected_event_codes', ['BCSMIF2025'])
             ->set('is_abe_member', 'no')
             ->set('participation_format', 'in-person')
