@@ -523,28 +523,28 @@ class FeeCalculationServiceTest extends TestCase
                 'expected_event_prices' => [$workshopCode => 150.00],
             ],
             'main_and_workshop_with_discount' => [
-                'category' => 'professor_non_abe_professional',
+                'category' => 'professional_foreign',
                 'events' => [$mainConferenceCode, $workshopCode],
                 'date' => '2025-08-01', // Early
                 'type' => 'in-person',
                 'fees_to_create' => [
-                    ['event_code' => $mainConferenceCode, 'participant_category' => 'professor_non_abe_professional', 'type' => 'in-person', 'period' => 'early', 'price' => 1600.00, 'is_discount_for_main_event_participant' => false],
-                    ['event_code' => $workshopCode, 'participant_category' => 'professor_non_abe_professional', 'type' => 'in-person', 'period' => 'early', 'price' => 500.00, 'is_discount_for_main_event_participant' => true], // Discounted
-                    ['event_code' => $workshopCode, 'participant_category' => 'professor_non_abe_professional', 'type' => 'in-person', 'period' => 'early', 'price' => 700.00, 'is_discount_for_main_event_participant' => false], // Normal
+                    ['event_code' => $mainConferenceCode, 'participant_category' => 'professional_foreign', 'type' => 'in-person', 'period' => 'early', 'price' => 1600.00, 'is_discount_for_main_event_participant' => false],
+                    ['event_code' => $workshopCode, 'participant_category' => 'professional_foreign', 'type' => 'in-person', 'period' => 'early', 'price' => 500.00, 'is_discount_for_main_event_participant' => true], // Discounted
+                    ['event_code' => $workshopCode, 'participant_category' => 'professional_foreign', 'type' => 'in-person', 'period' => 'early', 'price' => 700.00, 'is_discount_for_main_event_participant' => false], // Normal
                 ],
                 'expected_total' => 1600.00 + 500.00,
                 'expected_details_count' => 2,
                 'expected_event_prices' => [$mainConferenceCode => 1600.00, $workshopCode => 500.00],
             ],
             'main_and_workshop_discount_not_found_uses_normal_workshop_price' => [
-                'category' => 'professor_non_abe_professional',
+                'category' => 'professional_foreign',
                 'events' => [$mainConferenceCode, $workshopCode],
                 'date' => '2025-08-01', // Early
                 'type' => 'in-person',
                 'fees_to_create' => [
-                    ['event_code' => $mainConferenceCode, 'participant_category' => 'professor_non_abe_professional', 'type' => 'in-person', 'period' => 'early', 'price' => 1600.00, 'is_discount_for_main_event_participant' => false],
+                    ['event_code' => $mainConferenceCode, 'participant_category' => 'professional_foreign', 'type' => 'in-person', 'period' => 'early', 'price' => 1600.00, 'is_discount_for_main_event_participant' => false],
                     // No discounted fee for workshop
-                    ['event_code' => $workshopCode, 'participant_category' => 'professor_non_abe_professional', 'type' => 'in-person', 'period' => 'early', 'price' => 700.00, 'is_discount_for_main_event_participant' => false], // Normal workshop
+                    ['event_code' => $workshopCode, 'participant_category' => 'professional_foreign', 'type' => 'in-person', 'period' => 'early', 'price' => 700.00, 'is_discount_for_main_event_participant' => false], // Normal workshop
                 ],
                 'expected_total' => 1600.00 + 700.00,
                 'expected_details_count' => 2,

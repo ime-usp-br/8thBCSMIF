@@ -21,7 +21,7 @@ class EventsTableSeeder extends Seeder
                 'start_date' => '2025-09-28',
                 'end_date' => '2025-10-03',
                 'location' => 'Maresias Beach Hotel, Maresias, SP',
-                'registration_deadline_early' => '2025-08-15',
+                'registration_deadline_early' => '2025-09-05',
                 'registration_deadline_late' => null,
                 'is_main_conference' => true,
             ]
@@ -35,7 +35,7 @@ class EventsTableSeeder extends Seeder
                 'start_date' => '2025-09-24',
                 'end_date' => '2025-09-25',
                 'location' => 'IME-USP, São Paulo',
-                'registration_deadline_early' => '2025-08-15',
+                'registration_deadline_early' => '2025-09-05',
                 'registration_deadline_late' => null,
                 'is_main_conference' => false,
             ]
@@ -49,7 +49,7 @@ class EventsTableSeeder extends Seeder
                 'start_date' => '2025-09-26',
                 'end_date' => '2025-09-27',
                 'location' => 'IMECC-UNICAMP, Campinas',
-                'registration_deadline_early' => '2025-08-15',
+                'registration_deadline_early' => '2025-09-05',
                 'registration_deadline_late' => null,
                 'is_main_conference' => false,
             ]
