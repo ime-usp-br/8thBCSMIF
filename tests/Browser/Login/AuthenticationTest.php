@@ -450,7 +450,6 @@ class AuthenticationTest extends DuskTestCase
         });
     }
 
-
     #[Test]
     public function external_user_creation_flow_works_end_to_end(): void
     {
@@ -497,7 +496,4 @@ class AuthenticationTest extends DuskTestCase
         $this->assertFalse($externalUser->hasRole('usp_user'));
         $this->assertNull($externalUser->codpes);
     }
-
-
-
 }
