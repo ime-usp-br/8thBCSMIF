@@ -35,11 +35,21 @@ class FeesTableSeeder extends Seeder
             ['event_code' => 'BCSMIF2025', 'participant_category' => 'professor_abe', 'type' => 'online', 'period' => 'early', 'price' => 400.00, 'is_discount_for_main_event_participant' => false],
             ['event_code' => 'BCSMIF2025', 'participant_category' => 'professor_abe', 'type' => 'online', 'period' => 'late', 'price' => 400.00, 'is_discount_for_main_event_participant' => false],
 
-            // Professor - ABE non-member / Professional
-            ['event_code' => 'BCSMIF2025', 'participant_category' => 'professor_non_abe_professional', 'type' => 'in-person', 'period' => 'early', 'price' => 1600.00, 'is_discount_for_main_event_participant' => false],
-            ['event_code' => 'BCSMIF2025', 'participant_category' => 'professor_non_abe_professional', 'type' => 'in-person', 'period' => 'late', 'price' => 2000.00, 'is_discount_for_main_event_participant' => false],
-            ['event_code' => 'BCSMIF2025', 'participant_category' => 'professor_non_abe_professional', 'type' => 'online', 'period' => 'early', 'price' => 800.00, 'is_discount_for_main_event_participant' => false],
-            ['event_code' => 'BCSMIF2025', 'participant_category' => 'professor_non_abe_professional', 'type' => 'online', 'period' => 'late', 'price' => 800.00, 'is_discount_for_main_event_participant' => false],
+            // Professor - ABE non-member
+            ['event_code' => 'BCSMIF2025', 'participant_category' => 'professor_non_abe', 'type' => 'in-person', 'period' => 'early', 'price' => 1400.00, 'is_discount_for_main_event_participant' => false],
+            ['event_code' => 'BCSMIF2025', 'participant_category' => 'professor_non_abe', 'type' => 'in-person', 'period' => 'late', 'price' => 1700.00, 'is_discount_for_main_event_participant' => false],
+            ['event_code' => 'BCSMIF2025', 'participant_category' => 'professor_non_abe', 'type' => 'online', 'period' => 'early', 'price' => 600.00, 'is_discount_for_main_event_participant' => false],
+            ['event_code' => 'BCSMIF2025', 'participant_category' => 'professor_non_abe', 'type' => 'online', 'period' => 'late', 'price' => 600.00, 'is_discount_for_main_event_participant' => false],
+
+            // Professional or Foreign Participant
+            ['event_code' => 'BCSMIF2025', 'participant_category' => 'professional_foreign', 'type' => 'in-person', 'period' => 'early', 'price' => 1600.00, 'is_discount_for_main_event_participant' => false],
+            ['event_code' => 'BCSMIF2025', 'participant_category' => 'professional_foreign', 'type' => 'in-person', 'period' => 'late', 'price' => 2000.00, 'is_discount_for_main_event_participant' => false],
+            ['event_code' => 'BCSMIF2025', 'participant_category' => 'professional_foreign', 'type' => 'online', 'period' => 'early', 'price' => 800.00, 'is_discount_for_main_event_participant' => false],
+            ['event_code' => 'BCSMIF2025', 'participant_category' => 'professional_foreign', 'type' => 'online', 'period' => 'late', 'price' => 800.00, 'is_discount_for_main_event_participant' => false],
+
+            // Accompanying person (in-person only)
+            ['event_code' => 'BCSMIF2025', 'participant_category' => 'accompanying_person', 'type' => 'in-person', 'period' => 'early', 'price' => 500.00, 'is_discount_for_main_event_participant' => false],
+            ['event_code' => 'BCSMIF2025', 'participant_category' => 'accompanying_person', 'type' => 'in-person', 'period' => 'late', 'price' => 600.00, 'is_discount_for_main_event_participant' => false],
         ];
 
         $workshopEvents = ['RAA2025', 'WDA2025'];
@@ -62,11 +72,17 @@ class FeesTableSeeder extends Seeder
             ['participant_category' => 'professor_abe', 'type' => 'online', 'period' => 'early', 'price_discount' => 100.00, 'price_normal' => 150.00],
             ['participant_category' => 'professor_abe', 'type' => 'online', 'period' => 'late', 'price_discount' => 100.00, 'price_normal' => 150.00],
 
-            // Professor - ABE non-member / Professional (Workshop)
-            ['participant_category' => 'professor_non_abe_professional', 'type' => 'in-person', 'period' => 'early', 'price_discount' => 500.00, 'price_normal' => 700.00],
-            ['participant_category' => 'professor_non_abe_professional', 'type' => 'in-person', 'period' => 'late', 'price_discount' => 650.00, 'price_normal' => 850.00],
-            ['participant_category' => 'professor_non_abe_professional', 'type' => 'online', 'period' => 'early', 'price_discount' => 200.00, 'price_normal' => 350.00],
-            ['participant_category' => 'professor_non_abe_professional', 'type' => 'online', 'period' => 'late', 'price_discount' => 200.00, 'price_normal' => 350.00],
+            // Professor - ABE non-member (Workshop)
+            ['participant_category' => 'professor_non_abe', 'type' => 'in-person', 'period' => 'early', 'price_discount' => 300.00, 'price_normal' => 500.00],
+            ['participant_category' => 'professor_non_abe', 'type' => 'in-person', 'period' => 'late', 'price_discount' => 450.00, 'price_normal' => 650.00],
+            ['participant_category' => 'professor_non_abe', 'type' => 'online', 'period' => 'early', 'price_discount' => 150.00, 'price_normal' => 250.00],
+            ['participant_category' => 'professor_non_abe', 'type' => 'online', 'period' => 'late', 'price_discount' => 150.00, 'price_normal' => 250.00],
+
+            // Professional or Foreign Participant (Workshop)
+            ['participant_category' => 'professional_foreign', 'type' => 'in-person', 'period' => 'early', 'price_discount' => 500.00, 'price_normal' => 700.00],
+            ['participant_category' => 'professional_foreign', 'type' => 'in-person', 'period' => 'late', 'price_discount' => 650.00, 'price_normal' => 850.00],
+            ['participant_category' => 'professional_foreign', 'type' => 'online', 'period' => 'early', 'price_discount' => 200.00, 'price_normal' => 350.00],
+            ['participant_category' => 'professional_foreign', 'type' => 'online', 'period' => 'late', 'price_discount' => 200.00, 'price_normal' => 350.00],
         ];
 
         foreach ($workshopEvents as $eventCode) {

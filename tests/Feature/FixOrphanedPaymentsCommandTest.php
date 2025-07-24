@@ -38,7 +38,7 @@ class FixOrphanedPaymentsCommandTest extends TestCase
         $eventWithFee = Event::factory()->create();
         $eventWithFee->fees()->create([
             'price' => 100.00,
-            'participant_category' => 'professor_non_abe_professional', // Example category
+            'participant_category' => 'professional_foreign', // Example category
             'participation_format' => 'in_person',
             'is_early_bird' => true,
             'is_main_event_participant_discount' => false,
@@ -134,7 +134,7 @@ class FixOrphanedPaymentsCommandTest extends TestCase
         $eventWithFee = Event::factory()->create();
         $eventWithFee->fees()->create([
             'price' => 100.00,
-            'participant_category' => 'professor_non_abe_professional',
+            'participant_category' => 'professional_foreign',
             'participation_format' => 'in_person',
             'is_early_bird' => true,
             'is_main_event_participant_discount' => false,

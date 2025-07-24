@@ -47,13 +47,13 @@ class RegistrationController extends Controller
                 $participantCategory = match ($position) {
                     'undergraduate_student' => 'undergrad_student',
                     'graduate_student' => 'grad_student',
-                    'professor' => $isAbeMember ? 'professor_abe' : 'professor_non_abe_professional',
-                    'professional', 'researcher', 'other' => 'professor_non_abe_professional',
-                    default => 'professor_non_abe_professional', // Fallback
+                    'professor' => $isAbeMember ? 'professor_abe' : 'professor_non_abe',
+                    'professional', 'researcher', 'other' => 'professional_foreign',
+                    default => 'professional_foreign', // Fallback
                 };
                 if ($position === 'other' || ! in_array($position, ['undergraduate_student', 'graduate_student', 'professor', 'professional', 'researcher'])) {
                     Log::warning(
-                        "Unhandled or 'other' position during participant category mapping. Defaulting to 'professor_non_abe_professional'.",
+                        "Unhandled or 'other' position during participant category mapping. Defaulting to 'professional_foreign'.",
                         ['position_value' => $position]
                     );
                 }

@@ -27,7 +27,7 @@ class FeeFactory extends Factory
     {
         return [
             'event_code' => fn () => Event::factory()->create()->code,
-            'participant_category' => $this->faker->randomElement(['undergrad_student', 'grad_student', 'professor_abe', 'professor_non_abe_professional']),
+            'participant_category' => $this->faker->randomElement(['undergrad_student', 'grad_student', 'professor_abe', 'professor_non_abe', 'professional_foreign', 'accompanying_person']),
             'type' => $this->faker->randomElement(['in-person', 'online']),
             'period' => $this->faker->randomElement(['early', 'late']),
             'price' => $this->faker->randomFloat(2, 0, 2000),

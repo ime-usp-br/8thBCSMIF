@@ -25,4 +25,30 @@ return [
     |
     */
     'default_participation_type' => 'in-person',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Registration Deadline (Early Bird)
+    |--------------------------------------------------------------------------
+    |
+    | The early bird registration deadline date. After this date, late
+    | registration fees will apply. Updated to September 5, 2025.
+    |
+    */
+    'early_registration_deadline' => '2025-09-05',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Accompanying Person Restrictions
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for accompanying person category restrictions.
+    | Accompanying persons cannot register for workshops.
+    |
+    */
+    'accompanying_person' => [
+        'can_register_workshops' => false,
+        'participation_types' => ['in-person'], // Only in-person allowed
+        'description' => 'Includes transportation, materials, reception, excursion, dinner. Excludes coffee breaks.',
+    ],
 ];

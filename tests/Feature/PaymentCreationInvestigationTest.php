@@ -26,7 +26,7 @@ class PaymentCreationInvestigationTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'payment_status' => 'pending_payment',
-            'registration_category_snapshot' => 'professor_non_abe_professional',
+            'registration_category_snapshot' => 'professional_foreign',
             'participation_format' => 'in_person',
         ]);
 
