@@ -1,56 +1,74 @@
----
-description: "Guia para executar todas as verificações de qualidade obrigatórias (Pint, PHPStan, PHPUnit, Pytest)."
----
+<task name="Run Quality Assurance (QA) Checks">
 
-**Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
+<task_objective>
+This workflow executes all mandatory project quality checks in a defined sequence. Each step must pass before proceeding, ensuring that the code meets formatting, static analysis, and testing standards before integration.
+</task_objective>
 
-## Guia: Quality Checks Obrigatórios
+<detailed_sequence_steps>
+# Run Quality Assurance Checks - Detailed Process
 
-O Cline deve executar todas as verificações de qualidade na ordem exata definida no projeto. Cada etapa deve ser aprovada antes de prosseguir.
+**Important Note:** When executing commands that might produce extensive output or hang the terminal, use `| cat` at the end of the command. Example: `your-command-here | cat`.
 
-### 1. PSR-12 Formatting (Pint)
-O Cline deve executar o Pint para garantir a formatação PSR-12.
+## 1. Code Formatting (Pint)
 
-<execute_command>
-<command>vendor/bin/pint | cat</command>
-<requires_approval>false</requires_approval>
-</execute_command>
+1.  Run Pint to ensure compliance with the PSR-12 standard.
 
-### 2. Static Analysis (PHPStan Level 9)
-O Cline deve executar o PHPStan para análise estática.
+    ```xml
+    <execute_command>
+    <command>vendor/bin/pint | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-<execute_command>
-<command>vendor/bin/phpstan analyse | cat</command>
-<requires_approval>false</requires_approval>
-</execute_command>
+## 2. Static Analysis (PHPStan)
 
-### 3. Unit/Feature Tests (PHPUnit)
-O Cline deve executar os testes de unidade e feature com PHPUnit.
+1.  Run PHPStan to perform static analysis of the code.
 
-<execute_command>
-<command>php artisan test | cat</command>
-<requires_approval>false</requires_approval>
-</execute_command>
+    ```xml
+    <execute_command>
+    <command>vendor/bin/phpstan analyse | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-### 4. Python Tests (Pytest)
-O Cline deve executar os testes Python com Pytest.
+## 3. Unit and Feature Tests (PHPUnit)
 
-<execute_command>
-<command>pytest -v --live | cat</command>
-<requires_approval>false</requires_approval>
-</execute_command>
+1.  Run the unit and feature tests with PHPUnit.
 
-### 5. Browser Tests (Opcional - Dusk)
-O Cline deve verificar e executar os testes de navegador (Dusk), se existirem.
+    ```xml
+    <execute_command>
+    <command>php artisan test | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-<execute_command>
-<command>if grep -r "dusk" tests/ >/dev/null 2>&1; then echo "Executando testes Dusk..." && php artisan dusk; else echo "Nenhum teste Dusk encontrado"; fi</command>
-<requires_approval>false</requires_approval>
-</execute_command>
+## 4. Python Tests (Pytest)
 
----
+1.  Run the Python tests with Pytest, if applicable.
 
-**📋 RESULTADO FINAL:**
-- **TODOS OS CHECKS DEVEM PASSAR** antes de executar a validação de AC.
-- Se algum check falhar, o Cline deve parar e instruir o usuário a corrigir antes de prosseguir.
-- O Cline **NÃO** deve executar a validação de AC com quality checks reprovados.
+    ```xml
+    <execute_command>
+    <command>pytest -v --live | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
+
+## 5. Browser Tests (Dusk - Optional)
+
+1.  Check for and run browser tests (Dusk) if they exist in the project.
+
+    ```xml
+    <execute_command>
+    <command>if grep -r "dusk" tests/ >/dev/null 2>&1; then echo "Running Dusk tests..." && php artisan dusk | cat; else echo "No Dusk tests found"; fi</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
+
+## 6. Conclusion
+
+1.  **Instructions for the AI Assistant:**
+    *   If all checks pass, use `attempt_completion` to inform the user that the quality check was completed successfully.
+    *   If any check fails, **stop the workflow**, inform the user which step failed, and present the error logs so they can fix the issue before trying again.
+
+</detailed_sequence_steps>
+</task>

@@ -1,96 +1,108 @@
----
-description: "Workflow atômico e robusto para executar git push, com verificações de segurança e lógica de decisão gerenciada pelo Cline."
----
+<task name="Atomic and Secure Push to Remote Repository">
 
-**Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
+<task_objective>
+This workflow executes `git push` incrementally and securely. Each step is a simple command, and the decision on which push command to use (standard push or push with --set-upstream) is made by Cline based on the branch status, ensuring a robust and error-proof process.
+</task_objective>
 
-## Guia: Push Atômico e Seguro para Repositório Remoto
+<detailed_sequence_steps>
+# Atomic and Secure Push - Detailed Process
 
-Este guia executa `git push` de forma incremental e segura. Cada passo é um comando simples e a decisão sobre qual comando de push usar é feita pelo Cline com base no status da branch.
+**Important Note:** When executing commands that might produce extensive output or hang the terminal, use `| cat` at the end of the command. Example: `your-command-here | cat`.
 
-### 1. Sincronização com o Repositório Remoto
-Primeiro, vamos buscar as atualizações do repositório remoto para garantir que nossas verificações locais estejam baseadas na versão mais recente.
+## 1. Sync and Analyze Status
 
-<execute_command>
-<command>git fetch --verbose | cat</command>
-<# Sincroniza o estado do remoto. Essencial para evitar um push cego. #>
-<requires_approval>false</requires_approval>
-</execute_command>
+1.  Fetch updates from the remote repository to ensure local checks are based on the latest version.
 
-### 2. Análise de Status e Commits Pendentes
-Agora, o Cline irá obter o contexto do que está prestes a ser enviado.
+    ```xml
+    <execute_command>
+    <command>git fetch --verbose | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-**A. Verificação de Status:**
+2.  Check the status of the branch in relation to its remote counterpart.
 
-<execute_command>
-<command>git status | cat</command>
-<# Mostra se a branch está à frente, atrás ou divergiu da remota. '| cat' garante que não trave. #>
-<requires_approval>false</requires_approval>
-</execute_command>
+    ```xml
+    <execute_command>
+    <command>git status | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-**B. Listagem dos Commits a Serem Enviados:**
+3.  List the commits that are about to be pushed.
 
-<execute_command>
-<command>git log @{u}..HEAD --pretty=format:"%C(yellow)%h %C(reset)- %s %C(green)(%cr) %C(bold blue)<%an>%C(reset)" | cat</command>
-<# Lista os commits que você tem e o remoto não. Se der erro, é o primeiro push, e o Cline saberá lidar com isso. #>
-<requires_approval>false</requires_approval>
-</execute_command>
+    ```xml
+    <execute_command>
+    <command>git log @{u}..HEAD --pretty=format:"%C(yellow)%h %C(reset)- %s %C(green)(%cr) %C(bold blue)<%an>%C(reset)" | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-### 3. Análise de Segurança Crítica (Executada pelo Cline)
-O Cline irá obter o `diff` completo do que será enviado e analisá-lo internamente em busca de segredos.
+## 2. Critical Security Analysis (Assistant's Action)
 
-<execute_command>
-<command>git diff @{u}..HEAD | cat</command>
-<# Fornece o conteúdo para o Cline analisar. Se for o primeiro push, o Cline deve comparar com a branch principal (ex: main ou master). #>
-<requires_approval>false</requires_approval>
-</execute_command>
+1.  Get the complete `diff` of what will be pushed for an internal secret scan.
 
-**Instruções para o Cline (Sua Ação Obrigatória):**
-1.  **Analise o `diff` acima.** Se o comando falhar (primeiro push), execute `git diff origin/main..HEAD | cat` (ou `origin/master`) para obter as alterações.
-2.  **Procure por dados sensíveis** (chaves, senhas, tokens).
-3.  **SE ENCONTRAR ALGO SUSPEITO:**
-    *   **Pare o processo.**
-    *   Informe o usuário sobre o risco e pergunte se deseja prosseguir. Se "não", encerre o workflow.
+    ```xml
+    <execute_command>
+    <command>git diff @{u}..HEAD | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-### 4. Verificação de Existência da Branch Remota
-Este é o passo de decisão. O Cline executará um comando para saber se a branch já existe no `origin`. O resultado determinará o próximo passo.
+2.  **Instructions for the AI Assistant (Mandatory Action):**
+    *   Analyze the `diff` output. If the command fails (first push), execute `git diff origin/main..HEAD | cat` as an alternative.
+    *   Look for sensitive data (keys, passwords, tokens).
+    *   **If you find anything suspicious:** Stop the process, inform the user of the risk, and ask if they wish to proceed. If "no", terminate the workflow.
 
-<execute_command>
-<command>git ls-remote --exit-code --heads origin $(git branch --show-current)</command>
-<# Este comando simples falha (exit code 2) se a branch não existir no remoto, e tem sucesso (exit code 0) se existir. #>
-<requires_approval>false</requires_approval>
-</execute_command>
+## 3. Decision and Execution of Push
 
-**Instruções para o Cline:**
-*   Se o comando acima foi **bem-sucedido** (exit code 0), a branch já existe. **Pule para a Etapa 5A.**
-*   Se o comando acima **falhou** (exit code diferente de 0), é o primeiro push. **Pule para a Etapa 5B.**
+1.  Check if the branch already exists on the remote repository to decide which push command to use.
 
----
-### 5A. OPÇÃO 1: Push para Branch Existente
-*Execute esta etapa apenas se a verificação da Etapa 4 foi bem-sucedida.*
+    ```xml
+    <execute_command>
+    <command>git ls-remote --exit-code --heads origin $(git branch --show-current) | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
+2.  **Instructions for the AI Assistant (Decision Logic):**
+    *   If the command above was **successful** (exit code 0), the branch already exists. **Proceed to Step 3A.**
+    *   If the command above **failed** (exit code other than 0), this is the first push for the branch. **Proceed to Step 3B.**
+
+### 3A. Option 1: Push to an Existing Branch
+
+*Execute this step only if the check in Step 3 was successful.*
+
+```xml
 <execute_command>
 <command>git push | cat</command>
-<# Comando de push padrão para uma branch que já é rastreada. Requer sua aprovação. #>
 <requires_approval>true</requires_approval>
 </execute_command>
+```
 
----
-### 5B. OPÇÃO 2: Publicar Nova Branch (Primeiro Push)
-*Execute esta etapa apenas se a verificação da Etapa 4 falhou.*
+### 3B. Option 2: Publish a New Branch (First Push)
 
+*Execute this step only if the check in Step 3 failed.*
+
+```xml
 <execute_command>
 <command>git push --set-upstream origin $(git branch --show-current) | cat</command>
-<# Publica a branch no remoto e configura o rastreamento (upstream). Requer sua aprovação. #>
 <requires_approval>true</requires_approval>
 </execute_command>
+```
 
----
-### 6. Confirmação Final Pós-Push
-Após o push ser aprovado e executado, vamos confirmar que tudo está sincronizado.
+## 4. Final Post-Push Confirmation
 
-<execute_command>
-<command>git status | cat</command>
-<# O status final deve informar: "Your branch is up to date with 'origin/...'". #>
-<requires_approval>false</requires_approval>
-</execute_command>
+1.  After the push is approved and executed, confirm that everything is synchronized.
+
+    ```xml
+    <execute_command>
+    <command>git status | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
+
+2.  Use `attempt_completion` to inform the user that the push was completed successfully.
+
+</detailed_sequence_steps>
+</task>
