@@ -9,7 +9,7 @@ class FileUploadTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_basic_file_upload()
     {
         $view = $this->blade(
@@ -21,7 +21,7 @@ class FileUploadTest extends TestCase
         $view->assertSeeInOrder(['input', 'type="file"', 'name="test_upload"']);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_with_custom_accept_types()
     {
         $view = $this->blade(
@@ -33,7 +33,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('Supported formats');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_with_custom_max_size()
     {
         $view = $this->blade(
@@ -44,7 +44,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('Max');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_required_field()
     {
         $view = $this->blade(
@@ -56,7 +56,7 @@ class FileUploadTest extends TestCase
         $view->assertSeeInOrder(['input', 'required']);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_with_description()
     {
         $view = $this->blade(
@@ -66,7 +66,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('Please upload your document');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_shows_existing_file_when_provided()
     {
         $existingFile = ['name' => 'document.pdf', 'path' => '/storage/docs/document.pdf'];
@@ -81,7 +81,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('Replace');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_includes_alpine_js_functionality()
     {
         $view = $this->blade(
@@ -94,7 +94,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('handleFileSelect($event)', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_includes_drag_and_drop_events()
     {
         $view = $this->blade(
@@ -107,7 +107,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('@dragend.prevent="dragOver = false"', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_shows_file_preview_section()
     {
         $view = $this->blade(
@@ -120,7 +120,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('@click="removeFile()"', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_includes_upload_progress_indicator()
     {
         $view = $this->blade(
@@ -133,7 +133,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('bg-usp-blue-pri', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_shows_error_messages()
     {
         $view = $this->blade(
@@ -145,7 +145,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('text-red-600', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_includes_image_preview_functionality()
     {
         $view = $this->blade(
@@ -156,7 +156,7 @@ class FileUploadTest extends TestCase
         $view->assertSee(':src="filePreview"', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_includes_pdf_icon_for_pdf_files()
     {
         $view = $this->blade(
@@ -168,7 +168,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('text-red-600', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_includes_file_validation_logic()
     {
         $view = $this->blade(
@@ -181,7 +181,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('File size exceeds maximum', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_includes_file_utility_functions()
     {
         $view = $this->blade(
@@ -193,7 +193,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('generatePreview(file)', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_supports_download_route_for_existing_files()
     {
         $downloadRoute = 'https://example.com/download/file.pdf';
@@ -206,7 +206,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('viewExistingFile()', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_uses_usp_brand_colors()
     {
         $view = $this->blade(
@@ -218,7 +218,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('hover:border-usp-blue-pri', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_supports_dark_mode()
     {
         $view = $this->blade(
@@ -231,7 +231,7 @@ class FileUploadTest extends TestCase
         $view->assertSee('dark:text-gray-400', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_handles_file_replacement_functionality()
     {
         $view = $this->blade(

@@ -9,7 +9,7 @@ class FormSectionTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_basic_form_section()
     {
         $view = $this->blade(
@@ -22,7 +22,7 @@ class FormSectionTest extends TestCase
         $view->assertSee('Section content');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_section_with_description()
     {
         $view = $this->blade(
@@ -36,7 +36,7 @@ class FormSectionTest extends TestCase
         $view->assertSee('Content');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_section_with_step_number()
     {
         $view = $this->blade(
@@ -50,7 +50,7 @@ class FormSectionTest extends TestCase
         $view->assertSee('Step content');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_completed_section_with_checkmark()
     {
         $view = $this->blade(
@@ -65,7 +65,7 @@ class FormSectionTest extends TestCase
         $view->assertSee('Completed content');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_section_with_icon()
     {
         $icon = '<svg class="w-5 h-5"><path d="test-icon-path"/></svg>';
@@ -82,7 +82,7 @@ class FormSectionTest extends TestCase
         $view->assertSee('Icon content');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_collapsible_section()
     {
         $view = $this->blade(
@@ -97,7 +97,7 @@ class FormSectionTest extends TestCase
         $view->assertSee('Collapsible content');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_collapsed_section_by_default()
     {
         $view = $this->blade(
@@ -111,7 +111,7 @@ class FormSectionTest extends TestCase
         $view->assertSee('Hidden content');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_shows_expand_collapse_icons_for_collapsible_sections()
     {
         $view = $this->blade(
@@ -127,7 +127,7 @@ class FormSectionTest extends TestCase
         $view->assertSee('M5 15l7-7 7 7', false); // Up arrow path
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_includes_alpine_js_transitions()
     {
         $view = $this->blade(
@@ -142,7 +142,7 @@ class FormSectionTest extends TestCase
         $view->assertSee('opacity-100 max-h-full', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_section_with_both_step_and_completed_state()
     {
         $view = $this->blade(
@@ -157,7 +157,7 @@ class FormSectionTest extends TestCase
         $view->assertSee('Completed step content');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_completion_checkmark_in_title()
     {
         $view = $this->blade(
@@ -171,7 +171,7 @@ class FormSectionTest extends TestCase
         $view->assertSee('M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1', false); // Title checkmark path
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_applies_hover_effects_for_collapsible_sections()
     {
         $view = $this->blade(
@@ -185,7 +185,7 @@ class FormSectionTest extends TestCase
         $view->assertSee('transition-colors duration-200', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_uses_usp_brand_colors()
     {
         $view = $this->blade(
@@ -197,7 +197,7 @@ class FormSectionTest extends TestCase
         $view->assertSee('bg-usp-blue-pri', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_supports_dark_mode_classes()
     {
         $view = $this->blade(
