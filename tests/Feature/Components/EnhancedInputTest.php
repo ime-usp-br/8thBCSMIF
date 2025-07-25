@@ -9,7 +9,7 @@ class EnhancedInputTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_basic_text_input()
     {
         $view = $this->blade(
@@ -21,7 +21,7 @@ class EnhancedInputTest extends TestCase
         $view->assertSeeInOrder(['input', 'type="text"', 'name="test_field"']);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_required_field_with_asterisk()
     {
         $view = $this->blade(
@@ -33,7 +33,7 @@ class EnhancedInputTest extends TestCase
         $view->assertSeeInOrder(['input', 'required']);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_select_input_with_options()
     {
         $options = ['value1' => 'Option 1', 'value2' => 'Option 2'];
@@ -49,7 +49,7 @@ class EnhancedInputTest extends TestCase
         $view->assertSee('Option 2');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_textarea_with_rows()
     {
         $view = $this->blade(
@@ -60,7 +60,7 @@ class EnhancedInputTest extends TestCase
         $view->assertSeeInOrder(['textarea', 'name="description"', 'rows="5"']);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_help_text()
     {
         $view = $this->blade(
@@ -71,7 +71,7 @@ class EnhancedInputTest extends TestCase
         $view->assertSee('This is help text');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_with_prefix_and_suffix()
     {
         $view = $this->blade(
@@ -83,7 +83,7 @@ class EnhancedInputTest extends TestCase
         $view->assertSee('.00');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_with_icon()
     {
         $icon = '<svg class="w-5 h-5"><path d="test-path"/></svg>';
@@ -97,7 +97,7 @@ class EnhancedInputTest extends TestCase
         $view->assertSee('test-path', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_disabled_state()
     {
         $view = $this->blade(
@@ -108,7 +108,7 @@ class EnhancedInputTest extends TestCase
         $view->assertSeeInOrder(['input', 'disabled']);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_includes_alpine_js_functionality()
     {
         $view = $this->blade(
@@ -119,7 +119,7 @@ class EnhancedInputTest extends TestCase
         $view->assertSee('function enhancedInput(config)', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_handles_wire_model_attributes()
     {
         $view = $this->blade(
@@ -130,7 +130,7 @@ class EnhancedInputTest extends TestCase
         $view->assertSee('wire:model.blur="test"', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_validation_icons_for_wire_model()
     {
         $view = $this->blade(
@@ -142,7 +142,7 @@ class EnhancedInputTest extends TestCase
         $view->assertSee('validationState === \'success\'', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_renders_character_count_for_textarea_with_maxlength()
     {
         $view = $this->blade(
@@ -154,7 +154,7 @@ class EnhancedInputTest extends TestCase
         $view->assertSee('x-text="count + \' / 100\'"', false);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_handles_non_required_select_with_default_option()
     {
         $options = ['value1' => 'Option 1', 'value2' => 'Option 2'];
@@ -169,7 +169,7 @@ class EnhancedInputTest extends TestCase
         $view->assertSee('Option 2');
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_does_not_show_default_option_for_required_select()
     {
         $options = ['value1' => 'Option 1', 'value2' => 'Option 2'];
