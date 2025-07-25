@@ -1,170 +1,150 @@
----
-description: "A comprehensive workflow for creating pull requests with GitHub CLI, including branch analysis, security checks, and automated PR content generation following best practices."
----
+<task name="Create Intelligent and Secure Pull Request">
 
-**Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
+<task_objective>
+This workflow automates the creation of Pull Requests (PRs) on GitHub. It analyzes the changes in the current branch, performs a security check, gathers context from commit history and open issues, and generates a standardized PR with a title, description, and labels, awaiting final user approval.
+</task_objective>
 
-## Guide: Intelligent and Secure Pull Request Creation
+<detailed_sequence_steps>
+# Create Intelligent and Secure Pull Request - Detailed Process
 
-This workflow automates the entire pull request creation process: it analyzes the current branch changes, performs security validation, gathers context from commit history and existing issues, and generates a standardized PR with proper title, description, and labels.
+**Important Note:** When executing commands that might produce extensive output or hang the terminal, use `| cat` at the end of the command. Example: `your-command-here | cat`.
 
-### 1. Branch and Repository Status Analysis
-The AI assistant will first verify the current branch state and ensure it's ready for a pull request.
+## 1. Analyze Branch and Repository Status
 
-<execute_command>
-<command>git status | cat</command>
-<# Verifies working tree is clean and branch is ready for PR creation. #>
-<requires_approval>false</requires_approval>
-</execute_command>
+1.  Verify that the working tree is clean and the branch is ready for a PR.
 
-<execute_command>
-<command>git branch --show-current | cat</command>
-<# Gets the current branch name to ensure we're not creating a PR from main/master. #>
-<requires_approval>false</requires_approval>
-</execute_command>
+    ```xml
+    <execute_command>
+    <command>git status | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-### 2. Ensure Branch is Pushed to Remote
-Before creating a PR, we need to ensure the branch exists on the remote repository.
+2.  Ensure the current branch is not the main branch (main/master).
 
-<execute_command>
-<command>git ls-remote --exit-code --heads origin $(git branch --show-current)</command>
-<# Checks if the current branch exists on the remote. If it fails, we'll need to push first. #>
-<requires_approval>false</requires_approval>
-</execute_command>
+    ```xml
+    <execute_command>
+    <command>git branch --show-current | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-**Instructions for the AI Assistant:**
-*   If the command above **failed** (non-zero exit code), the branch doesn't exist remotely. **Push the branch first** with `git push --set-upstream origin $(git branch --show-current)`.
-*   If the command **succeeded** (exit code 0), proceed to the next step.
+## 2. Ensure Branch is Pushed to Remote
 
-### 3. Gather Changes for Analysis
-The AI assistant will collect all changes that will be included in the pull request for comprehensive analysis.
+1.  Check if the local branch already exists on the remote repository.
 
-**A. Get Commit History for the Branch:**
+    ```xml
+    <execute_command>
+    <command>git ls-remote --exit-code --heads origin $(git branch --show-current) | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-<execute_command>
-<command>git log origin/main..HEAD --pretty=format:"%C(yellow)%h %C(reset)- %s %C(green)(%cr) %C(bold blue)<%an>%C(reset)" | cat</command>
-<# Lists all commits that will be included in the PR, showing the scope of changes. #>
-<requires_approval>false</requires_approval>
-</execute_command>
+2.  **Instructions for the AI Assistant:**
+    *   If the command above **failed** (non-zero exit code), the branch needs to be pushed first. Execute `git push --set-upstream origin $(git branch --show-current) | cat`.
+    *   If the command **succeeded** (exit code 0), proceed to the next step.
 
-**B. Get Complete Diff for Security Analysis:**
+## 3. Gather Changes for Analysis
 
-<execute_command>
-<command>git diff origin/main..HEAD | cat</command>
-<# Provides the complete diff for the AI assistant to analyze for security issues and understand the changes. #>
-<requires_approval>false</requires_approval>
-</execute_command>
+1.  List the commits that will be included in the PR to understand the scope.
 
-### 4. Critical Security Analysis (Performed by the AI Assistant)
-This is a mandatory security checkpoint. The AI assistant will analyze all changes in the pull request for sensitive data.
+    ```xml
+    <execute_command>
+    <command>git log origin/main..HEAD --pretty=format:"%C(yellow)%h %C(reset)- %s %C(green)(%cr) %C(bold blue)<%an>%C(reset)" | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-**Instructions for the AI Assistant (Mandatory Action):**
-1.  **Analyze the complete diff from the previous command.**
-2.  **Actively search for:**
-    *   **High-risk keywords:** `password`, `secret`, `key`, `token`, `bearer`, `private`, `credential`, `.env`.
-    *   **API key patterns:** (e.g., `sk_live_`, `pk_live_`, `ghp_`, long strings with high entropy).
-    *   **Hardcoded credentials:** URLs with embedded credentials, database connection strings.
-    *   **Suspicious comments:** (e.g., `// TODO: remove password before merging`).
-3.  **IF ANYTHING SUSPICIOUS IS FOUND:**
-    *   **Stop the process immediately.**
-    *   **Clearly inform the user, showing the problematic code snippet.**
-    *   **Ask explicitly:** "I have detected what appears to be sensitive data in the changes. Do you wish to proceed with the PR creation anyway? (yes/no)"
-    *   If the answer is "no", **terminate the workflow immediately** and instruct the user to fix the issue.
-4.  **IF NOTHING IS FOUND:**
-    *   Inform the user: "✅ Security scan complete. No apparent secrets were found." and proceed to the next step.
+2.  Get the complete `diff` for security analysis and content understanding.
 
-### 5. Context Gathering for PR Content Generation
-To create the best possible PR title and description, the AI assistant will analyze project patterns and open issues.
+    ```xml
+    <execute_command>
+    <command>git diff origin/main..HEAD | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-**A. Recent PR History for Style Patterns:**
+## 4. Critical Security Analysis (Assistant's Action)
 
-<execute_command>
-<command>gh pr list --state merged --limit 10 --json number,title,body | cat</command>
-<# Analyzes recent PR titles and descriptions to learn the project's style and conventions. #>
-<requires_approval>false</requires_approval>
-</execute_command>
+1.  **Instructions for the AI Assistant (Mandatory Action):**
+    *   Analyze the complete `diff` from the previous step.
+    *   Actively search for sensitive data: passwords, API keys, tokens, etc.
+    *   **If anything suspicious is found:** Stop the process and alert the user, requesting confirmation to proceed. If denied, terminate the workflow.
+    *   **If nothing is found:** Proceed to the next step.
 
-**B. Open GitHub Issues for Task Connection:**
+## 5. Gather Context for PR Content
 
-<execute_command>
-<command>gh issue list --state open --json number,title,labels,body | cat</command>
-<# The AI assistant will analyze this to connect the PR to existing issues and understand the context. #>
-<requires_approval>false</requires_approval>
-</execute_command>
+1.  Analyze recent PR history to understand the project's style and conventions.
 
-**C. Repository Information for Labels and Assignees:**
+    ```xml
+    <execute_command>
+    <command>gh pr list --state merged --limit 10 --json number,title,body | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-<execute_command>
-<command>gh repo view --json owner,name,defaultBranch | cat</command>
-<# Gets repository metadata for proper PR configuration. #>
-<requires_approval>false</requires_approval>
-</execute_command>
+2.  Analyze open issues to connect the PR to existing tasks.
 
-### 6. PR Content Generation (AI Assistant's Action)
-With all context gathered, the AI assistant will construct an optimal pull request with proper title, description, and metadata.
+    ```xml
+    <execute_command>
+    <command>gh issue list --state open --json number,title,labels,body | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-**Instructions for the AI Assistant:**
-1.  **Analyze the diff and commits** to understand the scope and purpose of changes.
-2.  **Use the PR history** to determine the correct title format and description style.
-3.  **Cross-reference with open issues** to identify if this PR addresses any existing issues.
-4.  **Generate a clear, descriptive title** that follows project conventions.
-5.  **Create a comprehensive description** including:
-    *   **## Summary:** Brief overview of the changes
-    *   **## Changes Made:** Bullet points of specific modifications
-    *   **## Related Issues:** Reference relevant issues (use `Closes #number` if appropriate)
-    *   **## Testing:** Description of how changes were tested
-    *   **## Screenshots/Demo:** If applicable (UI changes)
-6.  **Suggest appropriate labels** based on the type of changes (bug, feature, documentation, etc.).
-7.  **CRITICAL:** Do not include any references to AI assistants, LLMs, or specific tools in the PR title or description.
+## 6. Generate PR Content (Assistant's Action)
 
-### 7. Pull Request Creation (with User Approval)
-The AI assistant will generate the complete `gh pr create` command with all necessary flags and content.
+1.  **Instructions for the AI Assistant:**
+    *   Analyze the `diff` and commits to understand the purpose of the changes.
+    *   Use PR and issue history to generate a title and description that follow project patterns.
+    *   **Title:** Should be clear, descriptive, and follow conventions.
+    *   **Description (Body):**
+        *   Should include a summary, a list of changes, and how they were tested.
+        *   **MANDATORY:** Use `Closes #number` to link and automatically close the relevant issue.
+    *   Suggest appropriate labels (e.g., `feature`, `bug`, `documentation`).
 
-<execute_command>
-<command>
-# The AI assistant will generate the complete gh pr create command here.
-# Example format:
-# gh pr create \
-#   --title "feat: Add user authentication system" \
-#   --body "$(cat <<'EOF'
-# ## Summary
-# Implements comprehensive user authentication with JWT tokens and role-based access control.
-#
-# ## Changes Made
-# - Add authentication middleware for Express routes
-# - Implement JWT token generation and validation
-# - Create user registration and login endpoints
-# - Add password hashing with bcrypt
-# - Implement role-based authorization
-#
-# ## Related Issues
-# Closes #42
-# Closes #38
-#
-# ## Testing
-# - Unit tests for authentication middleware
-# - Integration tests for auth endpoints
-# - Manual testing of login/logout flow
-# EOF
-# )" \
-#   --label "feature" \
-#   --label "backend" \
-#   --assignee "@me"
-</command>
-<# Review the PR title, description, and metadata generated by the AI assistant. If correct, approve to create the PR. #>
-<requires_approval>true</requires_approval>
-</execute_command>
+## 7. Create the Pull Request (with User Approval)
 
-### 8. Post-Creation Verification
-After the PR is created, verify it was successful and provide the PR URL for easy access.
+1.  The assistant will generate the complete `gh pr create` command, with title, body, and metadata, for user approval.
 
-<execute_command>
-<command>gh pr view --json number,title,url | cat</command>
-<# Displays the created PR information including the URL for immediate access. #>
-<requires_approval>false</requires_approval>
-</execute_command>
+    ```xml
+    <execute_command>
+    <command>
+    # The AI assistant will generate the complete 'gh pr create' command here.
+    # Example format:
+    # gh pr create \
+    #   --title "feat: Add user authentication system" \
+    #   --body "$(cat <<'EOF'
+    # ## Summary
+    # Implements a comprehensive user authentication system with JWT tokens.
+    # 
+    # ## Changes Made
+    # - Adds authentication middleware for Express routes.
+    # - Implements JWT token generation and validation.
+    # 
+    # ## Related Issues
+    # Closes #42
+    # EOF
+    # )" \
+    #   --label "feature" \
+    #   --assignee "@me" | cat
+    </command>
+    <requires_approval>true</requires_approval>
+    </execute_command>
+    ```
 
-**Final Notes:**
-- The AI assistant will provide the direct PR URL for immediate review
-- Consider enabling auto-merge if the repository supports it and all checks pass
-- The PR will be ready for review by team members
+## 8. Post-Creation Verification
+
+1.  After the PR is created, display its information, including the URL.
+
+    ```xml
+    <execute_command>
+    <command>gh pr view --json number,title,url | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
+
+2.  Use `attempt_completion` to notify the user of the successful operation and provide the PR link.
+
+</detailed_sequence_steps>
+</task>

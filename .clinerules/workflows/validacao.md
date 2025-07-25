@@ -1,59 +1,63 @@
----
-description: "Guia para executar validação completa de Acceptance Criteria (AC) seguindo o workflow do Cline."
----
+<task name="Complete Validation of Acceptance Criteria (AC)">
 
-**Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
+<task_objective>
+This guide describes the process for validating an Acceptance Criteria (AC) using Cline's tools. The workflow focuses on ensuring that the implementation meets the issue's requirements and the project's quality standards before proceeding to the commit and documentation stages.
+</task_objective>
 
-## Guia: Validação Completa de Acceptance Criteria (AC)
+<detailed_sequence_steps>
+# Complete Validation of Acceptance Criteria - Detailed Process
 
-Este guia descreve o processo de validação de um Acceptance Criteria (AC) usando as ferramentas do Cline.
+**Important Note:** When executing commands that might produce extensive output or hang the terminal, use `| cat` at the end of the command. Example: `your-command-here | cat`.
 
-**Argumentos esperados:** `<ISSUE_NUMBER> <AC_NUMBER>`
+## 1. Gather Issue Context
 
-### 1. Análise de Contexto da Issue
-O Cline deve analisar a issue para entender o contexto e os requisitos do AC.
+1.  Use `ask_followup_question` to get the issue number and AC number from the user for validation.
 
-<execute_command>
-<command>gh issue view $ISSUE_NUMBER | cat</command>
-<requires_approval>false</requires_approval>
-</execute_command>
+2.  Analyze the issue to understand the context and requirements of the AC.
 
-### 2. Verificação de Requisitos "Incrementais"
-O Cline deve verificar se a issue contém palavras-chave como "incremental", "adicionar", "modificar". Se sim, é CRÍTICO que a implementação use métodos aditivos (attach, create) e não substitutivos (sync, update), validando que a implementação não apaga/substitui dados existentes.
+    ```xml
+    <execute_command>
+    <command>gh issue view {issue_number} | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-### 3. Quality Checks Obrigatórios
-O Cline deve executar todos os quality checks obrigatórios.
+## 2. Run Mandatory Quality Checks
 
-<execute_command>
-<command>vendor/bin/pint | cat && vendor/bin/phpstan analyse | cat && php artisan test | cat</command>
-<requires_approval>false</requires_approval>
-</execute_command>
+1.  Execute all mandatory quality checks for the project.
 
-### 4. Atualização de Contexto
-O Cline deve adicionar as mudanças ao stage e gerar o contexto atualizado.
+    ```xml
+    <execute_command>
+    <command>vendor/bin/pint | cat && vendor/bin/phpstan analyse | cat && php artisan test | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-<execute_command>
-<command>git add . && python3 scripts/generate_context.py --stages git</command>
-<requires_approval>false</requires_approval>
-</execute_command>
+2.  **Instructions for the AI Assistant:** If any of the quality checks fail, the workflow must be stopped. Inform the user about the failure and provide the error logs so that corrections can be made before attempting validation again.
 
-### 5. Validação Automática com analyze-ac
-O Cline deve executar a ferramenta `analyze-ac` para validar o AC.
+## 3. Prepare and Validate the Implementation
 
-<execute_command>
-<command>printf "y\ny\ny\n" | python3 scripts/tasks/llm_task_analyze_ac.py -i $ISSUE_NUMBER -a $AC_NUMBER -sc</command>
-<requires_approval>false</requires_approval>
-</execute_command>
+1.  Add the changes to the staging area so that the analysis context includes the latest modifications.
 
-### 6. Verificação de Resultados
-O Cline deve verificar os resultados da análise do `analyze-ac`. É crucial que só prossiga se o `analyze-ac` mostrar "foi **Atendido**". Se reprovar, o Cline deve corrigir e repetir a validação.
+    ```xml
+    <execute_command>
+    <command>git add . | cat</command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-<execute_command>
-<command>LATEST_ANALYSIS=$(ls -t llm_outputs/analyze-ac/*.txt | head -1) && echo "=== RESULTADO ANALYZE-AC ===" && tail -5 "$LATEST_ANALYSIS"</command>
-<requires_approval>false</requires_approval>
-</execute_command>
+2.  **AI Assistant's Action:**
+    *   With the changes staged, internally analyze the `diff` (`git diff --cached`) and the content of the modified files.
+    *   Compare the implementation with the AC requirements obtained in Step 1.
+    *   Formulate a conclusion on whether the AC has been met.
 
-**✅ PRÓXIMOS PASSOS AUTOMÁTICOS** (apenas se APROVADO):
-1. O Cline deve criar um commit com o padrão do projeto (usando o guia `commit.md`).
-2. O Cline deve fazer o push para o repositório remoto (usando o guia `git-push.md`).
-3. O Cline deve documentar no GitHub com o hash correto (usando o guia `postar-comentario.md`).
+## 4. Present Results and Next Steps
+
+1.  Use `attempt_completion` to present your analysis and conclusion to the user.
+
+2.  **If the AC has been met:** Inform the user and suggest the next steps, such as running the `commit`, `push`, and `comentario` workflows.
+
+3.  **If the AC has NOT been met:** Inform the user, explaining in detail which points were not fulfilled, and await instructions to correct the implementation.
+
+</detailed_sequence_steps>
+</task>

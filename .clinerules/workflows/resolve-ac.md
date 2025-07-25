@@ -1,107 +1,76 @@
----
-description: "Workflow para resolver um Critério de Aceite (AC) específico de uma issue, focando na análise, planejamento e implementação direta."
----
+<task name="Resolve Acceptance Criteria (AC)">
 
-**Nota Importante:** Ao executar comandos manualmente ou adicionar novos comandos a este workflow, se o comando puder gerar uma saída que precise ser exibida ou que possa travar o terminal, utilize `| cat` ao final do comando. Exemplo: `seu-comando-aqui | cat`.
+<task_objective>
+This workflow guides the AI assistant in the process of resolving a single Acceptance Criteria (AC). The process emphasizes information gathering, upfront planning with the user, and focused implementation, without using complex project automation scripts.
+</task_objective>
 
-## Guia: Resolução Focada de um Critério de Aceite (AC)
+<detailed_sequence_steps>
+# Resolve Acceptance Criteria - Detailed Process
 
-Este workflow guia o assistente de IA no processo de resolver um único Critério de Aceite (AC). O processo enfatiza a coleta de informações, o planejamento prévio com o usuário e a implementação focada, sem utilizar os scripts de automação do projeto.
+**Important Note:** When executing commands that might produce extensive output or hang the terminal, use `| cat` at the end of the command. Example: `your-command-here | cat`.
 
-**Argumentos esperados:** `{issue_number}` `{ac_number}`
+**Expected arguments:** `{issue_number}` `{ac_number}`
 
-### 1. Coleta de Informações Essenciais
+## 1. Gather Essential Information
 
-O assistente DEVE, primeiramente, obter o contexto da tarefa e do ambiente do projeto.
+1.  Get the context of the task and the project environment.
 
-**A. Obter Detalhes da Issue:**
-O assistente DEVE ler o conteúdo completo da issue para entender o escopo do trabalho.
+    ```xml
+    <execute_command>
+    <command>
+    # The AI assistant MUST replace {issue_number} with the actual issue number.
+    gh issue view {issue_number} --json title,body,labels | cat
+    </command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-`<execute_command>`
-`<command># O assistente de IA DEVE substituir {issue_number} pelo número real da issue.
-gh issue view {issue_number} --json title,body,labels | cat
-</command>`
-`<# Busca o conteúdo da issue para análise contextual. #>`
-`<requires_approval>false</requires_approval>`
-`</execute_command>`
+2.  Read the development guides and coding standards to ensure the implementation aligns with project practices.
 
-**B. Consultar Documentação Externa (Condicional):**
-Se uma versão de biblioteca for posterior à sua data de corte de conhecimento, o assistente DEVE usar a ferramenta `context7` para obter documentação atualizada.
+    ```xml
+    <read_file>
+    <path>docs/guia_de_desenvolvimento.md</path>
+    </read_file>
+    ```
 
-**Exemplo de uso da ferramenta `context7` (MCP):**
-```xml
-<use_mcp_tool>
-  <server_name>github.com/upstash/context7-mcp</server_name>
-  <tool_name>get-library-docs</tool_name>
-  <arguments>
-  {
-    "context7CompatibleLibraryID": "/livewire/livewire",
-    "topic": "Events"
-  }
-  </arguments>
-</use_mcp_tool>
-```
-**Nota:** O assistente DEVE primeiro usar `resolve-library-id` se não tiver certeza do ID exato.
+    ```xml
+    <read_file>
+    <path>docs/padroes_codigo_boas_praticas.md</path>
+    </read_file>
+    ```
 
-**C. Leitura de Documentação Interna:**
-O assistente DEVE ler os guias de desenvolvimento e padrões de código para garantir que a implementação esteja alinhada com as práticas do projeto.
+3.  **Assistant's Action:** Based on the analysis of the issue and documentation, form hypotheses about which existing files are relevant to resolving the AC and read their content using the `read_file` tool.
 
-`<read_file>`
-`<path>docs/guia_de_desenvolvimento.md</path>`
-`</read_file>`
+## 2. Planning Phase (User Interaction)
 
-`<read_file>`
-`<path>docs/padroes_codigo_boas_praticas.md</path>`
-`</read_file>`
+1.  **Instructions for the AI Assistant (Mandatory Action):**
+    *   Synthesize all collected information.
+    *   Formulate a detailed implementation plan describing which files you intend to create or modify and the main logical changes.
+    *   Use `ask_followup_question` to present this plan to the user and request explicit approval before proceeding.
 
-**D. Análise de Código Existente:**
-Com base na análise da issue e da documentação, o assistente DEVE levantar hipóteses sobre quais arquivos existentes são relevantes para a resolução do AC e ler seu conteúdo.
+## 3. Implementation and Coding
 
-**Instruções para o Assistente de IA:**
-1.  Liste os arquivos que você acredita que precisará modificar ou consultar.
-2.  Para cada arquivo, execute o comando `read_file`.
+1.  **Instructions for the AI Assistant:**
+    *   After user approval, execute the implementation.
+    *   Use the `<write_to_file>` or `<replace_in_file>` tools to make the necessary changes.
+    *   Changes MUST be strictly limited to the scope of the AC and the approved plan.
 
-**Exemplo (deve ser adaptado pelo assistente):**
-`<read_file>`
-`<path>app/Http/Controllers/MeuController.php</path>`
-`</read_file>`
+## 4. Validation (Relevant Tests)
 
-`<read_file>`
-`<path>resources/views/minha-view.blade.php</path>`
-`</read_file>`
+1.  If relevant to the change made, run the appropriate unit or feature tests to ensure the new functionality is correct and that there are no regressions.
 
-### 2. Fase de Planejamento (Interação com o Usuário)
+    ```xml
+    <execute_command>
+    <command>
+    # The assistant MUST specify a file, filter, or group to run only relevant tests.
+    # Example: ./vendor/bin/phpunit --filter=RelevantTestNameTest
+    ./vendor/bin/phpunit | cat
+    </command>
+    <requires_approval>false</requires_approval>
+    </execute_command>
+    ```
 
-Com as informações coletadas, o assistente **NÃO DEVE** começar a codificar imediatamente. Em vez disso, **DEVE** entrar em um modo de planejamento.
+2.  Use `attempt_completion` to inform the user that the resolution of the Acceptance Criteria is complete.
 
-**Instruções para o Assistente de IA (Ação Obrigatória):**
-1.  Sintetize todas as informações: os requisitos da issue, o AC específico, e o conhecimento adquirido sobre as bibliotecas.
-2.  Formule um plano de implementação detalhado. O plano DEVE descrever:
-    *   Quais arquivos você pretende criar ou modificar.
-    *   As principais alterações lógicas que você fará.
-    *   Como você abordará os requisitos específicos do AC.
-3.  Apresente este plano ao usuário para aprovação.
-4.  **Aguarde a aprovação explícita do usuário antes de prosseguir.**
-
-### 3. Implementação e Codificação
-
-Após a aprovação do plano pelo usuário, o assistente DEVE executar a implementação.
-
-**Instruções para o Assistente de IA:**
-1.  **Modificar ou Criar Arquivos:** Escreva ou edite o código (PHP, Blade, etc.) conforme o plano aprovado. Utilize as ferramentas `<write_to_file>` ou `<replace_in_file>` para realizar as alterações.
-2.  **Foco Atômico:** As alterações DEVEM se limitar estritamente ao escopo do AC e do plano aprovado.
-
-### 4. Validação (Testes Pertinentes)
-
-Se for pertinente para a alteração realizada, o assistente DEVE executar os testes unitários ou de feature relevantes para garantir que a nova funcionalidade está correta e que não houve regressões.
-
-`<execute_command>`
-`<command># O assistente DEVE especificar um arquivo, filtro ou grupo para rodar apenas os testes relevantes.
-# Exemplo: ./vendor/bin/phpunit --filter=NomeDoTesteRelevanteTest
-./vendor/bin/phpunit | cat
-</command>`
-`<# Executa testes específicos para validar a implementação do AC. #>`
-`<requires_approval>false</requires_approval>`
-`</execute_command>`
-
-Ao final desta etapa, a resolução do Critério de Aceite está concluída. O workflow não cobre os passos de commit ou pull request.
+</detailed_sequence_steps>
+</task>
