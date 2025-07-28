@@ -45,8 +45,7 @@ new #[Layout('layouts.app')] class extends Component {
     public string $departure_date = '';
     public array $selected_event_codes = [];
     public string $participation_format = '';
-    public bool $needs_transport_from_gru = false;
-    public bool $needs_transport_from_usp = false;
+    public string $transportation = '';
 
     // Dietary Restrictions
     public string $dietary_restrictions = '';
@@ -101,15 +100,62 @@ new #[Layout('layouts.app')] class extends Component {
         }
     }
 
-    public function updatedSelectedEventCodes(): void
+    /**
+     * Check if any workshops are currently selected
+     */
+    public function getHasWorkshopsSelectedProperty(): bool
     {
+        if (empty($this->selected_event_codes)) {
+            return false;
+        }
+        
+        // Workshop event codes (not main conference)
+        $workshopCodes = ['RAA2025', 'WDA2025'];
+        
+        return !empty(array_intersect($this->selected_event_codes, $workshopCodes));
+    }
+
+    /**
+     * React to position changes - clear workshops if accompanying person is selected
+     */
+    public function updatedPosition($value): void
+    {
+        if ($value === 'accompanying_person' && $this->hasWorkshopsSelected) {
+            // Remove workshop events when accompanying person is selected
+            $workshopCodes = ['RAA2025', 'WDA2025'];
+            $this->selected_event_codes = array_values(array_diff($this->selected_event_codes ?? [], $workshopCodes));
+        }
+        
+        // Always recalculate fees when position changes
         $this->calculateFees();
     }
 
-    public function updatedPosition(): void
+    /**
+     * React to event selection changes - clear accompanying person if workshops are selected
+     */
+    public function updatedSelectedEventCodes($value): void
     {
+        if ($this->position === 'accompanying_person' && $this->hasWorkshopsSelected) {
+            // If accompanying person tries to select workshops, remove them
+            $workshopCodes = ['RAA2025', 'WDA2025'];
+            $this->selected_event_codes = array_values(array_diff($this->selected_event_codes ?? [], $workshopCodes));
+        } elseif ($this->hasWorkshopsSelected && $this->position !== 'accompanying_person') {
+            // If workshops are selected and position is not accompanying person, that's ok
+            // But we need to prevent setting position to accompanying person later
+        }
+        
         $this->calculateFees();
     }
+
+    /**
+     * Check if current position is accompanying person
+     */
+    public function getIsAccompanyingPersonProperty(): bool
+    {
+        return $this->position === 'accompanying_person';
+    }
+
+
 
     public function updatedIsAbeMember(): void
     {
@@ -136,6 +182,7 @@ new #[Layout('layouts.app')] class extends Component {
                 'graduate_student' => 'grad_student',
                 'researcher', 'professor' => $this->is_abe_member === 'yes' ? 'professor_abe' : 'professor_non_abe',
                 'professional' => 'professional_foreign',
+                'accompanying_person' => 'accompanying_person',
                 default => 'professional_foreign'
             };
 
@@ -197,7 +244,7 @@ new #[Layout('layouts.app')] class extends Component {
             'other_address_country' => 'required_if:address_country,OTHER|string|max:255',
             'address_postal_code' => 'required|string|max:20',
             'affiliation' => 'required|string|max:255',
-            'position' => 'required|string|in:undergraduate_student,graduate_student,researcher,professor,professional,other',
+            'position' => 'required|string|in:undergraduate_student,graduate_student,researcher,professor,professional,accompanying_person,other',
             'other_position' => 'required_if:position,other|string|max:255',
             'is_abe_member' => 'required|string|in:yes,no',
             'arrival_date' => 'required|date|after_or_equal:today',
@@ -244,7 +291,7 @@ new #[Layout('layouts.app')] class extends Component {
             'other_address_country' => 'required_if:address_country,OTHER|string|max:255',
                 'address_postal_code' => 'required|string|max:20',
                 'affiliation' => 'required|string|max:255',
-                'position' => 'required|string|in:undergraduate_student,graduate_student,researcher,professor,professional,other',
+                'position' => 'required|string|in:undergraduate_student,graduate_student,researcher,professor,professional,accompanying_person,other',
                 'other_position' => 'required_if:position,other|string|max:255',
                 'is_abe_member' => 'required|string|in:yes,no',
                 'arrival_date' => 'required|date|after_or_equal:today',
@@ -322,7 +369,7 @@ new #[Layout('layouts.app')] class extends Component {
             'email', 'phone_number', 'address_street', 'address_city', 'address_state_province', 
             'address_country', 'other_address_country', 'address_postal_code', 'affiliation', 'position', 'other_position',
             'is_abe_member', 'arrival_date', 'departure_date', 'selected_event_codes', 
-            'participation_format', 'needs_transport_from_gru', 'needs_transport_from_usp',
+            'participation_format', 'transportation',
             'dietary_restrictions', 'other_dietary_restrictions', 'emergency_contact_name',
             'emergency_contact_relationship', 'emergency_contact_phone', 'requires_visa_letter',
             'confirm_information', 'consent_data_processing', 'registration_successful', 'general_error_message'
@@ -375,8 +422,8 @@ new #[Layout('layouts.app')] class extends Component {
                     departure_date: "' . addslashes($this->departure_date) . '",
                     selected_event_codes: ' . json_encode($this->selected_event_codes) . ',
                     participation_format: "' . addslashes($this->participation_format) . '",
-                    needs_transport_from_gru: "' . ($this->needs_transport_from_gru ? '1' : '0') . '",
-                    needs_transport_from_usp: "' . ($this->needs_transport_from_usp ? '1' : '0') . '",
+                    needs_transport_from_gru: "' . ($this->transportation === 'gru' ? '1' : '0') . '",
+                    needs_transport_from_usp: "' . ($this->transportation === 'usp' ? '1' : '0') . '",
                     dietary_restrictions: "' . addslashes($this->dietary_restrictions === 'other' ? $this->other_dietary_restrictions : $this->dietary_restrictions) . '",
                     emergency_contact_name: "' . addslashes($this->emergency_contact_name) . '",
                     emergency_contact_relationship: "' . addslashes($this->emergency_contact_relationship) . '",
@@ -683,6 +730,13 @@ new #[Layout('layouts.app')] class extends Component {
                                         <input wire:model.live="position" type="radio" value="professional" name="position" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="position-professional">
                                         <span class="ml-2">{{ __('Professional') }}</span>
                                     </label>
+                                    <label class="flex items-center {{ $this->hasWorkshopsSelected ? 'opacity-50' : '' }}">
+                                        <input wire:model.live="position" type="radio" value="accompanying_person" name="position" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="position-accompanying" {{ $this->hasWorkshopsSelected ? 'disabled' : '' }}>
+                                        <span class="ml-2">{{ __('Accompanying Person') }}</span>
+                                        @if($this->hasWorkshopsSelected)
+                                            <small class="ml-2 text-red-600 text-xs">{{ __('Cannot select: workshops are selected') }}</small>
+                                        @endif
+                                    </label>
                                     <label class="flex items-center">
                                         <input wire:model.live="position" type="radio" value="other" name="position" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="position-other">
                                         <span class="ml-2">{{ __('Other') }}</span>
@@ -735,9 +789,16 @@ new #[Layout('layouts.app')] class extends Component {
                                 <x-input-label :value="__('Which events would you like to register for?')" />
                                 <div class="mt-2 space-y-2 sm:space-y-3">
                                     @foreach($available_events as $code => $name)
-                                        <label class="flex items-center">
-                                            <input wire:model.live="selected_event_codes" type="checkbox" value="{{ $code }}" name="selected_event_codes[]" class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="event-{{ $code }}">
+                                        @php
+                                            $isWorkshop = in_array($code, ['RAA2025', 'WDA2025']);
+                                            $isDisabled = $isWorkshop && $this->isAccompanyingPerson;
+                                        @endphp
+                                        <label class="flex items-center {{ $isDisabled ? 'opacity-50' : '' }}">
+                                            <input wire:model.live="selected_event_codes" type="checkbox" value="{{ $code }}" name="selected_event_codes[]" class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="event-{{ $code }}" {{ $isDisabled ? 'disabled' : '' }}>
                                             <span class="ml-2">{{ $name }}</span>
+                                            @if($isDisabled)
+                                                <small class="ml-2 text-red-600 text-xs">{{ __('Not available for accompanying persons') }}</small>
+                                            @endif
                                         </label>
                                     @endforeach
                                 </div>
@@ -763,11 +824,15 @@ new #[Layout('layouts.app')] class extends Component {
                                 <x-input-label :value="__('Transportation')" />
                                 <div class="mt-2 space-y-2 sm:space-y-3">
                                     <label class="flex items-center">
-                                        <input wire:model="needs_transport_from_gru" type="checkbox" class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="transport-gru">
+                                        <input wire:model="transportation" type="radio" value="none" name="transportation" class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="transport-none">
+                                        <span class="ml-2">{{ __('I do not need transportation.') }}</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input wire:model="transportation" type="radio" value="gru" name="transportation" class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="transport-gru">
                                         <span class="ml-2">{{ __('I need transportation from GRU Airport to Maresias and back.') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model="needs_transport_from_usp" type="checkbox" class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="transport-usp">
+                                        <input wire:model="transportation" type="radio" value="usp" name="transportation" class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="transport-usp">
                                         <span class="ml-2">{{ __('I need transportation from USP to Maresias and back.') }}</span>
                                     </label>
                                 </div>

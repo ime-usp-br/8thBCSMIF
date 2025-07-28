@@ -71,6 +71,7 @@ class StudentUploadRequiredValidation implements DataAwareRule, ValidationRule
             if (! $hasValidEnrollmentProof) {
                 $fail(__('Students must upload enrollment proof documents before completing registration.'));
             }
+
             return; // If user context exists, use that for validation
         }
 
