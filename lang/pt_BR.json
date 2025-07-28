@@ -540,7 +540,7 @@
     "Prefer not to say": "Prefiro não informar",
     "Please specify": "Por favor, especifique",
     "Country of residence": "País de residência",
-    "RG (ID) Number": "Número do RG",
+    "RG (RNE) Number": "Número do RG",
     "Affiliation (University/Organization)": "Instituição (Universidade/Organização)",
     "Undergraduate Student": "Estudante de Graduação",
     "Graduate Student": "Estudante de Pós-graduação",
@@ -707,5 +707,6 @@
     "Accompanying persons cannot register for workshops. The following events are workshops: :workshops": "Acompanhantes não podem se inscrever em workshops. Os seguintes eventos são workshops: :workshops",
     "Cannot select: workshops are selected": "Não é possível selecionar: workshops estão selecionados",
     "Not available for accompanying persons": "Não disponível para acompanhantes",
-    "I do not need transportation.": "Não preciso de transporte."
+    "I do not need transportation.": "Não preciso de transporte.",
+    "Please select a file": "Por favor, selecione um arquivo"
 }

@@ -399,7 +399,18 @@ new #[Layout('layouts.app')] class extends Component {
 
                             @if(!$enrollmentProof || !$enrollmentProof->file_path)
                                 {{-- Enhanced Upload Interface --}}
-                                <form action="{{ route('enrollment-proofs.upload', $registration) }}" method="POST" enctype="multipart/form-data">
+                                <form action="{{ route('enrollment-proofs.upload', $registration) }}" method="POST" enctype="multipart/form-data" 
+                                      x-data="{ 
+                                          submitForm() {
+                                              const fileUploadComponent = this.$el.querySelector('[x-data*=fileUpload]')?.__x?.$data;
+                                              if (!fileUploadComponent) {
+                                                  console.warn('File upload component not found');
+                                                  return true;
+                                              }
+                                              return fileUploadComponent.isValid();
+                                          }
+                                      }"
+                                      @submit="if (!submitForm()) { $event.preventDefault(); $el.querySelector('[x-data*=fileUpload]')?.__x?.$data?.validateBeforeSubmit(); }">
                                     @csrf
                                     
                                     <x-file-upload 
@@ -467,18 +478,19 @@ new #[Layout('layouts.app')] class extends Component {
                                         </div>
 
                                         <div class="flex items-center space-x-2">
-                                            <a href="{{ route('enrollment-proofs.download', $registration) }}" 
-                                               dusk="view-enrollment-proof-button-{{ $registration->id }}"
-                                               class="inline-flex items-center px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-usp-blue-pri transition-colors duration-200">
-                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                                {{ __('View Document') }}
-                                            </a>
-                                            
                                             @if($enrollmentProof->status !== 'approved')
-                                                <form action="{{ route('enrollment-proofs.upload', $registration) }}" method="POST" enctype="multipart/form-data" class="inline">
+                                                <form action="{{ route('enrollment-proofs.upload', $registration) }}" method="POST" enctype="multipart/form-data" class="inline"
+                                                      x-data="{ 
+                                                          submitReplaceForm() {
+                                                              const fileUploadComponent = this.$el.querySelector('[x-data*=fileUpload]')?.__x?.$data;
+                                                              if (!fileUploadComponent) {
+                                                                  console.warn('File upload component not found');
+                                                                  return true;
+                                                              }
+                                                              return fileUploadComponent.isValid();
+                                                          }
+                                                      }"
+                                                      @submit="if (!submitReplaceForm()) { $event.preventDefault(); $el.querySelector('[x-data*=fileUpload]')?.__x?.$data?.validateBeforeSubmit(); }">
                                                     @csrf
                                                     <x-file-upload 
                                                         name="enrollment_proof"
@@ -486,6 +498,7 @@ new #[Layout('layouts.app')] class extends Component {
                                                         max-size="10MB"
                                                         :existing-file="$enrollmentProof->file_path"
                                                         :download-route="$downloadRoute"
+                                                        :required="true"
                                                         class="inline"
                                                     />
                                                     <button type="submit" class="inline-flex items-center px-3 py-2 bg-usp-blue-pri border border-transparent rounded-md text-sm font-medium text-white hover:bg-usp-blue-sec focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-usp-blue-pri transition-colors duration-200">

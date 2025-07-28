@@ -617,7 +617,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 </div>
 
                                 <div>
-                                    <x-input-label for="rg_number" :value="__('RG (ID) Number')" />
+                                    <x-input-label for="rg_number" :value="__('RG (RNE) Number')" />
                                     <x-text-input wire:model="rg_number" id="rg_number" class="block mt-1 w-full" type="text" required dusk="rg-number-input" />
                                     <x-input-error :messages="$errors->get('rg_number')" class="mt-2" />
                                 </div>

@@ -30,7 +30,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
             ->set('document_country_origin', 'Brazil');
 
         $component->assertSee(__('CPF'))
-            ->assertSee(__('RG (ID) Number'))
+            ->assertSee(__('RG (RNE) Number'))
             ->assertDontSee(__('Passport Number'))
             ->assertDontSee(__('Passport Expiry Date'));
     }
@@ -46,7 +46,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
         $component->assertSee(__('Passport Number'))
             ->assertSee(__('Passport Expiry Date'))
             ->assertDontSee(__('CPF'))
-            ->assertDontSee(__('RG (ID) Number'));
+            ->assertDontSee(__('RG (RNE) Number'));
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
@@ -150,7 +150,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
             ->set('document_country_origin', 'Brazil');
 
         $component->assertSee(__('CPF'))
-            ->assertSee(__('RG (ID) Number'))
+            ->assertSee(__('RG (RNE) Number'))
             ->assertDontSee(__('Passport Number'));
 
         // Switch to international
@@ -159,7 +159,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
         $component->assertSee(__('Passport Number'))
             ->assertSee(__('Passport Expiry Date'))
             ->assertDontSee(__('CPF'))
-            ->assertDontSee(__('RG (ID) Number'));
+            ->assertDontSee(__('RG (RNE) Number'));
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
