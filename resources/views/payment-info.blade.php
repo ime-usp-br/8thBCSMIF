@@ -231,6 +231,16 @@
                                                 <p class="text-gray-700 dark:text-gray-300">{{ __('Follow the payment instructions in the invoice for international wire transfer or credit card payment.') }}</p>
                                             </div>
                                         </div>
+                                        
+                                        <div class="flex items-start">
+                                            <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0">
+                                                <span class="text-blue-600 dark:text-blue-400 font-bold text-sm">4</span>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">{{ __('Upload Payment Proof') }}</h4>
+                                                <p class="text-gray-700 dark:text-gray-300">{{ __('After completing payment, log into the registration system and upload your payment proof through your registration page.') }}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -252,19 +262,6 @@
                                             </p>
                                         </div>
                                         
-                                        <div class="p-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                                            <div class="flex items-center mb-3">
-                                                <svg class="w-6 h-6 text-green-600 dark:text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                                </svg>
-                                                <h4 class="font-semibold text-green-900 dark:text-green-400">{{ __('Payment Methods') }}</h4>
-                                            </div>
-                                            <ul class="text-green-800 dark:text-green-300 space-y-1">
-                                                <li>• {{ __('International wire transfer') }}</li>
-                                                <li>• {{ __('Credit card payment') }}</li>
-                                                <li>• {{ __('PayPal (where available)') }}</li>
-                                            </ul>
-                                        </div>
                                         
                                         <div class="p-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                                             <div class="flex items-center mb-3">

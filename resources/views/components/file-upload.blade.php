@@ -107,35 +107,55 @@
 
         <!-- File Preview -->
         <div x-show="selectedFile" class="mt-4">
-            <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
+            <div class="border border-green-200 dark:border-green-600 rounded-lg p-4 bg-green-50 dark:bg-green-900/20">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
+                        <!-- Success Icon -->
                         <div class="flex-shrink-0">
-                            <!-- Image Preview -->
-                            <template x-if="filePreview && fileType === 'image'">
-                                <img :src="filePreview" class="h-16 w-16 object-cover rounded-lg border border-gray-300">
-                            </template>
-                            
-                            <!-- PDF Icon -->
-                            <template x-if="fileType === 'pdf'">
-                                <div class="h-16 w-16 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
-                                    <svg class="h-8 w-8 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                            </template>
+                            <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
                         </div>
                         
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="fileName"></p>
-                            <p class="text-sm text-gray-500 dark:text-gray-400" x-text="fileSize"></p>
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-shrink-0">
+                                <!-- Image Preview -->
+                                <template x-if="filePreview && fileType === 'image'">
+                                    <img :src="filePreview" class="h-16 w-16 object-cover rounded-lg border border-gray-300">
+                                </template>
+                                
+                                <!-- PDF Icon -->
+                                <template x-if="fileType === 'pdf'">
+                                    <div class="h-16 w-16 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
+                                        <svg class="h-8 w-8 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </template>
+                                
+                                <!-- Generic File Icon -->
+                                <template x-if="fileType === 'other'">
+                                    <div class="h-16 w-16 bg-gray-100 dark:bg-gray-900/20 rounded-lg flex items-center justify-center">
+                                        <svg class="h-8 w-8 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </template>
+                            </div>
+                            
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-green-800 dark:text-green-300">{{ __('File selected successfully') }}</p>
+                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="fileName"></p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400" x-text="fileSize"></p>
+                            </div>
                         </div>
                     </div>
                     
                     <button 
                         type="button"
                         @click="removeFile()"
-                        class="flex-shrink-0 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                        class="flex-shrink-0 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                        title="{{ __('Remove file') }}">
                         <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                         </svg>
@@ -181,6 +201,7 @@ function fileUpload(config) {
         existingFile: config.existingFile,
         downloadRoute: config.downloadRoute,
         showUpload: false,
+        required: {{ $required ? 'true' : 'false' }},
 
         handleDrop(e) {
             e.preventDefault();
@@ -282,6 +303,40 @@ function fileUpload(config) {
             if (this.downloadRoute) {
                 window.open(this.downloadRoute, '_blank');
             }
+        },
+
+        // Validate form before submission
+        validateBeforeSubmit() {
+            // Clear any previous error messages
+            this.errorMessage = '';
+            
+            // If it's required and we don't have a file selected or existing file
+            if (this.required && !this.selectedFile && !this.existingFile) {
+                this.errorMessage = '{{ __("Please select a file") }}';
+                return false;
+            }
+            
+            // If we have a selected file, it's valid
+            if (this.selectedFile) {
+                return true;
+            }
+            
+            // If we have an existing file and no new file selected, it's valid
+            if (this.existingFile && !this.selectedFile) {
+                return true;
+            }
+            
+            return true;
+        },
+
+        // Method to get validation state for form submission
+        isValid() {
+            return this.validateBeforeSubmit();
+        },
+
+        // Method to check if a file is available (either selected or existing)
+        hasFile() {
+            return this.selectedFile || this.existingFile;
         }
     }
 }

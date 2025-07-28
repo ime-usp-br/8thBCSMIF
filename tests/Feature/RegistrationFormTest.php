@@ -103,7 +103,7 @@ class RegistrationFormTest extends TestCase
 
         $response
             ->assertSee('CPF')
-            ->assertSee('RG (ID) Number')
+            ->assertSee('RG (RNE) Number')
             ->assertSee('Brazil', false); // Document country defaults to BR
     }
 
@@ -187,7 +187,7 @@ class RegistrationFormTest extends TestCase
         // Test that Brazilian-specific fields are present when Brazil is selected by default
         $response
             ->assertSee('CPF')
-            ->assertSee('RG (ID) Number')
+            ->assertSee('RG (RNE) Number')
             ->assertSee('required', false);
     }
 
