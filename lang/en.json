@@ -517,6 +517,9 @@
     "Researcher": "Researcher",
     "Professor": "Professor",
     "Professional": "Professional",
+    "Accompanying Person": "Accompanying Person",
+    "Cannot select: workshops are selected": "Cannot select: workshops are selected",
+    "Not available for accompanying persons": "Not available for accompanying persons",
     "ABE affiliation": "ABE affiliation",
     "Which events would you like to register for?": "Which events would you like to register for?",
     "Participation format": "Participation format",
@@ -668,5 +671,8 @@
     "System": "System",
     "Free workshop for graduate students": "Free workshop for graduate students",
     "Thank you for your registration. Your invoice for international payment will be sent shortly from assoc.bras.estatistica@gmail.com. Please check your inbox and spam folder.": "Thank you for your registration. Your invoice for international payment will be sent shortly from assoc.bras.estatistica@gmail.com. Please check your inbox and spam folder.",
-    "Accompanying persons cannot register for workshops. The following events are workshops: :workshops": "Accompanying persons cannot register for workshops. The following events are workshops: :workshops"
+    "Accompanying persons cannot register for workshops. The following events are workshops: :workshops": "Accompanying persons cannot register for workshops. The following events are workshops: :workshops",
+    "Cannot select: workshops are selected": "Cannot select: workshops are selected",
+    "Not available for accompanying persons": "Not available for accompanying persons",
+    "I do not need transportation.": "I do not need transportation."
 }

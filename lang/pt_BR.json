@@ -547,6 +547,7 @@
     "Researcher": "Pesquisador",
     "Professor": "Professor",
     "Professional": "Profissional",
+    "Accompanying Person": "Acompanhante",
     "ABE affiliation": "Filiação à ABE",
     "Which events would you like to register for?": "Para quais eventos você gostaria de se inscrever?",
     "Participation format": "Formato de participação",
@@ -703,5 +704,8 @@
     "System": "Sistema",
     "Free workshop for graduate students": "Workshop gratuito para estudantes de pós-graduação",
     "Thank you for your registration. Your invoice for international payment will be sent shortly from assoc.bras.estatistica@gmail.com. Please check your inbox and spam folder.": "Obrigado pela sua inscrição. Sua fatura para pagamento internacional será enviada em breve de assoc.bras.estatistica@gmail.com. Por favor, verifique sua caixa de entrada e pasta de spam.",
-    "Accompanying persons cannot register for workshops. The following events are workshops: :workshops": "Acompanhantes não podem se inscrever em workshops. Os seguintes eventos são workshops: :workshops"
+    "Accompanying persons cannot register for workshops. The following events are workshops: :workshops": "Acompanhantes não podem se inscrever em workshops. Os seguintes eventos são workshops: :workshops",
+    "Cannot select: workshops are selected": "Não é possível selecionar: workshops estão selecionados",
+    "Not available for accompanying persons": "Não disponível para acompanhantes",
+    "I do not need transportation.": "Não preciso de transporte."
 }
