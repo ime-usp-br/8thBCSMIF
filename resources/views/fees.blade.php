@@ -60,8 +60,8 @@
                                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                     <tr>
                                         <th scope="col" class="px-6 py-3 font-semibold">{{ __('Participant Category') }}</th>
-                                        <th scope="col" class="px-6 py-3 text-center font-semibold">{{ __('Until 08/15/2025') }}<br><span class="text-xs font-normal normal-case">{{ __('In-person') }}</span></th>
-                                        <th scope="col" class="px-6 py-3 text-center font-semibold">{{ __('After 08/15/2025') }}<br><span class="text-xs font-normal normal-case">{{ __('In-person') }}</span></th>
+                                        <th scope="col" class="px-6 py-3 text-center font-semibold">{{ __('Until September 5') }}<br><span class="text-xs font-normal normal-case">{{ __('In-person') }}</span></th>
+                                        <th scope="col" class="px-6 py-3 text-center font-semibold">{{ __('After September 5') }}<br><span class="text-xs font-normal normal-case">{{ __('In-person') }}</span></th>
                                         <th scope="col" class="px-6 py-3 text-center font-semibold">{{ __('Online') }}</th>
                                     </tr>
                                 </thead>
@@ -94,9 +94,9 @@
                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                             {{ __('Professor (non-ABE)') }}
                                         </th>
-                                        <td class="px-6 py-4 text-center font-semibold">R$ 1,600</td>
-                                        <td class="px-6 py-4 text-center font-semibold">R$ 2,000</td>
-                                        <td class="px-6 py-4 text-center font-semibold">R$ 800</td>
+                                        <td class="px-6 py-4 text-center font-semibold">R$ 1,400</td>
+                                        <td class="px-6 py-4 text-center font-semibold">R$ 1,700</td>
+                                        <td class="px-6 py-4 text-center font-semibold">R$ 600</td>
                                     </tr>
                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -105,6 +105,14 @@
                                         <td class="px-6 py-4 text-center font-semibold">R$ 1,600</td>
                                         <td class="px-6 py-4 text-center font-semibold">R$ 2,000</td>
                                         <td class="px-6 py-4 text-center font-semibold">R$ 800</td>
+                                    </tr>
+                                    <tr class="bg-gray-50 border-b dark:bg-gray-700 dark:border-gray-600">
+                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                            {{ __('Accompanying person') }}
+                                        </th>
+                                        <td class="px-6 py-4 text-center font-semibold">R$ 500</td>
+                                        <td class="px-6 py-4 text-center font-semibold">R$ 600</td>
+                                        <td class="px-6 py-4 text-center text-gray-400">-</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -127,8 +135,8 @@
                                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                     <tr>
                                         <th scope="col" class="px-6 py-3 font-semibold">{{ __('Participant Category') }}</th>
-                                        <th scope="col" class="px-6 py-3 text-center font-semibold">{{ __('Until 08/15/2025') }}<br><span class="text-xs font-normal normal-case">{{ __('In-person') }}</span></th>
-                                        <th scope="col" class="px-6 py-3 text-center font-semibold">{{ __('After 08/15/2025') }}<br><span class="text-xs font-normal normal-case">{{ __('In-person') }}</span></th>
+                                        <th scope="col" class="px-6 py-3 text-center font-semibold">{{ __('Until September 5') }}<br><span class="text-xs font-normal normal-case">{{ __('In-person') }}</span></th>
+                                        <th scope="col" class="px-6 py-3 text-center font-semibold">{{ __('After September 5') }}<br><span class="text-xs font-normal normal-case">{{ __('In-person') }}</span></th>
                                         <th scope="col" class="px-6 py-3 text-center font-semibold">{{ __('Online') }}</th>
                                     </tr>
                                 </thead>
@@ -171,16 +179,16 @@
                                             {{ __('Professor (non-ABE)') }}
                                         </th>
                                         <td class="px-6 py-4 text-center">
-                                            <span class="font-semibold">R$ 700</span>
-                                            <span class="text-sm text-purple-600 dark:text-purple-400 block">(R$ 500)*</span>
+                                            <span class="font-semibold">R$ 500</span>
+                                            <span class="text-sm text-purple-600 dark:text-purple-400 block">(R$ 300)*</span>
                                         </td>
                                         <td class="px-6 py-4 text-center">
-                                            <span class="font-semibold">R$ 850</span>
-                                            <span class="text-sm text-purple-600 dark:text-purple-400 block">(R$ 650)*</span>
+                                            <span class="font-semibold">R$ 650</span>
+                                            <span class="text-sm text-purple-600 dark:text-purple-400 block">(R$ 450)*</span>
                                         </td>
                                         <td class="px-6 py-4 text-center">
-                                            <span class="font-semibold">R$ 350</span>
-                                            <span class="text-sm text-purple-600 dark:text-purple-400 block">(R$ 200)*</span>
+                                            <span class="font-semibold">R$ 250</span>
+                                            <span class="text-sm text-purple-600 dark:text-purple-400 block">(R$ 150)*</span>
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
@@ -232,7 +240,7 @@
                                     </li>
                                     <li class="flex items-start">
                                         <span class="font-semibold mr-2">•</span>
-                                        {{ __('Early bird registration deadline: August 15, 2025') }}
+                                        {{ __('Early bird registration deadline: September 5, 2025') }}
                                     </li>
                                     <li class="flex items-start">
                                         <span class="font-semibold mr-2">•</span>
