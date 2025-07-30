@@ -176,14 +176,18 @@ new #[Layout('layouts.app')] class extends Component {
         }
 
         try {
-            // Map position to participant category
+            // Map position to participant category considering residence country
             $participantCategory = match ($this->position) {
                 'undergraduate_student' => 'undergrad_student',
                 'graduate_student' => 'grad_student',
                 'researcher', 'professor' => $this->is_abe_member === 'yes' ? 'professor_abe' : 'professor_non_abe',
-                'professional' => 'professional_foreign',
+                'professional' => $this->address_country === 'Brazil' 
+                    ? ($this->is_abe_member === 'yes' ? 'professor_abe' : 'professor_non_abe')
+                    : 'professional_foreign',
                 'accompanying_person' => 'accompanying_person',
-                default => 'professional_foreign'
+                default => $this->address_country === 'Brazil' 
+                    ? ($this->is_abe_member === 'yes' ? 'professor_abe' : 'professor_non_abe')
+                    : 'professional_foreign'
             };
 
             $feeCalculationService = app(FeeCalculationService::class);
@@ -257,7 +261,7 @@ new #[Layout('layouts.app')] class extends Component {
             'emergency_contact_name' => 'required|string|max:255',
             'emergency_contact_relationship' => 'required|string|max:255',
             'emergency_contact_phone' => 'required|string|max:20',
-            'requires_visa_letter' => 'required_unless:document_country_origin,Brazil|nullable|string|in:yes,no',
+            'requires_visa_letter' => 'required_unless:address_country,Brazil|nullable|string|in:yes,no',
             'confirm_information' => 'required|accepted',
             'consent_data_processing' => 'required|accepted',
         ]);
@@ -304,7 +308,7 @@ new #[Layout('layouts.app')] class extends Component {
                 'emergency_contact_name' => 'required|string|max:255',
                 'emergency_contact_relationship' => 'required|string|max:255',
                 'emergency_contact_phone' => 'required|string|max:20',
-                'requires_visa_letter' => 'required_unless:document_country_origin,Brazil|nullable|string|in:yes,no',
+                'requires_visa_letter' => 'required_unless:address_country,Brazil|nullable|string|in:yes,no',
                 'confirm_information' => 'required|accepted',
                 'consent_data_processing' => 'required|accepted',
             ]);
@@ -594,7 +598,7 @@ new #[Layout('layouts.app')] class extends Component {
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
                             <div class="sm:col-span-2">
-                                <x-input-label for="document_country_origin" :value="__('Country of residence')" />
+                                <x-input-label for="document_country_origin" :value="__('Document issuing country')" />
                                 <select wire:model.live="document_country_origin" id="document_country_origin" class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-usp-blue-pri dark:focus:border-usp-blue-sec focus:ring-usp-blue-pri dark:focus:ring-usp-blue-sec rounded-md shadow-sm block mt-1 w-full" required dusk="document-country-origin-select">
                                     @foreach($countries as $code => $name)
                                         <option value="{{ $code }}">{{ $name }}</option>
@@ -673,7 +677,7 @@ new #[Layout('layouts.app')] class extends Component {
                             </div>
 
                             <div>
-                                <x-input-label for="address_country" :value="__('Country')" />
+                                <x-input-label for="address_country" :value="__('Country of residence')" />
                                 <select wire:model.live="address_country" id="address_country" class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-usp-blue-pri dark:focus:border-usp-blue-sec focus:ring-usp-blue-pri dark:focus:ring-usp-blue-sec rounded-md shadow-sm block mt-1 w-full" required dusk="country-select">
                                     @foreach($countries as $code => $name)
                                         <option value="{{ $code }}">{{ $name }}</option>
@@ -924,7 +928,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
 
                     {{-- Visa Support --}}
-                    @if($document_country_origin !== 'Brazil')
+                    @if($address_country !== 'Brazil')
                         <div class="border-b border-gray-200 dark:border-gray-700 pb-8">
                             <h2 class="text-lg font-semibold mb-4 text-usp-blue-pri dark:text-usp-blue-sec">{{ __('8. Visa Support') }}</h2>
                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ __('(For international participants only)') }}</p>
