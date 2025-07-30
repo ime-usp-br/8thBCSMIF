@@ -268,8 +268,16 @@ new #[Layout('layouts.app')] class extends Component {
                                             // This payment is for a free workshop for a grad student, which is auto-approved.
                                             $isAutoApprovedWorkshopPayment = $isGradStudent && $payment->status === 'approved' && (float) $payment->amount === 0.0 && !$payment->payment_proof_path;
                                             
-                                            // Standard condition to show the upload form
-                                            $showPaymentUpload = in_array($payment->status, ['pending']) && !$payment->payment_proof_path;
+                                            // Check if there are newer active payments for this registration
+                                            // Active statuses: pending (no upload yet) + pending_br_proof_approval (uploaded, awaiting approval)
+                                            $activeStatuses = ['pending', 'pending_br_proof_approval'];
+                                            $hasNewerActivePayment = $registration->payments()
+                                                ->whereIn('status', $activeStatuses)
+                                                ->where('created_at', '>', $payment->created_at)
+                                                ->exists();
+                                            
+                                            // Standard condition to show the upload form - hide if there are newer active payments
+                                            $showPaymentUpload = in_array($payment->status, ['pending']) && !$payment->payment_proof_path && !$hasNewerActivePayment;
                                         @endphp
 
                                         @if($isAutoApprovedWorkshopPayment)
