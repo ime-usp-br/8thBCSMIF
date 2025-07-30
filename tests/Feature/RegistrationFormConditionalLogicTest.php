@@ -121,7 +121,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
 
         $component = Livewire::test('registration-form')
-            ->set('document_country_origin', 'US');
+            ->set('address_country', 'US');
 
         $component->assertSee(__('8. Visa Support'))
             ->assertSee(__('Do you require an invitation letter to get a Brazilian visa?'))
@@ -134,7 +134,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
 
         $component = Livewire::test('registration-form')
-            ->set('document_country_origin', 'Brazil');
+            ->set('address_country', 'Brazil');
 
         $component->assertDontSee(__('8. Visa Support'))
             ->assertDontSee(__('Do you require an invitation letter to get a Brazilian visa?'));
@@ -178,7 +178,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
             ->set('address_street', 'Test Street')
             ->set('address_city', 'São Paulo')
             ->set('address_state_province', 'SP')
-            ->set('address_country', 'BR')
+            ->set('address_country', 'Brazil')
             ->set('address_postal_code', '01234-567')
             ->set('affiliation', 'Test University')
             ->set('position', 'professor')
@@ -275,7 +275,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
 
         $component = Livewire::test('registration-form')
-            ->set('address_country', 'BR');
+            ->set('address_country', 'Brazil');
 
         $component->assertDontSee(__('Please specify the country'));
     }

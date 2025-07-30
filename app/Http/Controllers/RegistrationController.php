@@ -44,17 +44,31 @@ class RegistrationController extends Controller
                 /** @var bool $isAbeMember */
                 $isAbeMember = $validatedData['is_abe_member'] ?? false;
 
+                // Map position to participant category considering residence country
+                /** @var string $addressCountry */
+                $addressCountry = $validatedData['address_country'] === 'OTHER'
+                    ? $validatedData['other_address_country']
+                    : $validatedData['address_country'];
+
                 $participantCategory = match ($position) {
                     'undergraduate_student' => 'undergrad_student',
                     'graduate_student' => 'grad_student',
-                    'professor' => $isAbeMember ? 'professor_abe' : 'professor_non_abe',
-                    'professional', 'researcher', 'other' => 'professional_foreign',
-                    default => 'professional_foreign', // Fallback
+                    'researcher', 'professor' => $isAbeMember ? 'professor_abe' : 'professor_non_abe',
+                    'professional' => $addressCountry === 'Brazil'
+                        ? ($isAbeMember ? 'professor_abe' : 'professor_non_abe')
+                        : 'professional_foreign',
+                    'accompanying_person' => 'accompanying_person',
+                    'other' => $addressCountry === 'Brazil'
+                        ? ($isAbeMember ? 'professor_abe' : 'professor_non_abe')
+                        : 'professional_foreign',
+                    default => $addressCountry === 'Brazil'
+                        ? ($isAbeMember ? 'professor_abe' : 'professor_non_abe')
+                        : 'professional_foreign', // Fallback
                 };
-                if ($position === 'other' || ! in_array($position, ['undergraduate_student', 'graduate_student', 'professor', 'professional', 'researcher'])) {
+                if ($position === 'other' || ! in_array($position, ['undergraduate_student', 'graduate_student', 'professor', 'professional', 'researcher', 'accompanying_person'])) {
                     Log::warning(
-                        "Unhandled or 'other' position during participant category mapping. Defaulting to 'professional_foreign'.",
-                        ['position_value' => $position]
+                        "Unhandled or 'other' position during participant category mapping. Applied country-based logic.",
+                        ['position_value' => $position, 'address_country' => $addressCountry, 'category_assigned' => $participantCategory]
                     );
                 }
 
