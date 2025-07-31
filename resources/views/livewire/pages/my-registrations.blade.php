@@ -180,8 +180,14 @@ new #[Layout('layouts.app')] class extends Component {
 
                         {{-- Payments Timeline --}}
                         @if($registration->payments->count() > 0)
-                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                            <h4 class="text-lg font-semibold mb-4 border-l-4 border-blue-500 pl-3">{{ __('Payment History') }}</h4>
+                        <x-form-section 
+                            :title="__('Payment History')"
+                            :description="__('Track your payment submissions and approval status')"
+                            :step="1"
+                            :completed="$registration->payments()->where('status', 'approved')->exists()"
+                            icon='<svg class="w-5 h-5 text-usp-blue-pri" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>'>
                             <div class="space-y-4">
                                 @foreach($registration->payments->sortByDesc('created_at') as $payment)
                                 <div class="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -368,7 +374,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 </div>
                                 @endforeach
                             </div>
-                        </div>
+                        </x-form-section>
                         @endif
 
                         {{-- Student Document Upload Section - For Both Undergraduate and Graduate Students --}}

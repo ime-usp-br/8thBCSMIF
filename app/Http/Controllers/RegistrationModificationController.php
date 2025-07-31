@@ -49,13 +49,6 @@ class RegistrationModificationController extends Controller
 
         $amountDue = $feeData['amount_due'] ?? 0.0;
 
-        if ($amountDue > 0) {
-            $registration->payments()->create([
-                'amount' => $amountDue,
-                'status' => 'pending',
-            ]);
-        }
-
         // Only attach new events (incrementally), not sync all events
         $newEventData = [];
         foreach ($feeData['details'] as $eventDetail) {
@@ -70,10 +63,8 @@ class RegistrationModificationController extends Controller
             $registration->events()->attach($newEventData);
         }
 
-        // Auto-approve payments for grad students in workshops
-        if ($registration->registration_category_snapshot === 'grad_student') {
-            $this->autoApproveWorkshopPayments($registration);
-        }
+        // Create payments strategically based on event types and participant category
+        $this->createAppropriatePayments($registration, $amountDue, $newEventCodes, $feeData);
 
         // Send notification to the participant (user)
         Mail::to($registration->user->email)->queue(new RegistrationModifiedNotification($registration));
@@ -95,31 +86,74 @@ class RegistrationModificationController extends Controller
     }
 
     /**
-     * Auto-approves payments for workshops for a given registration.
+     * Creates appropriate payments based on event types and participant category.
+     * This method prevents duplicate payments by consolidating all logic.
      *
-     * This method is called for graduate student registrations to automatically
-     * create a payment with 'approved' status for any new workshop events.
+     * @param  array<string>  $newEventCodes
+     * @param  array{details: list<array{event_code: string, event_name: string, calculated_price: float, error?: string}>, total_fee: float, new_total_fee?: float, total_paid?: float, amount_due?: float}  $feeData
      */
-    private function autoApproveWorkshopPayments(Registration $registration): void
+    private function createAppropriatePayments(Registration $registration, float $amountDue, array $newEventCodes, array $feeData): void
     {
-        $events = $registration->events()->where('is_main_conference', false)->get();
+        // Get all new events that were just added with pivot data
+        $newEvents = $registration->events()
+            ->whereIn('code', $newEventCodes)
+            ->withPivot('price_at_registration')
+            ->get();
 
-        foreach ($events as $event) {
-            // Check if a payment for this workshop already exists
-            $existingPayment = $registration->payments()
-                ->whereHas('events', function ($query) use ($event) {
-                    $query->where('event_code', $event->code);
-                })
-                ->exists();
+        $paidEvents = [];
+        $freeEvents = [];
 
-            if (! $existingPayment) {
-                $payment = $registration->payments()->create([
-                    'amount' => 0.00,
-                    'status' => 'approved',
-                    'payment_date' => now(),
-                    'notes' => __('Free workshop for graduate students'),
-                ]);
-                $payment->events()->attach($event->code);
+        // Categorize new events by payment requirement using fee calculation data
+        foreach ($feeData['details'] as $eventDetail) {
+            if (! isset($eventDetail['error']) && in_array($eventDetail['event_code'], $newEventCodes)) {
+                $calculatedPrice = (float) $eventDetail['calculated_price'];
+                $eventCode = $eventDetail['event_code'];
+
+                if ($calculatedPrice > 0) {
+                    $paidEvents[] = $eventCode;
+                } else {
+                    $freeEvents[] = $eventCode;
+                }
+            }
+        }
+
+        // Create a single payment for all paid events if there's an amount due
+        if ($amountDue > 0 && ! empty($paidEvents)) {
+            $payment = $registration->payments()->create([
+                'amount' => $amountDue,
+                'status' => 'pending',
+            ]);
+
+            // Associate the payment with paid events
+            foreach ($paidEvents as $eventCode) {
+                $payment->events()->attach($eventCode);
+            }
+        }
+
+        // Auto-approve payments for grad students in free workshops
+        if ($registration->registration_category_snapshot === 'grad_student' && ! empty($freeEvents)) {
+            foreach ($freeEvents as $eventCode) {
+                // Get event to check if it's a workshop
+                $event = $newEvents->where('code', $eventCode)->first();
+
+                if ($event && ! $event->is_main_conference) {
+                    // Check if a payment for this workshop already exists
+                    $existingPayment = $registration->payments()
+                        ->whereHas('events', function ($query) use ($eventCode) {
+                            $query->where('event_code', $eventCode);
+                        })
+                        ->exists();
+
+                    if (! $existingPayment) {
+                        $payment = $registration->payments()->create([
+                            'amount' => 0.00,
+                            'status' => 'approved',
+                            'payment_date' => now(),
+                            'notes' => __('Free workshop for graduate students'),
+                        ]);
+                        $payment->events()->attach($eventCode);
+                    }
+                }
             }
         }
     }
