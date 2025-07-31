@@ -140,7 +140,7 @@ class CombinedRegistrationTest extends TestCase
         $this->assertTrue($registration->events->contains('code', $workshop->code));
         $this->assertTrue($registration->events->contains('code', $mainConference->code));
 
-        // With the corrected logic: workshops are NOT auto-approved when 
+        // With the corrected logic: workshops are NOT auto-approved when
         // registering together with main conference (main conference payment is still pending)
         $payments = $registration->payments;
         $this->assertGreaterThanOrEqual(1, $payments->count());

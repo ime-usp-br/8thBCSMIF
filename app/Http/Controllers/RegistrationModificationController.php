@@ -140,7 +140,7 @@ class RegistrationModificationController extends Controller
             $mainConferencePaymentApproved = false;
             if ($hasMainConference) {
                 $mainConferencePaymentApproved = $registration->payments()
-                    ->whereIn('status', ['approved', 'paid', 'paid_br', 'paid_int'])
+                    ->where('status', 'approved')
                     ->whereHas('events', function ($query) {
                         $query->where('is_main_conference', true);
                     })

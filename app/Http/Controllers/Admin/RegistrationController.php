@@ -44,13 +44,10 @@ class RegistrationController extends Controller
             'payment_status' => [
                 'required',
                 Rule::in([
-                    'pending_payment',
-                    'pending_br_proof_approval',
-                    'paid_br',
-                    'invoice_sent_int',
-                    'paid_int',
-                    'free',
-                    'cancelled',
+                    'pending',
+                    'pending_approval',
+                    'approved',
+                    'rejected',
                 ]),
             ],
             'send_notification' => ['nullable', 'string', 'in:1'],
@@ -76,16 +73,21 @@ class RegistrationController extends Controller
         ]);
 
         // AC6: Update individual Payment records to automatically remove blocks
-        if ($newStatus === 'paid_br') {
-            // When payment is approved, update all pending_br_proof_approval payments to paid_br
+        if ($newStatus === 'approved') {
+            // When payment is approved, update all pending_approval payments to approved
             $registration->payments()
-                ->where('status', 'pending_br_proof_approval')
-                ->update(['status' => 'paid_br']);
-        } elseif ($newStatus === 'pending_payment') {
-            // When payment is rejected, update all pending_br_proof_approval payments to pending_payment
+                ->where('status', 'pending_approval')
+                ->update(['status' => 'approved']);
+        } elseif ($newStatus === 'rejected') {
+            // When payment is rejected, update all pending_approval payments to rejected
             $registration->payments()
-                ->where('status', 'pending_br_proof_approval')
-                ->update(['status' => 'pending_payment']);
+                ->where('status', 'pending_approval')
+                ->update(['status' => 'rejected']);
+        } elseif ($newStatus === 'pending') {
+            // When payment is reset to pending, update payments accordingly
+            $registration->payments()
+                ->whereIn('status', ['pending_approval', 'rejected'])
+                ->update(['status' => 'pending']);
         }
 
         // Send email notification if requested, especially for confirmations

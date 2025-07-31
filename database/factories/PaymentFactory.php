@@ -28,7 +28,7 @@ class PaymentFactory extends Factory
         return [
             'registration_id' => Registration::factory(),
             'amount' => $this->faker->randomFloat(2, 0, 2000),
-            'status' => $this->faker->randomElement(['pending', 'paid', 'pending_approval', 'cancelled']),
+            'status' => $this->faker->randomElement(['pending', 'pending_approval', 'approved', 'rejected']),
             'payment_proof_path' => $this->faker->optional(0.3)->filePath(),
             'payment_date' => $this->faker->optional(0.5)->dateTimeBetween('-1 month', 'now'),
             'notes' => $this->faker->optional(0.4)->sentence(),
@@ -49,12 +49,12 @@ class PaymentFactory extends Factory
     }
 
     /**
-     * Indicate that the payment is paid.
+     * Indicate that the payment is approved.
      */
-    public function paid(): Factory
+    public function approved(): Factory
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'paid',
+            'status' => 'approved',
             'payment_date' => $this->faker->dateTimeBetween('-1 month', 'now'),
             'payment_proof_path' => $this->faker->filePath(),
         ]);
@@ -73,12 +73,12 @@ class PaymentFactory extends Factory
     }
 
     /**
-     * Indicate that the payment is cancelled.
+     * Indicate that the payment is rejected.
      */
-    public function cancelled(): Factory
+    public function rejected(): Factory
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'cancelled',
+            'status' => 'rejected',
             'payment_date' => null,
             'payment_proof_path' => null,
         ]);

@@ -18,7 +18,7 @@ return new class extends Migration
                 ->onDelete('cascade')
                 ->comment('Foreign key to registrations table');
             $table->decimal('amount', 8, 2)->comment('Payment amount');
-            $table->string('status')->index()->comment('Payment status: pending, paid, pending_approval, cancelled');
+            $table->string('status')->index()->comment('Payment status: pending, pending_approval, approved, rejected');
             $table->string('payment_proof_path')->nullable()->comment('Path to payment proof file');
             $table->timestamp('payment_date')->nullable()->comment('Date when payment was confirmed');
             $table->text('notes')->nullable()->comment('Administrative notes');
