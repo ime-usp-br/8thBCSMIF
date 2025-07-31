@@ -823,21 +823,23 @@ class MyRegistrationsPageTest extends TestCase
         // Attach event to registration
         $registration->events()->attach($event->code, ['price_at_registration' => 200.00]);
 
-        // Create pending payment with proof already uploaded
+        // Create pending payment with proof already uploaded (older)
         $paymentWithProof = Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 100.00,
             'status' => 'pending',
             'payment_proof_path' => 'proofs/123/test_proof.pdf',
             'payment_date' => now(),
+            'created_at' => now()->subDays(1), // Older payment
         ]);
 
-        // Create another pending payment without proof
+        // Create another pending payment without proof (newer - should be the only one with upload form)
         $paymentWithoutProof = Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 100.00,
             'status' => 'pending',
             'payment_proof_path' => null,
+            'created_at' => now(), // Most recent payment
         ]);
 
         // Test that the page displays the behavior correctly
@@ -1104,5 +1106,180 @@ class MyRegistrationsPageTest extends TestCase
         // Verify no payment upload forms are present (since no payments exist)
         $this->assertStringNotContainsString('Payment Proof Upload', $content);
         $this->assertStringNotContainsString('payment_proof', $content);
+    }
+
+    /**
+     * Test that payment history card only shows green check when most recent payment is approved.
+     * This test addresses the requirement that the completion status should reflect only the latest payment.
+     */
+    public function test_payment_history_completion_status_reflects_most_recent_payment(): void
+    {
+        // Create verified user
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // Create event and registration
+        $event = Event::factory()->create();
+        $registration = Registration::factory()->create(['user_id' => $user->id]);
+        $registration->events()->attach($event, ['price_at_registration' => 100.00]);
+
+        // Scenario 1: Only one payment that is approved - should show completion
+        $payment1 = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'status' => 'approved',
+            'created_at' => now()->subDays(2),
+        ]);
+
+        $response = $this->actingAs($user)->get('/my-registration');
+        $content = $response->getContent();
+
+        // Look for the completed state in the form-section (green circle with checkmark)
+        $this->assertStringContainsString('bg-green-100 text-green-800', $content);
+
+        // Reset and test Scenario 2: Most recent payment is not approved - should not show completion
+        $payment1->delete();
+
+        // Create older approved payment and newer pending payment
+        Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'status' => 'approved',
+            'created_at' => now()->subDays(2),
+        ]);
+
+        Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'status' => 'pending',
+            'created_at' => now()->subDays(1), // More recent
+        ]);
+
+        $response = $this->actingAs($user)->get('/my-registration');
+        $content = $response->getContent();
+
+        // Should show step number instead of green checkmark since most recent is pending
+        $this->assertStringContainsString('bg-usp-blue-pri text-white', $content);
+
+        // Scenario 3: Most recent payment is approved - should show completion
+        Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'status' => 'approved',
+            'created_at' => now(), // Most recent and approved
+        ]);
+
+        $response = $this->actingAs($user)->get('/my-registration');
+        $content = $response->getContent();
+
+        // Should show green checkmark for completion
+        $this->assertStringContainsString('bg-green-100 text-green-800', $content);
+    }
+
+    /**
+     * Test that only the most recent pending payment allows upload form.
+     * This test addresses the bug where multiple upload forms were enabled simultaneously.
+     * IMPORTANT: This test verifies the fix for the cache issue where payments weren't refreshed after upload.
+     */
+    public function test_only_most_recent_pending_payment_allows_upload(): void
+    {
+        // Create verified user
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // Create event and registration
+        $event = Event::factory()->create();
+        $registration = Registration::factory()->create(['user_id' => $user->id]);
+        $registration->events()->attach($event, ['price_at_registration' => 100.00]);
+
+        // Scenario: User makes 3 payments sequentially (workshop + another workshop + main event)
+        // Create 3 payments with different timestamps, all pending initially, no proofs uploaded
+        $payment1 = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'status' => 'pending',
+            'amount' => 50.00,
+            'payment_proof_path' => null,
+            'created_at' => now()->subDays(3),
+        ]);
+
+        $payment2 = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'status' => 'pending',
+            'amount' => 75.00,
+            'payment_proof_path' => null,
+            'created_at' => now()->subDays(2),
+        ]);
+
+        $payment3 = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'status' => 'pending',
+            'amount' => 100.00,
+            'payment_proof_path' => null,
+            'created_at' => now()->subDays(1), // Most recent
+        ]);
+
+        // Test 1: Initially, only the most recent payment (payment3) should show upload form
+        $response = $this->actingAs($user)->get('/my-registration');
+        $content = $response->getContent();
+
+        // Should see upload form for payment3 (most recent)
+        $this->assertStringContainsString('payment_proof_'.$payment3->id, $content);
+        $this->assertStringContainsString('Payment Proof Upload', $content);
+
+        // Should NOT see upload forms for older payments
+        $this->assertStringNotContainsString('payment_proof_'.$payment1->id, $content);
+        $this->assertStringNotContainsString('payment_proof_'.$payment2->id, $content);
+
+        // Test 2: After uploading proof for payment3, it changes to pending_approval
+        // and payment2 becomes the most recent pending payment
+        $payment3->update([
+            'status' => 'pending_approval',
+            'payment_proof_path' => 'proof3.pdf',
+            'payment_date' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->get('/my-registration');
+        $content = $response->getContent();
+
+        // Now should see upload form for payment2 (now the most recent pending)
+        $this->assertStringContainsString('payment_proof_'.$payment2->id, $content);
+
+        // Should NOT see upload forms for payment1 (older) or payment3 (no longer pending)
+        $this->assertStringNotContainsString('payment_proof_'.$payment1->id, $content);
+        $this->assertStringNotContainsString('payment_proof_'.$payment3->id, $content);
+
+        // Test 3: After uploading proof for payment2, only payment1 should allow upload
+        $payment2->update([
+            'status' => 'pending_approval',
+            'payment_proof_path' => 'proof2.pdf',
+            'payment_date' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->get('/my-registration');
+        $content = $response->getContent();
+
+        // Refresh payment1 to check its current state
+        $payment1->refresh();
+        
+        // Verify payment1 is still the only pending payment without proof
+        $this->assertEquals('pending', $payment1->status);
+        $this->assertNull($payment1->payment_proof_path);
+
+        // Now should see upload form for payment1 (now the only pending payment)
+        $this->assertStringContainsString('payment_proof_'.$payment1->id, $content);
+
+        // Should NOT see upload forms for payment2 or payment3 (both no longer pending)
+        $this->assertStringNotContainsString('payment_proof_'.$payment2->id, $content);
+        $this->assertStringNotContainsString('payment_proof_'.$payment3->id, $content);
+
+        // Test 4: After all payments are processed, no upload forms should be visible
+        $payment1->update([
+            'status' => 'approved',
+            'payment_proof_path' => 'proof1.pdf',
+            'payment_date' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->get('/my-registration');
+        $content = $response->getContent();
+
+        // Should NOT see any upload forms
+        $this->assertStringNotContainsString('payment_proof_'.$payment1->id, $content);
+        $this->assertStringNotContainsString('payment_proof_'.$payment2->id, $content);
+        $this->assertStringNotContainsString('payment_proof_'.$payment3->id, $content);
+        $this->assertStringNotContainsString('Payment Proof Upload', $content);
     }
 }

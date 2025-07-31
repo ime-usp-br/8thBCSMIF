@@ -184,12 +184,18 @@ new #[Layout('layouts.app')] class extends Component {
                             :title="__('Payment History')"
                             :description="__('Track your payment submissions and approval status')"
                             :step="1"
-                            :completed="$registration->payments()->where('status', 'approved')->exists()"
+                            :completed="$registration->payments()->orderBy('created_at', 'desc')->first()?->status === 'approved'"
                             icon='<svg class="w-5 h-5 text-usp-blue-pri" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>'>
                             <div class="space-y-4">
-                                @foreach($registration->payments->sortByDesc('created_at') as $payment)
+                                @php
+                                    // Load fresh payments to avoid cache issues after status updates
+                                    $freshPayments = \App\Models\Payment::where('registration_id', $registration->id)
+                                        ->orderBy('created_at', 'desc')
+                                        ->get();
+                                @endphp
+                                @foreach($freshPayments as $payment)
                                 <div class="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                     <div class="flex-shrink-0">
                                         <div class="w-8 h-8 rounded-full flex items-center justify-center
@@ -274,16 +280,14 @@ new #[Layout('layouts.app')] class extends Component {
                                             // This payment is for a free workshop for a grad student, which is auto-approved.
                                             $isAutoApprovedWorkshopPayment = $isGradStudent && $payment->status === 'approved' && (float) $payment->amount === 0.0 && !$payment->payment_proof_path;
                                             
-                                            // Check if there are newer active payments for this registration
-                                            // Active statuses: pending (no upload yet) + pending_br_proof_approval (uploaded, awaiting approval)
-                                            $activeStatuses = ['pending', 'pending_br_proof_approval'];
-                                            $hasNewerActivePayment = $registration->payments()
-                                                ->whereIn('status', $activeStatuses)
-                                                ->where('created_at', '>', $payment->created_at)
-                                                ->exists();
+                                            $mostRecentPayment = \App\Models\Payment::where('registration_id', $registration->id)
+                                                ->orderBy('created_at', 'desc')
+                                                ->first();
+                                                
+                                            $showPaymentUpload = $payment->status === 'pending' 
+                                                && !$payment->payment_proof_path 
+                                                && $mostRecentPayment->id === $payment->id;
                                             
-                                            // Standard condition to show the upload form - hide if there are newer active payments
-                                            $showPaymentUpload = in_array($payment->status, ['pending']) && !$payment->payment_proof_path && !$hasNewerActivePayment;
                                         @endphp
 
                                         @if($isAutoApprovedWorkshopPayment)
