@@ -140,21 +140,20 @@ class CombinedRegistrationTest extends TestCase
         $this->assertTrue($registration->events->contains('code', $workshop->code));
         $this->assertTrue($registration->events->contains('code', $mainConference->code));
 
-        // Verify two payments were created (one for workshop, one for main conference)
+        // With the corrected logic: workshops are NOT auto-approved when 
+        // registering together with main conference (main conference payment is still pending)
         $payments = $registration->payments;
         $this->assertGreaterThanOrEqual(1, $payments->count());
 
-        // Find the auto-approved workshop payment
+        // There should be NO auto-approved workshop payment when main conference is also registered
+        // and not yet paid - workshop should be included in the combined payment
         $workshopPayment = $payments->where('status', 'approved')->first();
-        $this->assertNotNull($workshopPayment, 'Workshop payment should be auto-approved');
-        $this->assertEquals(0.00, $workshopPayment->amount);
-        $this->assertTrue($workshopPayment->events->contains('code', $workshop->code));
+        $this->assertNull($workshopPayment, 'Workshop payment should NOT be auto-approved when main conference is unpaid');
 
-        // Find the main conference payment (should be pending)
-        $mainConferencePayment = $payments->where('status', 'pending')->first();
-        if ($mainConferencePayment) {
-            $this->assertGreaterThan(0, $mainConferencePayment->amount);
-        }
+        // Find the main payment (should be pending and include both events)
+        $mainPayment = $payments->where('status', 'pending')->first();
+        $this->assertNotNull($mainPayment, 'There should be a pending payment for both events');
+        $this->assertGreaterThan(0, $mainPayment->amount);
     }
 
     /**
@@ -322,6 +321,13 @@ class CombinedRegistrationTest extends TestCase
         // Verify initial state: only main conference, no auto-approved payments
         $this->assertTrue($registration->events->contains('code', $mainConference->code));
         $initialAutoApprovedCount = $registration->payments()->where('status', 'approved')->count();
+
+        // Simulate main conference payment being approved first
+        $mainConferencePayment = $registration->payments()->first();
+        if ($mainConferencePayment) {
+            $mainConferencePayment->update(['status' => 'approved']);
+            $mainConferencePayment->events()->attach($mainConference->code);
+        }
 
         // Now add workshop via modification
         $workshop = Event::where('code', 'WDA2025')->first() ?? Event::factory()->workshop()->create([

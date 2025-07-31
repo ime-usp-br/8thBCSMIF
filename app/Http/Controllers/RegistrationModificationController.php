@@ -131,27 +131,49 @@ class RegistrationModificationController extends Controller
         }
 
         // Auto-approve payments for grad students in free workshops
+        // but only if main conference is not registered or already approved
         if ($registration->registration_category_snapshot === 'grad_student' && ! empty($freeEvents)) {
-            foreach ($freeEvents as $eventCode) {
-                // Get event to check if it's a workshop
-                $event = $newEvents->where('code', $eventCode)->first();
+            // Check if registration includes main conference
+            $hasMainConference = $registration->events()->where('is_main_conference', true)->exists();
 
-                if ($event && ! $event->is_main_conference) {
-                    // Check if a payment for this workshop already exists
-                    $existingPayment = $registration->payments()
-                        ->whereHas('events', function ($query) use ($eventCode) {
-                            $query->where('event_code', $eventCode);
-                        })
-                        ->exists();
+            // Check if main conference payment is approved (if main conference is registered)
+            $mainConferencePaymentApproved = false;
+            if ($hasMainConference) {
+                $mainConferencePaymentApproved = $registration->payments()
+                    ->whereIn('status', ['approved', 'paid', 'paid_br', 'paid_int'])
+                    ->whereHas('events', function ($query) {
+                        $query->where('is_main_conference', true);
+                    })
+                    ->exists();
+            }
 
-                    if (! $existingPayment) {
-                        $payment = $registration->payments()->create([
-                            'amount' => 0.00,
-                            'status' => 'approved',
-                            'payment_date' => now(),
-                            'notes' => __('Free workshop for graduate students'),
-                        ]);
-                        $payment->events()->attach($eventCode);
+            // Only auto-approve workshop payments if:
+            // 1. No main conference registration, OR
+            // 2. Main conference payment is already approved
+            $shouldAutoApproveWorkshops = ! $hasMainConference || $mainConferencePaymentApproved;
+
+            if ($shouldAutoApproveWorkshops) {
+                foreach ($freeEvents as $eventCode) {
+                    // Get event to check if it's a workshop
+                    $event = $newEvents->where('code', $eventCode)->first();
+
+                    if ($event && ! $event->is_main_conference) {
+                        // Check if a payment for this workshop already exists
+                        $existingPayment = $registration->payments()
+                            ->whereHas('events', function ($query) use ($eventCode) {
+                                $query->where('event_code', $eventCode);
+                            })
+                            ->exists();
+
+                        if (! $existingPayment) {
+                            $payment = $registration->payments()->create([
+                                'amount' => 0.00,
+                                'status' => 'approved',
+                                'payment_date' => now(),
+                                'notes' => __('Free workshop for graduate students'),
+                            ]);
+                            $payment->events()->attach($eventCode);
+                        }
                     }
                 }
             }

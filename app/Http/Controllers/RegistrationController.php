@@ -400,10 +400,31 @@ class RegistrationController extends Controller
      *
      * This method is called for graduate student registrations to automatically
      * create a payment with 'approved' status for any workshop events.
+     * Workshops are only free if there's no main conference registration
+     * or if the main conference payment is already approved.
      */
     private function autoApproveWorkshopPayments(Registration $registration): void
     {
         $events = $registration->events()->where('is_main_conference', false)->get();
+
+        // Check if registration includes main conference
+        $hasMainConference = $registration->events()->where('is_main_conference', true)->exists();
+
+        // Check if main conference payment is approved (if main conference is registered)
+        $mainConferencePaymentApproved = false;
+        if ($hasMainConference) {
+            $mainConferencePaymentApproved = $registration->payments()
+                ->whereIn('status', ['approved', 'paid', 'paid_br', 'paid_int'])
+                ->whereHas('events', function ($query) {
+                    $query->where('is_main_conference', true);
+                })
+                ->exists();
+        }
+
+        // Only auto-approve workshop payments if:
+        // 1. No main conference registration, OR
+        // 2. Main conference payment is already approved
+        $shouldAutoApproveWorkshops = ! $hasMainConference || $mainConferencePaymentApproved;
 
         foreach ($events as $event) {
             // Check if a payment for this workshop already exists
@@ -413,7 +434,7 @@ class RegistrationController extends Controller
                 })
                 ->exists();
 
-            if (! $existingPayment) {
+            if (! $existingPayment && $shouldAutoApproveWorkshops) {
                 $payment = $registration->payments()->create([
                     'amount' => 0.00,
                     'status' => 'approved',
