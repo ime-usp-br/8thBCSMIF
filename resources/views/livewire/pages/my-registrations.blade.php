@@ -458,7 +458,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 {{-- Enhanced Status Display --}}
                                 <div class="space-y-4">
                                     <!-- Status Overview -->
-                                    <div class="flex items-center justify-between p-4 rounded-lg border
+                                    <div class="p-4 rounded-lg border
                                         @if($enrollmentProof->status === 'approved')
                                             bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700
                                         @elseif($enrollmentProof->status === 'rejected')
@@ -467,37 +467,45 @@ new #[Layout('layouts.app')] class extends Component {
                                             bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700
                                         @endif">
                                         
-                                        <div class="flex items-center">
+                                        <!-- Status Info - Always visible -->
+                                        <div class="flex items-center mb-4">
                                             @if($enrollmentProof->status === 'approved')
-                                                <svg class="w-6 h-6 text-green-600 dark:text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <svg class="w-6 h-6 text-green-600 dark:text-green-400 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                                                 </svg>
-                                                <div>
+                                                <div class="min-w-0 flex-1">
                                                     <p class="font-medium text-green-800 dark:text-green-300">{{ __('Document Approved') }}</p>
                                                     <p class="text-sm text-green-600 dark:text-green-400">{{ __('Your student status has been verified') }}</p>
                                                 </div>
                                             @elseif($enrollmentProof->status === 'rejected')
-                                                <svg class="w-6 h-6 text-red-600 dark:text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <svg class="w-6 h-6 text-red-600 dark:text-red-400 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                                                 </svg>
-                                                <div>
+                                                <div class="min-w-0 flex-1">
                                                     <p class="font-medium text-red-800 dark:text-red-300">{{ __('Document Rejected') }}</p>
                                                     <p class="text-sm text-red-600 dark:text-red-400">{{ __('Please upload a new document') }}</p>
                                                 </div>
                                             @else
-                                                <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
                                                 </svg>
-                                                <div>
+                                                <div class="min-w-0 flex-1">
                                                     <p class="font-medium text-yellow-800 dark:text-yellow-300">{{ __('Under Review') }}</p>
                                                     <p class="text-sm text-yellow-600 dark:text-yellow-400">{{ __('Your document is being reviewed') }}</p>
                                                 </div>
                                             @endif
                                         </div>
 
-                                        <div class="flex items-center space-x-2">
-                                            @if($enrollmentProof->status !== 'approved')
-                                                <form action="{{ route('enrollment-proofs.upload', $registration) }}" method="POST" enctype="multipart/form-data" class="inline"
+                                        <!-- Replace Document Form - Responsive layout -->
+                                        @if($enrollmentProof->status !== 'approved')
+                                            <div class="border-t pt-4 
+                                                @if($enrollmentProof->status === 'rejected')
+                                                    border-red-200 dark:border-red-700
+                                                @else
+                                                    border-yellow-200 dark:border-yellow-700
+                                                @endif">
+                                                <form action="{{ route('enrollment-proofs.upload', $registration) }}" method="POST" enctype="multipart/form-data" 
+                                                      class="space-y-4 sm:space-y-0 sm:flex sm:items-end sm:space-x-4"
                                                       x-data="{ 
                                                           submitReplaceForm() {
                                                               const fileUploadComponent = this.$el.querySelector('[x-data*=fileUpload]')?.__x?.$data;
@@ -510,24 +518,33 @@ new #[Layout('layouts.app')] class extends Component {
                                                       }"
                                                       @submit="if (!submitReplaceForm()) { $event.preventDefault(); $el.querySelector('[x-data*=fileUpload]')?.__x?.$data?.validateBeforeSubmit(); }">
                                                     @csrf
-                                                    <x-file-upload 
-                                                        name="enrollment_proof"
-                                                        accept=".jpg,.jpeg,.png,.pdf"
-                                                        max-size="10MB"
-                                                        :existing-file="$enrollmentProof->file_path"
-                                                        :download-route="$downloadRoute"
-                                                        :required="true"
-                                                        class="inline"
-                                                    />
-                                                    <button type="submit" class="inline-flex items-center px-3 py-2 bg-usp-blue-pri border border-transparent rounded-md text-sm font-medium text-white hover:bg-usp-blue-sec focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-usp-blue-pri transition-colors duration-200">
-                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                                        </svg>
-                                                        {{ __('Replace Document') }}
-                                                    </button>
+                                                    
+                                                    <!-- File Upload - Full width on mobile, flexible on desktop -->
+                                                    <div class="flex-1 min-w-0">
+                                                        <x-file-upload 
+                                                            name="enrollment_proof"
+                                                            accept=".jpg,.jpeg,.png,.pdf"
+                                                            max-size="10MB"
+                                                            :existing-file="$enrollmentProof->file_path"
+                                                            :download-route="$downloadRoute"
+                                                            :required="true"
+                                                            class="w-full"
+                                                        />
+                                                    </div>
+                                                    
+                                                    <!-- Submit Button - Full width on mobile, fixed width on desktop -->
+                                                    <div class="flex-shrink-0">
+                                                        <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-usp-blue-pri border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-usp-blue-sec focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-usp-blue-pri transition-colors duration-200">
+                                                            <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                                            </svg>
+                                                            <span class="hidden sm:inline">{{ __('Replace Document') }}</span>
+                                                            <span class="sm:hidden">{{ __('Replace') }}</span>
+                                                        </button>
+                                                    </div>
                                                 </form>
-                                            @endif
-                                        </div>
+                                            </div>
+                                        @endif
                                     </div>
 
                                     <!-- Upload Details -->
