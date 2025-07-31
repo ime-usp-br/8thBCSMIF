@@ -398,4 +398,258 @@ class RegistrationFormConditionalLogicTest extends TestCase
 
         $component->assertHasNoErrors(['other_document_country_origin', 'other_address_country']);
     }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function foreign_researcher_is_charged_foreign_rates(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // Set up mock fees for testing
+        \App\Models\Fee::factory()->create([
+            'event_code' => '8BCSMIF',
+            'participant_category' => 'professional_foreign',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 1600.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $component = Livewire::test('registration-form')
+            ->set('position', 'researcher')
+            ->set('address_country', 'United States')  // Foreign country
+            ->set('is_abe_member', 'no')
+            ->set('selected_event_codes', ['8BCSMIF'])
+            ->set('participation_format', 'in-person');
+
+        // Verify that foreign fees are applied
+        $component->assertSet('total_fee', 1600.00);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function foreign_professor_is_charged_foreign_rates(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // Set up mock fees for testing
+        \App\Models\Fee::factory()->create([
+            'event_code' => '8BCSMIF',
+            'participant_category' => 'professional_foreign',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 1600.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $component = Livewire::test('registration-form')
+            ->set('position', 'professor')
+            ->set('address_country', 'United Kingdom')  // Foreign country
+            ->set('is_abe_member', 'yes')  // Even ABE members with foreign residence pay foreign rates
+            ->set('selected_event_codes', ['8BCSMIF'])
+            ->set('participation_format', 'in-person');
+
+        // Verify that foreign fees are applied regardless of ABE membership
+        $component->assertSet('total_fee', 1600.00);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function brazilian_researcher_is_charged_domestic_rates(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // Set up mock fees for testing
+        \App\Models\Fee::factory()->create([
+            'event_code' => '8BCSMIF',
+            'participant_category' => 'professor_non_abe',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 1400.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $component = Livewire::test('registration-form')
+            ->set('position', 'researcher')
+            ->set('address_country', 'Brazil')  // Brazilian residence
+            ->set('is_abe_member', 'no')
+            ->set('selected_event_codes', ['8BCSMIF'])
+            ->set('participation_format', 'in-person');
+
+        // Verify that domestic rates apply
+        $component->assertSet('total_fee', 1400.00);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function brazilian_professor_abe_member_is_charged_abe_rates(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // Set up mock fees for testing
+        \App\Models\Fee::factory()->create([
+            'event_code' => '8BCSMIF',
+            'participant_category' => 'professor_abe',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 1200.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $component = Livewire::test('registration-form')
+            ->set('position', 'professor')
+            ->set('address_country', 'Brazil')  // Brazilian residence
+            ->set('is_abe_member', 'yes')  // ABE member
+            ->set('selected_event_codes', ['8BCSMIF'])
+            ->set('participation_format', 'in-person');
+
+        // Verify that ABE rates apply for Brazilian residents
+        $component->assertSet('total_fee', 1200.00);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function fees_update_automatically_when_address_country_changes(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // Set up mock fees for testing
+        \App\Models\Fee::factory()->create([
+            'event_code' => '8BCSMIF',
+            'participant_category' => 'professor_non_abe',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 1400.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+        \App\Models\Fee::factory()->create([
+            'event_code' => '8BCSMIF',
+            'participant_category' => 'professional_foreign',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 1600.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $component = Livewire::test('registration-form')
+            ->set('position', 'professor')
+            ->set('address_country', 'Brazil')  // Start with Brazilian residence
+            ->set('is_abe_member', 'no')
+            ->set('selected_event_codes', ['8BCSMIF'])
+            ->set('participation_format', 'in-person');
+
+        // Initially should show Brazilian rates
+        $component->assertSet('total_fee', 1400.00);
+
+        // Change to foreign country - fees should update automatically
+        $component->set('address_country', 'United States');
+
+        // Should now show foreign rates
+        $component->assertSet('total_fee', 1600.00);
+
+        // Change back to Brazil - should revert to Brazilian rates
+        $component->set('address_country', 'Brazil');
+
+        // Should show Brazilian rates again
+        $component->assertSet('total_fee', 1400.00);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function brazilian_professional_is_charged_foreign_rates(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // Set up mock fees for testing
+        \App\Models\Fee::factory()->create([
+            'event_code' => '8BCSMIF',
+            'participant_category' => 'professional_foreign',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 1600.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $component = Livewire::test('registration-form')
+            ->set('position', 'professional')
+            ->set('address_country', 'Brazil')  // Brazilian residence
+            ->set('is_abe_member', 'no')
+            ->set('selected_event_codes', ['8BCSMIF'])
+            ->set('participation_format', 'in-person');
+
+        // Should charge foreign rates even for Brazilian professionals
+        $component->assertSet('total_fee', 1600.00);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function foreign_professional_is_charged_foreign_rates(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // Set up mock fees for testing
+        \App\Models\Fee::factory()->create([
+            'event_code' => '8BCSMIF',
+            'participant_category' => 'professional_foreign',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 1600.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $component = Livewire::test('registration-form')
+            ->set('position', 'professional')
+            ->set('address_country', 'Germany')  // Foreign residence
+            ->set('is_abe_member', 'no')
+            ->set('selected_event_codes', ['8BCSMIF'])
+            ->set('participation_format', 'in-person');
+
+        // Should charge foreign rates
+        $component->assertSet('total_fee', 1600.00);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function brazilian_other_position_is_charged_foreign_rates(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // Set up mock fees for testing
+        \App\Models\Fee::factory()->create([
+            'event_code' => '8BCSMIF',
+            'participant_category' => 'professional_foreign',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 1600.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $component = Livewire::test('registration-form')
+            ->set('position', 'other')
+            ->set('address_country', 'Brazil')  // Brazilian residence
+            ->set('is_abe_member', 'yes')  // ABE member
+            ->set('selected_event_codes', ['8BCSMIF'])
+            ->set('participation_format', 'in-person');
+
+        // Should charge foreign rates even for Brazilian other position
+        $component->assertSet('total_fee', 1600.00);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function foreign_other_position_is_charged_foreign_rates(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        // Set up mock fees for testing
+        \App\Models\Fee::factory()->create([
+            'event_code' => '8BCSMIF',
+            'participant_category' => 'professional_foreign',
+            'type' => 'in-person',
+            'period' => 'early',
+            'price' => 1600.00,
+            'is_discount_for_main_event_participant' => false,
+        ]);
+
+        $component = Livewire::test('registration-form')
+            ->set('position', 'other')
+            ->set('address_country', 'Canada')  // Foreign residence
+            ->set('is_abe_member', 'yes')  // Even ABE members pay foreign rates if foreign
+            ->set('selected_event_codes', ['8BCSMIF'])
+            ->set('participation_format', 'in-person');
+
+        // Should charge foreign rates
+        $component->assertSet('total_fee', 1600.00);
+    }
 }

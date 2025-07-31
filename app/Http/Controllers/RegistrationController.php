@@ -53,14 +53,12 @@ class RegistrationController extends Controller
                 $participantCategory = match ($position) {
                     'undergraduate_student' => 'undergrad_student',
                     'graduate_student' => 'grad_student',
-                    'researcher', 'professor' => $isAbeMember ? 'professor_abe' : 'professor_non_abe',
-                    'professional' => $addressCountry === 'Brazil'
+                    'researcher', 'professor' => $addressCountry === 'Brazil'
                         ? ($isAbeMember ? 'professor_abe' : 'professor_non_abe')
                         : 'professional_foreign',
+                    'professional' => 'professional_foreign',
                     'accompanying_person' => 'accompanying_person',
-                    'other' => $addressCountry === 'Brazil'
-                        ? ($isAbeMember ? 'professor_abe' : 'professor_non_abe')
-                        : 'professional_foreign',
+                    'other' => 'professional_foreign',
                     default => $addressCountry === 'Brazil'
                         ? ($isAbeMember ? 'professor_abe' : 'professor_non_abe')
                         : 'professional_foreign', // Fallback

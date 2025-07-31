@@ -167,6 +167,11 @@ new #[Layout('layouts.app')] class extends Component {
         $this->calculateFees();
     }
 
+    public function updatedAddressCountry(): void
+    {
+        $this->calculateFees();
+    }
+
     protected function calculateFees(): void
     {
         if (empty($this->selected_event_codes) || empty($this->position)) {
@@ -180,11 +185,12 @@ new #[Layout('layouts.app')] class extends Component {
             $participantCategory = match ($this->position) {
                 'undergraduate_student' => 'undergrad_student',
                 'graduate_student' => 'grad_student',
-                'researcher', 'professor' => $this->is_abe_member === 'yes' ? 'professor_abe' : 'professor_non_abe',
-                'professional' => $this->address_country === 'Brazil' 
+                'researcher', 'professor' => $this->address_country === 'Brazil'
                     ? ($this->is_abe_member === 'yes' ? 'professor_abe' : 'professor_non_abe')
                     : 'professional_foreign',
+                'professional' => 'professional_foreign',
                 'accompanying_person' => 'accompanying_person',
+                'other' => 'professional_foreign',
                 default => $this->address_country === 'Brazil' 
                     ? ($this->is_abe_member === 'yes' ? 'professor_abe' : 'professor_non_abe')
                     : 'professional_foreign'

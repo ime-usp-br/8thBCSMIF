@@ -35,7 +35,7 @@ class CombinedRegistrationTest extends TestCase
             'address_street' => 'Rua Exemplo, 123',
             'address_city' => 'São Paulo',
             'address_state_province' => 'SP',
-            'address_country' => 'BR',
+            'address_country' => 'Brazil',
             'address_postal_code' => '01000-000',
             'affiliation' => 'University Test',
             'position' => 'graduate_student',
