@@ -1254,7 +1254,7 @@ class MyRegistrationsPageTest extends TestCase
 
         // Refresh payment1 to check its current state
         $payment1->refresh();
-        
+
         // Verify payment1 is still the only pending payment without proof
         $this->assertEquals('pending', $payment1->status);
         $this->assertNull($payment1->payment_proof_path);

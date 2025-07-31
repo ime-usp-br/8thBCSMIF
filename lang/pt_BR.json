@@ -9,6 +9,7 @@
     "Enrollment proof approved": "Comprovante de matrícula aprovado",
     "Enrollment proof rejected": "Comprovante de matrícula rejeitado",
     "Accompanying persons cannot register for workshops. Workshops found: :workshops": "Acompanhantes não podem se inscrever em workshops. Workshops encontrados: :workshops",
+    "Accompanying persons cannot participate online. Only in-person participation is allowed.": "Acompanhantes não podem participar online. Apenas participação presencial é permitida.",
     "Brazilian residents must use domestic payment methods (PIX, Bank Transfer, or Boleto).": "Residentes no Brasil devem usar métodos de pagamento nacionais (PIX, Transferência Bancária ou Boleto).",
     "International participants must use international payment methods (Credit Card, PayPal, or Wire Transfer).": "Participantes internacionais devem usar métodos de pagamento internacionais (Cartão de Crédito, PayPal ou Transferência Bancária).",
     "Students must upload enrollment proof documents. Both undergraduate and graduate students are required to provide valid enrollment documentation.": "Estudantes devem enviar comprovantes de matrícula. Tanto estudantes de graduação quanto de pós-graduação são obrigatórios a fornecer documentação válida de matrícula.",
@@ -707,6 +708,7 @@
     "Thank you for your registration. Your invoice for international payment will be sent shortly from assoc.bras.estatistica@gmail.com. Please check your inbox and spam folder.": "Obrigado pela sua inscrição. Sua fatura para pagamento internacional será enviada em breve de assoc.bras.estatistica@gmail.com. Por favor, verifique sua caixa de entrada e pasta de spam.",
     "Accompanying persons cannot register for workshops. The following events are workshops: :workshops": "Acompanhantes não podem se inscrever em workshops. Os seguintes eventos são workshops: :workshops",
     "Cannot select: workshops are selected": "Não é possível selecionar: workshops estão selecionados",
+    "Cannot select: online participation is selected": "Não é possível selecionar: participação online está selecionada",
     "Not available for accompanying persons": "Não disponível para acompanhantes",
     "I do not need transportation.": "Não preciso de transporte.",
     "Please select a file": "Por favor, selecione um arquivo"

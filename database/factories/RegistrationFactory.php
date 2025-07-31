@@ -27,7 +27,7 @@ class RegistrationFactory extends Factory
     public function definition(): array
     {
         $user = User::factory()->create();
-        $position = $this->faker->randomElement(['undergrad_student', 'grad_student', 'researcher', 'professor', 'professional', 'other']);
+        $position = $this->faker->randomElement(['undergrad_student', 'grad_student', 'professor', 'professional', 'other']);
         $isBrazilian = $this->faker->boolean(70); // 70% chance of being Brazilian for testing variety
 
         return [
