@@ -25,7 +25,7 @@ class RegistrationPolicy
 
     /**
      * Determine whether the user can modify the registration (add events).
-     * Blocked when any payment has status 'pending_br_proof_approval'.
+     * Blocked when any payment has status 'pending_approval'.
      */
     public function modify(User $user, Registration $registration): bool
     {
@@ -39,9 +39,9 @@ class RegistrationPolicy
             return false;
         }
 
-        // Check if any payment has status 'pending_br_proof_approval'
+        // Check if any payment has status 'pending_approval'
         return ! $registration->payments()
-            ->where('status', 'pending_br_proof_approval')
+            ->where('status', 'pending_approval')
             ->exists();
     }
 }

@@ -66,7 +66,7 @@ return new class extends Migration
             // Registration/Payment Data
             $table->string('registration_category_snapshot', 50)->comment('Participant category used for fee calculation at the time of registration.');
             $table->decimal('calculated_fee', 8, 2)->comment('Total fee calculated for the registration.');
-            $table->string('payment_status', 50)->default('pending_payment')->index()->comment('Payment status of the registration. E.g., pending_payment, paid_br.');
+            $table->string('payment_status', 50)->default('pending')->index()->comment('Payment status of the registration: pending, pending_approval, approved, rejected');
             $table->string('payment_proof_path')->nullable()->comment('Path to the uploaded payment proof file (for Brazilians).');
             $table->timestamp('payment_uploaded_at')->nullable()->comment('Timestamp when payment proof was uploaded.');
             $table->timestamp('invoice_sent_at')->nullable()->comment('Timestamp when invoice was sent (for internationals).');

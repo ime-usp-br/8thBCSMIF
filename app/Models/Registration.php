@@ -66,6 +66,14 @@ class Registration extends Model
     /** @use HasFactory<\Database\Factories\RegistrationFactory> */
     use HasFactory;
 
+    const PAYMENT_STATUS_PENDING = 'pending';
+
+    const PAYMENT_STATUS_PENDING_APPROVAL = 'pending_approval';
+
+    const PAYMENT_STATUS_APPROVED = 'approved';
+
+    const PAYMENT_STATUS_REJECTED = 'rejected';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -223,5 +231,52 @@ class Registration extends Model
         $newTotalFee = $feeCalculation['new_total_fee'] ?? null;
 
         return is_numeric($newTotalFee) ? (float) $newTotalFee : $fallbackFee;
+    }
+
+    /**
+     * Get all valid payment status values.
+     *
+     * @return array<string>
+     */
+    public static function getValidPaymentStatuses(): array
+    {
+        return [
+            self::PAYMENT_STATUS_PENDING,
+            self::PAYMENT_STATUS_PENDING_APPROVAL,
+            self::PAYMENT_STATUS_APPROVED,
+            self::PAYMENT_STATUS_REJECTED,
+        ];
+    }
+
+    /**
+     * Check if the payment status is pending.
+     */
+    public function isPaymentPending(): bool
+    {
+        return $this->payment_status === self::PAYMENT_STATUS_PENDING;
+    }
+
+    /**
+     * Check if the payment status is pending approval.
+     */
+    public function isPaymentPendingApproval(): bool
+    {
+        return $this->payment_status === self::PAYMENT_STATUS_PENDING_APPROVAL;
+    }
+
+    /**
+     * Check if the payment status is approved.
+     */
+    public function isPaymentApproved(): bool
+    {
+        return $this->payment_status === self::PAYMENT_STATUS_APPROVED;
+    }
+
+    /**
+     * Check if the payment status is rejected.
+     */
+    public function isPaymentRejected(): bool
+    {
+        return $this->payment_status === self::PAYMENT_STATUS_REJECTED;
     }
 }

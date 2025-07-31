@@ -31,11 +31,27 @@ class EnrollmentProofFactory extends Factory
             'file_path' => $this->faker->optional(0.7)->filePath(),
             'original_filename' => $this->faker->optional(0.7)->word().'.pdf',
             'uploaded_at' => $this->faker->optional(0.6)->dateTimeBetween('-1 month', 'now'),
-            'status' => $this->faker->randomElement(['pending_approval', 'approved', 'rejected']),
+            'status' => $this->faker->randomElement(['pending', 'pending_approval', 'approved', 'rejected']),
             'approved_at' => $this->faker->optional(0.3)->dateTimeBetween('-1 week', 'now'),
             'approved_by' => $this->faker->optional(0.3)->randomElement([User::factory(), null]),
             'rejection_reason' => $this->faker->optional(0.2)->sentence(),
         ];
+    }
+
+    /**
+     * Indicate that the enrollment proof is pending (not yet uploaded).
+     */
+    public function pending(): Factory
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'pending',
+            'file_path' => null,
+            'original_filename' => null,
+            'uploaded_at' => null,
+            'approved_at' => null,
+            'approved_by' => null,
+            'rejection_reason' => null,
+        ]);
     }
 
     /**

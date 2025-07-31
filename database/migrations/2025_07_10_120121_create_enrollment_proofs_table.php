@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('file_path')->nullable()->comment('Path to the uploaded enrollment proof file');
             $table->string('original_filename')->nullable()->comment('Original filename of the uploaded file');
             $table->timestamp('uploaded_at')->nullable()->comment('Timestamp when the file was uploaded');
-            $table->string('status')->index()->comment('Status of the enrollment proof: pending_approval, approved, rejected');
+            $table->string('status')->index()->comment('Status of the enrollment proof: pending, pending_approval, approved, rejected');
             $table->timestamp('approved_at')->nullable()->comment('Timestamp when the proof was approved');
             $table->foreignId('approved_by')->nullable()
                 ->constrained('users')

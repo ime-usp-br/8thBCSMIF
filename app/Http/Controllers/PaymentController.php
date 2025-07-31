@@ -64,7 +64,7 @@ class PaymentController extends Controller
             $payment->update([
                 'payment_proof_path' => $path,
                 'payment_date' => Carbon::now(),
-                'status' => 'pending_br_proof_approval',
+                'status' => 'pending_approval',
                 'notes' => __('Payment proof uploaded by user'),
             ]);
 
@@ -82,7 +82,7 @@ class PaymentController extends Controller
                 // Update registration status if all payments have been submitted for approval
                 $payment->registration->update([
                     'payment_uploaded_at' => Carbon::now(),
-                    'payment_status' => 'pending_br_proof_approval',
+                    'payment_status' => 'pending_approval',
                 ]);
             }
 

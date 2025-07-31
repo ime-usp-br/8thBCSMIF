@@ -29,6 +29,8 @@ class EnrollmentProof extends Model
     /** @use HasFactory<\Database\Factories\EnrollmentProofFactory> */
     use HasFactory;
 
+    const STATUS_PENDING = 'pending';
+
     const STATUS_PENDING_APPROVAL = 'pending_approval';
 
     const STATUS_APPROVED = 'approved';
@@ -92,6 +94,7 @@ class EnrollmentProof extends Model
     public static function getValidStatuses(): array
     {
         return [
+            self::STATUS_PENDING,
             self::STATUS_PENDING_APPROVAL,
             self::STATUS_APPROVED,
             self::STATUS_REJECTED,
@@ -107,7 +110,7 @@ class EnrollmentProof extends Model
     public function approve(User $approver): bool
     {
         if ($this->status !== self::STATUS_PENDING_APPROVAL) {
-            return false; // Can only approve pending proofs
+            return false; // Can only approve pending approval proofs
         }
 
         $this->update([
@@ -130,7 +133,7 @@ class EnrollmentProof extends Model
     public function reject(User $approver, string $reason): bool
     {
         if ($this->status !== self::STATUS_PENDING_APPROVAL) {
-            return false; // Can only reject pending proofs
+            return false; // Can only reject pending approval proofs
         }
 
         $this->update([
@@ -144,9 +147,17 @@ class EnrollmentProof extends Model
     }
 
     /**
-     * Check if the enrollment proof is pending approval.
+     * Check if the enrollment proof is pending (not yet uploaded).
      */
     public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    /**
+     * Check if the enrollment proof is pending approval.
+     */
+    public function isPendingApproval(): bool
     {
         return $this->status === self::STATUS_PENDING_APPROVAL;
     }

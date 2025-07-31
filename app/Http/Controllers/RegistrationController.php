@@ -160,7 +160,7 @@ class RegistrationController extends Controller
                 }
 
                 // --- AC9: Set payment_status based on calculated_fee ---
-                $paymentStatus = ($feeData['total_fee'] == 0) ? 'free' : 'pending_payment';
+                $paymentStatus = ($feeData['total_fee'] == 0) ? 'approved' : 'pending';
                 $registration->update(['payment_status' => $paymentStatus]);
                 if (config('app.debug')) {
                     Log::debug('Payment status set for registration.', ['registration_id' => $registration->id, 'payment_status' => $paymentStatus]);
@@ -365,7 +365,7 @@ class RegistrationController extends Controller
                 // Update registration status if all payments have been submitted
                 $registration->update([
                     'payment_uploaded_at' => Carbon::now(),
-                    'payment_status' => 'pending_br_proof_approval',
+                    'payment_status' => 'pending_approval',
                 ]);
             }
 
@@ -414,7 +414,7 @@ class RegistrationController extends Controller
         $mainConferencePaymentApproved = false;
         if ($hasMainConference) {
             $mainConferencePaymentApproved = $registration->payments()
-                ->whereIn('status', ['approved', 'paid', 'paid_br', 'paid_int'])
+                ->where('status', 'approved')
                 ->whereHas('events', function ($query) {
                     $query->where('is_main_conference', true);
                 })
