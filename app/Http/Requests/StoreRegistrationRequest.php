@@ -120,7 +120,7 @@ class StoreRegistrationRequest extends FormRequest
 
             // Professional Details
             'affiliation' => ['nullable', 'string', 'max:255'],
-            'position' => ['required', 'string', Rule::in(['undergraduate_student', 'graduate_student', 'researcher', 'professor', 'professional', 'accompanying_person', 'other'])],
+            'position' => ['required', 'string', Rule::in(['undergraduate_student', 'graduate_student', 'professor', 'professional', 'accompanying_person', 'other'])],
             'is_abe_member' => ['boolean'], // Default is false, so allowing true/false/'0'/'1'
 
             // Event Participation

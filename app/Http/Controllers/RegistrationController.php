@@ -53,7 +53,7 @@ class RegistrationController extends Controller
                 $participantCategory = match ($position) {
                     'undergraduate_student' => 'undergrad_student',
                     'graduate_student' => 'grad_student',
-                    'researcher', 'professor' => $addressCountry === 'Brazil'
+                    'professor' => $addressCountry === 'Brazil'
                         ? ($isAbeMember ? 'professor_abe' : 'professor_non_abe')
                         : 'professional_foreign',
                     'professional' => 'professional_foreign',
@@ -63,7 +63,7 @@ class RegistrationController extends Controller
                         ? ($isAbeMember ? 'professor_abe' : 'professor_non_abe')
                         : 'professional_foreign', // Fallback
                 };
-                if ($position === 'other' || ! in_array($position, ['undergraduate_student', 'graduate_student', 'professor', 'professional', 'researcher', 'accompanying_person'])) {
+                if ($position === 'other' || ! in_array($position, ['undergraduate_student', 'graduate_student', 'professor', 'professional', 'accompanying_person'])) {
                     Log::warning(
                         "Unhandled or 'other' position during participant category mapping. Applied country-based logic.",
                         ['position_value' => $position, 'address_country' => $addressCountry, 'category_assigned' => $participantCategory]

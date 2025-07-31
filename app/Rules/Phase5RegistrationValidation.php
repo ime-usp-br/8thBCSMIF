@@ -46,7 +46,7 @@ class Phase5RegistrationValidation implements DataAwareRule, ValidationRule
      * Run the validation rule.
      *
      * Comprehensive validation for Phase 5 registration requirements including:
-     * 1. Accompanying person workshop restrictions
+     * 1. Accompanying person restrictions (workshops and online participation)
      * 2. Student upload requirements
      * 3. Country-based payment validation
      * 4. Workshop discount eligibility
@@ -62,27 +62,35 @@ class Phase5RegistrationValidation implements DataAwareRule, ValidationRule
     }
 
     /**
-     * Validate accompanying person cannot register for workshops.
+     * Validate accompanying person cannot register for workshops or online participation.
      */
     protected function validateAccompanyingPersonRestrictions(Closure $fail): void
     {
         $registrationCategory = $this->data['registration_category_snapshot'] ?? null;
         $selectedEventCodes = $this->data['selected_event_codes'] ?? [];
+        $participationFormat = $this->data['participation_format'] ?? null;
 
-        if ($registrationCategory !== 'accompanying_person' || ! is_array($selectedEventCodes)) {
+        if ($registrationCategory !== 'accompanying_person') {
             return;
         }
 
-        // Check if any selected events are workshops
-        $workshopEvents = Event::whereIn('code', $selectedEventCodes)
-            ->where('is_main_conference', false)
-            ->get();
+        // Check if online participation is selected
+        if ($participationFormat === 'online') {
+            $fail(__('Accompanying persons cannot participate online. Only in-person participation is allowed.'));
+        }
 
-        if ($workshopEvents->isNotEmpty()) {
-            $workshopNames = $workshopEvents->pluck('name')->join(', ');
-            $fail(__('Accompanying persons cannot register for workshops. Workshops found: :workshops', [
-                'workshops' => $workshopNames,
-            ]));
+        // Check if any selected events are workshops
+        if (is_array($selectedEventCodes)) {
+            $workshopEvents = Event::whereIn('code', $selectedEventCodes)
+                ->where('is_main_conference', false)
+                ->get();
+
+            if ($workshopEvents->isNotEmpty()) {
+                $workshopNames = $workshopEvents->pluck('name')->join(', ');
+                $fail(__('Accompanying persons cannot register for workshops. Workshops found: :workshops', [
+                    'workshops' => $workshopNames,
+                ]));
+            }
         }
     }
 

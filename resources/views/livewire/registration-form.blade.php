@@ -116,14 +116,21 @@ new #[Layout('layouts.app')] class extends Component {
     }
 
     /**
-     * React to position changes - clear workshops if accompanying person is selected
+     * React to position changes - clear workshops and online participation if accompanying person is selected
      */
     public function updatedPosition($value): void
     {
-        if ($value === 'accompanying_person' && $this->hasWorkshopsSelected) {
+        if ($value === 'accompanying_person') {
             // Remove workshop events when accompanying person is selected
-            $workshopCodes = ['RAA2025', 'WDA2025'];
-            $this->selected_event_codes = array_values(array_diff($this->selected_event_codes ?? [], $workshopCodes));
+            if ($this->hasWorkshopsSelected) {
+                $workshopCodes = ['RAA2025', 'WDA2025'];
+                $this->selected_event_codes = array_values(array_diff($this->selected_event_codes ?? [], $workshopCodes));
+            }
+            
+            // Clear online participation when accompanying person is selected
+            if ($this->participation_format === 'online') {
+                $this->participation_format = '';
+            }
         }
         
         // Always recalculate fees when position changes
@@ -155,6 +162,14 @@ new #[Layout('layouts.app')] class extends Component {
         return $this->position === 'accompanying_person';
     }
 
+    /**
+     * Check if online participation is currently selected
+     */
+    public function getIsOnlineParticipationSelectedProperty(): bool
+    {
+        return $this->participation_format === 'online';
+    }
+
 
 
     public function updatedIsAbeMember(): void
@@ -162,8 +177,14 @@ new #[Layout('layouts.app')] class extends Component {
         $this->calculateFees();
     }
 
-    public function updatedParticipationFormat(): void
+    public function updatedParticipationFormat($value): void
     {
+        // Prevent accompanying person from selecting online participation
+        if ($this->position === 'accompanying_person' && $value === 'online') {
+            $this->participation_format = '';
+            return;
+        }
+        
         $this->calculateFees();
     }
 
@@ -185,7 +206,7 @@ new #[Layout('layouts.app')] class extends Component {
             $participantCategory = match ($this->position) {
                 'undergraduate_student' => 'undergrad_student',
                 'graduate_student' => 'grad_student',
-                'researcher', 'professor' => $this->address_country === 'Brazil'
+                'professor' => $this->address_country === 'Brazil'
                     ? ($this->is_abe_member === 'yes' ? 'professor_abe' : 'professor_non_abe')
                     : 'professional_foreign',
                 'professional' => 'professional_foreign',
@@ -254,7 +275,7 @@ new #[Layout('layouts.app')] class extends Component {
             'other_address_country' => 'required_if:address_country,OTHER|string|max:255',
             'address_postal_code' => 'required|string|max:20',
             'affiliation' => 'required|string|max:255',
-            'position' => 'required|string|in:undergraduate_student,graduate_student,researcher,professor,professional,accompanying_person,other',
+            'position' => 'required|string|in:undergraduate_student,graduate_student,professor,professional,accompanying_person,other',
             'other_position' => 'required_if:position,other|string|max:255',
             'is_abe_member' => 'required|string|in:yes,no',
             'arrival_date' => 'required|date|after_or_equal:today',
@@ -301,7 +322,7 @@ new #[Layout('layouts.app')] class extends Component {
             'other_address_country' => 'required_if:address_country,OTHER|string|max:255',
                 'address_postal_code' => 'required|string|max:20',
                 'affiliation' => 'required|string|max:255',
-                'position' => 'required|string|in:undergraduate_student,graduate_student,researcher,professor,professional,accompanying_person,other',
+                'position' => 'required|string|in:undergraduate_student,graduate_student,professor,professional,accompanying_person,other',
                 'other_position' => 'required_if:position,other|string|max:255',
                 'is_abe_member' => 'required|string|in:yes,no',
                 'arrival_date' => 'required|date|after_or_equal:today',
@@ -729,10 +750,6 @@ new #[Layout('layouts.app')] class extends Component {
                                         <span class="ml-2">{{ __('Graduate Student') }}</span>
                                     </label>
                                     <label class="flex items-center">
-                                        <input wire:model.live="position" type="radio" value="researcher" name="position" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="position-postgraduate">
-                                        <span class="ml-2">{{ __('Researcher') }}</span>
-                                    </label>
-                                    <label class="flex items-center">
                                         <input wire:model.live="position" type="radio" value="professor" name="position" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="position-professor">
                                         <span class="ml-2">{{ __('Professor') }}</span>
                                     </label>
@@ -740,11 +757,13 @@ new #[Layout('layouts.app')] class extends Component {
                                         <input wire:model.live="position" type="radio" value="professional" name="position" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="position-professional">
                                         <span class="ml-2">{{ __('Professional') }}</span>
                                     </label>
-                                    <label class="flex items-center {{ $this->hasWorkshopsSelected ? 'opacity-50' : '' }}">
-                                        <input wire:model.live="position" type="radio" value="accompanying_person" name="position" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="position-accompanying" {{ $this->hasWorkshopsSelected ? 'disabled' : '' }}>
+                                    <label class="flex items-center {{ ($this->hasWorkshopsSelected || $this->isOnlineParticipationSelected) ? 'opacity-50' : '' }}">
+                                        <input wire:model.live="position" type="radio" value="accompanying_person" name="position" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="position-accompanying" {{ ($this->hasWorkshopsSelected || $this->isOnlineParticipationSelected) ? 'disabled' : '' }}>
                                         <span class="ml-2">{{ __('Accompanying Person') }}</span>
                                         @if($this->hasWorkshopsSelected)
                                             <small class="ml-2 text-red-600 text-xs">{{ __('Cannot select: workshops are selected') }}</small>
+                                        @elseif($this->isOnlineParticipationSelected)
+                                            <small class="ml-2 text-red-600 text-xs">{{ __('Cannot select: online participation is selected') }}</small>
                                         @endif
                                     </label>
                                     <label class="flex items-center">
@@ -822,9 +841,12 @@ new #[Layout('layouts.app')] class extends Component {
                                         <input wire:model.live="participation_format" type="radio" value="in-person" name="participation_format" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="participation-format-in-person">
                                         <span class="ml-2">{{ __('In-person') }}</span>
                                     </label>
-                                    <label class="flex items-center">
-                                        <input wire:model.live="participation_format" type="radio" value="online" name="participation_format" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="participation-format-online">
+                                    <label class="flex items-center {{ $this->isAccompanyingPerson ? 'opacity-50' : '' }}">
+                                        <input wire:model.live="participation_format" type="radio" value="online" name="participation_format" required class="rounded border-gray-300 text-usp-blue-pri shadow-sm focus:ring-usp-blue-pri" dusk="participation-format-online" {{ $this->isAccompanyingPerson ? 'disabled' : '' }}>
                                         <span class="ml-2">{{ __('Online') }}</span>
+                                        @if($this->isAccompanyingPerson)
+                                            <small class="ml-2 text-red-600 text-xs">{{ __('Not available for accompanying persons') }}</small>
+                                        @endif
                                     </label>
                                 </div>
                                 <x-input-error :messages="$errors->get('participation_format')" class="mt-2" />

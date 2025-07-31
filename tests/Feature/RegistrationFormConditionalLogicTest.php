@@ -400,7 +400,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
-    public function foreign_researcher_is_charged_foreign_rates(): void
+    public function foreign_professor_is_charged_foreign_rates(): void
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
 
@@ -415,7 +415,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
         ]);
 
         $component = Livewire::test('registration-form')
-            ->set('position', 'researcher')
+            ->set('position', 'professor')
             ->set('address_country', 'United States')  // Foreign country
             ->set('is_abe_member', 'no')
             ->set('selected_event_codes', ['8BCSMIF'])
@@ -426,7 +426,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
-    public function foreign_professor_is_charged_foreign_rates(): void
+    public function foreign_professor_abe_member_is_charged_foreign_rates(): void
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
 
@@ -452,7 +452,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
-    public function brazilian_researcher_is_charged_domestic_rates(): void
+    public function brazilian_professor_is_charged_domestic_rates(): void
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
 
@@ -467,7 +467,7 @@ class RegistrationFormConditionalLogicTest extends TestCase
         ]);
 
         $component = Livewire::test('registration-form')
-            ->set('position', 'researcher')
+            ->set('position', 'professor')
             ->set('address_country', 'Brazil')  // Brazilian residence
             ->set('is_abe_member', 'no')
             ->set('selected_event_codes', ['8BCSMIF'])
