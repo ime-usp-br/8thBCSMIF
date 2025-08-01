@@ -279,4 +279,91 @@ class Registration extends Model
     {
         return $this->payment_status === self::PAYMENT_STATUS_REJECTED;
     }
+
+    /**
+     * Calculate the correct status based on registration category and related models.
+     *
+     * Business Rules:
+     * - undergrad_student: Status reflects enrollment proof status only
+     * - grad_student: Status requires both payment and enrollment proof to be approved
+     * - Other categories: Status reflects most recent payment status only
+     *
+     * @return string The calculated status
+     */
+    public function calculateStatusFromRelatedModels(): string
+    {
+        $category = $this->registration_category_snapshot;
+
+        if ($category === 'undergrad_student') {
+            // For undergrad students, status depends only on enrollment proof
+            $latestEnrollmentProof = $this->enrollmentProof;
+
+            if (! $latestEnrollmentProof) {
+                return self::PAYMENT_STATUS_PENDING;
+            }
+
+            return $latestEnrollmentProof->status;
+        }
+
+        if ($category === 'grad_student') {
+            // For grad students, both payment and enrollment proof are required
+            $latestPayment = $this->payments()->latest()->first();
+            $latestEnrollmentProof = $this->enrollmentProof;
+
+            // If no payment or enrollment proof exists, status is pending
+            if (! $latestPayment || ! $latestEnrollmentProof) {
+                return self::PAYMENT_STATUS_PENDING;
+            }
+
+            // Both must be approved for registration to be approved
+            if ($latestPayment->status === self::PAYMENT_STATUS_APPROVED &&
+                $latestEnrollmentProof->status === self::PAYMENT_STATUS_APPROVED) {
+                return self::PAYMENT_STATUS_APPROVED;
+            }
+
+            // If either is rejected, registration is rejected
+            if ($latestPayment->status === self::PAYMENT_STATUS_REJECTED ||
+                $latestEnrollmentProof->status === self::PAYMENT_STATUS_REJECTED) {
+                return self::PAYMENT_STATUS_REJECTED;
+            }
+
+            // If any is pending approval, registration is pending approval
+            if ($latestPayment->status === self::PAYMENT_STATUS_PENDING_APPROVAL ||
+                $latestEnrollmentProof->status === self::PAYMENT_STATUS_PENDING_APPROVAL) {
+                return self::PAYMENT_STATUS_PENDING_APPROVAL;
+            }
+
+            // Default to pending if any component is pending
+            return self::PAYMENT_STATUS_PENDING;
+        }
+
+        // For other categories (professor, professional, etc.), status mirrors most recent payment
+        $latestPayment = $this->payments()->latest()->first();
+
+        if (! $latestPayment) {
+            return self::PAYMENT_STATUS_PENDING;
+        }
+
+        return $latestPayment->status;
+    }
+
+    /**
+     * Update the payment status based on related models.
+     * This method should be called by observers when related models change.
+     *
+     * @return bool True if status was actually changed, false otherwise
+     */
+    public function updatePaymentStatusFromRelatedModels(): bool
+    {
+        $newStatus = $this->calculateStatusFromRelatedModels();
+
+        if ($this->payment_status !== $newStatus) {
+            // Use updateQuietly to avoid triggering observers and prevent infinite loops
+            $this->updateQuietly(['payment_status' => $newStatus]);
+
+            return true;
+        }
+
+        return false;
+    }
 }
