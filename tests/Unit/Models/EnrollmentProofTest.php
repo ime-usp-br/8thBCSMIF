@@ -206,23 +206,33 @@ class EnrollmentProofTest extends TestCase
     #[Test]
     public function status_check_helper_methods(): void
     {
-        $pendingProof = EnrollmentProof::factory()->create(['status' => 'pending_approval']);
+        $pendingProof = EnrollmentProof::factory()->create(['status' => 'pending']);
+        $pendingApprovalProof = EnrollmentProof::factory()->create(['status' => 'pending_approval']);
         $approvedProof = EnrollmentProof::factory()->create(['status' => 'approved']);
         $rejectedProof = EnrollmentProof::factory()->create(['status' => 'rejected']);
 
-        // Test pending proof
+        // Test pending proof (not yet uploaded)
         $this->assertTrue($pendingProof->isPending());
+        $this->assertFalse($pendingProof->isPendingApproval());
         $this->assertFalse($pendingProof->isApproved());
         $this->assertFalse($pendingProof->isRejected());
+
+        // Test pending approval proof (uploaded, awaiting approval)
+        $this->assertFalse($pendingApprovalProof->isPending());
+        $this->assertTrue($pendingApprovalProof->isPendingApproval());
+        $this->assertFalse($pendingApprovalProof->isApproved());
+        $this->assertFalse($pendingApprovalProof->isRejected());
 
         // Test approved proof
         $this->assertTrue($approvedProof->isApproved());
         $this->assertFalse($approvedProof->isPending());
+        $this->assertFalse($approvedProof->isPendingApproval());
         $this->assertFalse($approvedProof->isRejected());
 
         // Test rejected proof
         $this->assertTrue($rejectedProof->isRejected());
         $this->assertFalse($rejectedProof->isPending());
+        $this->assertFalse($rejectedProof->isPendingApproval());
         $this->assertFalse($rejectedProof->isApproved());
     }
 
@@ -231,9 +241,10 @@ class EnrollmentProofTest extends TestCase
     {
         $statuses = EnrollmentProof::getValidStatuses();
 
+        $this->assertContains('pending', $statuses);
         $this->assertContains('pending_approval', $statuses);
         $this->assertContains('approved', $statuses);
         $this->assertContains('rejected', $statuses);
-        $this->assertCount(3, $statuses);
+        $this->assertCount(4, $statuses);
     }
 }

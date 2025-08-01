@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class WorkshopsPageTest extends TestCase
 {
+    use RefreshDatabase;
     /**
      * Test that the workshops page loads successfully.
      */

@@ -18,11 +18,9 @@ class RegistrationControllerPaymentErrorHandlingTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed([
-            RoleSeeder::class,
-            EventsTableSeeder::class,
-            FeesTableSeeder::class,
-        ]);
+        $this->seed(RoleSeeder::class);
+        $this->seed(EventsTableSeeder::class);
+        $this->seed(FeesTableSeeder::class);
     }
 
     /**

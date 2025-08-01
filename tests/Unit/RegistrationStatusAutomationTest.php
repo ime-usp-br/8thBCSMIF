@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\Registration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class RegistrationStatusAutomationTest extends TestCase
@@ -21,7 +22,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $this->user = User::factory()->create();
     }
 
-    /** @test */
+    #[Test]
     public function it_calculates_status_for_undergrad_student_based_on_enrollment_proof_only(): void
     {
         $registration = Registration::factory()->create([
@@ -58,7 +59,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $this->assertEquals(Registration::PAYMENT_STATUS_APPROVED, $registration->calculateStatusFromRelatedModels());
     }
 
-    /** @test */
+    #[Test]
     public function it_calculates_status_for_grad_student_requiring_both_payment_and_enrollment_proof(): void
     {
         $registration = Registration::factory()->create([
@@ -101,7 +102,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $this->assertEquals(Registration::PAYMENT_STATUS_REJECTED, $registration->calculateStatusFromRelatedModels());
     }
 
-    /** @test */
+    #[Test]
     public function it_calculates_status_for_other_categories_based_on_payment_only(): void
     {
         $registration = Registration::factory()->create([
@@ -138,7 +139,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $this->assertEquals(Registration::PAYMENT_STATUS_APPROVED, $registration->calculateStatusFromRelatedModels());
     }
 
-    /** @test */
+    #[Test]
     public function it_automatically_updates_registration_status_when_payment_changes(): void
     {
         $registration = Registration::factory()->create([
@@ -163,7 +164,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $this->assertEquals(Registration::PAYMENT_STATUS_REJECTED, $registration->payment_status);
     }
 
-    /** @test */
+    #[Test]
     public function it_automatically_updates_registration_status_when_enrollment_proof_changes(): void
     {
         $registration = Registration::factory()->create([
@@ -188,7 +189,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $this->assertEquals(Registration::PAYMENT_STATUS_REJECTED, $registration->payment_status);
     }
 
-    /** @test */
+    #[Test]
     public function it_automatically_updates_registration_status_when_category_changes(): void
     {
         $registration = Registration::factory()->create([
@@ -220,7 +221,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $this->assertEquals(Registration::PAYMENT_STATUS_REJECTED, $registration->payment_status);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_multiple_payments_correctly_using_latest(): void
     {
         $registration = Registration::factory()->create([
@@ -248,7 +249,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $this->assertEquals(Registration::PAYMENT_STATUS_REJECTED, $registration->calculateStatusFromRelatedModels());
     }
 
-    /** @test */
+    #[Test]
     public function update_payment_status_from_related_models_returns_correct_boolean(): void
     {
         $registration = Registration::factory()->create([

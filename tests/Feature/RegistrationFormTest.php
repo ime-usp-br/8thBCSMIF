@@ -18,11 +18,11 @@ class RegistrationFormTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed([
-            RoleSeeder::class,
-            EventsTableSeeder::class,
-            FeesTableSeeder::class,
-        ]);
+        
+        // Create test data using individual seeder calls
+        $this->seed(RoleSeeder::class);
+        $this->seed(EventsTableSeeder::class);
+        $this->seed(FeesTableSeeder::class);
     }
 
     public function test_registration_form_requires_authentication(): void

@@ -35,11 +35,9 @@ abstract class DuskTestCase extends BaseTestCase
 
         // Ensure seeders are run if tables are empty
         if (\Spatie\Permission\Models\Role::count() === 0) {
-            $this->seed([
-                \Database\Seeders\RoleSeeder::class,
-                \Database\Seeders\EventsTableSeeder::class,
-                \Database\Seeders\FeesTableSeeder::class,
-            ]);
+            $this->seed(\Database\Seeders\RoleSeeder::class);
+            $this->seed(\Database\Seeders\EventsTableSeeder::class);
+            $this->seed(\Database\Seeders\FeesTableSeeder::class);
         }
     }
 
