@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class PublicPagesTest extends TestCase
 {
+    use RefreshDatabase;
     /**
      * Test that all public pages return successful response (status 200).
      * This test specifically addresses AC9 requirements.

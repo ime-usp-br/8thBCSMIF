@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class FeesPageTest extends TestCase
 {
+    use RefreshDatabase;
     /**
      * Test that the fees page loads successfully.
      */

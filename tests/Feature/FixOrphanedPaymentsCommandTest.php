@@ -19,7 +19,9 @@ class FixOrphanedPaymentsCommandTest extends TestCase
     {
         parent::setUp();
         // Seed necessary data for tests
-        $this->seed();
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+        $this->seed(\Database\Seeders\EventsTableSeeder::class);
+        $this->seed(\Database\Seeders\FeesTableSeeder::class);
     }
 
     protected function tearDown(): void
