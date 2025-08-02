@@ -1327,7 +1327,7 @@ class RegistrationControllerTest extends TestCase
         $admin->assignRole('admin');
 
         $registration = Registration::factory()->create();
-        // Manually set status to avoid observer interference 
+        // Manually set status to avoid observer interference
         $registration->updateQuietly(['status' => 'pending']);
 
         // Create individual payment records with pending_approval status

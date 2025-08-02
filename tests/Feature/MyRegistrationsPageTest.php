@@ -1238,7 +1238,7 @@ class MyRegistrationsPageTest extends TestCase
         // Now should see upload form for payment2 (now the most recent pending)
         $this->assertStringContainsString('id="payment_proof_'.$payment2->id.'"', $content);
 
-        // Should NOT see upload forms for payment1 (older) or payment3 (no longer pending)  
+        // Should NOT see upload forms for payment1 (older) or payment3 (no longer pending)
         $this->assertStringNotContainsString('id="payment_proof_'.$payment1->id.'"', $content);
         $this->assertStringNotContainsString('id="payment_proof_'.$payment3->id.'"', $content);
 
