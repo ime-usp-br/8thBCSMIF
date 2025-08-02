@@ -49,7 +49,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <h2 class="text-2xl font-bold mb-4 sm:mb-0">{{ __('My Registration') }}</h2>
                     @if($registration)
                         @php
-                            $hasPendingApproval = $registration->payments()->where('status', 'pending_br_proof_approval')->exists();
+                            $hasPendingApproval = $registration->payments()->where('status', 'pending_approval')->exists();
                         @endphp
                         <div class="flex items-center space-x-2">
                             <a href="{{ $hasPendingApproval ? '#' : route('registrations.modify') }}" 
@@ -149,9 +149,9 @@ new #[Layout('layouts.app')] class extends Component {
                                     <p class="text-gray-600 dark:text-gray-400">
                                         <strong>{{ __('Payment Status') }}:</strong>
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            @if($registration->payment_status === 'pending_payment')
+                                            @if($registration->payment_status === 'pending')
                                                 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
-                                            @elseif($registration->payment_status === 'pending_br_proof_approval')
+                                            @elseif($registration->payment_status === 'pending_approval')
                                                 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
                                             @elseif($registration->payment_status === 'approved')
                                                 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
@@ -201,7 +201,7 @@ new #[Layout('layouts.app')] class extends Component {
                                         <div class="w-8 h-8 rounded-full flex items-center justify-center
                                             @if($payment->status === 'pending')
                                                 bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-400
-                                            @elseif($payment->status === 'pending_br_proof_approval')
+                                            @elseif($payment->status === 'pending_approval')
                                                 bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400
                                             @elseif($payment->status === 'approved')
                                                 bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400
@@ -215,7 +215,7 @@ new #[Layout('layouts.app')] class extends Component {
                                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
                                                 </svg>
-                                            @elseif($payment->status === 'pending_br_proof_approval')
+                                            @elseif($payment->status === 'pending_approval')
                                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clip-rule="evenodd" />
                                                 </svg>
@@ -248,7 +248,7 @@ new #[Layout('layouts.app')] class extends Component {
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                                     @if($payment->status === 'pending')
                                                         bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
-                                                    @elseif($payment->status === 'pending_br_proof_approval')
+                                                    @elseif($payment->status === 'pending_approval')
                                                         bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
                                                     @elseif($payment->status === 'approved')
                                                         bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300

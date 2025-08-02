@@ -50,7 +50,7 @@ class InvestigateRegistrationPayments extends Command
             $this->line('   Total Event Fees: R$ '.number_format($totalEventFeesFloat, 2, ',', '.'));
 
             // Check if this registration should have payments but doesn't
-            if ($registration->payment_status === 'pending_payment' &&
+            if ($registration->payment_status === 'pending' &&
                 $registration->payments->count() === 0 &&
                 $totalEventFees > 0) {
 

@@ -60,7 +60,7 @@ class AutoApprovedPaymentTest extends TestCase
      * Test that the payment upload form IS SHOWN for regular pending payments.
      * This is a sanity check to ensure we didn't break existing functionality.
      */
-    public function test_upload_form_is_shown_for_regular_pending_payments(): void
+    public function test_upload_form_is_shown_for_regular_pendings(): void
     {
         // 1. Arrange
         // Create a verified user and a registration for a professor (who needs to pay)

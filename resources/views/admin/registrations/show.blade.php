@@ -7,8 +7,8 @@
             <div class="mt-2 sm:mt-0">
                 @php
                     $statusColors = [
-                        'pending_payment' => 'bg-yellow-100 text-yellow-800',
-                        'pending_br_proof_approval' => 'bg-orange-100 text-orange-800',
+                        'pending' => 'bg-yellow-100 text-yellow-800',
+                        'pending_approval' => 'bg-orange-100 text-orange-800',
                         'paid_br' => 'bg-green-100 text-green-800',
                         'invoice_sent_int' => 'bg-blue-100 text-blue-800',
                         'paid_int' => 'bg-green-100 text-green-800',
@@ -16,8 +16,8 @@
                         'cancelled' => 'bg-red-100 text-red-800',
                     ];
                     $statusLabels = [
-                        'pending_payment' => __('Pending Payment'),
-                        'pending_br_proof_approval' => __('Pending BR Proof Approval'),
+                        'pending' => __('Pending Payment'),
+                        'pending_approval' => __('Pending BR Proof Approval'),
                         'paid_br' => __('Paid (BR)'),
                         'invoice_sent_int' => __('Invoice Sent (International)'),
                         'paid_int' => __('Paid (International)'),
@@ -420,8 +420,8 @@
                                 <p class="text-sm font-medium text-gray-500 mb-2">{{ __('Payment Status') }}</p>
                                 @php
                                     $statusColors = [
-                                        'pending_payment' => 'bg-yellow-100 text-yellow-800',
-                                        'pending_br_proof_approval' => 'bg-orange-100 text-orange-800',
+                                        'pending' => 'bg-yellow-100 text-yellow-800',
+                                        'pending_approval' => 'bg-orange-100 text-orange-800',
                                         'paid_br' => 'bg-green-100 text-green-800',
                                         'invoice_sent_int' => 'bg-blue-100 text-blue-800',
                                         'paid_int' => 'bg-green-100 text-green-800',
@@ -429,8 +429,8 @@
                                         'cancelled' => 'bg-red-100 text-red-800',
                                     ];
                                     $statusLabels = [
-                                        'pending_payment' => __('Pending Payment'),
-                                        'pending_br_proof_approval' => __('Pending BR Proof Approval'),
+                                        'pending' => __('Pending Payment'),
+                                        'pending_approval' => __('Pending BR Proof Approval'),
                                         'paid_br' => __('Paid (BR)'),
                                         'invoice_sent_int' => __('Invoice Sent (International)'),
                                         'paid_int' => __('Paid (International)'),
@@ -488,10 +488,10 @@
                                                 <label for="payment_status" class="sr-only">{{ __('Payment Status') }}</label>
                                                 <select name="payment_status" id="payment_status" 
                                                         class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri text-sm transition-colors duration-200 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
-                                                    <option value="pending_payment" {{ $registration->payment_status === 'pending_payment' ? 'selected' : '' }}>
+                                                    <option value="pending" {{ $registration->payment_status === 'pending' ? 'selected' : '' }}>
                                                         {{ __('Pending Payment') }}
                                                     </option>
-                                                    <option value="pending_br_proof_approval" {{ $registration->payment_status === 'pending_br_proof_approval' ? 'selected' : '' }}>
+                                                    <option value="pending_approval" {{ $registration->payment_status === 'pending_approval' ? 'selected' : '' }}>
                                                         {{ __('Pending BR Proof Approval') }}
                                                     </option>
                                                     <option value="paid_br" {{ $registration->payment_status === 'paid_br' ? 'selected' : '' }}>

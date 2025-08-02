@@ -443,7 +443,7 @@ class PaymentProofComprehensiveTest extends TestCase
         $payment->refresh();
         $firstPath = $payment->payment_proof_path;
         $this->assertNotNull($firstPath);
-        $this->assertEquals('pending_br_proof_approval', $payment->status);
+        $this->assertEquals('pending_approval', $payment->status);
 
         // Second upload should be rejected since payment is no longer pending
         $response = $this->actingAs($user)
@@ -455,7 +455,7 @@ class PaymentProofComprehensiveTest extends TestCase
 
         $payment->refresh();
         $this->assertEquals($firstPath, $payment->payment_proof_path); // Path should remain unchanged
-        $this->assertEquals('pending_br_proof_approval', $payment->status); // Status should remain unchanged
+        $this->assertEquals('pending_approval', $payment->status); // Status should remain unchanged
 
         // Verify file path structure is consistent
         $this->assertStringStartsWith("proofs/{$registration->id}/", $firstPath);

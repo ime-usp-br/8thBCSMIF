@@ -24,7 +24,7 @@ Este plano assume que as funcionalidades de autenticação (login local, Senha �
             *   Campos para todos os dados do formulário (Informações Pessoais, Identificação, Contato, Profissionais, Participação no Evento, Restrições Alimentares, Contato de Emergência, Suporte a Visto).
             *   `registration_category` (string, para registrar a categoria no momento da inscrição).
             *   `calculated_fee` (decimal).
-            *   `payment_status` (enum/string: 'pending_payment', 'pending_br_proof_approval', 'paid_br', 'invoice_sent_int', 'paid_int', 'free', 'cancelled').
+            *   `payment_status` (enum/string: 'pending', 'pending_approval', 'paid_br', 'invoice_sent_int', 'paid_int', 'free', 'cancelled').
             *   `payment_proof_path` (string, nullable).
             *   `payment_uploaded_at` (timestamp, nullable).
             *   Timestamps.

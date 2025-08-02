@@ -195,7 +195,7 @@ PROPOSED_SOLUTION:
         *   **Dados da Inscrição/Pagamento:**
             *   `registration_category_snapshot` (string) - Armazena a `participant_category` usada para calcular o preço no momento da inscrição.
             *   `calculated_fee` (decimal, 8, 2) - Taxa total calculada.
-            *   `payment_status` (string, index, default: 'pending_payment') - Ex: 'pending_payment', 'pending_br_proof_approval', 'paid_br', 'invoice_sent_int', 'paid_int', 'free', 'cancelled'.
+            *   `payment_status` (string, index, default: 'pending') - Ex: 'pending', 'pending_approval', 'paid_br', 'invoice_sent_int', 'paid_int', 'free', 'cancelled'.
             *   `payment_proof_path` (string, nullable) - Caminho para o comprovante (para BR).
             *   `payment_uploaded_at` (timestamp, nullable)
             *   `invoice_sent_at` (timestamp, nullable) - Para controle de envio de invoice internacional.
@@ -362,7 +362,7 @@ PROPOSED_SOLUTION:
             [
                 'registration_category_snapshot' => $participantCategory,
                 'calculated_fee' => $feeData['total_fee'],
-                'payment_status' => ($feeData['total_fee'] == 0) ? 'free' : 'pending_payment',
+                'payment_status' => ($feeData['total_fee'] == 0) ? 'free' : 'pending',
                 // Preencher outros campos não diretamente do formulário, se houver
             ]
         ));
@@ -386,7 +386,7 @@ ACCEPTANCE_CRITERIA:
 - [ ] AC6: Método `store` no `RegistrationController` (ou componente Livewire) utiliza `StoreRegistrationRequest` para validação.
 - [ ] AC7: `FeeCalculationService` é chamado corretamente para obter as taxas.
 - [ ] AC8: Uma nova `Registration` é criada e salva no banco de dados com os dados validados, `user_id`, `registration_category_snapshot` e `calculated_fee`.
-- [ ] AC9: Se `calculated_fee` for zero, `payment_status` é definido como 'free'; caso contrário, 'pending_payment'.
+- [ ] AC9: Se `calculated_fee` for zero, `payment_status` é definido como 'free'; caso contrário, 'pending'.
 - [ ] AC10: Os eventos selecionados são corretamente associados à inscrição na tabela `event_registration` com o `price_at_registration` correto para cada evento.
 - [ ] AC11: Evento `NewRegistrationCreated` (ou notificação por email) é disparado após a criação bem-sucedida da inscrição (coberto na Issue #23).
 - [ ] AC12: Usuário é redirecionado para uma página de confirmação/dashboard com mensagem de sucesso após a inscrição.
@@ -457,7 +457,7 @@ FEATURE_DESCRIPTION: Esta tarefa consiste em implementar a funcionalidade de bac
 1.  Criar um método em um Controller apropriado (ex: `RegistrationController` ou um novo `PaymentProofController`, ou dentro de um componente Livewire na área do usuário) para lidar com o request de upload.
 2.  Validar o arquivo enviado (tipo: PDF, JPG, PNG; tamanho máximo, ex: 5MB).
 3.  Armazenar o arquivo de forma segura no sistema de arquivos (ex: `storage/app/proofs/{registration_id}/` ou similar, usando o disco 'local' ou 'private'). O nome do arquivo deve ser sanitizado ou gerado unicamente para evitar conflitos/problemas.
-4.  Atualizar o registro da `Registration` correspondente no banco de dados com o caminho do arquivo (`payment_proof_path`), a data do upload (`payment_uploaded_at`), e mudar o `payment_status` para um status apropriado (ex: 'pending_br_proof_approval').
+4.  Atualizar o registro da `Registration` correspondente no banco de dados com o caminho do arquivo (`payment_proof_path`), a data do upload (`payment_uploaded_at`), e mudar o `payment_status` para um status apropriado (ex: 'pending_approval').
 5.  Disparar a notificação `ProofUploadedNotification` para o coordenador (conforme Issue #23).
 PROPOSED_SOLUTION:
 *   **Rota:** Definir uma rota POST, ex: `/my-registrations/{registration}/upload-proof`.
@@ -481,7 +481,7 @@ PROPOSED_SOLUTION:
         $registration->update([
             'payment_proof_path' => $path,
             'payment_uploaded_at' => now(),
-            'payment_status' => 'pending_br_proof_approval',
+            'payment_status' => 'pending_approval',
         ]);
         ```
     *   Disparar Notificação: `Mail::to(config('mail.coordinator_address'))->send(new ProofUploadedNotification($registration));` (ou via evento).
@@ -504,7 +504,7 @@ ACCEPTANCE_CRITERIA:
 - [ ] AC4: Arquivo de comprovante é validado quanto ao tipo (PDF, JPG, PNG) e tamanho máximo (ex: 5MB).
 - [ ] AC5: Arquivo é armazenado de forma segura em um disco não público (ex: `storage/app/private_uploads/proofs/{registration_id}/`).
 - [ ] AC6: Nome do arquivo armazenado é sanitizado ou gerado unicamente.
-- [ ] AC7: Caminho do arquivo (`payment_proof_path`), data de upload (`payment_uploaded_at`) e status de pagamento (`payment_status` para 'pending_br_proof_approval') são corretamente atualizados na tabela `registrations`.
+- [ ] AC7: Caminho do arquivo (`payment_proof_path`), data de upload (`payment_uploaded_at`) e status de pagamento (`payment_status` para 'pending_approval') são corretamente atualizados na tabela `registrations`.
 - [ ] AC8: Notificação `ProofUploadedNotification` é disparada para o coordenador após o upload bem-sucedido (coberto pela Issue #23).
 - [ ] AC9: Usuário é redirecionado com mensagem de sucesso após o upload.
 - [ ] AC10: Código PHP segue padrões PSR-12 (Pint) e passa no PHPStan.
@@ -643,7 +643,7 @@ FEATURE_DESCRIPTION: Criar uma nova seção na área do usuário logado (ex: `/d
     *   Exibir todos os dados da inscrição selecionada (conforme foram preenchidos no formulário).
     *   Mostrar os eventos específicos para os quais o usuário se inscreveu, com os respectivos preços no momento da inscrição.
 3.  **Upload de Comprovante (para BR, pendente):**
-    *   Se a inscrição for de um participante brasileiro E o status de pagamento for 'pending_payment' (ou similar), exibir um formulário simples para upload de arquivo (PDF, JPG, PNG).
+    *   Se a inscrição for de um participante brasileiro E o status de pagamento for 'pending' (ou similar), exibir um formulário simples para upload de arquivo (PDF, JPG, PNG).
     *   Este formulário deve submeter o arquivo para a lógica de backend definida na Issue #24.
     *   Exibir feedback de sucesso ou erro após a tentativa de upload.
 PROPOSED_SOLUTION:
@@ -663,7 +663,7 @@ PROPOSED_SOLUTION:
     *   Modal ou seção separada para exibir detalhes da inscrição.
     *   Formulário condicional para upload:
         ```html
-        @if ($selectedRegistration && $selectedRegistration->user->is_brazilian_document_type && $selectedRegistration->payment_status === 'pending_payment')
+        @if ($selectedRegistration && $selectedRegistration->user->is_brazilian_document_type && $selectedRegistration->payment_status === 'pending')
             <form wire:submit.prevent="uploadProof({{ $selectedRegistration->id }})">
                 <input type="file" wire:model="paymentProofFile">
                 @error('paymentProofFile') <span class="error">{{ $message }}</span> @enderror
@@ -677,9 +677,9 @@ ACCEPTANCE_CRITERIA:
 - [ ] AC2: Componente Livewire/Volt `MyRegistrations` criado.
 - [ ] AC3: Lista de inscrições do usuário autenticado é exibida corretamente, mostrando informações chave (evento(s), data, taxa, status).
 - [ ] AC4: Clicar em uma inscrição exibe seus detalhes completos, incluindo os eventos específicos e preços individuais.
-- [ ] AC5: Formulário para upload de comprovante é exibido condicionalmente APENAS para inscrições de usuários brasileiros com status de pagamento 'pending_payment' (ou equivalente).
+- [ ] AC5: Formulário para upload de comprovante é exibido condicionalmente APENAS para inscrições de usuários brasileiros com status de pagamento 'pending' (ou equivalente).
 - [ ] AC6: Upload de um arquivo válido (PDF, JPG, PNG, dentro do limite de tamanho) através do formulário é processado pela lógica de backend (Issue #24).
-- [ ] AC7: Após o upload bem-sucedido, o status da inscrição na lista/detalhe é atualizado (ex: para 'pending_br_proof_approval') e uma mensagem de sucesso é exibida.
+- [ ] AC7: Após o upload bem-sucedido, o status da inscrição na lista/detalhe é atualizado (ex: para 'pending_approval') e uma mensagem de sucesso é exibida.
 - [ ] AC8: Tentativa de upload de arquivo inválido exibe mensagem de erro de validação apropriada.
 - [ ] AC9: Interface é responsiva e estilizada com Tailwind CSS.
 - [ ] AC10: Código PHP/Blade segue padrões PSR-12 (Pint) e passa no PHPStan.
@@ -880,7 +880,7 @@ ACCEPTANCE_CRITERIA:
 - [ ] AC2: Teste de Feature verifica o fluxo completo de inscrição (validação, cálculo de taxa, salvamento, associação de eventos, email) para um usuário USP.
 - [ ] AC3: Teste de Feature verifica o fluxo completo de inscrição para um usuário externo.
 - [ ] AC4: Teste de Feature verifica o cálculo de taxas e aplicação de descontos em cenários de inscrição em múltiplos workshops (com e sem evento principal).
-- [ ] AC5: Testes de Feature para a área de admin cobrem a alteração de status de pagamento para todos os estados válidos (ex: de 'pending_br_proof_approval' para 'paid_br', de 'pending_payment' para 'cancelled').
+- [ ] AC5: Testes de Feature para a área de admin cobrem a alteração de status de pagamento para todos os estados válidos (ex: de 'pending_approval' para 'paid_br', de 'pending' para 'cancelled').
 - [ ] AC6: Testes de Feature verificam o tratamento de erro para tentativas inválidas de alteração de status de pagamento pelo admin.
 - [ ] AC7: Testes de Feature confirmam que as regras de autorização para upload de comprovante e gerenciamento de status de pagamento (admin) estão funcionando corretamente.
 - [ ] AC8: Código dos novos testes/testes atualizados segue padrões PSR-12 (Pint) e passa no PHPStan.

@@ -51,7 +51,7 @@ class RegistrationsListTest extends TestCase
             'user_id' => $user->id,
             'full_name' => 'John Test Doe',
             'email' => 'john@example.com',
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
             'registration_category_snapshot' => 'graduate_student',
             'participation_format' => 'in-person',
         ]);
@@ -133,7 +133,7 @@ class RegistrationsListTest extends TestCase
 
         Registration::factory()->create([
             'user_id' => $user1->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
             'full_name' => 'Pending User',
         ]);
 
@@ -323,7 +323,7 @@ class RegistrationsListTest extends TestCase
             $registration = Registration::factory()->create([
                 'user_id' => $user->id,
                 'full_name' => "User {$index}",
-                'payment_status' => $index < 10 ? 'pending_payment' : 'paid_br',
+                'payment_status' => $index < 10 ? 'pending' : 'paid_br',
             ]);
 
             if ($index < 5) {

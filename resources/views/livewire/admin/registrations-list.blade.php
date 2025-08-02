@@ -73,7 +73,7 @@
                         wire:model.live="filterPaymentStatus"
                         :options="[
                             '' => __('All Statuses'),
-                            'pending_payment' => __('Pending Payment'),
+                            'pending' => __('Pending Payment'),
                             'paid_br' => __('Paid (BR)'),
                             'paid_int' => __('Paid (International)'),
                             'cancelled' => __('Cancelled')
@@ -269,13 +269,13 @@
                                     </div>
                                     @php
                                         $statusColors = [
-                                            'pending_payment' => 'bg-yellow-100 text-yellow-800',
+                                            'pending' => 'bg-yellow-100 text-yellow-800',
                                             'paid_br' => 'bg-green-100 text-green-800',
                                             'paid_int' => 'bg-green-100 text-green-800',
                                             'cancelled' => 'bg-red-100 text-red-800',
                                         ];
                                         $statusLabels = [
-                                            'pending_payment' => __('Pending Payment'),
+                                            'pending' => __('Pending Payment'),
                                             'paid_br' => __('Paid (BR)'),
                                             'paid_int' => __('Paid (International)'),
                                             'cancelled' => __('Cancelled'),
@@ -465,13 +465,13 @@
                                     <td class="px-4 xl:px-6 py-4 whitespace-nowrap">
                                         @php
                                             $regStatusColors = [
-                                                'pending_payment' => 'bg-yellow-100 text-yellow-800',
+                                                'pending' => 'bg-yellow-100 text-yellow-800',
                                                 'paid_br' => 'bg-green-100 text-green-800',
                                                 'paid_int' => 'bg-green-100 text-green-800',
                                                 'cancelled' => 'bg-red-100 text-red-800',
                                             ];
                                             $regStatusLabels = [
-                                                'pending_payment' => __('Pending Payment'),
+                                                'pending' => __('Pending Payment'),
                                                 'paid_br' => __('Paid (BR)'),
                                                 'paid_int' => __('Paid (International)'),
                                                 'cancelled' => __('Cancelled'),
