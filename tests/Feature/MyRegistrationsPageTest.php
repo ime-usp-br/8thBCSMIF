@@ -1068,19 +1068,19 @@ class MyRegistrationsPageTest extends TestCase
             'email_verified_at' => now(),
         ]);
 
-        // Create free event for undergraduate students
-        $freeEvent = Event::factory()->create(['name' => 'Free Workshop for Students']);
+        // Create pending event for undergraduate students
+        $pendingEvent = Event::factory()->create(['name' => 'Free Workshop for Students']);
 
         // Create registration for undergraduate student with zero fee
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'registration_category_snapshot' => 'undergrad_student',
             'document_country_origin' => 'Brazil',
-            'status' => 'free', // No payment needed, directly approved
+            'status' => 'pending', // No payment needed, directly approved
         ]);
 
-        // Attach free event to registration (R$ 0,00)
-        $registration->events()->attach($freeEvent->code, ['price_at_registration' => 0.00]);
+        // Attach pending event to registration (R$ 0,00)
+        $registration->events()->attach($pendingEvent->code, ['price_at_registration' => 0.00]);
 
         // Ensure no payments exist for this registration (taxa R$ 0,00)
         $this->assertCount(0, $registration->payments);

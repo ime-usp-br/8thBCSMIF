@@ -180,7 +180,7 @@ class RegistrationTest extends TestCase
         $payment1 = \App\Models\Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 300.00,
-            'status' => 'paid',
+            'status' => 'approved',
         ]);
 
         $payment2 = \App\Models\Payment::factory()->create([

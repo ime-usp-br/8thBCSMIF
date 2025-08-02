@@ -207,7 +207,7 @@ class RegistrationModificationTest extends TestCase
         // Add payment with different status
         $registration->payments()->create([
             'amount' => 50.00,
-            'status' => 'paid',
+            'status' => 'approved',
         ]);
 
         $component = Livewire::actingAs($user)

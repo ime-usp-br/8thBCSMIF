@@ -32,7 +32,7 @@ class RegistrationStatusAutomationTest extends TestCase
         ]);
 
         // Test without enrollment proof - should be pending
-        $this->assertEquals(Registration::PAYMENT_STATUS_PENDING, $registration->calculateStatusFromRelatedModels());
+        $this->assertEquals(Registration::STATUS_PENDING, $registration->calculateStatusFromRelatedModels());
 
         // Create enrollment proof with pending_approval status
         EnrollmentProof::factory()->create([
@@ -41,12 +41,12 @@ class RegistrationStatusAutomationTest extends TestCase
         ]);
 
         $registration->refresh();
-        $this->assertEquals(Registration::PAYMENT_STATUS_PENDING_APPROVAL, $registration->calculateStatusFromRelatedModels());
+        $this->assertEquals(Registration::STATUS_PENDING_APPROVAL, $registration->calculateStatusFromRelatedModels());
 
         // Update enrollment proof to approved
         $registration->enrollmentProof->update(['status' => EnrollmentProof::STATUS_APPROVED]);
         $registration->refresh();
-        $this->assertEquals(Registration::PAYMENT_STATUS_APPROVED, $registration->calculateStatusFromRelatedModels());
+        $this->assertEquals(Registration::STATUS_APPROVED, $registration->calculateStatusFromRelatedModels());
 
         // Create payment but it should not affect undergrad student status
         Payment::factory()->create([
@@ -56,7 +56,7 @@ class RegistrationStatusAutomationTest extends TestCase
 
         $registration->refresh();
         // Status should still be approved (based on enrollment proof, not payment)
-        $this->assertEquals(Registration::PAYMENT_STATUS_APPROVED, $registration->calculateStatusFromRelatedModels());
+        $this->assertEquals(Registration::STATUS_APPROVED, $registration->calculateStatusFromRelatedModels());
     }
 
     #[Test]
@@ -69,7 +69,7 @@ class RegistrationStatusAutomationTest extends TestCase
         ]);
 
         // Test without payment or enrollment proof - should be pending
-        $this->assertEquals(Registration::PAYMENT_STATUS_PENDING, $registration->calculateStatusFromRelatedModels());
+        $this->assertEquals(Registration::STATUS_PENDING, $registration->calculateStatusFromRelatedModels());
 
         // Create payment only - should still be pending (missing enrollment proof)
         Payment::factory()->create([
@@ -78,7 +78,7 @@ class RegistrationStatusAutomationTest extends TestCase
         ]);
 
         $registration->refresh();
-        $this->assertEquals(Registration::PAYMENT_STATUS_PENDING, $registration->calculateStatusFromRelatedModels());
+        $this->assertEquals(Registration::STATUS_PENDING, $registration->calculateStatusFromRelatedModels());
 
         // Create enrollment proof only - should still be pending (missing approved payment)
         EnrollmentProof::factory()->create([
@@ -89,17 +89,17 @@ class RegistrationStatusAutomationTest extends TestCase
         // Update payment to pending_approval
         $registration->payments()->latest()->first()->update(['status' => Payment::STATUS_PENDING_APPROVAL]);
         $registration->refresh();
-        $this->assertEquals(Registration::PAYMENT_STATUS_PENDING_APPROVAL, $registration->calculateStatusFromRelatedModels());
+        $this->assertEquals(Registration::STATUS_PENDING_APPROVAL, $registration->calculateStatusFromRelatedModels());
 
         // Both approved - should be approved
         $registration->payments()->latest()->first()->update(['status' => Payment::STATUS_APPROVED]);
         $registration->refresh();
-        $this->assertEquals(Registration::PAYMENT_STATUS_APPROVED, $registration->calculateStatusFromRelatedModels());
+        $this->assertEquals(Registration::STATUS_APPROVED, $registration->calculateStatusFromRelatedModels());
 
         // If either is rejected, registration should be rejected
         $registration->enrollmentProof->update(['status' => EnrollmentProof::STATUS_REJECTED]);
         $registration->refresh();
-        $this->assertEquals(Registration::PAYMENT_STATUS_REJECTED, $registration->calculateStatusFromRelatedModels());
+        $this->assertEquals(Registration::STATUS_REJECTED, $registration->calculateStatusFromRelatedModels());
     }
 
     #[Test]
@@ -112,7 +112,7 @@ class RegistrationStatusAutomationTest extends TestCase
         ]);
 
         // Test without payment - should be pending
-        $this->assertEquals(Registration::PAYMENT_STATUS_PENDING, $registration->calculateStatusFromRelatedModels());
+        $this->assertEquals(Registration::STATUS_PENDING, $registration->calculateStatusFromRelatedModels());
 
         // Create payment with pending_approval status
         Payment::factory()->create([
@@ -121,12 +121,12 @@ class RegistrationStatusAutomationTest extends TestCase
         ]);
 
         $registration->refresh();
-        $this->assertEquals(Registration::PAYMENT_STATUS_PENDING_APPROVAL, $registration->calculateStatusFromRelatedModels());
+        $this->assertEquals(Registration::STATUS_PENDING_APPROVAL, $registration->calculateStatusFromRelatedModels());
 
         // Update payment to approved
         $registration->payments()->latest()->first()->update(['status' => Payment::STATUS_APPROVED]);
         $registration->refresh();
-        $this->assertEquals(Registration::PAYMENT_STATUS_APPROVED, $registration->calculateStatusFromRelatedModels());
+        $this->assertEquals(Registration::STATUS_APPROVED, $registration->calculateStatusFromRelatedModels());
 
         // Create enrollment proof but it should not affect other categories
         EnrollmentProof::factory()->create([
@@ -136,7 +136,7 @@ class RegistrationStatusAutomationTest extends TestCase
 
         $registration->refresh();
         // Status should still be approved (based on payment, not enrollment proof)
-        $this->assertEquals(Registration::PAYMENT_STATUS_APPROVED, $registration->calculateStatusFromRelatedModels());
+        $this->assertEquals(Registration::STATUS_APPROVED, $registration->calculateStatusFromRelatedModels());
     }
 
     #[Test]
@@ -246,7 +246,7 @@ class RegistrationStatusAutomationTest extends TestCase
 
         $registration->refresh();
         // Status should reflect the latest payment (rejected)
-        $this->assertEquals(Registration::PAYMENT_STATUS_REJECTED, $registration->calculateStatusFromRelatedModels());
+        $this->assertEquals(Registration::STATUS_REJECTED, $registration->calculateStatusFromRelatedModels());
     }
 
     #[Test]
