@@ -231,7 +231,7 @@ class CombinedRegistrationTest extends TestCase
         // Verify registration has workshop event
         $this->assertTrue($registration->events->contains('code', $workshop->code));
 
-        // Verify no auto-approved payment was created (undergrad is always free)
+        // Verify no auto-approved payment was created (undergrad is always pending)
         $autoApprovedPayment = $registration->payments()->where('status', 'approved')->first();
         $this->assertNull($autoApprovedPayment, 'Undergrad students should not get auto-approved payments');
     }

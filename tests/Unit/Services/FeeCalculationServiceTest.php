@@ -432,7 +432,7 @@ class FeeCalculationServiceTest extends TestCase
             'participant_category' => 'grad_student',
             'type' => 'in-person',
             'period' => 'early',
-            'price' => 0.00, // grad_student workshop is free if discounted
+            'price' => 0.00, // grad_student workshop is pending if discounted
             'is_discount_for_main_event_participant' => true,
         ]);
         // Workshop fee (normal, if not discounted)
@@ -441,7 +441,7 @@ class FeeCalculationServiceTest extends TestCase
             'participant_category' => 'grad_student',
             'type' => 'in-person',
             'period' => 'early',
-            'price' => 0.00, // grad_student workshop is free even if not discounted
+            'price' => 0.00, // grad_student workshop is pending even if not discounted
             'is_discount_for_main_event_participant' => false,
         ]);
 
@@ -616,7 +616,7 @@ class FeeCalculationServiceTest extends TestCase
     #[Test]
     public function it_calculates_total_paid_from_paid_payments(): void
     {
-        // AC2: Test calculation of total_paid from payments with status 'paid'
+        // AC2: Test calculation of total_paid from payments with status 'approved'
         $user = User::factory()->create();
         $registration = Registration::factory()->create(['user_id' => $user->id]);
 
@@ -624,12 +624,12 @@ class FeeCalculationServiceTest extends TestCase
         Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 300.00,
-            'status' => 'paid',
+            'status' => 'approved',
         ]);
         Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 200.00,
-            'status' => 'paid',
+            'status' => 'approved',
         ]);
         Payment::factory()->create([
             'registration_id' => $registration->id,
@@ -669,7 +669,7 @@ class FeeCalculationServiceTest extends TestCase
         Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 250.00,
-            'status' => 'paid',
+            'status' => 'approved',
         ]);
 
         // Setup fees for main conference and workshop
@@ -721,7 +721,7 @@ class FeeCalculationServiceTest extends TestCase
         Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 400.00,
-            'status' => 'paid',
+            'status' => 'approved',
         ]);
 
         Fee::factory()->create([
@@ -765,7 +765,7 @@ class FeeCalculationServiceTest extends TestCase
         Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 250.00, // Original workshop price
-            'status' => 'paid',
+            'status' => 'approved',
         ]);
 
         // Setup workshop fees
@@ -886,7 +886,7 @@ class FeeCalculationServiceTest extends TestCase
         Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 800.00, // More than required
-            'status' => 'paid',
+            'status' => 'approved',
         ]);
 
         Fee::factory()->create([

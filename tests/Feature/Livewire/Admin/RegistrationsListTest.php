@@ -90,7 +90,7 @@ class RegistrationsListTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'full_name' => 'Multi Event User',
-            'status' => 'paid_br',
+            'status' => 'approved',
         ]);
 
         $registration->events()->attach([
@@ -139,13 +139,13 @@ class RegistrationsListTest extends TestCase
 
         Registration::factory()->create([
             'user_id' => $user2->id,
-            'status' => 'paid_br',
+            'status' => 'approved',
             'full_name' => 'Paid BR User',
         ]);
 
         Registration::factory()->create([
             'user_id' => $user3->id,
-            'status' => 'paid_int',
+            'status' => 'approved',
             'full_name' => 'Paid Int User',
         ]);
 
@@ -289,7 +289,7 @@ class RegistrationsListTest extends TestCase
 
         \App\Models\Payment::factory()->create([
             'registration_id' => $registration->id,
-            'status' => 'paid',
+            'status' => 'approved',
         ]);
 
         \App\Models\Payment::factory()->create([
@@ -305,7 +305,7 @@ class RegistrationsListTest extends TestCase
         Livewire::actingAs($admin)
             ->test(RegistrationsList::class)
             ->assertSee('Multi Payment User')
-            ->assertSee(__('paid'))
+            ->assertSee(__('approved'))
             ->assertSee(__('pending'))
             ->assertSee(__('pending_approval'));
     }
@@ -323,7 +323,7 @@ class RegistrationsListTest extends TestCase
             $registration = Registration::factory()->create([
                 'user_id' => $user->id,
                 'full_name' => "User {$index}",
-                'payment_status' => $index < 10 ? 'pending' : 'paid_br',
+                'status' => $index < 10 ? 'pending' : 'approved',
             ]);
 
             if ($index < 5) {

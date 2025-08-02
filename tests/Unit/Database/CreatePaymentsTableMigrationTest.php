@@ -131,7 +131,7 @@ class CreatePaymentsTableMigrationTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        $statuses = ['pending', 'paid', 'pending_approval', 'cancelled'];
+        $statuses = ['pending', 'approved', 'pending_approval', 'rejected'];
 
         foreach ($statuses as $status) {
             $paymentId = \DB::table('payments')->insertGetId([

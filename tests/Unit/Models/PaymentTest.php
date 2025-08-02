@@ -106,7 +106,7 @@ class PaymentTest extends TestCase
     #[Test]
     public function status_can_be_set_to_valid_values(): void
     {
-        $validStatuses = ['pending', 'paid', 'pending_approval', 'cancelled'];
+        $validStatuses = ['pending', 'approved', 'pending_approval', 'rejected'];
 
         foreach ($validStatuses as $status) {
             $payment = Payment::factory()->create(['status' => $status]);

@@ -79,7 +79,7 @@ class RegistrationModificationCalculationTest extends TestCase
         // Add existing payment
         $registration->payments()->create([
             'amount' => 50.00,
-            'status' => 'paid',
+            'status' => 'approved',
         ]);
 
         // Calculate fees for all events (existing + new)
@@ -111,8 +111,8 @@ class RegistrationModificationCalculationTest extends TestCase
         $registration->events()->attach($event->code, ['price_at_registration' => 200.00]);
 
         // Add multiple payments
-        $registration->payments()->create(['amount' => 100.00, 'status' => 'paid']);
-        $registration->payments()->create(['amount' => 50.00, 'status' => 'paid']);
+        $registration->payments()->create(['amount' => 100.00, 'status' => 'approved']);
+        $registration->payments()->create(['amount' => 50.00, 'status' => 'approved']);
 
         $newEvent = Event::skip(1)->first();
         $allEventCodes = [$event->code, $newEvent->code];
@@ -142,7 +142,7 @@ class RegistrationModificationCalculationTest extends TestCase
         $registration->events()->attach($event->code, ['price_at_registration' => 600.00]);
 
         // Add payment that covers the fee
-        $registration->payments()->create(['amount' => 600.00, 'status' => 'paid']);
+        $registration->payments()->create(['amount' => 600.00, 'status' => 'approved']);
 
         $feeData = $this->service->calculateFees(
             $registration->registration_category_snapshot,
@@ -169,7 +169,7 @@ class RegistrationModificationCalculationTest extends TestCase
         $registration->events()->attach($event->code, ['price_at_registration' => 100.00]);
 
         // Add paid and pending payments
-        $registration->payments()->create(['amount' => 50.00, 'status' => 'paid']);
+        $registration->payments()->create(['amount' => 50.00, 'status' => 'approved']);
         $registration->payments()->create(['amount' => 30.00, 'status' => 'pending']);
         $registration->payments()->create(['amount' => 20.00, 'status' => 'pending_approval']);
 
@@ -291,7 +291,7 @@ class RegistrationModificationCalculationTest extends TestCase
             $existingEvent2->code => ['price_at_registration' => 75.00],
         ]);
 
-        $registration->payments()->create(['amount' => 50.00, 'status' => 'paid']);
+        $registration->payments()->create(['amount' => 50.00, 'status' => 'approved']);
 
         // Calculate fees for all events (existing + new)
         $allEventCodes = [$existingEvent1->code, $existingEvent2->code, $newEvent->code];

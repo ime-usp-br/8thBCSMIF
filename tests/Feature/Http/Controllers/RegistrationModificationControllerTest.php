@@ -156,10 +156,10 @@ class RegistrationModificationControllerTest extends TestCase
         ]);
         $event = Event::first(); // Use seeded event
 
-        // Create a payment with paid_br status (approved)
+        // Create a payment with approved status
         $registration->payments()->create([
             'amount' => 100.00,
-            'status' => 'paid_br',
+            'status' => 'approved',
         ]);
 
         $this->actingAs($user);

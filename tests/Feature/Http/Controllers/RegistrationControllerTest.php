@@ -256,9 +256,9 @@ class RegistrationControllerTest extends TestCase
     }
 
     #[Test]
-    public function store_sets_status_to_free_when_calculated_fee_is_zero(): void
+    public function store_sets_status_to_pending_when_calculated_fee_is_zero(): void
     {
-        // AC9: Test that status is 'free' when calculated fee is zero
+        // AC9: Test that status is 'pending' when calculated fee is zero
         $user = User::factory()->create();
         $user->markEmailAsVerified();
         $this->actingAs($user);
@@ -295,11 +295,11 @@ class RegistrationControllerTest extends TestCase
         $registrationId = Registration::where('user_id', $user->id)->latest()->first()->id;
         $this->assertNotNull($registrationId);
 
-        // AC9: Assert that status is 'free' when calculated fee is zero
+        // AC9: Assert that status is 'pending' when calculated fee is zero
         $this->assertDatabaseHas('registrations', [
             'id' => $registrationId,
             'user_id' => $user->id,
-            'status' => 'free',
+            'status' => 'pending',
         ]);
     }
 
@@ -601,7 +601,7 @@ class RegistrationControllerTest extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'status' => 'paid_br',  // Already paid
+            'status' => 'approved',  // Already approved
         ]);
         $payment = Payment::factory()->paid()->create([
             'registration_id' => $registration->id,
@@ -1121,7 +1121,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertNull($registration->user->codpes); // Non-USP user should not have codpes
 
         // AC14: Verify fee calculation and event association
-        // Check that status is not 'free' (indicates there is a fee)
+        // Check that status is not 'pending' (indicates there is a fee)
         $this->assertEquals('pending', $registration->status);
 
         // Verify the total fee from events relationship is greater than 0
@@ -1590,7 +1590,7 @@ class RegistrationControllerTest extends TestCase
     }
 
     #[Test]
-    public function store_creates_payment_record_for_non_free_registration(): void
+    public function store_creates_payment_record_for_non_pending_registration(): void
     {
         // Test that a payment record is created for a registration with a non-zero fee.
         $user = User::factory()->create();

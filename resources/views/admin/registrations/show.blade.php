@@ -489,25 +489,16 @@
                                                 <select name="status" id="status" 
                                                         class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri text-sm transition-colors duration-200 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
                                                     <option value="pending" {{ $registration->status === 'pending' ? 'selected' : '' }}>
-                                                        {{ __('Pending Payment') }}
+                                                        {{ __('Pending') }}
                                                     </option>
                                                     <option value="pending_approval" {{ $registration->status === 'pending_approval' ? 'selected' : '' }}>
-                                                        {{ __('Pending BR Proof Approval') }}
+                                                        {{ __('Pending Approval') }}
                                                     </option>
-                                                    <option value="paid_br" {{ $registration->status === 'paid_br' ? 'selected' : '' }}>
-                                                        {{ __('Paid (BR)') }}
+                                                    <option value="approved" {{ $registration->status === 'approved' ? 'selected' : '' }}>
+                                                        {{ __('Approved') }}
                                                     </option>
-                                                    <option value="invoice_sent_int" {{ $registration->status === 'invoice_sent_int' ? 'selected' : '' }}>
-                                                        {{ __('Invoice Sent (International)') }}
-                                                    </option>
-                                                    <option value="paid_int" {{ $registration->status === 'paid_int' ? 'selected' : '' }}>
-                                                        {{ __('Paid (International)') }}
-                                                    </option>
-                                                    <option value="free" {{ $registration->status === 'free' ? 'selected' : '' }}>
-                                                        {{ __('Free') }}
-                                                    </option>
-                                                    <option value="cancelled" {{ $registration->status === 'cancelled' ? 'selected' : '' }}>
-                                                        {{ __('Cancelled') }}
+                                                    <option value="rejected" {{ $registration->status === 'rejected' ? 'selected' : '' }}>
+                                                        {{ __('Rejected') }}
                                                     </option>
                                                 </select>
                                             </div>

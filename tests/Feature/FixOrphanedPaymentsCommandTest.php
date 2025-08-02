@@ -73,7 +73,7 @@ class FixOrphanedPaymentsCommandTest extends TestCase
     }
 
     #[Test]
-    public function it_does_not_create_payments_for_free_registrations_marked_as_pending(): void
+    public function it_does_not_create_payments_for_pending_registrations_marked_as_pending(): void
     {
         // Create a user
         $user = User::factory()->create();

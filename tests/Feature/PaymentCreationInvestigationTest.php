@@ -87,15 +87,15 @@ class PaymentCreationInvestigationTest extends TestCase
         $this->assertEquals('pending', $registration2->fresh()->status);
     }
 
-    public function test_does_not_flag_free_registrations_as_problematic(): void
+    public function test_does_not_flag_pending_registrations_as_problematic(): void
     {
-        // Arrange: Create a free registration
+        // Arrange: Create a pending registration
         $user = User::factory()->create();
         $event = Event::factory()->create(['code' => 'FREE001']);
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'status' => 'free',
+            'status' => 'pending',
             'registration_category_snapshot' => 'undergrad_student',
             'participation_format' => 'online',
         ]);
@@ -110,8 +110,8 @@ class PaymentCreationInvestigationTest extends TestCase
             ->expectsOutput('✅ No problematic registrations found')
             ->assertExitCode(0);
 
-        // Assert: This registration should not be problematic because it's free
-        $this->assertEquals('free', $registration->fresh()->status);
+        // Assert: This registration should not be problematic because it's pending
+        $this->assertEquals('pending', $registration->fresh()->status);
         $this->assertEquals(0, $registration->fresh()->events()->sum('price_at_registration'));
     }
 
