@@ -33,7 +33,7 @@
 @if($registration->events->isNotEmpty())
 **{{ __('Total Amount') }}:** R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}  
 @endif
-**{{ __('Payment Status') }}:** {{ ucfirst(str_replace('_', ' ', $registration->payment_status)) }}
+**{{ __('Status') }}:** {{ ucfirst(str_replace('_', ' ', $registration->status)) }}
 @endif
 
 ## {{ __('Required Action') }}

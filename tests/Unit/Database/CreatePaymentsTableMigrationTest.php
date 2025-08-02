@@ -84,7 +84,7 @@ class CreatePaymentsTableMigrationTest extends TestCase
             'full_name' => 'Test User',
             'email' => 'test@example.com',
             'registration_category_snapshot' => 'student',
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -126,7 +126,7 @@ class CreatePaymentsTableMigrationTest extends TestCase
             'full_name' => 'Test User',
             'email' => 'test@example.com',
             'registration_category_snapshot' => 'student',
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

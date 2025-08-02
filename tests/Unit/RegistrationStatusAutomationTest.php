@@ -28,7 +28,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $this->user->id,
             'registration_category_snapshot' => 'undergrad_student',
-            'payment_status' => Registration::PAYMENT_STATUS_PENDING,
+            'status' => Registration::STATUS_PENDING,
         ]);
 
         // Test without enrollment proof - should be pending
@@ -65,7 +65,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $this->user->id,
             'registration_category_snapshot' => 'grad_student',
-            'payment_status' => Registration::PAYMENT_STATUS_PENDING,
+            'status' => Registration::STATUS_PENDING,
         ]);
 
         // Test without payment or enrollment proof - should be pending
@@ -108,7 +108,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $this->user->id,
             'registration_category_snapshot' => 'professor_abe',
-            'payment_status' => Registration::PAYMENT_STATUS_PENDING,
+            'status' => Registration::STATUS_PENDING,
         ]);
 
         // Test without payment - should be pending
@@ -145,7 +145,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $this->user->id,
             'registration_category_snapshot' => 'professor_abe',
-            'payment_status' => Registration::PAYMENT_STATUS_PENDING,
+            'status' => Registration::STATUS_PENDING,
         ]);
 
         // Create payment - observer should update registration status
@@ -155,13 +155,13 @@ class RegistrationStatusAutomationTest extends TestCase
         ]);
 
         $registration->refresh();
-        $this->assertEquals(Registration::PAYMENT_STATUS_APPROVED, $registration->payment_status);
+        $this->assertEquals(Registration::STATUS_APPROVED, $registration->status);
 
         // Update payment status - observer should update registration status
         $registration->payments()->latest()->first()->update(['status' => Payment::STATUS_REJECTED]);
 
         $registration->refresh();
-        $this->assertEquals(Registration::PAYMENT_STATUS_REJECTED, $registration->payment_status);
+        $this->assertEquals(Registration::STATUS_REJECTED, $registration->status);
     }
 
     #[Test]
@@ -170,7 +170,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $this->user->id,
             'registration_category_snapshot' => 'undergrad_student',
-            'payment_status' => Registration::PAYMENT_STATUS_PENDING,
+            'status' => Registration::STATUS_PENDING,
         ]);
 
         // Create enrollment proof - observer should update registration status
@@ -180,13 +180,13 @@ class RegistrationStatusAutomationTest extends TestCase
         ]);
 
         $registration->refresh();
-        $this->assertEquals(Registration::PAYMENT_STATUS_APPROVED, $registration->payment_status);
+        $this->assertEquals(Registration::STATUS_APPROVED, $registration->status);
 
         // Update enrollment proof status - observer should update registration status
         $registration->enrollmentProof->update(['status' => EnrollmentProof::STATUS_REJECTED]);
 
         $registration->refresh();
-        $this->assertEquals(Registration::PAYMENT_STATUS_REJECTED, $registration->payment_status);
+        $this->assertEquals(Registration::STATUS_REJECTED, $registration->status);
     }
 
     #[Test]
@@ -195,7 +195,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $this->user->id,
             'registration_category_snapshot' => 'professor_abe',
-            'payment_status' => Registration::PAYMENT_STATUS_PENDING,
+            'status' => Registration::STATUS_PENDING,
         ]);
 
         // Create both payment and enrollment proof
@@ -211,14 +211,14 @@ class RegistrationStatusAutomationTest extends TestCase
 
         $registration->refresh();
         // As professor, status should be approved (based on payment)
-        $this->assertEquals(Registration::PAYMENT_STATUS_APPROVED, $registration->payment_status);
+        $this->assertEquals(Registration::STATUS_APPROVED, $registration->status);
 
         // Change to undergrad student - observer should update registration status
         $registration->update(['registration_category_snapshot' => 'undergrad_student']);
 
         $registration->refresh();
         // As undergrad, status should be rejected (based on enrollment proof)
-        $this->assertEquals(Registration::PAYMENT_STATUS_REJECTED, $registration->payment_status);
+        $this->assertEquals(Registration::STATUS_REJECTED, $registration->status);
     }
 
     #[Test]
@@ -227,7 +227,7 @@ class RegistrationStatusAutomationTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $this->user->id,
             'registration_category_snapshot' => 'professor_abe',
-            'payment_status' => Registration::PAYMENT_STATUS_PENDING,
+            'status' => Registration::STATUS_PENDING,
         ]);
 
         // Create first payment
@@ -250,12 +250,12 @@ class RegistrationStatusAutomationTest extends TestCase
     }
 
     #[Test]
-    public function update_payment_status_from_related_models_returns_correct_boolean(): void
+    public function update_status_from_related_models_returns_correct_boolean(): void
     {
         $registration = Registration::factory()->create([
             'user_id' => $this->user->id,
             'registration_category_snapshot' => 'professor_abe',
-            'payment_status' => Registration::PAYMENT_STATUS_PENDING,
+            'status' => Registration::STATUS_PENDING,
         ]);
 
         // Should return true when status actually changes
@@ -264,12 +264,12 @@ class RegistrationStatusAutomationTest extends TestCase
             'status' => Payment::STATUS_APPROVED,
         ]);
 
-        $changed = $registration->updatePaymentStatusFromRelatedModels();
+        $changed = $registration->updateStatusFromRelatedModels();
         $this->assertTrue($changed);
-        $this->assertEquals(Registration::PAYMENT_STATUS_APPROVED, $registration->fresh()->payment_status);
+        $this->assertEquals(Registration::STATUS_APPROVED, $registration->fresh()->status);
 
         // Should return false when status doesn't change
-        $changed = $registration->updatePaymentStatusFromRelatedModels();
+        $changed = $registration->updateStatusFromRelatedModels();
         $this->assertFalse($changed);
     }
 }

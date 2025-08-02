@@ -142,7 +142,7 @@ class RegistrationController extends Controller
                     [
                         'user_id' => $user->id,
                         'registration_category_snapshot' => $participantCategory,
-                        // payment_status will be handled by AC9.
+                        // status will be handled by AC9.
                         // Other fields like invoice_sent_at, notes
                         // will be null/default on creation or handled by other processes.
                     ]
@@ -159,11 +159,11 @@ class RegistrationController extends Controller
                     ]);
                 }
 
-                // --- AC9: Set payment_status based on calculated_fee ---
-                $paymentStatus = ($feeData['total_fee'] == 0) ? 'approved' : 'pending';
-                $registration->update(['payment_status' => $paymentStatus]);
+                // --- AC9: Set status based on calculated_fee ---
+                $status = ($feeData['total_fee'] == 0) ? 'approved' : 'pending';
+                $registration->update(['status' => $status]);
                 if (config('app.debug')) {
-                    Log::debug('Payment status set for registration.', ['registration_id' => $registration->id, 'payment_status' => $paymentStatus]);
+                    Log::debug('Status set for registration.', ['registration_id' => $registration->id, 'status' => $status]);
                 }
 
                 // Create individual Payment record for non-free registrations
@@ -365,7 +365,7 @@ class RegistrationController extends Controller
                 // Update registration status if all payments have been submitted
                 $registration->update([
                     'payment_uploaded_at' => Carbon::now(),
-                    'payment_status' => 'pending_approval',
+                    'status' => 'pending_approval',
                 ]);
             }
 

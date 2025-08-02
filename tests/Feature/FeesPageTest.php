@@ -8,6 +8,7 @@ use Tests\TestCase;
 class FeesPageTest extends TestCase
 {
     use RefreshDatabase;
+
     /**
      * Test that the fees page loads successfully.
      */

@@ -22,10 +22,10 @@ class PaymentCreationInvestigationTest extends TestCase
             'name' => 'Test Event with Fee',
         ]);
 
-        // Create a problematic registration (has payment_status = pending but no actual payments)
+        // Create a problematic registration (has status = pending but no actual payments)
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'registration_category_snapshot' => 'professional_foreign',
             'participation_format' => 'in_person',
         ]);
@@ -44,7 +44,7 @@ class PaymentCreationInvestigationTest extends TestCase
 
         // Assert: Verify the core logic works by checking the database state
         // (The real command does log, but we'll focus on testing the core investigation logic)
-        $this->assertEquals('pending', $registration->fresh()->payment_status);
+        $this->assertEquals('pending', $registration->fresh()->status);
         $this->assertEquals(0, $registration->fresh()->payments()->count());
         $this->assertGreaterThan(0, $registration->fresh()->events()->sum('price_at_registration'));
     }
@@ -58,14 +58,14 @@ class PaymentCreationInvestigationTest extends TestCase
 
         $registration1 = Registration::factory()->create([
             'user_id' => $user1->id,
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'registration_category_snapshot' => 'grad_student',
             'participation_format' => 'in_person',
         ]);
 
         $registration2 = Registration::factory()->create([
             'user_id' => $user2->id,
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'registration_category_snapshot' => 'undergrad_student',
             'participation_format' => 'online',
         ]);
@@ -83,8 +83,8 @@ class PaymentCreationInvestigationTest extends TestCase
         // Assert: Both registrations should be problematic
         $this->assertEquals(0, $registration1->fresh()->payments()->count());
         $this->assertEquals(0, $registration2->fresh()->payments()->count());
-        $this->assertEquals('pending', $registration1->fresh()->payment_status);
-        $this->assertEquals('pending', $registration2->fresh()->payment_status);
+        $this->assertEquals('pending', $registration1->fresh()->status);
+        $this->assertEquals('pending', $registration2->fresh()->status);
     }
 
     public function test_does_not_flag_free_registrations_as_problematic(): void
@@ -95,7 +95,7 @@ class PaymentCreationInvestigationTest extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'free',
+            'status' => 'free',
             'registration_category_snapshot' => 'undergrad_student',
             'participation_format' => 'online',
         ]);
@@ -111,7 +111,7 @@ class PaymentCreationInvestigationTest extends TestCase
             ->assertExitCode(0);
 
         // Assert: This registration should not be problematic because it's free
-        $this->assertEquals('free', $registration->fresh()->payment_status);
+        $this->assertEquals('free', $registration->fresh()->status);
         $this->assertEquals(0, $registration->fresh()->events()->sum('price_at_registration'));
     }
 
@@ -123,7 +123,7 @@ class PaymentCreationInvestigationTest extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'registration_category_snapshot' => 'professor_abe',
             'participation_format' => 'in_person',
         ]);
@@ -155,7 +155,7 @@ class PaymentCreationInvestigationTest extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'registration_category_snapshot' => 'invalid_category', // This might cause fee calculation to fail
             'participation_format' => 'invalid_format',
         ]);

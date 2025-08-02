@@ -281,8 +281,8 @@
                                             'cancelled' => __('Cancelled'),
                                         ];
                                     @endphp
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusColors[$registration->payment_status] ?? 'bg-gray-100 text-gray-800' }}">
-                                        {{ $statusLabels[$registration->payment_status] ?? $registration->payment_status }}
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusColors[$registration->status] ?? 'bg-gray-100 text-gray-800' }}">
+                                        {{ $statusLabels[$registration->status] ?? $registration->status }}
                                     </span>
                                 </div>
                                 
@@ -477,8 +477,8 @@
                                                 'cancelled' => __('Cancelled'),
                                             ];
                                         @endphp
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $regStatusColors[$registration->payment_status] ?? 'bg-gray-100 text-gray-800' }}">
-                                            {{ $regStatusLabels[$registration->payment_status] ?? $registration->payment_status }}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $regStatusColors[$registration->status] ?? 'bg-gray-100 text-gray-800' }}">
+                                            {{ $regStatusLabels[$registration->status] ?? $registration->status }}
                                         </span>
                                     </td>
                                     <td class="px-4 xl:px-6 py-4 text-sm text-gray-900 dark:text-gray-100">

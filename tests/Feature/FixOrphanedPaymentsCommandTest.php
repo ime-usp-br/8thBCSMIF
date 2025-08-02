@@ -49,7 +49,7 @@ class FixOrphanedPaymentsCommandTest extends TestCase
         // Create an orphaned registration (pending but no payment record)
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending',
+            'status' => 'pending',
         ]);
         $registration->events()->attach($eventWithFee->code, ['price_at_registration' => 100.00]);
 
@@ -81,7 +81,7 @@ class FixOrphanedPaymentsCommandTest extends TestCase
         // Create an orphaned registration (pending but total_fee is 0)
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending',
+            'status' => 'pending',
         ]);
         // No events attached, or events with 0 price, so total_fee will be 0
 
@@ -111,7 +111,7 @@ class FixOrphanedPaymentsCommandTest extends TestCase
     public function it_handles_no_orphaned_payments_found(): void
     {
         // Ensure no registrations are in 'pending' status without payments
-        Registration::where('payment_status', 'pending')->delete();
+        Registration::where('status', 'pending')->delete();
 
         // Run the Artisan command
         Artisan::call('registrations:fix-orphaned-payments');
@@ -145,7 +145,7 @@ class FixOrphanedPaymentsCommandTest extends TestCase
         // Create an orphaned registration
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending',
+            'status' => 'pending',
         ]);
         $registration->events()->attach($eventWithFee->code, ['price_at_registration' => 100.00]);
 

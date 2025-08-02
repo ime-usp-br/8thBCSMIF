@@ -34,7 +34,7 @@ class RegistrationTest extends TestCase
         $this->assertNotNull($registration->email, 'email should be filled by the factory.');
         $this->assertNotNull($registration->registration_category_snapshot, 'registration_category_snapshot should be filled.');
         // calculated_fee was removed and moved to Payment model
-        $this->assertNotNull($registration->payment_status, 'payment_status should be filled.');
+        $this->assertNotNull($registration->status, 'status should be filled.');
     }
 
     #[Test]
@@ -249,8 +249,9 @@ class RegistrationTest extends TestCase
                     $this->assertInstanceOf(Carbon::class, $registration->{$key}, "Attribute {$key} should be Carbon instance.");
                     $this->assertEquals(Carbon::parse($value)->toDateTimeString(), $registration->{$key}->toDateTimeString());
                 }
-            } elseif (in_array($key, ['amount'])) {
+            } elseif (in_array($key, ['amount', 'status'])) {
                 // Skip amount validation as it's moved to Payment model
+                // Skip status validation as it's now calculated automatically by business logic
             } else {
                 $this->assertEquals($value, $registration->{$key});
             }

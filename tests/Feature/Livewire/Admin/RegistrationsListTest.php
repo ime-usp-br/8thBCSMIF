@@ -51,7 +51,7 @@ class RegistrationsListTest extends TestCase
             'user_id' => $user->id,
             'full_name' => 'John Test Doe',
             'email' => 'john@example.com',
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'registration_category_snapshot' => 'graduate_student',
             'participation_format' => 'in-person',
         ]);
@@ -90,7 +90,7 @@ class RegistrationsListTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'full_name' => 'Multi Event User',
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
         ]);
 
         $registration->events()->attach([
@@ -122,7 +122,7 @@ class RegistrationsListTest extends TestCase
             ->assertSee(__('No events'));
     }
 
-    public function test_component_displays_different_payment_statuses(): void
+    public function test_component_displays_different_statuses(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
@@ -133,19 +133,19 @@ class RegistrationsListTest extends TestCase
 
         Registration::factory()->create([
             'user_id' => $user1->id,
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'full_name' => 'Pending User',
         ]);
 
         Registration::factory()->create([
             'user_id' => $user2->id,
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
             'full_name' => 'Paid BR User',
         ]);
 
         Registration::factory()->create([
             'user_id' => $user3->id,
-            'payment_status' => 'paid_int',
+            'status' => 'paid_int',
             'full_name' => 'Paid Int User',
         ]);
 
@@ -279,7 +279,7 @@ class RegistrationsListTest extends TestCase
             ->assertSee('Both Events User');
     }
 
-    public function test_displays_individual_payment_statuses(): void
+    public function test_displays_individual_statuses(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');

@@ -42,7 +42,7 @@
 {{ __('There is a pending payment for the additional amount due from the modification. The participant should complete payment to finalize the registration update.') }}
 @endif
 
-**{{ __('Payment Status') }}:** {{ ucfirst(str_replace('_', ' ', $registration->payment_status)) }}
+**{{ __('Status') }}:** {{ ucfirst(str_replace('_', ' ', $registration->status)) }}
 
 ## {{ __('Action Required') }}
 

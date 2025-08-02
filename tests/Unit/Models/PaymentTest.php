@@ -104,7 +104,7 @@ class PaymentTest extends TestCase
     }
 
     #[Test]
-    public function payment_status_can_be_set_to_valid_values(): void
+    public function status_can_be_set_to_valid_values(): void
     {
         $validStatuses = ['pending', 'paid', 'pending_approval', 'cancelled'];
 

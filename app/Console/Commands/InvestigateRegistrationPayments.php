@@ -41,7 +41,7 @@ class InvestigateRegistrationPayments extends Command
 
         foreach ($registrations as $registration) {
             $this->line("\n📋 Registration ID: {$registration->id}");
-            $this->line("   Payment Status: {$registration->payment_status}");
+            $this->line("   Status: {$registration->status}");
             $this->line("   Payments Count: {$registration->payments->count()}");
             $this->line("   Events Count: {$registration->events->count()}");
 
@@ -50,7 +50,7 @@ class InvestigateRegistrationPayments extends Command
             $this->line('   Total Event Fees: R$ '.number_format($totalEventFeesFloat, 2, ',', '.'));
 
             // Check if this registration should have payments but doesn't
-            if ($registration->payment_status === 'pending' &&
+            if ($registration->status === 'pending' &&
                 $registration->payments->count() === 0 &&
                 $totalEventFees > 0) {
 
@@ -93,7 +93,7 @@ class InvestigateRegistrationPayments extends Command
                         // Log the finding
                         Log::info('AC1 Investigation: Found registration without payment that should have one', [
                             'registration_id' => $registration->id,
-                            'payment_status' => $registration->payment_status,
+                            'status' => $registration->status,
                             'calculated_fee' => $feeData['total_fee'],
                             'manual_creation_works' => true,
                             'event_fees_sum' => $totalEventFees,

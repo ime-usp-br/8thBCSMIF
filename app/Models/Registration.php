@@ -47,7 +47,7 @@ use Illuminate\Support\Carbon; // For date type hints in PHPDoc
  * @property string|null $emergency_contact_phone
  * @property bool $requires_visa_letter
  * @property string $registration_category_snapshot
- * @property string $payment_status
+ * @property string $status
  * @property Carbon|null $invoice_sent_at
  * @property string|null $notes
  * @property Carbon|null $created_at
@@ -66,13 +66,13 @@ class Registration extends Model
     /** @use HasFactory<\Database\Factories\RegistrationFactory> */
     use HasFactory;
 
-    const PAYMENT_STATUS_PENDING = 'pending';
+    const STATUS_PENDING = 'pending';
 
-    const PAYMENT_STATUS_PENDING_APPROVAL = 'pending_approval';
+    const STATUS_PENDING_APPROVAL = 'pending_approval';
 
-    const PAYMENT_STATUS_APPROVED = 'approved';
+    const STATUS_APPROVED = 'approved';
 
-    const PAYMENT_STATUS_REJECTED = 'rejected';
+    const STATUS_REJECTED = 'rejected';
 
     /**
      * The attributes that are mass assignable.
@@ -112,7 +112,7 @@ class Registration extends Model
         'emergency_contact_phone',
         'requires_visa_letter',
         'registration_category_snapshot',
-        'payment_status',
+        'status',
         'invoice_sent_at',
         'notes',
     ];
@@ -169,7 +169,7 @@ class Registration extends Model
     /**
      * The payments that belong to this registration.
      *
-     * Note: The 'payment_status' column on this model serves as a consolidated status
+     * Note: The 'status' column on this model serves as a consolidated status
      * reflecting the overall payment state across all associated payments. This allows
      * for quick queries and reporting while maintaining detailed payment records
      * in the related Payment models.
@@ -238,46 +238,46 @@ class Registration extends Model
      *
      * @return array<string>
      */
-    public static function getValidPaymentStatuses(): array
+    public static function getValidStatuses(): array
     {
         return [
-            self::PAYMENT_STATUS_PENDING,
-            self::PAYMENT_STATUS_PENDING_APPROVAL,
-            self::PAYMENT_STATUS_APPROVED,
-            self::PAYMENT_STATUS_REJECTED,
+            self::STATUS_PENDING,
+            self::STATUS_PENDING_APPROVAL,
+            self::STATUS_APPROVED,
+            self::STATUS_REJECTED,
         ];
     }
 
     /**
      * Check if the payment status is pending.
      */
-    public function isPaymentPending(): bool
+    public function isStatusPending(): bool
     {
-        return $this->payment_status === self::PAYMENT_STATUS_PENDING;
+        return $this->status === self::STATUS_PENDING;
     }
 
     /**
      * Check if the payment status is pending approval.
      */
-    public function isPaymentPendingApproval(): bool
+    public function isStatusPendingApproval(): bool
     {
-        return $this->payment_status === self::PAYMENT_STATUS_PENDING_APPROVAL;
+        return $this->status === self::STATUS_PENDING_APPROVAL;
     }
 
     /**
      * Check if the payment status is approved.
      */
-    public function isPaymentApproved(): bool
+    public function isStatusApproved(): bool
     {
-        return $this->payment_status === self::PAYMENT_STATUS_APPROVED;
+        return $this->status === self::STATUS_APPROVED;
     }
 
     /**
      * Check if the payment status is rejected.
      */
-    public function isPaymentRejected(): bool
+    public function isStatusRejected(): bool
     {
-        return $this->payment_status === self::PAYMENT_STATUS_REJECTED;
+        return $this->status === self::STATUS_REJECTED;
     }
 
     /**
@@ -299,7 +299,7 @@ class Registration extends Model
             $latestEnrollmentProof = $this->enrollmentProof;
 
             if (! $latestEnrollmentProof) {
-                return self::PAYMENT_STATUS_PENDING;
+                return self::STATUS_PENDING;
             }
 
             return $latestEnrollmentProof->status;
@@ -312,54 +312,54 @@ class Registration extends Model
 
             // If no payment or enrollment proof exists, status is pending
             if (! $latestPayment || ! $latestEnrollmentProof) {
-                return self::PAYMENT_STATUS_PENDING;
+                return self::STATUS_PENDING;
             }
 
             // Both must be approved for registration to be approved
-            if ($latestPayment->status === self::PAYMENT_STATUS_APPROVED &&
-                $latestEnrollmentProof->status === self::PAYMENT_STATUS_APPROVED) {
-                return self::PAYMENT_STATUS_APPROVED;
+            if ($latestPayment->status === self::STATUS_APPROVED &&
+                $latestEnrollmentProof->status === self::STATUS_APPROVED) {
+                return self::STATUS_APPROVED;
             }
 
             // If either is rejected, registration is rejected
-            if ($latestPayment->status === self::PAYMENT_STATUS_REJECTED ||
-                $latestEnrollmentProof->status === self::PAYMENT_STATUS_REJECTED) {
-                return self::PAYMENT_STATUS_REJECTED;
+            if ($latestPayment->status === self::STATUS_REJECTED ||
+                $latestEnrollmentProof->status === self::STATUS_REJECTED) {
+                return self::STATUS_REJECTED;
             }
 
             // If any is pending approval, registration is pending approval
-            if ($latestPayment->status === self::PAYMENT_STATUS_PENDING_APPROVAL ||
-                $latestEnrollmentProof->status === self::PAYMENT_STATUS_PENDING_APPROVAL) {
-                return self::PAYMENT_STATUS_PENDING_APPROVAL;
+            if ($latestPayment->status === self::STATUS_PENDING_APPROVAL ||
+                $latestEnrollmentProof->status === self::STATUS_PENDING_APPROVAL) {
+                return self::STATUS_PENDING_APPROVAL;
             }
 
             // Default to pending if any component is pending
-            return self::PAYMENT_STATUS_PENDING;
+            return self::STATUS_PENDING;
         }
 
         // For other categories (professor, professional, etc.), status mirrors most recent payment
         $latestPayment = $this->payments()->latest()->first();
 
         if (! $latestPayment) {
-            return self::PAYMENT_STATUS_PENDING;
+            return self::STATUS_PENDING;
         }
 
         return $latestPayment->status;
     }
 
     /**
-     * Update the payment status based on related models.
+     * Update the status based on related models.
      * This method should be called by observers when related models change.
      *
      * @return bool True if status was actually changed, false otherwise
      */
-    public function updatePaymentStatusFromRelatedModels(): bool
+    public function updateStatusFromRelatedModels(): bool
     {
         $newStatus = $this->calculateStatusFromRelatedModels();
 
-        if ($this->payment_status !== $newStatus) {
+        if ($this->status !== $newStatus) {
             // Use updateQuietly to avoid triggering observers and prevent infinite loops
-            $this->updateQuietly(['payment_status' => $newStatus]);
+            $this->updateQuietly(['status' => $newStatus]);
 
             return true;
         }
