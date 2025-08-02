@@ -33,19 +33,21 @@ class PaymentControllerViewProofButtonTest extends TestCase
             'document_country_origin' => 'Brazil',
         ]);
 
-        // Payment with proof uploaded
+        // Payment with proof uploaded (older, now pending_approval)
         $paymentWithProof = Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 150.00,
-            'status' => 'pending',
+            'status' => 'pending_approval', // Status after proof upload
             'payment_proof_path' => 'proofs/123/test_proof.pdf',
             'payment_date' => now(),
+            'created_at' => now()->subDays(1),
         ]);
 
-        // Payment without proof uploaded
+        // Payment without proof uploaded (most recent pending)
         $paymentWithoutProof = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 100.00,
+            'created_at' => now(), // Most recent
         ]);
 
         // Act: Load the my-registration page
@@ -60,8 +62,7 @@ class PaymentControllerViewProofButtonTest extends TestCase
         $this->assertStringContainsString('view-payment-proof-button-'.$paymentWithProof->id, $content);
         $this->assertStringContainsString(__('View Proof'), $content);
 
-        // Verify the success confirmation is also shown
-        $this->assertStringContainsString(__('Payment proof uploaded successfully'), $content);
+        // Note: Success message is not shown for pending_approval status
 
         // Payment without proof should NOT show "View Proof" button
         $this->assertStringNotContainsString('view-payment-proof-button-'.$paymentWithoutProof->id, $content);
@@ -90,26 +91,29 @@ class PaymentControllerViewProofButtonTest extends TestCase
             'document_country_origin' => 'Brazil',
         ]);
 
-        // Multiple payments with proofs uploaded
+        // Multiple payments with proofs uploaded (older payments)
         $payment1 = Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 100.00,
-            'status' => 'pending',
+            'status' => 'pending_approval', // Status after proof upload
             'payment_proof_path' => 'proofs/123/proof1.pdf',
             'payment_date' => now()->subHours(2),
+            'created_at' => now()->subDays(2),
         ]);
 
         $payment2 = Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 150.00,
-            'status' => 'pending',
+            'status' => 'pending_approval', // Status after proof upload
             'payment_proof_path' => 'proofs/123/proof2.pdf',
             'payment_date' => now()->subHours(1),
+            'created_at' => now()->subDays(1),
         ]);
 
         $payment3 = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 75.00,
+            'created_at' => now(), // Most recent pending
         ]);
 
         // Act: Load the my-registration page

@@ -418,6 +418,11 @@
     "Coordinator email not configured - coordinator notification not sent": "Email do coordenador não configurado - notificação do coordenador não enviada",
     "Payment proof uploaded successfully": "Comprovante de pagamento enviado com sucesso",
     "Payment status updated successfully.": "Status de pagamento atualizado com sucesso.",
+    "Status updated successfully.": "Status atualizado com sucesso.",
+    "Pending": "Pendente",
+    "Pending Approval": "Pendente de Aprovação",
+    "Approved": "Aprovado",
+    "Rejected": "Rejeitado",
     "Proof upload notification sent to coordinator": "Notificação de envio de comprovante enviada ao coordenador",
     "Failed to upload payment proof": "Falha ao enviar comprovante de pagamento",
     "You are not authorized to upload proof for this registration.": "Você não está autorizado a enviar comprovante para esta inscrição.",
@@ -713,5 +718,11 @@
     "Cannot select: online participation is selected": "Não é possível selecionar: participação online está selecionada",
     "Not available for accompanying persons": "Não disponível para acompanhantes",
     "I do not need transportation.": "Não preciso de transporte.",
-    "Please select a file": "Por favor, selecione um arquivo"
+    "Please select a file": "Por favor, selecione um arquivo",
+    "Professor (non-ABE)": "Professor (não-ABE)",
+    "Professional / Foreign Participant": "Profissional / Participante Estrangeiro",
+    "Until September 5": "Até 5 de Setembro",
+    "After September 5": "Após 5 de Setembro",
+    "Accompanying person": "Acompanhante",
+    "Early bird registration deadline: September 5, 2025": "Prazo para inscrição antecipada: 5 de setembro de 2025"
 }

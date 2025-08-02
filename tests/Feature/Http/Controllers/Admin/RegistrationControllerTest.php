@@ -232,13 +232,10 @@ class RegistrationControllerTest extends TestCase
         $response->assertSee('value="rejected"', false);
 
         // Verify label translations are present
-        $response->assertSee(__('Pending Payment'));
-        $response->assertSee(__('Pending BR Proof Approval'));
-        $response->assertSee(__('Paid (BR)'));
-        $response->assertSee(__('Invoice Sent (International)'));
-        $response->assertSee(__('Paid (International)'));
-        $response->assertSee(__('Free'));
-        $response->assertSee(__('Cancelled'));
+        $response->assertSee(__('Pending'));
+        $response->assertSee(__('Pending Approval'));
+        $response->assertSee(__('Approved'));
+        $response->assertSee(__('Rejected'));
     }
 
     /**
@@ -250,10 +247,12 @@ class RegistrationControllerTest extends TestCase
         $admin->assignRole('admin');
 
         // Test with different payment statuses
-        $testStatuses = ['pending', 'approved', 'approved', 'rejected'];
+        $testStatuses = ['pending', 'pending_approval', 'approved', 'rejected'];
 
         foreach ($testStatuses as $status) {
-            $registration = Registration::factory()->create(['status' => $status]);
+            $registration = Registration::factory()->create();
+            // Manually set status to avoid observer interference
+            $registration->updateQuietly(['status' => $status]);
 
             $response = $this->actingAs($admin)->get(route('admin.registrations.show', $registration));
 
@@ -430,7 +429,7 @@ class RegistrationControllerTest extends TestCase
             $response->assertSessionHasNoErrors();
             $response->assertStatus(302);
             $response->assertRedirect(route('admin.registrations.show', $registration));
-            $response->assertSessionHas('success', __('Payment status updated successfully.'));
+            $response->assertSessionHas('success', __('Status updated successfully.'));
 
             // Verify the status was actually updated in the database
             $registration->refresh();
@@ -496,7 +495,7 @@ class RegistrationControllerTest extends TestCase
         $response->assertRedirect(route('admin.registrations.show', $registration));
 
         // Verify success flash message is set
-        $response->assertSessionHas('success', __('Payment status updated successfully.'));
+        $response->assertSessionHas('success', __('Status updated successfully.'));
     }
 
     /**
@@ -510,14 +509,14 @@ class RegistrationControllerTest extends TestCase
 
         // Simulate the redirect with success message
         $response = $this->actingAs($admin)
-            ->withSession(['success' => __('Payment status updated successfully.')])
+            ->withSession(['success' => __('Status updated successfully.')])
             ->get(route('admin.registrations.show', $registration));
 
         $response->assertOk();
         $response->assertViewIs('admin.registrations.show');
 
         // Verify the success message is displayed in the view
-        $response->assertSee(__('Payment status updated successfully.'));
+        $response->assertSee(__('Status updated successfully.'));
     }
 
     /**
@@ -531,13 +530,10 @@ class RegistrationControllerTest extends TestCase
 
         // Test all possible status transitions to ensure header reflects all statuses correctly
         $statusTransitions = [
-            'pending_approval' => __('Pending BR Proof Approval'),
-            'approved' => __('Paid (BR)'),
-            'rejected' => __('Invoice Sent (International)'),
-            'approved' => __('Paid (International)'),
-            'pending' => __('Free'),
-            'rejected' => __('Cancelled'),
-            'pending' => __('Pending Payment'), // Back to original
+            'pending_approval' => __('Pending Approval'),
+            'approved' => __('Approved'),
+            'rejected' => __('Rejected'),
+            'pending' => __('Pending'), // Back to original
         ];
 
         foreach ($statusTransitions as $newStatus => $expectedLabel) {
@@ -568,9 +564,6 @@ class RegistrationControllerTest extends TestCase
                 'pending' => 'bg-yellow-100 text-yellow-800',
                 'pending_approval' => 'bg-orange-100 text-orange-800',
                 'approved' => 'bg-green-100 text-green-800',
-                'rejected' => 'bg-blue-100 text-blue-800',
-                'approved' => 'bg-green-100 text-green-800',
-                'pending' => 'bg-purple-100 text-purple-800',
                 'rejected' => 'bg-red-100 text-red-800',
             ];
 
@@ -613,7 +606,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertNotNull($registration->notes);
 
         // Verify log entry contains all required information
-        $this->assertStringContainsString('Payment status changed by Admin User', $registration->notes);
+        $this->assertStringContainsString('Status changed by Admin User', $registration->notes);
         $this->assertStringContainsString("'pending' -> 'approved'", $registration->notes);
 
         // Verify timestamp format is present (YYYY-MM-DD HH:MM:SS format)
@@ -692,7 +685,7 @@ class RegistrationControllerTest extends TestCase
         $response->assertStatus(302);
 
         $registration->refresh();
-        $this->assertStringContainsString('Payment status changed by João Silva Admin', $registration->notes);
+        $this->assertStringContainsString('Status changed by João Silva Admin', $registration->notes);
     }
 
     /**
@@ -719,7 +712,7 @@ class RegistrationControllerTest extends TestCase
         $response->assertStatus(302);
 
         $registration->refresh();
-        $this->assertStringContainsString('Payment status changed by admin@usp.br', $registration->notes);
+        $this->assertStringContainsString('Status changed by admin@usp.br', $registration->notes);
     }
 
     /**
@@ -950,11 +943,12 @@ class RegistrationControllerTest extends TestCase
         ]);
 
         $registration = Registration::factory()->create([
-            'status' => 'pending_approval',
             'user_id' => $participant->id,
             'email' => $participant->email,
             'full_name' => 'John Doe',
         ]);
+        // Manually set status to avoid observer interference
+        $registration->updateQuietly(['status' => 'pending_approval']);
 
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
             'status' => 'approved',
@@ -1046,7 +1040,7 @@ class RegistrationControllerTest extends TestCase
             $response->assertSessionHasNoErrors();
             $response->assertStatus(302);
             $response->assertRedirect(route('admin.registrations.show', $registration));
-            $response->assertSessionHas('success', __('Payment status updated successfully.'));
+            $response->assertSessionHas('success', __('Status updated successfully.'));
 
             // Verify status change is reflected in database
             $registration->refresh();
@@ -1072,7 +1066,9 @@ class RegistrationControllerTest extends TestCase
         ];
 
         foreach ($statusTransitions as $transition) {
-            $registration = Registration::factory()->create(['status' => $transition['from']]);
+            $registration = Registration::factory()->create();
+            // Manually set status to avoid observer interference
+            $registration->updateQuietly(['status' => $transition['from']]);
 
             // Verify initial status
             $this->assertEquals($transition['from'], $registration->status);
@@ -1153,7 +1149,7 @@ class RegistrationControllerTest extends TestCase
 
         $registration->refresh();
         $this->assertNotNull($registration->notes);
-        $this->assertStringContainsString('Payment status changed by Test Admin', $registration->notes);
+        $this->assertStringContainsString('Status changed by Test Admin', $registration->notes);
         $this->assertStringContainsString("'pending' -> 'approved'", $registration->notes);
         $this->assertMatchesRegularExpression('/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/', $registration->notes);
 
@@ -1330,7 +1326,9 @@ class RegistrationControllerTest extends TestCase
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
-        $registration = Registration::factory()->create(['status' => 'pending']);
+        $registration = Registration::factory()->create();
+        // Manually set status to avoid observer interference 
+        $registration->updateQuietly(['status' => 'pending']);
 
         // Create individual payment records with pending_approval status
         $payment1 = $registration->payments()->create([
@@ -1343,11 +1341,12 @@ class RegistrationControllerTest extends TestCase
         ]);
 
         // Test various status changes that should NOT affect individual payments
-        $statusesToTest = ['rejected', 'approved', 'pending', 'rejected', 'pending_approval'];
+        // Only pending_approval should not affect payments according to controller logic
+        $statusesToTest = ['pending_approval'];
 
         foreach ($statusesToTest as $status) {
             // Reset registration status
-            $registration->update(['status' => 'pending']);
+            $registration->updateQuietly(['status' => 'pending']);
 
             $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
                 'status' => $status,

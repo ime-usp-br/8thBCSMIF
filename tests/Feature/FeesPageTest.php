@@ -76,8 +76,8 @@ class FeesPageTest extends TestCase
         $response = $this->get('/fees');
 
         $response->assertStatus(200);
-        $response->assertSee(__('Until 08/15/2025'));
-        $response->assertSee(__('After 08/15/2025'));
+        $response->assertSee(__('Until September 5'));
+        $response->assertSee(__('After September 5'));
         $response->assertSee(__('Online'));
     }
 
@@ -103,7 +103,7 @@ class FeesPageTest extends TestCase
         $response->assertSee(__('Important Information'));
         $response->assertSee(__('Undergraduate students are exempt from fees for all events'));
         $response->assertSee(__('Graduate students are exempt from workshop fees'));
-        $response->assertSee(__('Early bird registration deadline: August 15, 2025'));
+        $response->assertSee(__('Early bird registration deadline: September 5, 2025'));
         $response->assertSee(__('ABE membership status will be verified during registration'));
     }
 

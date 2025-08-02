@@ -386,6 +386,11 @@
     "Coordinator email not configured - coordinator notification not sent": "Coordinator email not configured - coordinator notification not sent",
     "Payment proof uploaded successfully": "Payment proof uploaded successfully",
     "Payment status updated successfully.": "Payment status updated successfully.",
+    "Status updated successfully.": "Status updated successfully.",
+    "Pending": "Pending",
+    "Pending Approval": "Pending Approval",
+    "Approved": "Approved",
+    "Rejected": "Rejected",
     "Proof upload notification sent to coordinator": "Proof upload notification sent to coordinator",
     "Failed to upload payment proof": "Failed to upload payment proof",
     "You are not authorized to upload proof for this registration.": "You are not authorized to upload proof for this registration.",
@@ -679,5 +684,11 @@
     "Accompanying persons cannot register for workshops. The following events are workshops: :workshops": "Accompanying persons cannot register for workshops. The following events are workshops: :workshops",
     "Cannot select: workshops are selected": "Cannot select: workshops are selected",
     "Not available for accompanying persons": "Not available for accompanying persons",
-    "I do not need transportation.": "I do not need transportation."
+    "I do not need transportation.": "I do not need transportation.",
+    "Professor (non-ABE)": "Professor (non-ABE)",
+    "Professional / Foreign Participant": "Professional / Foreign Participant",
+    "Until September 5": "Until September 5",
+    "After September 5": "After September 5",
+    "Accompanying person": "Accompanying person",
+    "Early bird registration deadline: September 5, 2025": "Early bird registration deadline: September 5, 2025"
 }

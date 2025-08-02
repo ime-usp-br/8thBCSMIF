@@ -295,11 +295,11 @@ class RegistrationControllerTest extends TestCase
         $registrationId = Registration::where('user_id', $user->id)->latest()->first()->id;
         $this->assertNotNull($registrationId);
 
-        // AC9: Assert that status is 'pending' when calculated fee is zero
+        // AC9: Assert that status is 'approved' when calculated fee is zero
         $this->assertDatabaseHas('registrations', [
             'id' => $registrationId,
             'user_id' => $user->id,
-            'status' => 'pending',
+            'status' => 'approved',
         ]);
     }
 
@@ -603,7 +603,7 @@ class RegistrationControllerTest extends TestCase
             'user_id' => $user->id,
             'status' => 'approved',  // Already approved
         ]);
-        $payment = Payment::factory()->paid()->create([
+        $payment = Payment::factory()->approved()->create([
             'registration_id' => $registration->id,
             'amount' => 500.00,
         ]);
