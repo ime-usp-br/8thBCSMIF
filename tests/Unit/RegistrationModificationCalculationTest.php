@@ -157,7 +157,7 @@ class RegistrationModificationCalculationTest extends TestCase
     }
 
     #[Test]
-    public function excludes_pending_payments_from_total_paid(): void
+    public function excludes_pendings_from_total_paid(): void
     {
         $user = User::factory()->create();
         $registration = Registration::factory()->for($user)->create([

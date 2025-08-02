@@ -128,7 +128,7 @@ class SendEarlyBirdRemindersTest extends TestCase
     }
 
     #[Test]
-    public function command_excludes_registrations_without_pending_payments(): void
+    public function command_excludes_registrations_without_pendings(): void
     {
         Mail::fake();
 

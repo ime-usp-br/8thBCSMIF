@@ -131,7 +131,7 @@ class RegistrationControllerTest extends TestCase
             'participation_format' => $validData['participation_format'],
             'document_country_origin' => $validData['document_country_origin'],
             'cpf' => $validData['cpf'],
-            'payment_status' => 'pending_payment', // AC9: non-zero fee should result in pending_payment
+            'payment_status' => 'pending', // AC9: non-zero fee should result in pending
         ]);
 
         // Verify some nullable fields are correctly stored if provided
@@ -451,7 +451,7 @@ class RegistrationControllerTest extends TestCase
         // Create a registration with pending payment status
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
 
         // Create a Payment record for the registration
@@ -481,9 +481,9 @@ class RegistrationControllerTest extends TestCase
         $this->assertNotNull($payment->payment_date);
         $this->assertEquals('pending', $payment->status); // Status remains pending after upload
 
-        // Verify the registration status - stays pending_payment since payment status is still 'pending'
+        // Verify the registration status - stays pending since payment status is still 'pending'
         $registration->refresh();
-        $this->assertEquals('pending_payment', $registration->payment_status); // No change until all payments are non-pending
+        $this->assertEquals('pending', $registration->payment_status); // No change until all payments are non-pending
 
         // AC10: Verify ProofUploadedNotification was queued to coordinator
         Mail::assertQueued(ProofUploadedNotification::class, function ($mail) use ($registration) {
@@ -497,7 +497,7 @@ class RegistrationControllerTest extends TestCase
     #[Test]
     public function upload_proof_requires_authentication(): void
     {
-        $registration = Registration::factory()->create(['payment_status' => 'pending_payment']);
+        $registration = Registration::factory()->create(['payment_status' => 'pending']);
         $payment = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 500.00,
@@ -524,7 +524,7 @@ class RegistrationControllerTest extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $owner->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
         $payment = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
@@ -552,7 +552,7 @@ class RegistrationControllerTest extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
 
         $payment = Payment::factory()->pending()->create([
@@ -577,7 +577,7 @@ class RegistrationControllerTest extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $owner->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
 
         $payment = Payment::factory()->pending()->create([
@@ -593,7 +593,7 @@ class RegistrationControllerTest extends TestCase
     }
 
     #[Test]
-    public function upload_proof_requires_pending_payment_status(): void
+    public function upload_proof_requires_pending_status(): void
     {
         Mail::fake();
         $user = User::factory()->create();
@@ -632,7 +632,7 @@ class RegistrationControllerTest extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
 
         $payment = Payment::factory()->pending()->create([
@@ -688,7 +688,7 @@ class RegistrationControllerTest extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $owner->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
 
         $payment = Payment::factory()->pending()->create([
@@ -718,7 +718,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertEquals('pending', $payment->status); // Status remains pending after upload
 
         $registration->refresh();
-        $this->assertEquals('pending_payment', $registration->payment_status); // No change until all payments are non-pending
+        $this->assertEquals('pending', $registration->payment_status); // No change until all payments are non-pending
 
         // Verify file was stored in private storage
         $this->assertTrue(Storage::disk('private')->exists($payment->payment_proof_path));
@@ -731,7 +731,7 @@ class RegistrationControllerTest extends TestCase
         // Test 2: Falha no upload de arquivo com tipo inválido
         $registration2 = Registration::factory()->create([
             'user_id' => $owner->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
 
         $payment2 = Payment::factory()->pending()->create([
@@ -752,7 +752,7 @@ class RegistrationControllerTest extends TestCase
         // Test 3: Falha no upload de arquivo com tamanho inválido
         $registration3 = Registration::factory()->create([
             'user_id' => $owner->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
 
         $payment3 = Payment::factory()->pending()->create([
@@ -774,7 +774,7 @@ class RegistrationControllerTest extends TestCase
         $this->actingAs($otherUser);
         $registration4 = Registration::factory()->create([
             'user_id' => $owner->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
 
         $payment4 = Payment::factory()->pending()->create([
@@ -798,7 +798,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertEquals('pending', $payment4->status);
 
         $registration4->refresh();
-        $this->assertEquals('pending_payment', $registration4->payment_status);
+        $this->assertEquals('pending', $registration4->payment_status);
     }
 
     #[Test]
@@ -816,7 +816,7 @@ class RegistrationControllerTest extends TestCase
         // Test valid JPG file
         $registration1 = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
         $payment1 = Payment::factory()->pending()->create([
             'registration_id' => $registration1->id,
@@ -837,7 +837,7 @@ class RegistrationControllerTest extends TestCase
         // Test valid PNG file
         $registration2 = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
         $payment2 = Payment::factory()->pending()->create([
             'registration_id' => $registration2->id,
@@ -858,7 +858,7 @@ class RegistrationControllerTest extends TestCase
         // Test valid PDF file
         $registration3 = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
         $payment3 = Payment::factory()->pending()->create([
             'registration_id' => $registration3->id,
@@ -879,7 +879,7 @@ class RegistrationControllerTest extends TestCase
         // Test valid JPEG file (alternative extension)
         $registration4 = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
         $payment4 = Payment::factory()->pending()->create([
             'registration_id' => $registration4->id,
@@ -900,7 +900,7 @@ class RegistrationControllerTest extends TestCase
         // Test file at maximum size limit (10MB = 10240KB)
         $registration5 = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
         $payment5 = Payment::factory()->pending()->create([
             'registration_id' => $registration5->id,
@@ -1122,7 +1122,7 @@ class RegistrationControllerTest extends TestCase
 
         // AC14: Verify fee calculation and event association
         // Check that payment_status is not 'free' (indicates there is a fee)
-        $this->assertEquals('pending_payment', $registration->payment_status);
+        $this->assertEquals('pending', $registration->payment_status);
 
         // Verify the total fee from events relationship is greater than 0
         $totalFee = $registration->events->sum('pivot.price_at_registration');
@@ -1148,7 +1148,7 @@ class RegistrationControllerTest extends TestCase
             'document_country_origin' => 'Brazil',
             'position' => 'postgraduate_student',
             'registration_category_snapshot' => 'grad_student',
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
 
         // Create event association with fee to simulate non-zero total
@@ -1185,7 +1185,7 @@ class RegistrationControllerTest extends TestCase
             'document_country_origin' => 'US',
             'position' => 'postgraduate_student',
             'registration_category_snapshot' => 'grad_student',
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
 
         // Create event association with fee to simulate non-zero total
@@ -1422,7 +1422,7 @@ class RegistrationControllerTest extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
 
         $payment = Payment::factory()->pending()->create([
@@ -1451,9 +1451,9 @@ class RegistrationControllerTest extends TestCase
         $this->assertNotNull($payment->payment_date);
         $this->assertEquals('pending', $payment->status); // Status remains pending after upload
 
-        // Verify the registration status - stays pending_payment since payment status is still 'pending'
+        // Verify the registration status - stays pending since payment status is still 'pending'
         $registration->refresh();
-        $this->assertEquals('pending_payment', $registration->payment_status); // No change until all payments are non-pending
+        $this->assertEquals('pending', $registration->payment_status); // No change until all payments are non-pending
 
         // Verify filename sanitization - the actual filename should be sanitized
         // The stored path should not contain the unsafe characters from the original filename
@@ -1475,7 +1475,7 @@ class RegistrationControllerTest extends TestCase
 
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
 
         $payment = Payment::factory()->pending()->create([
@@ -1516,9 +1516,9 @@ class RegistrationControllerTest extends TestCase
     }
 
     #[Test]
-    public function upload_proof_shows_success_message_and_updates_status_to_pending_br_proof_approval_after_successful_upload(): void
+    public function upload_proof_shows_success_message_and_updates_status_to_pending_approval_after_successful_upload(): void
     {
-        // AC8: Test that after successful upload, user sees success message and status is updated to pending_br_proof_approval
+        // AC8: Test that after successful upload, user sees success message and status is updated to pending_approval
         Mail::fake();
         Storage::fake('private');
 
@@ -1533,7 +1533,7 @@ class RegistrationControllerTest extends TestCase
         // Create a registration with pending payment status and Brazilian document
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
             'document_country_origin' => 'Brasil',
         ]);
 
@@ -1568,9 +1568,9 @@ class RegistrationControllerTest extends TestCase
         $this->assertNotNull($payment->payment_date);
         $this->assertEquals('pending', $payment->status); // Status remains pending after upload
 
-        // AC8: Verify registration status - stays pending_payment since payment status is still 'pending'
+        // AC8: Verify registration status - stays pending since payment status is still 'pending'
         $registration->refresh();
-        $this->assertEquals('pending_payment', $registration->payment_status); // No change until all payments are non-pending
+        $this->assertEquals('pending', $registration->payment_status); // No change until all payments are non-pending
 
         // AC8: Verify notification was queued (additional verification)
         Mail::assertQueued(ProofUploadedNotification::class, function ($mail) use ($registration) {
@@ -1582,10 +1582,10 @@ class RegistrationControllerTest extends TestCase
         $myRegistrationsResponse = $this->get(route('registrations.my'));
         $myRegistrationsResponse->assertOk();
 
-        // The status should remain as pending_payment since payment status is still 'pending'
+        // The status should remain as pending since payment status is still 'pending'
         // This verifies that the UI properly reflects the current status after reload
         // Status is formatted according to: __(ucfirst(str_replace(['_', '-'], ' ', $registration->payment_status)))
-        $formattedStatus = __(ucfirst(str_replace(['_', '-'], ' ', 'pending_payment')));
+        $formattedStatus = __(ucfirst(str_replace(['_', '-'], ' ', 'pending')));
         $myRegistrationsResponse->assertSee($formattedStatus);
     }
 
@@ -1635,7 +1635,7 @@ class RegistrationControllerTest extends TestCase
         $this->assertEquals(1600.00, $payment->amount);
 
         // Verify the registration's payment status reflects this
-        $this->assertEquals('pending_payment', $registration->payment_status);
+        $this->assertEquals('pending', $registration->payment_status);
 
         // Clean up
         Carbon::setTestNow();

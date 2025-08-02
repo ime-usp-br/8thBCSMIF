@@ -455,10 +455,10 @@ Esta suíte cobre os complexos fluxos de upload de comprovantes de pagamento e m
 ##### **3.2 Upload de Comprovante de Pagamento - Cenários Básicos**
 
 *   **Teste 3.2.1 (Upload Pagamento - PDF Válido):**
-    *   **Dado** usuário brasileiro com payment status `pending_payment`
+    *   **Dado** usuário brasileiro com payment status `pending`
     *   **Quando** faz upload de arquivo PDF válido (< 10MB)
     *   **Então** arquivo é carregado com sucesso
-    *   **E** status muda para `pending_br_proof_approval`
+    *   **E** status muda para `pending_approval`
     *   **E** formulário de upload para esse payment desaparece
     *   **E** mensagem de sucesso é exibida
     *   **E** email de notificação é enviado aos coordenadores

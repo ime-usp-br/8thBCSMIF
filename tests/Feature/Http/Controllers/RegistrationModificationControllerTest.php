@@ -91,16 +91,16 @@ class RegistrationModificationControllerTest extends TestCase
     }
 
     #[Test]
-    public function store_blocks_modification_when_payment_pending_br_proof_approval(): void
+    public function store_blocks_modification_when_payment_pending_approval(): void
     {
         $user = User::factory()->create();
         $registration = Registration::factory()->for($user)->create();
         $event = Event::first(); // Use seeded event
 
-        // Create a payment with pending_br_proof_approval status
+        // Create a payment with pending_approval status
         $registration->payments()->create([
             'amount' => 100.00,
-            'status' => 'pending_br_proof_approval',
+            'status' => 'pending_approval',
         ]);
 
         $this->actingAs($user);
@@ -126,7 +126,7 @@ class RegistrationModificationControllerTest extends TestCase
         ]);
         $event = Event::first(); // Use seeded event
 
-        // Create a payment with different status (not pending_br_proof_approval)
+        // Create a payment with different status (not pending_approval)
         $registration->payments()->create([
             'amount' => 100.00,
             'status' => 'pending',
@@ -138,7 +138,7 @@ class RegistrationModificationControllerTest extends TestCase
             'selected_event_codes' => [$event->code],
         ]);
 
-        // Should succeed because payment is not pending_br_proof_approval
+        // Should succeed because payment is not pending_approval
         $response->assertRedirect(route('registrations.my'));
         $response->assertSessionHas('success', __('Registration modified successfully'));
     }

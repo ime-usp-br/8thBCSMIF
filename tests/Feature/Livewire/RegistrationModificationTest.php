@@ -177,7 +177,7 @@ class RegistrationModificationTest extends TestCase
     }
 
     #[Test]
-    public function component_detects_pending_payments(): void
+    public function component_detects_pendings(): void
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
         $registration = Registration::factory()->for($user)->create();
@@ -197,7 +197,7 @@ class RegistrationModificationTest extends TestCase
     }
 
     #[Test]
-    public function component_does_not_detect_pending_payments_when_none_exist(): void
+    public function component_does_not_detect_pendings_when_none_exist(): void
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
         $registration = Registration::factory()->for($user)->create();

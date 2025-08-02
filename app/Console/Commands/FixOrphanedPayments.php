@@ -30,7 +30,7 @@ class FixOrphanedPayments extends Command
     {
         $this->info('Starting to fix orphaned payments...');
 
-        $registrations = Registration::where('payment_status', 'pending_payment')
+        $registrations = Registration::where('payment_status', 'pending')
             ->whereDoesntHave('payments')
             ->get();
 
@@ -58,8 +58,8 @@ class FixOrphanedPayments extends Command
                     $this->info("Fixed payment for registration ID: {$registration->id} with amount: {$totalFee}");
                     $fixedCount++;
                 } else {
-                    Log::warning('Registration marked as pending_payment but has zero total fee, skipping.', ['registration_id' => $registration->id]);
-                    $this->warn("Registration ID: {$registration->id} has pending_payment status but zero total fee. Skipping.");
+                    Log::warning('Registration marked as pending but has zero total fee, skipping.', ['registration_id' => $registration->id]);
+                    $this->warn("Registration ID: {$registration->id} has pending status but zero total fee. Skipping.");
                 }
                 DB::commit();
             } catch (\Exception $e) {

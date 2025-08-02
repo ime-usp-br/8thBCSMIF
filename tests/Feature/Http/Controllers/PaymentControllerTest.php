@@ -209,7 +209,7 @@ class PaymentControllerTest extends TestCase
      * Test AC2: Verify upload fails for non-pending payments.
      * This test ensures that proof can only be uploaded for pending payments.
      */
-    public function test_upload_proof_fails_for_non_pending_payments(): void
+    public function test_upload_proof_fails_for_non_pendings(): void
     {
         // Arrange: Create test data
         Storage::fake('private');

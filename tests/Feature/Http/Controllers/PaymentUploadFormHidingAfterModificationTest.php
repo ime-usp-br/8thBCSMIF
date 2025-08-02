@@ -22,7 +22,7 @@ class PaymentUploadFormHidingAfterModificationTest extends TestCase
      * This addresses the user story: when a user registers for a workshop and later adds
      * a new event, the first upload form should not appear to avoid confusion.
      */
-    public function test_older_payment_upload_form_hidden_when_newer_pending_payment_exists(): void
+    public function test_older_payment_upload_form_hidden_when_newer_pending_exists(): void
     {
         // Arrange: Create test data simulating the registration modification scenario
         Storage::fake('private');
@@ -90,7 +90,7 @@ class PaymentUploadFormHidingAfterModificationTest extends TestCase
         $paymentWithProof = Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 100.00,
-            'status' => 'pending_br_proof_approval',
+            'status' => 'pending_approval',
             'payment_proof_path' => 'proofs/123/payment_proof.pdf',
             'payment_date' => now()->subHours(3),
             'created_at' => now()->subHours(4), // Older payment
@@ -249,7 +249,7 @@ class PaymentUploadFormHidingAfterModificationTest extends TestCase
     /**
      * Test the specific bug reported: first form should stay hidden even after upload on second payment.
      * This addresses the user story where uploading proof on newer payment changes its status to
-     * 'pending_br_proof_approval', but the older payment form should still remain hidden.
+     * 'pending_approval', but the older payment form should still remain hidden.
      */
     public function test_first_form_stays_hidden_after_upload_on_second_payment(): void
     {
@@ -297,9 +297,9 @@ class PaymentUploadFormHidingAfterModificationTest extends TestCase
         $uploadResponse->assertRedirect();
         $uploadResponse->assertSessionHas('success');
 
-        // Verify the payment status changed to pending_br_proof_approval
+        // Verify the payment status changed to pending_approval
         $modificationPayment->refresh();
-        $this->assertEquals('pending_br_proof_approval', $modificationPayment->status);
+        $this->assertEquals('pending_approval', $modificationPayment->status);
         $this->assertNotNull($modificationPayment->payment_proof_path);
 
         // STEP 5: CRITICAL TEST - First form should STILL be hidden (bug fix verification)

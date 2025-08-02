@@ -140,7 +140,7 @@ class MyRegistrationsPageTest extends TestCase
         // Create registration for the user
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
             'registration_category_snapshot' => 'undergrad_student', // Use specific category
             'participation_format' => 'in-person', // Match fee record
         ]);
@@ -262,7 +262,7 @@ class MyRegistrationsPageTest extends TestCase
         // Create single registration with multiple events and multiple payments
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
             'registration_category_snapshot' => 'undergrad_student',
             'participation_format' => 'in-person',
         ]);
@@ -354,7 +354,7 @@ class MyRegistrationsPageTest extends TestCase
             'email' => 'john@example.com',
             'nationality' => 'Brazilian',
             'document_country_origin' => 'Brazil',
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
         ]);
 
         // Attach events to registration with specific prices
@@ -451,7 +451,7 @@ class MyRegistrationsPageTest extends TestCase
             'email' => 'maria.silva@university.br',
             'nationality' => 'Brazilian',
             'document_country_origin' => 'Brazil',
-            'payment_status' => 'pending_payment',
+            'payment_status' => 'pending',
             'registration_category_snapshot' => 'undergrad_student',
             'participation_format' => 'in-person',
         ]);
@@ -649,7 +649,7 @@ class MyRegistrationsPageTest extends TestCase
      * Test that upload form is displayed conditionally for pending payments only (AC5).
      * This test specifically addresses AC5 requirements for Issue #49.
      */
-    public function test_upload_form_displayed_conditionally_for_pending_payments(): void
+    public function test_upload_form_displayed_conditionally_for_pendings(): void
     {
         // Create verified user
         $user = User::factory()->create([
@@ -716,7 +716,7 @@ class MyRegistrationsPageTest extends TestCase
      * Test that upload form IS displayed for international users with pending payments (AC7).
      * This test addresses AC7 requirements for Issue #80 - international participants need payment proof upload.
      */
-    public function test_upload_form_displayed_for_international_users_with_pending_payments(): void
+    public function test_upload_form_displayed_for_international_users_with_pendings(): void
     {
         // Create verified user
         $user = User::factory()->create([
@@ -761,7 +761,7 @@ class MyRegistrationsPageTest extends TestCase
      * Test that upload form is NOT displayed for non-pending payments (AC5).
      * This test specifically addresses AC5 requirements for Issue #49.
      */
-    public function test_upload_form_not_displayed_for_non_pending_payments(): void
+    public function test_upload_form_not_displayed_for_non_pendings(): void
     {
         // Create verified user
         $user = User::factory()->create([
@@ -1176,7 +1176,7 @@ class MyRegistrationsPageTest extends TestCase
      * This test addresses the bug where multiple upload forms were enabled simultaneously.
      * IMPORTANT: This test verifies the fix for the cache issue where payments weren't refreshed after upload.
      */
-    public function test_only_most_recent_pending_payment_allows_upload(): void
+    public function test_only_most_recent_pending_allows_upload(): void
     {
         // Create verified user
         $user = User::factory()->create(['email_verified_at' => now()]);

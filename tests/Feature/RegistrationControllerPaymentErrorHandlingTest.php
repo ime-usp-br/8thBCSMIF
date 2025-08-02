@@ -123,7 +123,7 @@ class RegistrationControllerPaymentErrorHandlingTest extends TestCase
         $registration = Registration::latest()->first();
         $this->assertNotNull($registration);
         $this->assertEquals($user->id, $registration->user_id);
-        $this->assertEquals('pending_payment', $registration->payment_status);
+        $this->assertEquals('pending', $registration->payment_status);
 
         // Verify payment was created successfully (this validates the happy path still works)
         $this->assertGreaterThan(0, $registration->payments()->count());
@@ -247,7 +247,7 @@ class RegistrationControllerPaymentErrorHandlingTest extends TestCase
         // Verify registration and payment were created successfully
         $registration = Registration::where('user_id', $user->id)->first();
         $this->assertNotNull($registration);
-        $this->assertEquals('pending_payment', $registration->payment_status);
+        $this->assertEquals('pending', $registration->payment_status);
         $this->assertGreaterThan(0, $registration->payments()->count());
     }
 }
