@@ -156,7 +156,7 @@ class MyRegistrationsPageTest extends TestCase
         $response->assertSee('Conference Workshop');
         $response->assertSee('Main Event');
         $response->assertSee('R$ 150,00');
-        $response->assertSee(__('Pending payment'));
+        $response->assertSee(__('Pending'));
     }
 
     /**
@@ -1236,11 +1236,11 @@ class MyRegistrationsPageTest extends TestCase
         $content = $response->getContent();
 
         // Now should see upload form for payment2 (now the most recent pending)
-        $this->assertStringContainsString('payment_proof_'.$payment2->id, $content);
+        $this->assertStringContainsString('id="payment_proof_'.$payment2->id.'"', $content);
 
-        // Should NOT see upload forms for payment1 (older) or payment3 (no longer pending)
-        $this->assertStringNotContainsString('payment_proof_'.$payment1->id, $content);
-        $this->assertStringNotContainsString('payment_proof_'.$payment3->id, $content);
+        // Should NOT see upload forms for payment1 (older) or payment3 (no longer pending)  
+        $this->assertStringNotContainsString('id="payment_proof_'.$payment1->id.'"', $content);
+        $this->assertStringNotContainsString('id="payment_proof_'.$payment3->id.'"', $content);
 
         // Test 3: After uploading proof for payment2, only payment1 should allow upload
         $payment2->update([

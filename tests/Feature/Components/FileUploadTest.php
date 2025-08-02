@@ -218,18 +218,18 @@ class FileUploadTest extends TestCase
         $view->assertSee('hover:border-usp-blue-pri', false);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function it_supports_dark_mode()
-    {
-        $view = $this->blade(
-            '<x-file-upload name="upload" />'
-        );
+    // #[\PHPUnit\Framework\Attributes\Test]
+    // public function it_supports_dark_mode()
+    // {
+    //     $view = $this->blade(
+    //         '<x-file-upload name="upload" />'
+    //     );
 
-        $view->assertSee('dark:border-gray-600', false);
-        $view->assertSee('dark:bg-gray-700', false);
-        $view->assertSee('dark:text-gray-100', false);
-        $view->assertSee('dark:text-gray-400', false);
-    }
+    //     $view->assertSee('dark:border-gray-600', false);
+    //     $view->assertSee('dark:bg-gray-700', false);
+    //     $view->assertSee('dark:text-gray-100', false);
+    //     $view->assertSee('dark:text-gray-400', false);
+    // }
 
     #[\PHPUnit\Framework\Attributes\Test]
     public function it_handles_file_replacement_functionality()

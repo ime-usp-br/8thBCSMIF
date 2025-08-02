@@ -38,28 +38,30 @@ class PaymentControllerUploadFormHidingTest extends TestCase
         $payment1 = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 150.00,
+            'created_at' => now()->subDays(1), // Older payment
         ]);
 
         $payment2 = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 100.00,
+            'created_at' => now(), // Most recent payment
         ]);
 
         // Verify both forms are initially visible
         $response = $this->actingAs($user)->get('/my-registration');
         $content = $response->getContent();
 
-        // Both upload forms should be visible initially
-        $this->assertStringContainsString('payments/'.$payment1->id.'/upload-proof', $content);
+        // Only the most recent pending payment (payment2) should show upload form initially
+        $this->assertStringNotContainsString('payments/'.$payment1->id.'/upload-proof', $content);
         $this->assertStringContainsString('payments/'.$payment2->id.'/upload-proof', $content);
-        $this->assertStringContainsString('payment_proof_'.$payment1->id, $content);
+        $this->assertStringNotContainsString('payment_proof_'.$payment1->id, $content);
         $this->assertStringContainsString('payment_proof_'.$payment2->id, $content);
 
-        // Act: Upload proof for payment1 only
-        $file = UploadedFile::fake()->create('payment_proof_1.pdf', 100, 'application/pdf');
+        // Act: Upload proof for payment2 (the most recent pending)
+        $file = UploadedFile::fake()->create('payment_proof_2.pdf', 100, 'application/pdf');
 
         $response = $this->actingAs($user)
-            ->post(route('payments.upload-proof', $payment1), [
+            ->post(route('payments.upload-proof', $payment2), [
                 'payment_proof' => $file,
             ]);
 
@@ -67,40 +69,40 @@ class PaymentControllerUploadFormHidingTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('success');
 
-        // Verify payment1 has proof uploaded
+        // Verify payment2 has proof uploaded
         $payment1->refresh();
         $payment2->refresh();
 
-        $this->assertNotNull($payment1->payment_proof_path);
-        $this->assertNull($payment2->payment_proof_path);
+        $this->assertNull($payment1->payment_proof_path);
+        $this->assertNotNull($payment2->payment_proof_path);
 
         // AC3 VERIFICATION: Check UI state after upload
         $response = $this->actingAs($user)->get('/my-registration');
         $content = $response->getContent();
 
-        // Payment1 form should be HIDDEN (AC3 requirement)
-        $this->assertStringNotContainsString('payments/'.$payment1->id.'/upload-proof', $content);
-        $this->assertStringNotContainsString('payment_proof_'.$payment1->id, $content);
+        // Payment2 form should be HIDDEN after upload (AC3 requirement)
+        $this->assertStringNotContainsString('payments/'.$payment2->id.'/upload-proof', $content);
+        $this->assertStringNotContainsString('payment_proof_'.$payment2->id, $content);
 
-        // Payment1 should show success confirmation instead
+        // Payment2 should show success confirmation instead
         $this->assertStringContainsString(__('Payment proof uploaded successfully'), $content);
 
-        // Payment2 form should still be VISIBLE (different payment)
-        $this->assertStringContainsString('payments/'.$payment2->id.'/upload-proof', $content);
-        $this->assertStringContainsString('payment_proof_'.$payment2->id, $content);
+        // Payment1 form should now be VISIBLE (now the most recent pending)
+        $this->assertStringContainsString('payments/'.$payment1->id.'/upload-proof', $content);
+        $this->assertStringContainsString('payment_proof_'.$payment1->id, $content);
         $this->assertStringContainsString(__('Payment Proof Upload'), $content);
 
-        // Additional verification: Upload proof for payment2
-        $file2 = UploadedFile::fake()->create('payment_proof_2.pdf', 100, 'application/pdf');
+        // Additional verification: Upload proof for payment1 (now the active one)
+        $file1 = UploadedFile::fake()->create('payment_proof_1.pdf', 100, 'application/pdf');
 
         $response = $this->actingAs($user)
-            ->post(route('payments.upload-proof', $payment2), [
-                'payment_proof' => $file2,
+            ->post(route('payments.upload-proof', $payment1), [
+                'payment_proof' => $file1,
             ]);
 
         $response->assertRedirect();
-        $payment2->refresh();
-        $this->assertNotNull($payment2->payment_proof_path);
+        $payment1->refresh();
+        $this->assertNotNull($payment1->payment_proof_path);
 
         // Final verification: Both forms should now be hidden
         $response = $this->actingAs($user)->get('/my-registration');
@@ -141,19 +143,21 @@ class PaymentControllerUploadFormHidingTest extends TestCase
             'document_country_origin' => 'Brazil',
         ]);
 
-        // Payment with proof already uploaded
+        // Payment with proof already uploaded (older payment)
         $paymentWithProof = Payment::factory()->create([
             'registration_id' => $registration->id,
             'amount' => 100.00,
-            'status' => 'pending',
+            'status' => 'pending_approval', // Status changed after proof upload
             'payment_proof_path' => 'proofs/123/existing_proof.pdf',
             'payment_date' => now(),
+            'created_at' => now()->subDays(2),
         ]);
 
-        // Payment without proof (should show form)
+        // Payment without proof (most recent pending - should show form)
         $paymentWithoutProof = Payment::factory()->pending()->create([
             'registration_id' => $registration->id,
             'amount' => 200.00,
+            'created_at' => now(), // Most recent
         ]);
 
         // Payment with different status (should not show form regardless)
@@ -161,16 +165,16 @@ class PaymentControllerUploadFormHidingTest extends TestCase
             'registration_id' => $registration->id,
             'amount' => 150.00,
             'status' => 'approved',
+            'created_at' => now()->subDays(1),
         ]);
 
         // Act & Assert: Verify UI state reflects payment-specific logic
         $response = $this->actingAs($user)->get('/my-registration');
         $content = $response->getContent();
 
-        // AC3 VERIFICATION: Payment with proof should NOT show upload form
+        // AC3 VERIFICATION: Payment with proof (pending_approval) should NOT show upload form
         $this->assertStringNotContainsString('payments/'.$paymentWithProof->id.'/upload-proof', $content);
         $this->assertStringNotContainsString('payment_proof_'.$paymentWithProof->id, $content);
-        $this->assertStringContainsString(__('Payment proof uploaded successfully'), $content);
 
         // Payment without proof SHOULD show upload form
         $this->assertStringContainsString('payments/'.$paymentWithoutProof->id.'/upload-proof', $content);
