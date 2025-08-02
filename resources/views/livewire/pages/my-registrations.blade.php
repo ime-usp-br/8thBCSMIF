@@ -280,14 +280,13 @@ new #[Layout('layouts.app')] class extends Component {
                                             // This payment is for a free workshop for a grad student, which is auto-approved.
                                             $isAutoApprovedWorkshopPayment = $isGradStudent && $payment->status === 'approved' && (float) $payment->amount === 0.0 && !$payment->payment_proof_path;
                                             
-                                            $mostRecentPendingPayment = \App\Models\Payment::where('registration_id', $registration->id)
-                                                ->where('status', 'pending')
+                                            $mostRecentPayment = \App\Models\Payment::where('registration_id', $registration->id)
                                                 ->orderBy('created_at', 'desc')
                                                 ->first();
                                                 
                                             $showPaymentUpload = $payment->status === 'pending' 
                                                 && !$payment->payment_proof_path 
-                                                && $mostRecentPendingPayment && $mostRecentPendingPayment->id === $payment->id;
+                                                && $mostRecentPayment && $mostRecentPayment->id === $payment->id;
                                             
                                         @endphp
 
