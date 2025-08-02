@@ -55,7 +55,7 @@ class RegistrationsList extends Component
                 }
             })
             ->when($this->filterPaymentStatus, function ($query, $status) {
-                $query->where('payment_status', $status);
+                $query->where('status', $status);
             })
             ->when($this->filterDateFrom, function ($query, $dateFrom) {
                 $query->whereDate('created_at', '>=', $dateFrom);

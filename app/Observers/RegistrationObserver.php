@@ -12,19 +12,19 @@ class RegistrationObserver
      */
     public function created(Registration $registration): void
     {
-        // Update payment status after creation when related models exist
-        $registration->updatePaymentStatusFromRelatedModels();
+        // Update status after creation when related models exist
+        $registration->updateStatusFromRelatedModels();
     }
 
     /**
      * Handle the Registration "updated" event.
-     * Update payment status if registration category changes.
+     * Update status if registration category changes.
      */
     public function updated(Registration $registration): void
     {
         // If registration category changed, recalculate status
         if ($registration->wasChanged('registration_category_snapshot')) {
-            $registration->updatePaymentStatusFromRelatedModels();
+            $registration->updateStatusFromRelatedModels();
         }
     }
 

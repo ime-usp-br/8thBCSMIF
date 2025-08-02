@@ -18,7 +18,7 @@
 **{{ __('Enrollment Information') }}:**
 {{ __('As an undergraduate student, your tuition fee is zero. Instead of proof of payment, we ask that you submit a valid proof of enrollment.') }}
 @elseif($registration->calculateCorrectTotalFee() > 0)
-**{{ __('Payment Status') }}:** {{ ucfirst(str_replace('_', ' ', $registration->payment_status)) }}
+**{{ __('Status') }}:** {{ ucfirst(str_replace('_', ' ', $registration->status)) }}
 
 @if($registration->document_country_origin === 'Brazil')
 ## {{ __('Payment Instructions') }}

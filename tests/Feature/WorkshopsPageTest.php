@@ -8,6 +8,7 @@ use Tests\TestCase;
 class WorkshopsPageTest extends TestCase
 {
     use RefreshDatabase;
+
     /**
      * Test that the workshops page loads successfully.
      */

@@ -147,19 +147,19 @@ new #[Layout('layouts.app')] class extends Component {
                                         R$ {{ number_format($registration->calculateCorrectTotalFee(), 2, ',', '.') }}
                                     </p>
                                     <p class="text-gray-600 dark:text-gray-400">
-                                        <strong>{{ __('Payment Status') }}:</strong>
+                                        <strong>{{ __('Status') }}:</strong>
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            @if($registration->payment_status === 'pending')
+                                            @if($registration->status === 'pending')
                                                 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
-                                            @elseif($registration->payment_status === 'pending_approval')
+                                            @elseif($registration->status === 'pending_approval')
                                                 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
-                                            @elseif($registration->payment_status === 'approved')
+                                            @elseif($registration->status === 'approved')
                                                 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
                                             @else
                                                 bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300
                                             @endif
                                         ">
-                                            {{ __(ucfirst(str_replace(['_', '-'], ' ', $registration->payment_status))) }}
+                                            {{ __(ucfirst(str_replace(['_', '-'], ' ', $registration->status))) }}
                                         </span>
                                     </p>
                                 </div>

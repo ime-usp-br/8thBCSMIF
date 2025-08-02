@@ -19,7 +19,7 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         $this->withoutVite();
-        
+
         // Ensure no active transactions from previous tests
         try {
             while (DB::transactionLevel() > 0) {

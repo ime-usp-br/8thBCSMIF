@@ -72,7 +72,7 @@ class NewRegistrationNotificationTest extends TestCase
             'full_name' => 'Test Full Name',
             'cpf' => '123.456.789-00',
             'document_country_origin' => 'BR',
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'position' => 'student',
             'affiliation' => 'Test University',
             'dietary_restrictions' => 'vegetarian',

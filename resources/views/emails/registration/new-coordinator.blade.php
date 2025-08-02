@@ -18,7 +18,7 @@
 ## {{ __('Informações Financeiras') }}
 
 **{{ __('Valor Total') }}:** R$ {{ number_format($registration->events->sum('pivot.price_at_registration'), 2, ',', '.') }}  
-**{{ __('Status do Pagamento') }}:** {{ ucfirst(str_replace('_', ' ', $registration->payment_status)) }}
+**{{ __('Status') }}:** {{ ucfirst(str_replace('_', ' ', $registration->status)) }}
 
 ## {{ __('Informações Pessoais') }}
 

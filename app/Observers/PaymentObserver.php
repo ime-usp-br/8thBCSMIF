@@ -64,6 +64,6 @@ class PaymentObserver
         }
 
         // Update the registration status
-        $payment->registration->updatePaymentStatusFromRelatedModels();
+        $payment->registration->updateStatusFromRelatedModels();
     }
 }

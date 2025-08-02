@@ -762,7 +762,7 @@ class EnrollmentProofControllerTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'registration_category_snapshot' => 'undergraduate_student',
-            'payment_status' => 'approved', // Directly approved as free
+            'status' => 'approved', // Directly approved as free
         ]);
 
         // Ensure no payments exist for this registration (taxa R$ 0,00)

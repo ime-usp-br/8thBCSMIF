@@ -39,9 +39,9 @@ class RegistrationController extends Controller
 
     public function updateStatus(Request $request, Registration $registration): RedirectResponse
     {
-        /** @var array{payment_status: string, send_notification?: string} $validated */
+        /** @var array{status: string, send_notification?: string} $validated */
         $validated = $request->validate([
-            'payment_status' => [
+            'status' => [
                 'required',
                 Rule::in([
                     'pending',
@@ -54,21 +54,21 @@ class RegistrationController extends Controller
         ]);
 
         // Store the old status for logging
-        $oldStatus = $registration->payment_status;
-        $newStatus = $validated['payment_status'];
+        $oldStatus = $registration->status;
+        $newStatus = $validated['status'];
 
         // Create log entry with admin info, timestamps, and status change details
         $user = $request->user();
         $adminName = (! empty($user->name)) ? $user->name : ($user->email ?? 'Unknown Admin');
         $timestamp = now()->format('Y-m-d H:i:s');
-        $logEntry = "[{$timestamp}] Payment status changed by {$adminName}: '{$oldStatus}' -> '{$newStatus}'";
+        $logEntry = "[{$timestamp}] Status changed by {$adminName}: '{$oldStatus}' -> '{$newStatus}'";
 
         // Append to existing notes or create new notes
         $existingNotes = $registration->notes ? $registration->notes."\n" : '';
         $updatedNotes = $existingNotes.$logEntry;
 
         $registration->update([
-            'payment_status' => $newStatus,
+            'status' => $newStatus,
             'notes' => $updatedNotes,
         ]);
 
@@ -103,7 +103,7 @@ class RegistrationController extends Controller
         }
 
         return redirect()->route('admin.registrations.show', $registration)
-            ->with('success', __('Payment status updated successfully.'));
+            ->with('success', __('Status updated successfully.'));
     }
 
     public function downloadEnrollmentProof(Registration $registration): BinaryFileResponse|StreamedResponse|Response

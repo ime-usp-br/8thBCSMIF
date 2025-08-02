@@ -30,7 +30,7 @@ class FixOrphanedPayments extends Command
     {
         $this->info('Starting to fix orphaned payments...');
 
-        $registrations = Registration::where('payment_status', 'pending')
+        $registrations = Registration::where('status', 'pending')
             ->whereDoesntHave('payments')
             ->get();
 

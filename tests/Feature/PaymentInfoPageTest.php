@@ -8,6 +8,7 @@ use Tests\TestCase;
 class PaymentInfoPageTest extends TestCase
 {
     use RefreshDatabase;
+
     /**
      * Test that the payment info page loads successfully.
      */

@@ -140,7 +140,7 @@ class MyRegistrationsPageTest extends TestCase
         // Create registration for the user
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'registration_category_snapshot' => 'undergrad_student', // Use specific category
             'participation_format' => 'in-person', // Match fee record
         ]);
@@ -262,7 +262,7 @@ class MyRegistrationsPageTest extends TestCase
         // Create single registration with multiple events and multiple payments
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'registration_category_snapshot' => 'undergrad_student',
             'participation_format' => 'in-person',
         ]);
@@ -354,7 +354,7 @@ class MyRegistrationsPageTest extends TestCase
             'email' => 'john@example.com',
             'nationality' => 'Brazilian',
             'document_country_origin' => 'Brazil',
-            'payment_status' => 'pending',
+            'status' => 'pending',
         ]);
 
         // Attach events to registration with specific prices
@@ -451,7 +451,7 @@ class MyRegistrationsPageTest extends TestCase
             'email' => 'maria.silva@university.br',
             'nationality' => 'Brazilian',
             'document_country_origin' => 'Brazil',
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'registration_category_snapshot' => 'undergrad_student',
             'participation_format' => 'in-person',
         ]);
@@ -1076,7 +1076,7 @@ class MyRegistrationsPageTest extends TestCase
             'user_id' => $user->id,
             'registration_category_snapshot' => 'undergrad_student',
             'document_country_origin' => 'Brazil',
-            'payment_status' => 'free', // No payment needed, directly approved
+            'status' => 'free', // No payment needed, directly approved
         ]);
 
         // Attach free event to registration (R$ 0,00)

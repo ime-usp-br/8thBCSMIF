@@ -25,8 +25,8 @@
                         'cancelled' => __('Cancelled'),
                     ];
                 @endphp
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $statusColors[$registration->payment_status] ?? 'bg-gray-100 text-gray-800' }}">
-                    {{ $statusLabels[$registration->payment_status] ?? $registration->payment_status }}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $statusColors[$registration->status] ?? 'bg-gray-100 text-gray-800' }}">
+                    {{ $statusLabels[$registration->status] ?? $registration->status }}
                 </span>
             </div>
         </div>
@@ -438,8 +438,8 @@
                                         'cancelled' => __('Cancelled'),
                                     ];
                                 @endphp
-                                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium {{ $statusColors[$registration->payment_status] ?? 'bg-gray-100 text-gray-800' }}">
-                                    {{ $statusLabels[$registration->payment_status] ?? $registration->payment_status }}
+                                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium {{ $statusColors[$registration->status] ?? 'bg-gray-100 text-gray-800' }}">
+                                    {{ $statusLabels[$registration->status] ?? $registration->status }}
                                 </span>
                             </div>
                             <div>
@@ -485,28 +485,28 @@
                                     <div class="flex flex-col gap-3">
                                         <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center min-w-0 lg:min-w-96">
                                             <div class="flex-1 min-w-0">
-                                                <label for="payment_status" class="sr-only">{{ __('Payment Status') }}</label>
-                                                <select name="payment_status" id="payment_status" 
+                                                <label for="status" class="sr-only">{{ __('Status') }}</label>
+                                                <select name="status" id="status" 
                                                         class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-usp-blue-pri focus:ring-usp-blue-pri text-sm transition-colors duration-200 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
-                                                    <option value="pending" {{ $registration->payment_status === 'pending' ? 'selected' : '' }}>
+                                                    <option value="pending" {{ $registration->status === 'pending' ? 'selected' : '' }}>
                                                         {{ __('Pending Payment') }}
                                                     </option>
-                                                    <option value="pending_approval" {{ $registration->payment_status === 'pending_approval' ? 'selected' : '' }}>
+                                                    <option value="pending_approval" {{ $registration->status === 'pending_approval' ? 'selected' : '' }}>
                                                         {{ __('Pending BR Proof Approval') }}
                                                     </option>
-                                                    <option value="paid_br" {{ $registration->payment_status === 'paid_br' ? 'selected' : '' }}>
+                                                    <option value="paid_br" {{ $registration->status === 'paid_br' ? 'selected' : '' }}>
                                                         {{ __('Paid (BR)') }}
                                                     </option>
-                                                    <option value="invoice_sent_int" {{ $registration->payment_status === 'invoice_sent_int' ? 'selected' : '' }}>
+                                                    <option value="invoice_sent_int" {{ $registration->status === 'invoice_sent_int' ? 'selected' : '' }}>
                                                         {{ __('Invoice Sent (International)') }}
                                                     </option>
-                                                    <option value="paid_int" {{ $registration->payment_status === 'paid_int' ? 'selected' : '' }}>
+                                                    <option value="paid_int" {{ $registration->status === 'paid_int' ? 'selected' : '' }}>
                                                         {{ __('Paid (International)') }}
                                                     </option>
-                                                    <option value="free" {{ $registration->payment_status === 'free' ? 'selected' : '' }}>
+                                                    <option value="free" {{ $registration->status === 'free' ? 'selected' : '' }}>
                                                         {{ __('Free') }}
                                                     </option>
-                                                    <option value="cancelled" {{ $registration->payment_status === 'cancelled' ? 'selected' : '' }}>
+                                                    <option value="cancelled" {{ $registration->status === 'cancelled' ? 'selected' : '' }}>
                                                         {{ __('Cancelled') }}
                                                     </option>
                                                 </select>

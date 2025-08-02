@@ -193,17 +193,17 @@ class RegistrationControllerTest extends TestCase
     /**
      * AC2: Test that admin.registrations.show page displays payment status update form with dropdown
      */
-    public function test_admin_registration_show_displays_payment_status_update_form(): void
+    public function test_admin_registration_show_displays_status_update_form(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
-        $registration = Registration::factory()->create(['payment_status' => 'pending']);
+        $registration = Registration::factory()->create(['status' => 'pending']);
 
         $response = $this->actingAs($admin)->get(route('admin.registrations.show', $registration));
 
         $response->assertOk();
         $response->assertSee(__('Update Payment Status'));
-        $response->assertSee('name="payment_status"', false);
+        $response->assertSee('name="status"', false);
         $response->assertSee('method="POST"', false);
         $response->assertSee('action="'.route('admin.registrations.update-status', $registration).'"', false);
         $response->assertSee(__('Update Status'));
@@ -216,7 +216,7 @@ class RegistrationControllerTest extends TestCase
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
-        $registration = Registration::factory()->create(['payment_status' => 'pending']);
+        $registration = Registration::factory()->create(['status' => 'pending']);
 
         $response = $this->actingAs($admin)->get(route('admin.registrations.show', $registration));
 
@@ -253,7 +253,7 @@ class RegistrationControllerTest extends TestCase
         $testStatuses = ['pending', 'paid_br', 'paid_int', 'cancelled'];
 
         foreach ($testStatuses as $status) {
-            $registration = Registration::factory()->create(['payment_status' => $status]);
+            $registration = Registration::factory()->create(['status' => $status]);
 
             $response = $this->actingAs($admin)->get(route('admin.registrations.show', $registration));
 
@@ -269,7 +269,7 @@ class RegistrationControllerTest extends TestCase
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
-        $registration = Registration::factory()->create(['payment_status' => 'pending']);
+        $registration = Registration::factory()->create(['status' => 'pending']);
 
         $response = $this->actingAs($admin)->get(route('admin.registrations.show', $registration));
 
@@ -312,7 +312,7 @@ class RegistrationControllerTest extends TestCase
         $admin->assignRole('admin');
 
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br', // Provide valid payment_status to avoid validation errors
+            'status' => 'paid_br', // Provide valid status to avoid validation errors
         ]);
 
         // Should not return 404 (route exists) and should redirect (method exists)
@@ -356,7 +356,7 @@ class RegistrationControllerTest extends TestCase
         $registration = Registration::factory()->create();
 
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br', // Provide valid payment_status to avoid validation errors
+            'status' => 'paid_br', // Provide valid status to avoid validation errors
         ]);
 
         $response->assertStatus(302);
@@ -364,48 +364,48 @@ class RegistrationControllerTest extends TestCase
     }
 
     /**
-     * AC4: Test that updateStatus validates payment_status field is required
+     * AC4: Test that updateStatus validates status field is required
      */
-    public function test_admin_update_status_validates_payment_status_required(): void
+    public function test_admin_update_status_validates_status_required(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
-        $registration = Registration::factory()->create(['payment_status' => 'pending']);
+        $registration = Registration::factory()->create(['status' => 'pending']);
 
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            // No payment_status provided
+            // No status provided
         ]);
 
-        $response->assertSessionHasErrors('payment_status');
+        $response->assertSessionHasErrors('status');
         $response->assertStatus(302);
     }
 
     /**
-     * AC4: Test that updateStatus validates payment_status against allowed values
+     * AC4: Test that updateStatus validates status against allowed values
      */
-    public function test_admin_update_status_validates_payment_status_allowed_values(): void
+    public function test_admin_update_status_validates_status_allowed_values(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
-        $registration = Registration::factory()->create(['payment_status' => 'pending']);
+        $registration = Registration::factory()->create(['status' => 'pending']);
 
         // Test invalid payment status
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'invalid_status',
+            'status' => 'invalid_status',
         ]);
 
-        $response->assertSessionHasErrors('payment_status');
+        $response->assertSessionHasErrors('status');
         $response->assertStatus(302);
 
         // Verify registration status was not changed
         $registration->refresh();
-        $this->assertEquals('pending', $registration->payment_status);
+        $this->assertEquals('pending', $registration->status);
     }
 
     /**
-     * AC4: Test that updateStatus accepts all valid payment_status values
+     * AC4: Test that updateStatus accepts all valid status values
      */
-    public function test_admin_update_status_accepts_all_valid_payment_status_values(): void
+    public function test_admin_update_status_accepts_all_valid_status_values(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
@@ -421,10 +421,10 @@ class RegistrationControllerTest extends TestCase
         ];
 
         foreach ($validStatuses as $status) {
-            $registration = Registration::factory()->create(['payment_status' => 'pending']);
+            $registration = Registration::factory()->create(['status' => 'pending']);
 
             $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-                'payment_status' => $status,
+                'status' => $status,
             ]);
 
             $response->assertSessionHasNoErrors();
@@ -434,40 +434,40 @@ class RegistrationControllerTest extends TestCase
 
             // Verify the status was actually updated in the database
             $registration->refresh();
-            $this->assertEquals($status, $registration->payment_status);
+            $this->assertEquals($status, $registration->status);
         }
     }
 
     /**
-     * AC5: Test that payment_status field is correctly updated in database after successful validation
+     * AC5: Test that status field is correctly updated in database after successful validation
      */
-    public function test_admin_update_status_correctly_updates_payment_status_in_database(): void
+    public function test_admin_update_status_correctly_updates_status_in_database(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
         // Create registration with initial status
-        $registration = Registration::factory()->create(['payment_status' => 'pending']);
+        $registration = Registration::factory()->create(['status' => 'pending']);
 
         // Verify initial status
-        $this->assertEquals('pending', $registration->payment_status);
+        $this->assertEquals('pending', $registration->status);
 
         // Update to a different status
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
         ]);
 
         // Verify response success
         $response->assertSessionHasNoErrors();
         $response->assertStatus(302);
 
-        // Verify the payment_status field was correctly updated in the database
+        // Verify the status field was correctly updated in the database
         $registration->refresh();
-        $this->assertEquals('paid_br', $registration->payment_status);
+        $this->assertEquals('paid_br', $registration->status);
 
         // Test another status change to ensure updates work consistently
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'cancelled',
+            'status' => 'cancelled',
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -475,7 +475,7 @@ class RegistrationControllerTest extends TestCase
 
         // Verify the second update was also correctly applied
         $registration->refresh();
-        $this->assertEquals('cancelled', $registration->payment_status);
+        $this->assertEquals('cancelled', $registration->status);
     }
 
     /**
@@ -485,10 +485,10 @@ class RegistrationControllerTest extends TestCase
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
-        $registration = Registration::factory()->create(['payment_status' => 'pending']);
+        $registration = Registration::factory()->create(['status' => 'pending']);
 
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
         ]);
 
         // Verify redirect to the correct show page
@@ -506,7 +506,7 @@ class RegistrationControllerTest extends TestCase
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
-        $registration = Registration::factory()->create(['payment_status' => 'pending']);
+        $registration = Registration::factory()->create(['status' => 'pending']);
 
         // Simulate the redirect with success message
         $response = $this->actingAs($admin)
@@ -523,11 +523,11 @@ class RegistrationControllerTest extends TestCase
     /**
      * AC7: Test that registration details page reflects the new payment status after update and redirect
      */
-    public function test_admin_registration_show_reflects_new_payment_status_after_update(): void
+    public function test_admin_registration_show_reflects_new_status_after_update(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
-        $registration = Registration::factory()->create(['payment_status' => 'pending']);
+        $registration = Registration::factory()->create(['status' => 'pending']);
 
         // Test all possible status transitions to ensure header reflects all statuses correctly
         $statusTransitions = [
@@ -543,7 +543,7 @@ class RegistrationControllerTest extends TestCase
         foreach ($statusTransitions as $newStatus => $expectedLabel) {
             // Update the payment status
             $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-                'payment_status' => $newStatus,
+                'status' => $newStatus,
             ]);
 
             $response->assertSessionHasNoErrors();
@@ -552,7 +552,7 @@ class RegistrationControllerTest extends TestCase
 
             // Verify database was updated
             $registration->refresh();
-            $this->assertEquals($newStatus, $registration->payment_status);
+            $this->assertEquals($newStatus, $registration->status);
 
             // Visit the show page to verify the new status is reflected
             $response = $this->actingAs($admin)->get(route('admin.registrations.show', $registration));
@@ -596,13 +596,13 @@ class RegistrationControllerTest extends TestCase
         $admin->assignRole('admin');
 
         $registration = Registration::factory()->create([
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'notes' => null,
         ]);
 
         // Update the payment status
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -632,13 +632,13 @@ class RegistrationControllerTest extends TestCase
         $admin->assignRole('admin');
 
         $registration = Registration::factory()->create([
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'notes' => 'Initial note about registration',
         ]);
 
         // First status change
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'pending_approval',
+            'status' => 'pending_approval',
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -653,7 +653,7 @@ class RegistrationControllerTest extends TestCase
 
         // Second status change
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -680,12 +680,12 @@ class RegistrationControllerTest extends TestCase
         $admin->assignRole('admin');
 
         $registration = Registration::factory()->create([
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'notes' => null,
         ]);
 
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -707,12 +707,12 @@ class RegistrationControllerTest extends TestCase
         $admin->assignRole('admin');
 
         $registration = Registration::factory()->create([
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'notes' => null,
         ]);
 
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -734,14 +734,14 @@ class RegistrationControllerTest extends TestCase
         $admin->assignRole('admin');
 
         $registration = Registration::factory()->create([
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'notes' => null,
         ]);
 
         $beforeTime = now();
 
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
         ]);
 
         $afterTime = now();
@@ -769,7 +769,7 @@ class RegistrationControllerTest extends TestCase
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
-        $registration = Registration::factory()->create(['payment_status' => 'pending']);
+        $registration = Registration::factory()->create(['status' => 'pending']);
 
         $response = $this->actingAs($admin)->get(route('admin.registrations.show', $registration));
 
@@ -799,13 +799,13 @@ class RegistrationControllerTest extends TestCase
         ]);
 
         $registration = Registration::factory()->create([
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'user_id' => $participant->id,
             'email' => $participant->email,
         ]);
 
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
             'send_notification' => '1',
         ]);
 
@@ -840,13 +840,13 @@ class RegistrationControllerTest extends TestCase
         ]);
 
         $registration = Registration::factory()->create([
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'user_id' => $participant->id,
             'email' => $participant->email,
         ]);
 
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
             // send_notification not included (unchecked)
         ]);
 
@@ -875,13 +875,13 @@ class RegistrationControllerTest extends TestCase
 
         foreach ($confirmationStatuses as $status) {
             $registration = Registration::factory()->create([
-                'payment_status' => 'pending',
+                'status' => 'pending',
                 'user_id' => $participant->id,
                 'email' => $participant->email,
             ]);
 
             $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-                'payment_status' => $status,
+                'status' => $status,
                 'send_notification' => '1',
             ]);
 
@@ -916,14 +916,14 @@ class RegistrationControllerTest extends TestCase
         ]);
 
         $registration = Registration::factory()->create([
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'user_id' => $participant->id,
             'email' => $participant->email,
         ]);
 
         // Test invalid send_notification value is rejected by validation
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
             'send_notification' => 'invalid_value',
         ]);
 
@@ -950,14 +950,14 @@ class RegistrationControllerTest extends TestCase
         ]);
 
         $registration = Registration::factory()->create([
-            'payment_status' => 'pending_approval',
+            'status' => 'pending_approval',
             'user_id' => $participant->id,
             'email' => $participant->email,
             'full_name' => 'John Doe',
         ]);
 
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
             'send_notification' => '1',
         ]);
 
@@ -983,17 +983,17 @@ class RegistrationControllerTest extends TestCase
      */
     public function test_admin_update_status_blocks_unauthenticated_access(): void
     {
-        $registration = Registration::factory()->create(['payment_status' => 'pending']);
+        $registration = Registration::factory()->create(['status' => 'pending']);
 
         $response = $this->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
         ]);
 
         $response->assertRedirect(route('login.local'));
 
         // Verify registration status was not changed
         $registration->refresh();
-        $this->assertEquals('pending', $registration->payment_status);
+        $this->assertEquals('pending', $registration->status);
     }
 
     /**
@@ -1003,17 +1003,17 @@ class RegistrationControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $user->assignRole('usp_user');
-        $registration = Registration::factory()->create(['payment_status' => 'pending']);
+        $registration = Registration::factory()->create(['status' => 'pending']);
 
         $response = $this->actingAs($user)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
         ]);
 
         $response->assertStatus(403);
 
         // Verify registration status was not changed
         $registration->refresh();
-        $this->assertEquals('pending', $registration->payment_status);
+        $this->assertEquals('pending', $registration->status);
     }
 
     /**
@@ -1037,10 +1037,10 @@ class RegistrationControllerTest extends TestCase
         $initialStatus = 'pending';
 
         foreach ($validStatuses as $targetStatus) {
-            $registration = Registration::factory()->create(['payment_status' => $initialStatus]);
+            $registration = Registration::factory()->create(['status' => $initialStatus]);
 
             $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-                'payment_status' => $targetStatus,
+                'status' => $targetStatus,
             ]);
 
             $response->assertSessionHasNoErrors();
@@ -1050,7 +1050,7 @@ class RegistrationControllerTest extends TestCase
 
             // Verify status change is reflected in database
             $registration->refresh();
-            $this->assertEquals($targetStatus, $registration->payment_status);
+            $this->assertEquals($targetStatus, $registration->status);
         }
     }
 
@@ -1072,13 +1072,13 @@ class RegistrationControllerTest extends TestCase
         ];
 
         foreach ($statusTransitions as $transition) {
-            $registration = Registration::factory()->create(['payment_status' => $transition['from']]);
+            $registration = Registration::factory()->create(['status' => $transition['from']]);
 
             // Verify initial status
-            $this->assertEquals($transition['from'], $registration->payment_status);
+            $this->assertEquals($transition['from'], $registration->status);
 
             $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-                'payment_status' => $transition['to'],
+                'status' => $transition['to'],
             ]);
 
             $response->assertSessionHasNoErrors();
@@ -1086,22 +1086,22 @@ class RegistrationControllerTest extends TestCase
 
             // Verify status change is immediately reflected in database
             $registration->refresh();
-            $this->assertEquals($transition['to'], $registration->payment_status);
+            $this->assertEquals($transition['to'], $registration->status);
 
             // Double-check by re-querying from database
             $freshRegistration = Registration::find($registration->id);
-            $this->assertEquals($transition['to'], $freshRegistration->payment_status);
+            $this->assertEquals($transition['to'], $freshRegistration->status);
         }
     }
 
     /**
-     * AC11: Test that invalid payment_status values fail validation and don't alter status
+     * AC11: Test that invalid status values fail validation and don't alter status
      */
-    public function test_admin_update_status_rejects_invalid_payment_status(): void
+    public function test_admin_update_status_rejects_invalid_status(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
-        $registration = Registration::factory()->create(['payment_status' => 'pending']);
+        $registration = Registration::factory()->create(['status' => 'pending']);
 
         $invalidStatuses = [
             'invalid_status',
@@ -1115,15 +1115,15 @@ class RegistrationControllerTest extends TestCase
 
         foreach ($invalidStatuses as $invalidStatus) {
             $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-                'payment_status' => $invalidStatus,
+                'status' => $invalidStatus,
             ]);
 
-            $response->assertSessionHasErrors('payment_status');
+            $response->assertSessionHasErrors('status');
             $response->assertStatus(302);
 
             // Verify registration status was not changed
             $registration->refresh();
-            $this->assertEquals('pending', $registration->payment_status);
+            $this->assertEquals('pending', $registration->status);
         }
     }
 
@@ -1139,13 +1139,13 @@ class RegistrationControllerTest extends TestCase
         $admin->assignRole('admin');
 
         $registration = Registration::factory()->create([
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'notes' => null,
         ]);
 
         // Test first status change
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -1159,7 +1159,7 @@ class RegistrationControllerTest extends TestCase
 
         // Test second status change to verify log appending
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'cancelled',
+            'status' => 'cancelled',
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -1189,14 +1189,14 @@ class RegistrationControllerTest extends TestCase
         ]);
 
         $registration = Registration::factory()->create([
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'user_id' => $participant->id,
             'email' => $participant->email,
         ]);
 
         // Test that notification is sent when requested
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
             'send_notification' => '1',
         ]);
 
@@ -1213,10 +1213,10 @@ class RegistrationControllerTest extends TestCase
         // Test that notification is NOT sent when not requested
         Mail::fake(); // Reset mail fake
 
-        $registration->update(['payment_status' => 'pending']); // Reset status
+        $registration->update(['status' => 'pending']); // Reset status
 
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
             // send_notification not included (unchecked)
         ]);
 
@@ -1234,7 +1234,7 @@ class RegistrationControllerTest extends TestCase
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
-        $registration = Registration::factory()->create(['payment_status' => 'pending_approval']);
+        $registration = Registration::factory()->create(['status' => 'pending_approval']);
 
         // Create individual payment records with pending_approval status
         $payment1 = $registration->payments()->create([
@@ -1252,7 +1252,7 @@ class RegistrationControllerTest extends TestCase
 
         // Update registration status to paid_br
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -1260,7 +1260,7 @@ class RegistrationControllerTest extends TestCase
 
         // Verify registration status was updated
         $registration->refresh();
-        $this->assertEquals('paid_br', $registration->payment_status);
+        $this->assertEquals('paid_br', $registration->status);
 
         // Verify individual payment records with pending_approval were updated to paid_br
         $payment1->refresh();
@@ -1282,7 +1282,7 @@ class RegistrationControllerTest extends TestCase
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
-        $registration = Registration::factory()->create(['payment_status' => 'pending_approval']);
+        $registration = Registration::factory()->create(['status' => 'pending_approval']);
 
         // Create individual payment records with pending_approval status
         $payment1 = $registration->payments()->create([
@@ -1300,7 +1300,7 @@ class RegistrationControllerTest extends TestCase
 
         // Update registration status to pending (rejection)
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'pending',
+            'status' => 'pending',
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -1308,7 +1308,7 @@ class RegistrationControllerTest extends TestCase
 
         // Verify registration status was updated
         $registration->refresh();
-        $this->assertEquals('pending', $registration->payment_status);
+        $this->assertEquals('pending', $registration->status);
 
         // Verify individual payment records with pending_approval were updated to pending
         $payment1->refresh();
@@ -1330,7 +1330,7 @@ class RegistrationControllerTest extends TestCase
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
-        $registration = Registration::factory()->create(['payment_status' => 'pending']);
+        $registration = Registration::factory()->create(['status' => 'pending']);
 
         // Create individual payment records with pending_approval status
         $payment1 = $registration->payments()->create([
@@ -1347,10 +1347,10 @@ class RegistrationControllerTest extends TestCase
 
         foreach ($statusesToTest as $status) {
             // Reset registration status
-            $registration->update(['payment_status' => 'pending']);
+            $registration->update(['status' => 'pending']);
 
             $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-                'payment_status' => $status,
+                'status' => $status,
             ]);
 
             $response->assertSessionHasNoErrors();
@@ -1358,7 +1358,7 @@ class RegistrationControllerTest extends TestCase
 
             // Verify registration status was updated
             $registration->refresh();
-            $this->assertEquals($status, $registration->payment_status);
+            $this->assertEquals($status, $registration->status);
 
             // Verify individual payment records were NOT affected
             $payment1->refresh();
@@ -1380,7 +1380,7 @@ class RegistrationControllerTest extends TestCase
         $admin->assignRole('admin');
 
         $user = User::factory()->create();
-        $registration = Registration::factory()->for($user)->create(['payment_status' => 'pending_approval']);
+        $registration = Registration::factory()->for($user)->create(['status' => 'pending_approval']);
 
         // Create payment with pending_approval status (blocks modification)
         $payment = $registration->payments()->create([
@@ -1393,7 +1393,7 @@ class RegistrationControllerTest extends TestCase
 
         // Admin updates status to paid_br
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'paid_br',
+            'status' => 'paid_br',
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -1416,7 +1416,7 @@ class RegistrationControllerTest extends TestCase
         $admin->assignRole('admin');
 
         $user = User::factory()->create();
-        $registration = Registration::factory()->for($user)->create(['payment_status' => 'pending_approval']);
+        $registration = Registration::factory()->for($user)->create(['status' => 'pending_approval']);
 
         // Create payment with pending_approval status (blocks modification)
         $payment = $registration->payments()->create([
@@ -1429,7 +1429,7 @@ class RegistrationControllerTest extends TestCase
 
         // Admin updates status to pending (rejection)
         $response = $this->actingAs($admin)->patch(route('admin.registrations.update-status', $registration), [
-            'payment_status' => 'pending',
+            'status' => 'pending',
         ]);
 
         $response->assertSessionHasNoErrors();

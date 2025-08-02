@@ -64,6 +64,6 @@ class EnrollmentProofObserver
         }
 
         // Update the registration status
-        $enrollmentProof->registration->updatePaymentStatusFromRelatedModels();
+        $enrollmentProof->registration->updateStatusFromRelatedModels();
     }
 }
