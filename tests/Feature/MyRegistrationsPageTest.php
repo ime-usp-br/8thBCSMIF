@@ -1225,7 +1225,7 @@ class MyRegistrationsPageTest extends TestCase
         $this->assertStringNotContainsString('payment_proof_'.$payment2->id, $content);
 
         // Test 2: After uploading proof for payment3, it changes to pending_approval
-        // and payment2 becomes the most recent pending payment
+        // Since payment3 is still the most recent chronologically, NO upload form should show
         $payment3->update([
             'status' => 'pending_approval',
             'payment_proof_path' => 'proof3.pdf',
@@ -1235,51 +1235,53 @@ class MyRegistrationsPageTest extends TestCase
         $response = $this->actingAs($user)->get('/my-registration');
         $content = $response->getContent();
 
-        // Now should see upload form for payment2 (now the most recent pending)
-        $this->assertStringContainsString('id="payment_proof_'.$payment2->id.'"', $content);
-
-        // Should NOT see upload forms for payment1 (older) or payment3 (no longer pending)
+        // Should NOT see any upload forms since most recent payment is no longer pending
         $this->assertStringNotContainsString('id="payment_proof_'.$payment1->id.'"', $content);
+        $this->assertStringNotContainsString('id="payment_proof_'.$payment2->id.'"', $content);
         $this->assertStringNotContainsString('id="payment_proof_'.$payment3->id.'"', $content);
 
-        // Test 3: After uploading proof for payment2, only payment1 should allow upload
-        $payment2->update([
-            'status' => 'pending_approval',
-            'payment_proof_path' => 'proof2.pdf',
-            'payment_date' => now(),
+        // Verify no upload forms are present
+        $uploadFormCount = substr_count($content, 'Payment Proof Upload');
+        $this->assertEquals(0, $uploadFormCount, 'No upload forms should be visible when most recent payment is not pending');
+
+        // Test 3: Create a new payment4 that becomes the most recent and should show form
+        $payment4 = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'status' => 'pending',
+            'amount' => 200.00,
+            'payment_proof_path' => null,
+            'created_at' => now(), // Most recent
         ]);
 
         $response = $this->actingAs($user)->get('/my-registration');
         $content = $response->getContent();
 
-        // Refresh payment1 to check its current state
-        $payment1->refresh();
+        // Now should see upload form for payment4 (most recent pending)
+        $this->assertStringContainsString('payment_proof_'.$payment4->id, $content);
 
-        // Verify payment1 is still the only pending payment without proof
-        $this->assertEquals('pending', $payment1->status);
-        $this->assertNull($payment1->payment_proof_path);
-
-        // Now should see upload form for payment1 (now the only pending payment)
-        $this->assertStringContainsString('payment_proof_'.$payment1->id, $content);
-
-        // Should NOT see upload forms for payment2 or payment3 (both no longer pending)
-        $this->assertStringNotContainsString('payment_proof_'.$payment2->id, $content);
-        $this->assertStringNotContainsString('payment_proof_'.$payment3->id, $content);
-
-        // Test 4: After all payments are processed, no upload forms should be visible
-        $payment1->update([
-            'status' => 'approved',
-            'payment_proof_path' => 'proof1.pdf',
-            'payment_date' => now(),
-        ]);
-
-        $response = $this->actingAs($user)->get('/my-registration');
-        $content = $response->getContent();
-
-        // Should NOT see any upload forms
+        // Should NOT see upload forms for older payments, even though payment1 is still pending
         $this->assertStringNotContainsString('payment_proof_'.$payment1->id, $content);
         $this->assertStringNotContainsString('payment_proof_'.$payment2->id, $content);
         $this->assertStringNotContainsString('payment_proof_'.$payment3->id, $content);
-        $this->assertStringNotContainsString('Payment Proof Upload', $content);
+
+        // Test 4: After payment4 gets proof uploaded, no upload forms should be visible
+        $payment4->update([
+            'status' => 'pending_approval',
+            'payment_proof_path' => 'proof4.pdf',
+            'payment_date' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->get('/my-registration');
+        $content = $response->getContent();
+
+        // Should NOT see any upload forms since most recent payment is no longer pending
+        $this->assertStringNotContainsString('payment_proof_'.$payment1->id, $content);
+        $this->assertStringNotContainsString('payment_proof_'.$payment2->id, $content);
+        $this->assertStringNotContainsString('payment_proof_'.$payment3->id, $content);
+        $this->assertStringNotContainsString('payment_proof_'.$payment4->id, $content);
+
+        // Verify no upload forms are present at all
+        $uploadFormCount = substr_count($content, 'Payment Proof Upload');
+        $this->assertEquals(0, $uploadFormCount, 'No upload forms should be visible when most recent payment is not pending');
     }
 }

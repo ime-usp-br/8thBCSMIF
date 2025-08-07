@@ -87,39 +87,56 @@ class PaymentControllerUploadFormHidingTest extends TestCase
         // Payment2 should show success confirmation instead
         $this->assertStringContainsString(__('Payment proof uploaded successfully'), $content);
 
-        // Payment1 form should now be VISIBLE (now the most recent pending)
-        $this->assertStringContainsString('payments/'.$payment1->id.'/upload-proof', $content);
-        $this->assertStringContainsString('payment_proof_'.$payment1->id, $content);
+        // Payment1 form should NOT be visible (payment2 is still the most recent chronologically)
+        $this->assertStringNotContainsString('payments/'.$payment1->id.'/upload-proof', $content);
+        $this->assertStringNotContainsString('payment_proof_'.$payment1->id, $content);
+
+        // No upload forms should be visible since most recent payment is no longer pending
+        $uploadFormCount = substr_count($content, __('Payment Proof Upload'));
+        $this->assertEquals(0, $uploadFormCount, 'No upload forms should be visible when most recent payment is not pending');
+
+        // Create a new payment that becomes the most recent - should show form
+        $payment3 = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 200.00,
+            'created_at' => now()->addMinutes(5), // Most recent
+        ]);
+
+        // Verify payment3 form is now visible (most recent pending)
+        $response = $this->actingAs($user)->get('/my-registration');
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('payments/'.$payment3->id.'/upload-proof', $content);
+        $this->assertStringContainsString('payment_proof_'.$payment3->id, $content);
         $this->assertStringContainsString(__('Payment Proof Upload'), $content);
 
-        // Additional verification: Upload proof for payment1 (now the active one)
-        $file1 = UploadedFile::fake()->create('payment_proof_1.pdf', 100, 'application/pdf');
+        // Payment1 and payment2 forms should still be hidden
+        $this->assertStringNotContainsString('payments/'.$payment1->id.'/upload-proof', $content);
+        $this->assertStringNotContainsString('payments/'.$payment2->id.'/upload-proof', $content);
+
+        // Upload proof for payment3 (the new most recent)
+        $file3 = UploadedFile::fake()->create('payment_proof_3.pdf', 100, 'application/pdf');
 
         $response = $this->actingAs($user)
-            ->post(route('payments.upload-proof', $payment1), [
-                'payment_proof' => $file1,
+            ->post(route('payments.upload-proof', $payment3), [
+                'payment_proof' => $file3,
             ]);
 
         $response->assertRedirect();
-        $payment1->refresh();
-        $this->assertNotNull($payment1->payment_proof_path);
+        $payment3->refresh();
+        $this->assertNotNull($payment3->payment_proof_path);
 
-        // Final verification: Both forms should now be hidden
+        // Final verification: All forms should now be hidden
         $response = $this->actingAs($user)->get('/my-registration');
         $content = $response->getContent();
 
         $this->assertStringNotContainsString('payments/'.$payment1->id.'/upload-proof', $content);
         $this->assertStringNotContainsString('payments/'.$payment2->id.'/upload-proof', $content);
-        $this->assertStringNotContainsString('payment_proof_'.$payment1->id, $content);
-        $this->assertStringNotContainsString('payment_proof_'.$payment2->id, $content);
+        $this->assertStringNotContainsString('payments/'.$payment3->id.'/upload-proof', $content);
 
-        // Both should show success messages
-        // Verify both payments show success confirmation (allowing for flash message)
-        $this->assertStringContainsString(__('Payment proof uploaded successfully'), $content);
-
-        // More important: verify that forms are properly hidden for both payments
-        // which is the main AC3 requirement (payment-specific form hiding)
-        $this->assertTrue(true, 'Both payments have proofs uploaded and forms are hidden correctly');
+        // No upload forms should be visible
+        $uploadFormCount = substr_count($content, __('Payment Proof Upload'));
+        $this->assertEquals(0, $uploadFormCount, 'No upload forms should be visible when most recent payment has proof uploaded');
 
     }
 
