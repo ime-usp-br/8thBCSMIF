@@ -9,7 +9,7 @@ A área administrativa poderia ser dividida em quatro seções principais:
 
 ---
 
-### **1. Dashboard Principal (`/admin/dashboard`) - (Nova Proposta)**
+### **1. Dashboard Principal (`/admin/dashboard`)**
 
 Esta seria a página inicial do admin, oferecendo uma visão rápida do status do evento.
 
@@ -27,7 +27,7 @@ Esta seria a página inicial do admin, oferecendo uma visão rápida do status d
 
 ---
 
-### **2. Gerenciamento de Inscrições (`/admin/registrations`) - (Existente e Aprimorado)**
+### **2. Gerenciamento de Inscrições (`/admin/registrations`)**
 
 Esta é a seção operacional principal, onde a maior parte do trabalho de validação acontece.
 
@@ -40,38 +40,49 @@ Seu código já possui uma base excelente para isso com o `AdminRegistrationCont
     *   **Filtros (Já implementados):** Manter e talvez aprimorar os filtros de busca por nome/email, evento, status de pagamento.
     *   **Ações Rápidas na Linha:** Um botão de "Detalhes" que leva à página de visualização completa.
 
-#### **2.2. Tela de Detalhes da Inscrição (`/admin/registrations/{registration}`)**
+#### **2.2. Tela de Detalhes da Inscrição (`/admin/registrations/{registration}`) - (Reforma Proposta)**
 
-Esta é a tela central para validação. O seu `RegistrationController@show` já integra a gestão de comprovantes de matrícula, o que é ótimo. Vamos projetar a interface:
+Propomos uma refatoração completa desta tela para resolver a confusão atual e otimizar o fluxo de validação. A ideia é adotar um layout claro de duas colunas, separando a visualização de dados das ações interativas.
 
-*   **Layout:** Uma tela dividida em duas ou três colunas.
-    *   **Coluna Principal (Esquerda):** Todas as informações da inscrição, agrupadas por seções (Dados Pessoais, Contato, Profissional, etc.), exatamente como no formulário.
-    *   **Coluna de Ações (Direita):** Painéis interativos para validação.
+*   **Layout Proposto:** Uma tela dividida.
+    *   **Coluna Principal (Esquerda - 70% da largura):** Dedicada exclusivamente à **visualização dos dados do participante**. Para evitar poluição visual, as informações seriam organizadas em seções expansíveis (formato acordeão), como:
+        *   Informações Pessoais (Nome, Nacionalidade, Gênero)
+        *   Detalhes de Contato (Email, Telefone, Endereço)
+        *   Detalhes de Identificação (CPF, Passaporte)
+        *   Detalhes Profissionais (Afiliação, Cargo, Membro ABE)
+        *   Detalhes da Participação (Datas, Formato, Transporte)
+        *   Informações Adicionais (Restrições Alimentares, Contato de Emergência)
+    *   **Coluna de Ações (Direita - 30% da largura):** Um "hub" de status e ações, contendo painéis interativos.
 
-*   **Painel de Ações (Coluna Direita):**
-    *   **Painel de Comprovantes de Matrícula (Visível apenas para estudantes):**
+*   **Painéis de Ação (Coluna Direita):**
+    *   **Painel de Status Geral (Novo):**
+        *   No topo, um card de destaque exibindo o **status geral da inscrição** (`pending`, `approved`, `rejected`) com uma badge colorida.
+        *   Exibe a categoria do participante (`registration_category_snapshot`).
+        *   Pode incluir links de ação rápida como "Enviar E-mail ao Participante".
+
+    *   **Painel de Comprovantes de Matrícula (Aprimorado, visível apenas para estudantes):**
         *   **Status Atual:** "Pendente", "Aprovado" ou "Rejeitado".
-        *   **Visualizador:** Um iframe para visualizar o PDF ou uma `<img>` para imagens, sem precisar baixar.
-        *   **Ações:**
-            *   Botão verde **"Aprovar Matrícula"**. Ao clicar, o status muda e o usuário é notificado (opcional).
-            *   Botão vermelho **"Rejeitar Matrícula"**. Ao clicar, abre um pequeno modal para o admin inserir o **motivo da rejeição**, que será enviado ao participante.
-        *   **Informações:** Link para download, data do upload, nome do arquivo.
-        *   _Backend: Isso já está coberto pelas suas rotas `approve-enrollment-proof` e `reject-enrollment-proof`._
+        *   **Visualizador:** Um `<iframe>` ou `<img>` para visualizar o documento diretamente na tela, sem necessidade de download.
+        *   **Ações (Livewire/AJAX):**
+            *   Botão verde **"Aprovar Matrícula"**: Atualiza o status sem recarregar a página.
+            *   Botão vermelho **"Rejeitar Matrícula"**: Abre um modal para inserir o motivo, que será salvo e enviado ao participante.
+        *   **Informações:** Link para download, data do upload.
+        *   _Backend: Conecta-se às rotas `approve-enrollment-proof` e `reject-enrollment-proof`._
 
-    *   **Painel de Histórico de Pagamentos:**
-        *   Uma lista de todos os pagamentos associados a esta inscrição (lembre-se, um usuário pode modificar a inscrição e gerar novos pagamentos).
-        *   Para cada pagamento:
+    *   **Painel de Histórico de Pagamentos (Aprimorado):**
+        *   Uma lista de **todos os pagamentos** associados a esta inscrição (essencial para o novo fluxo de modificações).
+        *   Para cada pagamento individual na lista:
             *   **Valor:** R$ XXX,XX
-            *   **Status:** "Pendente", "Aguardando Comprovante", "Aprovado", "Rejeitado".
-            *   **Visualizador de Comprovante:** Se um comprovante foi enviado, um iframe/imagem para visualização.
-            *   **Ações (se comprovante enviado):**
-                *   Botão **"Aprovar Pagamento"**.
+            *   **Status:** "Pendente", "Aguardando Comprovante", "Aprovado", "Rejeitado" (com badge colorida).
+            *   **Visualizador de Comprovante:** Se um comprovante foi enviado, um link para abri-lo no visualizador de documentos.
+            *   **Ações por Pagamento (se comprovante enviado):**
+                *   Botão **"Aprovar Pagamento"**: Age sobre este pagamento específico.
                 *   Botão **"Rejeitar Pagamento"** (com modal para motivo).
-        *   _Backend: Isso se conecta ao seu `RegistrationController@updateStatus`._
+        *   _Backend: Conecta-se à lógica de atualização de status do `Payment`, que por sua vez atualiza o status geral da `Registration`._
 
 ---
 
-### **3. Relatórios e Exportações (`/admin/reports`) - (Existente e a ser expandido)**
+### **3. Relatórios e Exportações (`/admin/reports`)**
 
 Seu `ReportsController` já é o lugar perfeito para isso. Vamos adicionar a funcionalidade das listas de ônibus.
 
@@ -98,7 +109,7 @@ Seu `ReportsController` já é o lugar perfeito para isso. Vamos adicionar a fun
 
 ---
 
-### **4. Ferramentas do Evento (`/admin/tools`) - (Nova Proposta)**
+### **4. Ferramentas do Evento (`/admin/tools`)**
 
 #### **4.1. Geração de Certificados (`/admin/tools/certificates`)**
 
@@ -124,7 +135,7 @@ Este é um módulo mais complexo, mas o fluxo pode ser o seguinte:
 
 ### **Resumo e Próximos Passos Sugeridos**
 
-1.  **Aprimorar a Tela de Detalhes da Inscrição:** Esta é a prioridade, pois é o coração da validação. A maior parte do trabalho aqui é de frontend (Blade/Livewire/Alpine), pois o backend já tem as ações de aprovação/rejeição.
+1.  **Refatorar a Tela de Detalhes da Inscrição:** Esta é a prioridade máxima para resolver a confusão da interface e otimizar o fluxo de trabalho de validação. A maior parte do trabalho aqui é de frontend (Blade/Livewire/Alpine), pois o backend já tem as ações de aprovação/rejeição.
 2.  **Construir a Página de Relatório de Transporte:** É uma funcionalidade relativamente simples, com grande valor prático. Requer uma nova rota, um método no `ReportsController`, uma view e a lógica de exportação.
 3.  **Desenvolver o Módulo de Certificados:** Por ser mais complexo, pode ser a última etapa. Requer pesquisa e implementação de uma biblioteca de manipulação de PDF.
-4.  **Criar o Dashboard Administrativo:** Por último, criar a página inicial do admin para unificar o acesso e fornecer uma visão geral rápida.
+4.  **Criar o Dashboard Administrativo:** (Em andamento via Issue #89) Criar a página inicial do admin para unificar o acesso e fornecer uma visão geral rápida.

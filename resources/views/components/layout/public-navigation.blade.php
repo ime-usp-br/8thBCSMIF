@@ -64,16 +64,19 @@
                         </x-slot>
 
                         <x-slot name="content">
-                            <x-dropdown-link :href="route('dashboard')">
-                                {{ __('Dashboard') }}
-                            </x-dropdown-link>
                             <x-dropdown-link :href="route('profile')">
                                 {{ __('Profile') }}
                             </x-dropdown-link>
 
                             @if(auth()->user() && auth()->user()->hasRole('admin'))
+                                <x-dropdown-link :href="route('admin.dashboard')">
+                                    {{ __('Dashboard') }}
+                                </x-dropdown-link>
                                 <x-dropdown-link :href="route('admin.registrations.index')">
                                     {{ __('Registrations') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.reports.index')">
+                                    {{ __('Reports') }}
                                 </x-dropdown-link>
                             @endif
 
@@ -146,9 +149,6 @@
                             {{ __('Sign Up') }}
                         </x-responsive-nav-link>
                     @endif
-                    <x-responsive-nav-link :href="route('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('registrations.my')" :active="request()->routeIs('registrations.my')">
                         {{ __('My Registration') }}
                     </x-responsive-nav-link>
@@ -156,8 +156,14 @@
                         {{ __('Profile') }}
                     </x-responsive-nav-link>
                     @if(auth()->user() && auth()->user()->hasRole('admin'))
+                        <x-responsive-nav-link :href="route('admin.dashboard')">
+                            {{ __('Dashboard') }}
+                        </x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.registrations.index')">
                             {{ __('Registrations') }}
+                        </x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('admin.reports.index')">
+                            {{ __('Reports') }}
                         </x-responsive-nav-link>
                     @endif
                     <form method="POST" action="{{ route('logout') }}" class="w-full">

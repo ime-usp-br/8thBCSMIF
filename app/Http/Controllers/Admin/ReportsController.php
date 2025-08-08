@@ -178,14 +178,14 @@ class ReportsController extends Controller
         $graduateStudents = Payment::where('status', 'approved')
             ->where('amount', '0.00')
             ->whereHas('registration', function ($query) {
-                $query->where('registration_type', 'graduate_student');
+                $query->where('registration_category_snapshot', 'grad_student');
             })
             ->count();
 
         $workshopRegistrations = Payment::where('status', 'approved')
             ->where('amount', '0.00')
             ->whereHas('events', function ($query) {
-                $query->where('type', 'workshop');
+                $query->where('is_main_conference', false);
             })
             ->count();
 

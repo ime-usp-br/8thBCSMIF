@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\RegistrationController as AdminRegistrationController;
 use App\Http\Controllers\Admin\ReportsController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\EnrollmentProofController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RegistrationController;
@@ -87,6 +88,11 @@ Volt::route('my-registration', 'pages.my-registrations')
 Volt::route('my-registration/modify', 'pages.registration-modification')
     ->middleware(['auth', 'verified'])
     ->name('registrations.modify');
+
+// Admin dashboard - main entry point for admin interface
+Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
+    ->middleware(['auth', 'role:admin'])
+    ->name('admin.dashboard');
 
 // Admin routes for registration management
 Route::prefix('admin/registrations')
