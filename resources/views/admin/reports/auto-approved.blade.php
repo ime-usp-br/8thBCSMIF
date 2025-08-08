@@ -131,20 +131,20 @@
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                    {{ ucfirst(str_replace('_', ' ', $payment->registration->registration_type)) }}
+                                                    {{ ucfirst(str_replace('_', ' ', $payment->registration->registration_category_snapshot)) }}
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                                                 <div class="flex flex-wrap gap-1">
                                                     @forelse($payment->events as $event)
                                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                                                              {{ $event->type === 'workshop' ? 'bg-green-100 text-green-800' : 'bg-usp-blue-sec/20 text-usp-blue-pri' }}">
+                                                              {{ !$event->is_main_conference ? 'bg-green-100 text-green-800' : 'bg-usp-blue-sec/20 text-usp-blue-pri' }}">
                                                             {{ $event->code }}
                                                         </span>
                                                     @empty
                                                         @forelse($payment->registration->events as $event)
                                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                                                                  {{ $event->type === 'workshop' ? 'bg-green-100 text-green-800' : 'bg-usp-blue-sec/20 text-usp-blue-pri' }}">
+                                                                  {{ !$event->is_main_conference ? 'bg-green-100 text-green-800' : 'bg-usp-blue-sec/20 text-usp-blue-pri' }}">
                                                                 {{ $event->code }}
                                                             </span>
                                                         @empty
@@ -191,20 +191,20 @@
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            {{ ucfirst(str_replace('_', ' ', $payment->registration->registration_type)) }}
+                                            {{ ucfirst(str_replace('_', ' ', $payment->registration->registration_category_snapshot)) }}
                                         </span>
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">
                                         <div class="flex flex-wrap gap-1">
                                             @forelse($payment->events as $event)
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                                                      {{ $event->type === 'workshop' ? 'bg-green-100 text-green-800' : 'bg-usp-blue-sec/20 text-usp-blue-pri' }}">
+                                                      {{ !$event->is_main_conference ? 'bg-green-100 text-green-800' : 'bg-usp-blue-sec/20 text-usp-blue-pri' }}">
                                                     {{ $event->code }}
                                                 </span>
                                             @empty
                                                 @forelse($payment->registration->events as $event)
                                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                                                          {{ $event->type === 'workshop' ? 'bg-green-100 text-green-800' : 'bg-usp-blue-sec/20 text-usp-blue-pri' }}">
+                                                          {{ !$event->is_main_conference ? 'bg-green-100 text-green-800' : 'bg-usp-blue-sec/20 text-usp-blue-pri' }}">
                                                         {{ $event->code }}
                                                     </span>
                                                 @empty

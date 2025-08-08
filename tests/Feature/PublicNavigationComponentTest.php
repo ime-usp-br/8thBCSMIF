@@ -153,6 +153,7 @@ class PublicNavigationComponentTest extends TestCase
 
         // Verify logout functionality for authenticated users
         $this->assertStringContainsString('route(\'logout\')', $componentContent);
-        $this->assertStringContainsString('route(\'dashboard\')', $componentContent);
+        // Dashboard is now only for admin users
+        $this->assertStringContainsString('route(\'admin.dashboard\')', $componentContent);
     }
 }

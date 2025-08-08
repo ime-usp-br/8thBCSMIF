@@ -5,11 +5,21 @@ namespace Tests\Feature;
 use App\Models\Registration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class NavigationConditionalVisibilityTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Create roles
+        Role::create(['name' => 'admin', 'guard_name' => 'web']);
+        Role::create(['name' => 'usp_user', 'guard_name' => 'web']);
+    }
 
     /**
      * Create a user with a registration to avoid middleware redirects
@@ -60,11 +70,19 @@ class NavigationConditionalVisibilityTest extends TestCase
         $response->assertOk();
         $response->assertDontSee(__('Dashboard'));
 
-        // Test as authenticated user - should see authenticated links
+        // Test as authenticated user - should see authenticated links but NOT regular dashboard
         $user = $this->createUserWithRegistration();
         $response = $this->actingAs($user)->get('/');
         $response->assertOk();
-        $response->assertSee(__('Dashboard'));
+        $response->assertDontSee(__('Dashboard')); // Regular users don't see dashboard
+        $response->assertSee(__('Log Out'));
+
+        // Test as admin user - should see admin dashboard
+        $admin = $this->createUserWithRegistration();
+        $admin->assignRole('admin');
+        $response = $this->actingAs($admin)->get('/');
+        $response->assertOk();
+        $response->assertSee(__('Dashboard')); // Admin users see dashboard
         $response->assertSee(__('Log Out'));
     }
 
@@ -109,7 +127,15 @@ class NavigationConditionalVisibilityTest extends TestCase
         // Test the register-event page itself where user can see Sign Up functionality
         $response = $this->actingAs($user)->get('/register-event');
         $response->assertOk();
-        $response->assertSee(__('Dashboard'));
+        $response->assertDontSee(__('Dashboard')); // Regular users don't see dashboard
+        $response->assertSee(__('Log Out'));
+
+        // Test admin user on register-event page
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $response = $this->actingAs($admin)->get('/register-event');
+        $response->assertOk();
+        $response->assertSee(__('Dashboard')); // Admin users see dashboard
         $response->assertSee(__('Log Out'));
 
         // Should NOT see guest-only links

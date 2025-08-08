@@ -64,11 +64,14 @@ new class extends Component
                         </x-dropdown-link>
 
                         @if(auth()->user() && auth()->user()->hasRole('admin'))
+                            <x-dropdown-link :href="route('admin.dashboard')" wire:navigate>
+                                {{ __('Dashboard') }}
+                            </x-dropdown-link>
                             <x-dropdown-link :href="route('admin.registrations.index')" wire:navigate>
                                 {{ __('Registrations') }}
                             </x-dropdown-link>
-                            <x-dropdown-link :href="route('admin.enrollment-proofs.index')" wire:navigate>
-                                {{ __('Enrollment Proofs') }}
+                            <x-dropdown-link :href="route('admin.reports.index')" wire:navigate>
+                                {{ __('Reports') }}
                             </x-dropdown-link>
                         @endif
 
@@ -121,8 +124,14 @@ new class extends Component
                 </x-responsive-nav-link>
 
                 @if(auth()->user() && auth()->user()->hasRole('admin'))
+                    <x-responsive-nav-link :href="route('admin.dashboard')" wire:navigate>
+                        {{ __('Dashboard') }}
+                    </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.registrations.index')" wire:navigate>
                         {{ __('Registrations') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.reports.index')" wire:navigate>
+                        {{ __('Reports') }}
                     </x-responsive-nav-link>
                 @endif
 
