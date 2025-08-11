@@ -7,10 +7,11 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
- * Registrations by Category Widget Component
+ * Registrations by Category Widget Component (Non-Critical - Progressive Loading)
  *
  * Displays a breakdown of registrations by category (undergrad, grad, professor, etc.)
  * with a visual pie chart representation.
+ * Optimized for progressive loading with 1.5s delay.
  */
 class RegistrationsByCategory extends Component
 {
@@ -20,6 +21,11 @@ class RegistrationsByCategory extends Component
      * @var array<int, array{category: string, label: string, count: int, color: string}>
      */
     public array $data = [];
+
+    /**
+     * Loading state for progressive loading
+     */
+    public bool $isLoading = true;
 
     /**
      * Category display names mapping
@@ -48,11 +54,21 @@ class RegistrationsByCategory extends Component
     ];
 
     /**
-     * Mount the component and load data
+     * Mount the component - start with loading state (progressive loading)
      */
-    public function mount(DashboardMetricService $metricsService): void
+    public function mount(): void
+    {
+        // Non-critical metric - will be loaded progressively via JavaScript
+        $this->isLoading = true;
+    }
+
+    /**
+     * Load data progressively (called by frontend after delay)
+     */
+    public function loadProgressively(DashboardMetricService $metricsService): void
     {
         $this->loadData($metricsService);
+        $this->isLoading = false;
     }
 
     /**

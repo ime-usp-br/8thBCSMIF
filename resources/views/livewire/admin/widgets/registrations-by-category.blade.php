@@ -1,4 +1,6 @@
-<div class="bg-white overflow-hidden shadow rounded-lg">
+<div class="bg-white overflow-hidden shadow rounded-lg" 
+     x-data="{ loaded: false }"
+     x-init="setTimeout(() => { loaded = true; $wire.loadProgressively(); }, 1500)">
     <div class="px-4 py-5 sm:p-6">
         <div class="flex items-center mb-4">
             <div class="flex-shrink-0">
@@ -16,7 +18,30 @@
             </div>
         </div>
 
-        @if(empty($data))
+        @if($isLoading)
+            {{-- Loading State with Skeleton --}}
+            <div class="animate-pulse space-y-3">
+                @for($i = 0; $i < 4; $i++)
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="h-4 bg-gray-300 rounded w-1/3"></div>
+                                <div class="h-4 bg-gray-300 rounded w-16"></div>
+                            </div>
+                            <div class="mt-1 w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-gray-300 h-2 rounded-full w-{{ rand(20, 80) }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                @endfor
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <div class="flex justify-between text-sm">
+                        <div class="h-4 bg-gray-300 rounded w-12"></div>
+                        <div class="h-4 bg-gray-300 rounded w-16"></div>
+                    </div>
+                </div>
+            </div>
+        @elseif(empty($data))
             <div class="text-center py-8 text-gray-500">
                 {{ __('No registration data available') }}
             </div>
