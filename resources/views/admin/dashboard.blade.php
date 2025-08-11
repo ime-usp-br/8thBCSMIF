@@ -159,45 +159,10 @@
                     </div>
                 </div>
 
-                <!-- Recent Activity Feed Placeholder -->
+                <!-- Recent Activity Feed -->
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            {{ __('Recent Activity') }}
-                        </h3>
-                        <div class="space-y-3">
-                            <div class="flex items-center text-sm">
-                                <div class="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                                <span class="text-gray-600 dark:text-gray-400">{{ __('New registration submitted') }}</span>
-                                <span class="ml-auto text-xs text-gray-500">{{ __('2 min ago') }}</span>
-                            </div>
-                            <div class="flex items-center text-sm">
-                                <div class="flex-shrink-0 w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                                <span class="text-gray-600 dark:text-gray-400">{{ __('Payment proof approved') }}</span>
-                                <span class="ml-auto text-xs text-gray-500">{{ __('5 min ago') }}</span>
-                            </div>
-                            <div class="flex items-center text-sm">
-                                <div class="flex-shrink-0 w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                                <span class="text-gray-600 dark:text-gray-400">{{ __('Enrollment proof uploaded') }}</span>
-                                <span class="ml-auto text-xs text-gray-500">{{ __('12 min ago') }}</span>
-                            </div>
-                            <div class="flex items-center text-sm">
-                                <div class="flex-shrink-0 w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
-                                <span class="text-gray-600 dark:text-gray-400">{{ __('Workshop registration') }}</span>
-                                <span class="ml-auto text-xs text-gray-500">{{ __('18 min ago') }}</span>
-                            </div>
-                            <div class="flex items-center text-sm">
-                                <div class="flex-shrink-0 w-2 h-2 bg-red-500 rounded-full mr-3"></div>
-                                <span class="text-gray-600 dark:text-gray-400">{{ __('Payment proof rejected') }}</span>
-                                <span class="ml-auto text-xs text-gray-500">{{ __('25 min ago') }}</span>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <a href="{{ route('admin.registrations.index') }}" 
-                               class="text-usp-blue-pri hover:text-usp-blue-pri/80 text-sm font-medium">
-                                {{ __('View all activities') }} →
-                            </a>
-                        </div>
+                        <livewire:admin.recent-activity-feed />
                     </div>
                 </div>
             </div>
