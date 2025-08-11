@@ -18,14 +18,19 @@ class VerifyEmailController extends Controller
 
         assert($user instanceof \App\Models\User);
 
+        // Determine redirect route based on user role
+        $redirectRoute = $user->hasRole('admin')
+            ? route('admin.dashboard', absolute: false)
+            : route('registrations.my', absolute: false);
+
         if ($user->hasVerifiedEmail()) {
-            return redirect()->intended(route('registrations.my', absolute: false).'?verified=1');
+            return redirect()->intended($redirectRoute.'?verified=1');
         }
 
         if ($user->markEmailAsVerified()) {
             event(new Verified($user));
         }
 
-        return redirect()->intended(route('registrations.my', absolute: false).'?verified=1');
+        return redirect()->intended($redirectRoute.'?verified=1');
     }
 }

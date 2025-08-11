@@ -15,6 +15,11 @@
 
     <div class="py-6 sm:py-8 lg:py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+            {{-- Breadcrumb Navigation --}}
+            <x-admin.breadcrumbs :breadcrumbs="[
+                ['label' => __('Dashboard'), 'url' => '#']
+            ]" />
+            
             {{-- Main dashboard content --}}
             <main id="main-dashboard-content" role="main" aria-label="{{ __('Admin Dashboard Main Content') }}" class="space-y-6">
             

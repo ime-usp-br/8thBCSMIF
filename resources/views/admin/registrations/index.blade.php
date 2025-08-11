@@ -7,6 +7,12 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            {{-- Breadcrumb Navigation --}}
+            <x-admin.breadcrumbs :breadcrumbs="[
+                ['label' => __('Dashboard'), 'url' => route('admin.dashboard')],
+                ['label' => __('Registrations'), 'url' => '#']
+            ]" />
+            
             <livewire:admin.registrations-list />
         </div>
     </div>
