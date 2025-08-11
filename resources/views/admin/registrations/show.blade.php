@@ -29,6 +29,13 @@
     <div class="py-6 sm:py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {{-- Success messages are handled by the global layout --}}
+            {{-- Breadcrumb Navigation --}}
+            <x-admin.breadcrumbs :breadcrumbs="[
+                ['label' => __('Dashboard'), 'url' => route('admin.dashboard')],
+                ['label' => __('Registrations'), 'url' => route('admin.registrations.index')],
+                ['label' => __('Registration #:id', ['id' => $registration->id]), 'url' => '#']
+            ]" />
+            
             <!-- Back to List Button -->
             <div class="mb-6">
                 <a href="{{ route('admin.registrations.index') }}" 

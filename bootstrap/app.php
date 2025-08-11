@@ -23,7 +23,16 @@ return Application::configure(basePath: dirname(__DIR__))
             return route('login.local');
         });
 
-        $middleware->redirectUsersTo(fn (Request $request) => route('registrations.my'));
+        // Redirect authenticated users based on their role
+        $middleware->redirectUsersTo(function (Request $request) {
+            $user = $request->user();
+
+            if ($user instanceof \App\Models\User && $user->hasRole('admin')) {
+                return route('admin.dashboard');
+            }
+
+            return route('registrations.my');
+        });
 
         // Register Spatie permission middleware aliases
         $middleware->alias([

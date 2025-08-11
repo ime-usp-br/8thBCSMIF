@@ -69,15 +69,24 @@
                             </x-dropdown-link>
 
                             @if(auth()->user() && auth()->user()->hasRole('admin'))
-                                <x-dropdown-link :href="route('admin.dashboard')">
-                                    {{ __('Dashboard') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('admin.registrations.index')">
-                                    {{ __('Registrations') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('admin.reports.index')">
-                                    {{ __('Reports') }}
-                                </x-dropdown-link>
+                                <div class="border-t border-gray-100 dark:border-gray-600"></div>
+                                <div class="py-1">
+                                    <div class="px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                                        {{ __('Admin Panel') }}
+                                    </div>
+                                    <x-dropdown-link :href="route('admin.dashboard')" class="flex items-center">
+                                        <svg class="w-4 h-4 mr-2 text-usp-blue-pri" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2V7zm0 0a2 2 0 012-2h6l2 2h6a2 2 0 012 2v2M7 13h10M7 17h4" />
+                                        </svg>
+                                        <span class="font-medium text-usp-blue-pri">{{ __('Dashboard') }}</span>
+                                    </x-dropdown-link>
+                                    <x-dropdown-link :href="route('admin.registrations.index')">
+                                        {{ __('Registrations') }}
+                                    </x-dropdown-link>
+                                    <x-dropdown-link :href="route('admin.reports.index')">
+                                        {{ __('Reports') }}
+                                    </x-dropdown-link>
+                                </div>
                             @endif
 
                             <!-- Authentication -->
@@ -156,7 +165,15 @@
                         {{ __('Profile') }}
                     </x-responsive-nav-link>
                     @if(auth()->user() && auth()->user()->hasRole('admin'))
-                        <x-responsive-nav-link :href="route('admin.dashboard')">
+                        <div class="pt-2 pb-1 border-t border-gray-200 dark:border-gray-600">
+                            <div class="px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                                {{ __('Admin Panel') }}
+                            </div>
+                        </div>
+                        <x-responsive-nav-link :href="route('admin.dashboard')" class="flex items-center font-medium text-usp-blue-pri">
+                            <svg class="w-4 h-4 mr-3 text-usp-blue-pri" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2V7zm0 0a2 2 0 012-2h6l2 2h6a2 2 0 012 2v2M7 13h10M7 17h4" />
+                            </svg>
                             {{ __('Dashboard') }}
                         </x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.registrations.index')">

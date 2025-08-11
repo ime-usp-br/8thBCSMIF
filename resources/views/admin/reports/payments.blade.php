@@ -13,6 +13,12 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            {{-- Breadcrumb Navigation --}}
+            <x-admin.breadcrumbs :breadcrumbs="[
+                ['label' => __('Dashboard'), 'url' => route('admin.dashboard')],
+                ['label' => __('Reports'), 'url' => route('admin.reports.index')],
+                ['label' => __('Payments'), 'url' => '#']
+            ]" />
             
             <!-- Statistics Overview -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
