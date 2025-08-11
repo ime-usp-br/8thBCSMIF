@@ -94,7 +94,7 @@ class DashboardMetricService
     }
 
     /**
-     * Get revenue metrics
+     * Get revenue metrics - optimized with single query
      *
      * @return array{confirmed: float, pending: float, total: float}
      */
@@ -102,24 +102,33 @@ class DashboardMetricService
     {
         /** @phpstan-ignore-next-line */
         return Cache::remember('dashboard.revenue', self::CACHE_TTL * 60, function (): array {
-            $confirmedRevenue = Payment::where('status', Payment::STATUS_APPROVED)
-                ->sum('amount');
-
-            $pendingRevenue = Payment::whereIn('status', [
+            // Optimized: Single query with conditional aggregation
+            $result = Payment::selectRaw('
+                SUM(CASE WHEN status = ? THEN amount ELSE 0 END) as confirmed,
+                SUM(CASE WHEN status IN (?, ?) THEN amount ELSE 0 END) as pending,
+                SUM(amount) as total
+            ', [
+                Payment::STATUS_APPROVED,
                 Payment::STATUS_PENDING,
                 Payment::STATUS_PENDING_APPROVAL,
-            ])->sum('amount');
+            ])->first();
+
+            $confirmedValue = $result->confirmed ?? 0;
+            $pendingValue = $result->pending ?? 0;
+            
+            $confirmed = is_numeric($confirmedValue) ? (float) $confirmedValue : 0.0;
+            $pending = is_numeric($pendingValue) ? (float) $pendingValue : 0.0;
 
             return [
-                'confirmed' => (float) $confirmedRevenue,
-                'pending' => (float) $pendingRevenue,
-                'total' => (float) ($confirmedRevenue + $pendingRevenue),
+                'confirmed' => $confirmed,
+                'pending' => $pending,
+                'total' => $confirmed + $pending,
             ];
         });
     }
 
     /**
-     * Get transport needs statistics
+     * Get transport needs statistics - optimized with single query
      *
      * @return array{from_usp: int, from_gru: int, both: int, total: int}
      */
@@ -127,11 +136,20 @@ class DashboardMetricService
     {
         /** @phpstan-ignore-next-line */
         return Cache::remember('dashboard.transport_needs', self::CACHE_TTL * 60, function (): array {
-            $fromUSP = Registration::where('needs_transport_from_usp', true)->count();
-            $fromGRU = Registration::where('needs_transport_from_gru', true)->count();
-            $both = Registration::where('needs_transport_from_usp', true)
-                ->where('needs_transport_from_gru', true)
-                ->count();
+            // Optimized: Single query with conditional aggregation
+            $result = Registration::selectRaw('
+                COUNT(CASE WHEN needs_transport_from_usp = 1 THEN 1 END) as from_usp,
+                COUNT(CASE WHEN needs_transport_from_gru = 1 THEN 1 END) as from_gru,
+                COUNT(CASE WHEN needs_transport_from_usp = 1 AND needs_transport_from_gru = 1 THEN 1 END) as both_transports
+            ')->first();
+
+            $fromUSPValue = $result->from_usp ?? 0;
+            $fromGRUValue = $result->from_gru ?? 0;
+            $bothValue = $result->both_transports ?? 0;
+            
+            $fromUSP = is_numeric($fromUSPValue) ? (int) $fromUSPValue : 0;
+            $fromGRU = is_numeric($fromGRUValue) ? (int) $fromGRUValue : 0;
+            $both = is_numeric($bothValue) ? (int) $bothValue : 0;
 
             return [
                 'from_usp' => $fromUSP,
@@ -143,19 +161,66 @@ class DashboardMetricService
     }
 
     /**
-     * Get all dashboard metrics at once
+     * Get all dashboard metrics at once - with request-level memoization
      *
      * @return array<string, mixed>
      */
     public function getAllMetrics(): array
     {
-        return [
-            'total_registrations' => $this->getTotalRegistrations(),
-            'registrations_by_category' => $this->getRegistrationsByCategory(),
-            'pending_approvals' => $this->getPendingApprovals(),
-            'revenue' => $this->getRevenue(),
-            'transport_needs' => $this->getTransportNeeds(),
-        ];
+        // Request-level memoization to avoid repeated calls within same request
+        return once(function (): array {
+            return [
+                'total_registrations' => $this->getTotalRegistrations(),
+                'registrations_by_category' => $this->getRegistrationsByCategory(),
+                'pending_approvals' => $this->getPendingApprovals(),
+                'revenue' => $this->getRevenue(),
+                'transport_needs' => $this->getTransportNeeds(),
+            ];
+        });
+    }
+
+    /**
+     * Get critical metrics only (for fast initial loading)
+     *
+     * @return array<string, mixed>
+     */
+    public function getCriticalMetrics(): array
+    {
+        return once(function (): array {
+            return [
+                'total_registrations' => $this->getTotalRegistrations(),
+                'pending_approvals' => $this->getPendingApprovals(),
+                'revenue' => $this->getRevenue(),
+            ];
+        });
+    }
+
+    /**
+     * Get non-critical metrics (for progressive loading)
+     *
+     * @return array<string, mixed>
+     */
+    public function getNonCriticalMetrics(): array
+    {
+        return once(function (): array {
+            return [
+                'registrations_by_category' => $this->getRegistrationsByCategory(),
+                'transport_needs' => $this->getTransportNeeds(),
+            ];
+        });
+    }
+
+    /**
+     * Warm up dashboard cache - preload all metrics
+     */
+    public function warmCache(): void
+    {
+        // Pre-fetch all metrics to warm the cache
+        $this->getTotalRegistrations();
+        $this->getRegistrationsByCategory();
+        $this->getPendingApprovals();
+        $this->getRevenue();
+        $this->getTransportNeeds();
     }
 
     /**

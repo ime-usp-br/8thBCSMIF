@@ -1,4 +1,6 @@
-<div class="bg-white overflow-hidden shadow rounded-lg">
+<div class="bg-white overflow-hidden shadow rounded-lg"
+     x-data="{ loaded: false }"
+     x-init="setTimeout(() => { loaded = true; $wire.loadProgressively(); }, 1000)">
     <div class="p-5">
         <div class="flex items-center">
             <div class="flex-shrink-0">
@@ -15,13 +17,37 @@
                         {{ __('Transport Needs') }}
                     </dt>
                     <dd class="text-2xl font-semibold text-gray-900">
-                        {{ number_format($data['total'] ?? 0) }}
+                        @if($isLoading)
+                            <div class="animate-pulse bg-gray-300 h-8 rounded w-16"></div>
+                        @else
+                            {{ number_format($data['total'] ?? 0) }}
+                        @endif
                     </dd>
                 </dl>
             </div>
         </div>
 
-        {{-- Transport Breakdown --}}
+        @if($isLoading)
+            {{-- Loading State with Skeleton --}}
+            <div class="mt-5 space-y-3 animate-pulse">
+                @for($i = 0; $i < 3; $i++)
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 bg-gray-300 rounded-full mr-2"></div>
+                            <div class="h-4 bg-gray-300 rounded w-20"></div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="h-4 bg-gray-300 rounded w-8"></div>
+                            <div class="h-6 bg-gray-300 rounded-full w-16"></div>
+                        </div>
+                    </div>
+                @endfor
+                <div class="mt-5 pt-4 border-t border-gray-200">
+                    <div class="h-4 bg-gray-300 rounded w-32"></div>
+                </div>
+            </div>
+        @else
+            {{-- Transport Breakdown --}}
         <div class="mt-5 space-y-3">
             {{-- USP Transport --}}
             <div class="flex items-center justify-between">
@@ -98,6 +124,7 @@
                     {{ __('No transport requests') }}
                 </span>
             </div>
+        @endif
         @endif
     </div>
 </div>

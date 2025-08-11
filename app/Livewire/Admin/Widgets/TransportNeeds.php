@@ -7,11 +7,11 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
- * Transport Needs Widget Component
+ * Transport Needs Widget Component (Non-Critical - Progressive Loading)
  *
  * Displays transport needs statistics for participants requiring
  * transportation from USP or GRU airport with integration to existing
- * transport reports.
+ * transport reports. Optimized for progressive loading with 1s delay.
  */
 class TransportNeeds extends Component
 {
@@ -23,11 +23,26 @@ class TransportNeeds extends Component
     public array $data = [];
 
     /**
-     * Mount the component and load data
+     * Loading state for progressive loading
      */
-    public function mount(DashboardMetricService $metricsService): void
+    public bool $isLoading = true;
+
+    /**
+     * Mount the component - start with loading state (progressive loading)
+     */
+    public function mount(): void
+    {
+        // Non-critical metric - will be loaded progressively via JavaScript
+        $this->isLoading = true;
+    }
+
+    /**
+     * Load data progressively (called by frontend after delay)
+     */
+    public function loadProgressively(DashboardMetricService $metricsService): void
     {
         $this->loadData($metricsService);
+        $this->isLoading = false;
     }
 
     /**

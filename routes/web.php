@@ -94,6 +94,15 @@ Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
     ->middleware(['auth', 'role:admin'])
     ->name('admin.dashboard');
 
+// Admin dashboard API routes for progressive loading
+Route::prefix('admin/dashboard')
+    ->middleware(['auth', 'role:admin'])
+    ->name('admin.dashboard.')
+    ->group(function () {
+        Route::get('/metrics/non-critical', [AdminDashboardController::class, 'getNonCriticalMetrics'])->name('non-critical-metrics');
+        Route::post('/refresh', [AdminDashboardController::class, 'refreshMetrics'])->name('refresh-metrics');
+    });
+
 // Admin routes for registration management
 Route::prefix('admin/registrations')
     ->middleware(['auth', 'role:admin'])

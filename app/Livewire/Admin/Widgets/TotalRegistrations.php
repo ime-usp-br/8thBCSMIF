@@ -7,10 +7,11 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
- * Total Registrations Widget Component
+ * Total Registrations Widget Component (Critical - Immediate Loading)
  *
  * Displays the total number of registrations with trend indicator
  * showing month-over-month growth percentage.
+ * Optimized for immediate loading as part of critical metrics.
  */
 class TotalRegistrations extends Component
 {
@@ -22,10 +23,16 @@ class TotalRegistrations extends Component
     public array $data = [];
 
     /**
-     * Mount the component and load data
+     * Loading state
+     */
+    public bool $isLoading = false;
+
+    /**
+     * Mount the component and load data immediately (critical metric)
      */
     public function mount(DashboardMetricService $metricsService): void
     {
+        // Critical metric - load immediately without delay
         $this->loadData($metricsService);
     }
 
