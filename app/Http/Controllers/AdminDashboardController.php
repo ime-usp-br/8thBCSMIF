@@ -27,25 +27,25 @@ class AdminDashboardController extends Controller
         $pendingApprovals = is_array($criticalMetrics['pending_approvals'] ?? null) ? $criticalMetrics['pending_approvals'] : [];
         /** @var array<string, mixed> $revenue */
         $revenue = is_array($criticalMetrics['revenue'] ?? null) ? $criticalMetrics['revenue'] : [];
-        
+
         // Extract trend data safely
         /** @var array<string, mixed> $trend */
         $trend = is_array($totalRegistrations['trend'] ?? null) ? $totalRegistrations['trend'] : [];
-        
+
         // Safe casting with type checking
         $totalCount = $totalRegistrations['total'] ?? 0;
         $percentageChange = $trend['percentage_change'] ?? 0;
         $currentMonth = $trend['current_month'] ?? 0;
         $previousMonth = $trend['previous_month'] ?? 0;
-        
+
         $paymentProofs = $pendingApprovals['payment_proofs'] ?? 0;
         $enrollmentProofs = $pendingApprovals['enrollment_proofs'] ?? 0;
         $totalApprovals = $pendingApprovals['total'] ?? 0;
-        
+
         $confirmedRevenue = $revenue['confirmed'] ?? 0;
         $pendingRevenue = $revenue['pending'] ?? 0;
         $totalRevenue = $revenue['total'] ?? 0;
-        
+
         $metrics = [
             'total_registrations' => [
                 'count' => is_numeric($totalCount) ? (int) $totalCount : 0,
@@ -88,7 +88,7 @@ class AdminDashboardController extends Controller
 
     /**
      * Get non-critical metrics for progressive loading via AJAX
-     * 
+     *
      * @return array<string, mixed>
      */
     public function getNonCriticalMetrics(): array
@@ -98,7 +98,7 @@ class AdminDashboardController extends Controller
 
     /**
      * Refresh all dashboard metrics and clear cache
-     * 
+     *
      * @return array<string, mixed>
      */
     public function refreshMetrics(): array

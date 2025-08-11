@@ -115,7 +115,7 @@ class DashboardMetricService
 
             $confirmedValue = $result->confirmed ?? 0;
             $pendingValue = $result->pending ?? 0;
-            
+
             $confirmed = is_numeric($confirmedValue) ? (float) $confirmedValue : 0.0;
             $pending = is_numeric($pendingValue) ? (float) $pendingValue : 0.0;
 
@@ -146,7 +146,7 @@ class DashboardMetricService
             $fromUSPValue = $result->from_usp ?? 0;
             $fromGRUValue = $result->from_gru ?? 0;
             $bothValue = $result->both_transports ?? 0;
-            
+
             $fromUSP = is_numeric($fromUSPValue) ? (int) $fromUSPValue : 0;
             $fromGRU = is_numeric($fromGRUValue) ? (int) $fromGRUValue : 0;
             $both = is_numeric($bothValue) ? (int) $bothValue : 0;
