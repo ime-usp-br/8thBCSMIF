@@ -25,10 +25,10 @@ class CurrencyServiceProvider extends ServiceProvider
         $locale = config('currency.locale') ?? 'pt_BR';
 
         // Ensure proper types
-        if (!is_string($currency)) {
+        if (! is_string($currency)) {
             $currency = 'BRL';
         }
-        if (!is_string($locale)) {
+        if (! is_string($locale)) {
             $locale = 'pt_BR';
         }
 
