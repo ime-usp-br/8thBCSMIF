@@ -783,5 +783,8 @@
     "Pending approvals icon": "Pending approvals icon",
     "Refresh icon": "Refresh icon",
     "Refresh dashboard metrics": "Refresh dashboard metrics",
-    "Manage all registrations": "Manage all registrations"
+    "Manage all registrations": "Manage all registrations",
+    "Dashboard metrics refreshed successfully.": "Dashboard metrics refreshed successfully.",
+    "Refresh Metrics": "Refresh Metrics",
+    "Admin Dashboard - 8th BCSMIF": "Admin Dashboard - 8th BCSMIF"
 }

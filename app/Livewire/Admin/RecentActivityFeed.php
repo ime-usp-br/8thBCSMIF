@@ -103,6 +103,13 @@ class RecentActivityFeed extends Component
             $timestamp = \Carbon\Carbon::parse($timestamp);
         }
 
+        // Ensure Carbon uses the application's locale
+        $locale = config('app.locale') ?? 'en';
+        if (!is_string($locale)) {
+            $locale = 'en';
+        }
+        $timestamp->locale($locale);
+
         return $timestamp->diffForHumans();
     }
 

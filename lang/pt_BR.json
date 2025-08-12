@@ -819,5 +819,8 @@
     "Pending approvals icon": "Ícone de aprovações pendentes",
     "Refresh icon": "Ícone de atualizar",
     "Refresh dashboard metrics": "Atualizar métricas do dashboard",
-    "Manage all registrations": "Gerenciar todas as inscrições"
+    "Manage all registrations": "Gerenciar todas as inscrições",
+    "Dashboard metrics refreshed successfully.": "Métricas do dashboard atualizadas com sucesso.",
+    "Refresh Metrics": "Atualizar Métricas",
+    "Admin Dashboard - 8th BCSMIF": "Painel Administrativo - 8º BCSMIF"
 }

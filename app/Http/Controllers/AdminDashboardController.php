@@ -63,7 +63,7 @@ class AdminDashboardController extends Controller
                 'confirmed' => is_numeric($confirmedRevenue) ? (float) $confirmedRevenue : 0.0,
                 'pending' => is_numeric($pendingRevenue) ? (float) $pendingRevenue : 0.0,
                 'total' => is_numeric($totalRevenue) ? (float) $totalRevenue : 0.0,
-                'currency' => 'BRL',
+                'currency' => config('currency.code'),
             ],
             // Progressive loading placeholders - will be loaded via AJAX
             'registrations_by_category' => [
