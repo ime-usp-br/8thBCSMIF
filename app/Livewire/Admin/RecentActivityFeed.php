@@ -105,7 +105,7 @@ class RecentActivityFeed extends Component
 
         // Ensure Carbon uses the application's locale
         $locale = config('app.locale') ?? 'en';
-        if (!is_string($locale)) {
+        if (! is_string($locale)) {
             $locale = 'en';
         }
         $timestamp->locale($locale);

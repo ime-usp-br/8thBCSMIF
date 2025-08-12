@@ -21,13 +21,13 @@ class CurrencyHelper
         $precision = $precision ?? config('currency.precision') ?? 2;
 
         // Ensure proper types
-        if (!is_string($currency)) {
+        if (! is_string($currency)) {
             $currency = 'BRL';
         }
-        if (!is_string($locale)) {
+        if (! is_string($locale)) {
             $locale = 'pt_BR';
         }
-        if (!is_int($precision)) {
+        if (! is_int($precision)) {
             $precision = 2;
         }
 
@@ -49,7 +49,7 @@ class CurrencyHelper
         $currency = $currency ?? config('currency.code') ?? 'BRL';
 
         // Ensure proper type
-        if (!is_string($currency)) {
+        if (! is_string($currency)) {
             $currency = 'BRL';
         }
 
