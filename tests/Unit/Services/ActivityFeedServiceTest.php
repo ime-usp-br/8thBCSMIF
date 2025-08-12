@@ -10,6 +10,7 @@ use App\Services\ActivityFeedService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ActivityFeedServiceTest extends TestCase
@@ -21,10 +22,14 @@ class ActivityFeedServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Ensure database is properly migrated
+        $this->ensureDatabaseMigrated();
+
         $this->service = new ActivityFeedService;
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_recent_activity_with_default_limit()
     {
         // Create test data
@@ -55,7 +60,7 @@ class ActivityFeedServiceTest extends TestCase
         $this->assertArrayHasKey('link_text', $firstActivity);
     }
 
-    /** @test */
+    #[Test]
     public function it_includes_recent_registrations_in_activity_feed()
     {
         $user = User::factory()->create(['name' => 'Jane Doe', 'email' => 'jane@example.com']);
@@ -79,7 +84,7 @@ class ActivityFeedServiceTest extends TestCase
         $this->assertEquals('pending', $registrationActivity['status']);
     }
 
-    /** @test */
+    #[Test]
     public function it_includes_recent_payment_proofs_in_activity_feed()
     {
         $user = User::factory()->create(['name' => 'Bob Smith', 'email' => 'bob@example.com']);
@@ -110,7 +115,7 @@ class ActivityFeedServiceTest extends TestCase
         $this->assertEquals('pending_approval', $paymentActivity['status']);
     }
 
-    /** @test */
+    #[Test]
     public function it_includes_recent_enrollment_proofs_in_activity_feed()
     {
         $user = User::factory()->create(['name' => 'Alice Johnson', 'email' => 'alice@example.com']);
@@ -139,7 +144,7 @@ class ActivityFeedServiceTest extends TestCase
         $this->assertEquals('pending_approval', $enrollmentActivity['status']);
     }
 
-    /** @test */
+    #[Test]
     public function it_sorts_activities_by_timestamp_descending()
     {
         $user = User::factory()->create();
@@ -190,7 +195,7 @@ class ActivityFeedServiceTest extends TestCase
         $this->assertLessThan($registrationIndex, $enrollmentIndex);
     }
 
-    /** @test */
+    #[Test]
     public function it_respects_the_limit_parameter()
     {
         $user = User::factory()->create();
@@ -203,7 +208,7 @@ class ActivityFeedServiceTest extends TestCase
         $this->assertEquals(5, $activities->count());
     }
 
-    /** @test */
+    #[Test]
     public function it_excludes_payments_without_proof_paths()
     {
         $user = User::factory()->create();
@@ -230,7 +235,7 @@ class ActivityFeedServiceTest extends TestCase
         $this->assertEquals(1, $paymentActivities->count());
     }
 
-    /** @test */
+    #[Test]
     public function it_excludes_enrollment_proofs_without_uploaded_at()
     {
         $user = User::factory()->create();
@@ -257,7 +262,7 @@ class ActivityFeedServiceTest extends TestCase
         $this->assertEquals(1, $enrollmentActivities->count());
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_activity_counts_for_last_24_hours()
     {
         $user = User::factory()->create();
@@ -297,7 +302,7 @@ class ActivityFeedServiceTest extends TestCase
         $this->assertEquals(1, $counts['enrollment_proofs']);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_correct_activity_icons()
     {
         $this->assertEquals('fas fa-user-plus text-blue-500', $this->service->getActivityIcon('registration_submission'));
@@ -306,7 +311,7 @@ class ActivityFeedServiceTest extends TestCase
         $this->assertEquals('fas fa-bell text-gray-500', $this->service->getActivityIcon('unknown_type'));
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_correct_status_badge_classes()
     {
         $this->assertEquals('bg-yellow-100 text-yellow-800', $this->service->getStatusBadgeClass('pending'));
@@ -316,7 +321,7 @@ class ActivityFeedServiceTest extends TestCase
         $this->assertEquals('bg-gray-100 text-gray-800', $this->service->getStatusBadgeClass('unknown_status'));
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_correct_status_text()
     {
         $this->assertEquals('Pending', $this->service->getStatusText('pending'));
@@ -326,7 +331,7 @@ class ActivityFeedServiceTest extends TestCase
         $this->assertEquals('Unknown_status', $this->service->getStatusText('unknown_status'));
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_correct_admin_links()
     {
         $user = User::factory()->create();

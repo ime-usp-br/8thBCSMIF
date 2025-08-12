@@ -1,20 +1,28 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 {{ __('Admin Dashboard') }}
             </h2>
-            {{-- Skip to main content link for accessibility --}}
-            <a href="#main-dashboard-content" 
-               class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-usp-blue-pri text-white px-4 py-2 rounded-md z-50 focus:z-50"
-               aria-label="{{ __('Skip to main dashboard content') }}">
-                {{ __('Skip to main content') }}
-            </a>
+            <div class="flex items-center space-x-4">
+                {{-- Skip to main content link for accessibility --}}
+                <a href="#main-dashboard-content" 
+                   class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-usp-blue-pri text-white px-4 py-2 rounded-md z-50 focus:z-50"
+                   aria-label="{{ __('Skip to main dashboard content') }}">
+                    {{ __('Skip to main content') }}
+                </a>
+                {{-- Refresh button with responsive text --}}
+                <button type="button" 
+                        class="inline-flex items-center px-4 py-2 bg-usp-blue-pri text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-usp-blue-pri focus:ring-offset-2">
+                    <span class="hidden sm:inline">{{ __('Refresh Metrics') }}</span>
+                    <span class="sm:hidden">{{ __('Refresh') }}</span>
+                </button>
+            </div>
         </div>
     </x-slot>
 
     <div class="py-6 sm:py-8 lg:py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
             {{-- Breadcrumb Navigation --}}
             <x-admin.breadcrumbs :breadcrumbs="[
                 ['label' => __('Dashboard'), 'url' => '#']
@@ -29,19 +37,19 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 
                 {{-- Total Registrations Card --}}
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg focus-within:ring-2 focus-within:ring-usp-blue-pri focus-within:ring-offset-2 transition-shadow duration-200">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg focus-within:ring-2 focus-within:ring-usp-blue-pri focus-within:ring-offset-2 transition-shadow duration-200 min-h-[80px]">
                     <div class="p-4 sm:p-6">
                         <div class="border-l-4 border-usp-blue-pri pl-3 sm:pl-4">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
                                 <div class="flex-1">
-                                    <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100" id="total-registrations-heading">
+                                    <h3 class="text-xl sm:text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100" id="total-registrations-heading">
                                         {{ __('Total Registrations') }}
                                     </h3>
                                     <p class="text-2xl sm:text-3xl font-bold text-usp-blue-pri mt-1 sm:mt-2" 
                                        aria-labelledby="total-registrations-heading">
                                         {{ number_format($metrics['total_registrations']['count']) }}
                                     </p>
-                                    <div class="flex items-center mt-2" role="status" 
+                                    <div class="flex items-center mt-1 sm:mt-2" role="status" 
                                          aria-live="polite" 
                                          aria-label="{{ __('Trend information') }}">
                                         @if($metrics['total_registrations']['trend'] === 'up')
@@ -84,7 +92,7 @@
                             <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3" id="pending-approvals-heading">
                                 {{ __('Pending Approvals') }}
                             </h3>
-                            <div class="space-y-2 text-sm" role="group" aria-labelledby="pending-approvals-heading">
+                            <div class="space-y-2 text-sm mt-6 sm:mt-8" role="group" aria-labelledby="pending-approvals-heading">
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-600 dark:text-gray-400">{{ __('Payment Proofs') }}:</span>
                                     <span class="font-medium text-orange-600 tabular-nums" 
@@ -102,10 +110,11 @@
                             </div>
                             <div class="mt-4">
                                 <a href="{{ route('admin.registrations.index') }}" 
-                                   class="inline-flex items-center px-3 py-2 bg-orange-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-400 focus:bg-orange-400 active:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition ease-in-out duration-150 min-h-[44px] min-w-[44px]" 
+                                   class="inline-flex items-center px-4 py-3 bg-orange-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-400 focus:bg-orange-400 active:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition ease-in-out duration-150 min-h-[44px] min-w-[44px]" 
                                    aria-describedby="pending-approvals-heading"
                                    aria-label="{{ __('Review pending approvals queue') }}">
-                                    {{ __('Review Queue') }}
+                                    <span class="hidden sm:inline">{{ __('Review Queue') }}</span>
+                                    <span class="sm:hidden">{{ __('Review') }}</span>
                                 </a>
                             </div>
                         </div>
@@ -190,12 +199,12 @@
                 {{-- Registrations by Category Chart --}}
                 <section aria-labelledby="registrations-by-category-heading">
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div class="p-4 sm:p-6">
+                        <div class="px-4 py-5 sm:p-6">
                             <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4" 
                                 id="registrations-by-category-heading">
                                 {{ __('Registrations by Category') }}
                             </h3>
-                            <div class="grid grid-cols-2 gap-3 sm:gap-4" role="group" aria-labelledby="registrations-by-category-heading">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4" role="group" aria-labelledby="registrations-by-category-heading">
                                 <div class="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 transition-shadow duration-200">
                                     <div class="text-xl sm:text-2xl font-bold text-blue-600 tabular-nums" 
                                          aria-label="{{ __('Undergraduate students') }}: {{ $metrics['registrations_by_category']['undergrad_student'] }}">
@@ -245,7 +254,7 @@
                                 id="recent-activity-heading">
                                 {{ __('Recent Activity') }}
                             </h3>
-                            <div aria-labelledby="recent-activity-heading" aria-live="polite" role="region">
+                            <div aria-labelledby="recent-activity-heading" aria-live="polite" role="region" data-component="livewire:admin.recent-activity-feed">
                                 <livewire:admin.recent-activity-feed />
                             </div>
                         </div>
@@ -269,7 +278,7 @@
                                    tabindex="0">
                                     <div class="flex items-center h-full">
                                         <div class="flex-shrink-0">
-                                            <svg class="h-6 w-6 sm:h-8 sm:w-8 text-usp-blue-pri group-hover:text-usp-blue-pri group-focus:text-usp-blue-pri" 
+                                            <svg class="w-6 w-6 sm:h-8 sm:w-8 text-usp-blue-pri group-hover:text-usp-blue-pri group-focus:text-usp-blue-pri" 
                                                  fill="none" viewBox="0 0 24 24" stroke="currentColor" 
                                                  aria-hidden="true" role="img">
                                                 <title>{{ __('Registrations icon') }}</title>

@@ -3,22 +3,44 @@
 namespace Tests\Unit\Http\Controllers;
 
 use App\Http\Controllers\AdminDashboardController;
+use App\Services\DashboardMetricService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\View\View;
+use Mockery;
 use Tests\TestCase;
 
 class AdminDashboardControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected DashboardMetricService $mockMetricsService;
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Ensure database is properly migrated
+        $this->ensureDatabaseMigrated();
+
+        // Create and bind mock service
+        $this->mockMetricsService = Mockery::mock(DashboardMetricService::class);
+        $this->app->instance(DashboardMetricService::class, $this->mockMetricsService);
     }
 
     public function test_index_returns_view_instance(): void
     {
-        $controller = new AdminDashboardController;
+        // Mock the service method
+        $this->mockMetricsService->shouldReceive('getCriticalMetrics')
+            ->once()
+            ->andReturn([
+                'total_registrations' => ['total' => 5, 'trend' => ['percentage_change' => 10, 'current_month' => 3, 'previous_month' => 2]],
+                'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
+                'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
+            ]);
+
+        $this->mockMetricsService->shouldReceive('warmCache')->once();
+
+        $controller = $this->app->make(AdminDashboardController::class);
 
         $result = $controller->index();
 
@@ -27,7 +49,18 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_index_returns_correct_view_name(): void
     {
-        $controller = new AdminDashboardController;
+        // Mock the service method
+        $this->mockMetricsService->shouldReceive('getCriticalMetrics')
+            ->once()
+            ->andReturn([
+                'total_registrations' => ['total' => 5, 'trend' => ['percentage_change' => 10, 'current_month' => 3, 'previous_month' => 2]],
+                'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
+                'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
+            ]);
+
+        $this->mockMetricsService->shouldReceive('warmCache')->once();
+
+        $controller = $this->app->make(AdminDashboardController::class);
 
         $result = $controller->index();
 
@@ -36,7 +69,18 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_index_passes_metrics_data_to_view(): void
     {
-        $controller = new AdminDashboardController;
+        // Mock the service method
+        $this->mockMetricsService->shouldReceive('getCriticalMetrics')
+            ->once()
+            ->andReturn([
+                'total_registrations' => ['total' => 5, 'trend' => ['percentage_change' => 10, 'current_month' => 3, 'previous_month' => 2]],
+                'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
+                'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
+            ]);
+
+        $this->mockMetricsService->shouldReceive('warmCache')->once();
+
+        $controller = $this->app->make(AdminDashboardController::class);
 
         $result = $controller->index();
 
@@ -48,7 +92,18 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_metrics_data_structure_is_complete(): void
     {
-        $controller = new AdminDashboardController;
+        // Mock the service method
+        $this->mockMetricsService->shouldReceive('getCriticalMetrics')
+            ->once()
+            ->andReturn([
+                'total_registrations' => ['total' => 5, 'trend' => ['percentage_change' => 10, 'current_month' => 3, 'previous_month' => 2]],
+                'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
+                'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
+            ]);
+
+        $this->mockMetricsService->shouldReceive('warmCache')->once();
+
+        $controller = $this->app->make(AdminDashboardController::class);
 
         $result = $controller->index();
         $data = $result->getData();
@@ -64,7 +119,18 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_total_registrations_metric_structure(): void
     {
-        $controller = new AdminDashboardController;
+        // Mock the service method
+        $this->mockMetricsService->shouldReceive('getCriticalMetrics')
+            ->once()
+            ->andReturn([
+                'total_registrations' => ['total' => 5, 'trend' => ['percentage_change' => 10, 'current_month' => 3, 'previous_month' => 2]],
+                'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
+                'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
+            ]);
+
+        $this->mockMetricsService->shouldReceive('warmCache')->once();
+
+        $controller = $this->app->make(AdminDashboardController::class);
 
         $result = $controller->index();
         $data = $result->getData();
@@ -81,7 +147,18 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_registrations_by_category_metric_structure(): void
     {
-        $controller = new AdminDashboardController;
+        // Mock the service method
+        $this->mockMetricsService->shouldReceive('getCriticalMetrics')
+            ->once()
+            ->andReturn([
+                'total_registrations' => ['total' => 5, 'trend' => ['percentage_change' => 10, 'current_month' => 3, 'previous_month' => 2]],
+                'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
+                'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
+            ]);
+
+        $this->mockMetricsService->shouldReceive('warmCache')->once();
+
+        $controller = $this->app->make(AdminDashboardController::class);
 
         $result = $controller->index();
         $data = $result->getData();
@@ -97,7 +174,18 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_pending_approvals_metric_structure(): void
     {
-        $controller = new AdminDashboardController;
+        // Mock the service method
+        $this->mockMetricsService->shouldReceive('getCriticalMetrics')
+            ->once()
+            ->andReturn([
+                'total_registrations' => ['total' => 5, 'trend' => ['percentage_change' => 10, 'current_month' => 3, 'previous_month' => 2]],
+                'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
+                'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
+            ]);
+
+        $this->mockMetricsService->shouldReceive('warmCache')->once();
+
+        $controller = $this->app->make(AdminDashboardController::class);
 
         $result = $controller->index();
         $data = $result->getData();
@@ -112,7 +200,18 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_revenue_metric_structure(): void
     {
-        $controller = new AdminDashboardController;
+        // Mock the service method
+        $this->mockMetricsService->shouldReceive('getCriticalMetrics')
+            ->once()
+            ->andReturn([
+                'total_registrations' => ['total' => 5, 'trend' => ['percentage_change' => 10, 'current_month' => 3, 'previous_month' => 2]],
+                'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
+                'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
+            ]);
+
+        $this->mockMetricsService->shouldReceive('warmCache')->once();
+
+        $controller = $this->app->make(AdminDashboardController::class);
 
         $result = $controller->index();
         $data = $result->getData();
@@ -130,7 +229,18 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_transport_needs_metric_structure(): void
     {
-        $controller = new AdminDashboardController;
+        // Mock the service method
+        $this->mockMetricsService->shouldReceive('getCriticalMetrics')
+            ->once()
+            ->andReturn([
+                'total_registrations' => ['total' => 5, 'trend' => ['percentage_change' => 10, 'current_month' => 3, 'previous_month' => 2]],
+                'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
+                'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
+            ]);
+
+        $this->mockMetricsService->shouldReceive('warmCache')->once();
+
+        $controller = $this->app->make(AdminDashboardController::class);
 
         $result = $controller->index();
         $data = $result->getData();

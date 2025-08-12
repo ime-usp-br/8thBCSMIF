@@ -21,7 +21,7 @@ class RecentActivityFeedInternationalizationTest extends TestCase
         $this->admin = $this->createAdmin();
     }
 
-    /** @test */
+    #[Test]
     public function format_timestamp_respects_application_locale()
     {
         // Test with Portuguese locale
@@ -49,7 +49,7 @@ class RecentActivityFeedInternationalizationTest extends TestCase
         // (though diffForHumans might return similar results in this case)
     }
 
-    /** @test */
+    #[Test]
     public function format_timestamp_handles_string_input()
     {
         App::setLocale('en');
@@ -64,7 +64,7 @@ class RecentActivityFeedInternationalizationTest extends TestCase
         $this->assertNotEmpty($formatted);
     }
 
-    /** @test */
+    #[Test]
     public function component_renders_with_proper_translations()
     {
         $this->actingAs($this->admin);
@@ -86,7 +86,7 @@ class RecentActivityFeedInternationalizationTest extends TestCase
             ->assertSee('Mostrar');
     }
 
-    /** @test */
+    #[Test]
     public function component_displays_no_activity_message_in_correct_locale()
     {
         $this->actingAs($this->admin);
@@ -105,7 +105,7 @@ class RecentActivityFeedInternationalizationTest extends TestCase
         $component->assertSee('Nenhuma atividade recente');
     }
 
-    /** @test */
+    #[Test]
     public function refresh_activities_method_works()
     {
         $this->actingAs($this->admin);
@@ -117,7 +117,7 @@ class RecentActivityFeedInternationalizationTest extends TestCase
             ->assertHasNoErrors();
     }
 
-    /** @test */
+    #[Test]
     public function set_limit_method_constrains_values_properly()
     {
         $this->actingAs($this->admin);
@@ -137,7 +137,7 @@ class RecentActivityFeedInternationalizationTest extends TestCase
         $this->assertEquals(5, $component->get('limit'));
     }
 
-    /** @test */
+    #[Test]
     public function component_has_required_helper_methods()
     {
         $component = new RecentActivityFeed;

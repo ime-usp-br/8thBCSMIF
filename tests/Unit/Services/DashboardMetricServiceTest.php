@@ -19,13 +19,17 @@ class DashboardMetricServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Ensure database is properly migrated
+        $this->ensureDatabaseMigrated();
+
         $this->service = new DashboardMetricService;
 
         // Clear cache before each test
         Cache::flush();
     }
 
-    /** @test */
+    #[Test]
     public function it_can_get_total_registrations_with_trend()
     {
         // Create registrations for current month
@@ -47,7 +51,7 @@ class DashboardMetricServiceTest extends TestCase
         $this->assertEquals(66.7, $result['trend']['percentage_change']); // (5-3)/3 * 100
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_zero_previous_month_registrations_in_trend()
     {
         // Create registrations for current month only
@@ -61,7 +65,7 @@ class DashboardMetricServiceTest extends TestCase
         $this->assertEquals(0, $result['trend']['percentage_change']); // Avoid division by zero
     }
 
-    /** @test */
+    #[Test]
     public function it_can_get_registrations_by_category()
     {
         Registration::factory()->create(['registration_category_snapshot' => 'undergrad_student']);
@@ -81,7 +85,7 @@ class DashboardMetricServiceTest extends TestCase
         $this->assertEquals(1, $result['professor']);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_get_pending_approvals()
     {
         // Create pending payment proofs
@@ -103,7 +107,7 @@ class DashboardMetricServiceTest extends TestCase
         $this->assertEquals(5, $result['total']);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_get_revenue_metrics()
     {
         // Create confirmed revenue (approved payments)
@@ -128,7 +132,7 @@ class DashboardMetricServiceTest extends TestCase
         $this->assertEquals(2000.00, $result['total']);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_get_transport_needs()
     {
         // Create registrations with various transport needs
@@ -162,7 +166,7 @@ class DashboardMetricServiceTest extends TestCase
         $this->assertEquals(3, $result['total']); // 2 + 2 - 1 (avoid double counting)
     }
 
-    /** @test */
+    #[Test]
     public function it_can_get_all_metrics_at_once()
     {
         Registration::factory()->create(['registration_category_snapshot' => 'undergrad_student']);
@@ -177,7 +181,7 @@ class DashboardMetricServiceTest extends TestCase
         $this->assertArrayHasKey('transport_needs', $result);
     }
 
-    /** @test */
+    #[Test]
     public function it_caches_metrics_data()
     {
         // Clear cache
@@ -205,7 +209,7 @@ class DashboardMetricServiceTest extends TestCase
         $this->assertGreaterThan($firstResult['total'], $thirdResult['total']);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_clear_all_cache()
     {
         // Populate cache
@@ -233,7 +237,7 @@ class DashboardMetricServiceTest extends TestCase
         $this->assertFalse(Cache::has('dashboard.transport_needs'));
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_empty_data_gracefully()
     {
         $totalRegistrations = $this->service->getTotalRegistrations();

@@ -25,11 +25,15 @@ class DashboardMetricServiceComprehensiveTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Ensure database is properly migrated
+        $this->ensureDatabaseMigrated();
+
         $this->service = new DashboardMetricService;
         Cache::flush();
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_large_dataset_performance()
     {
         // Create a larger dataset to test performance
@@ -54,7 +58,7 @@ class DashboardMetricServiceComprehensiveTest extends TestCase
         $this->assertEquals(200, $metrics['pending_approvals']['enrollment_proofs']);
     }
 
-    /** @test */
+    #[Test]
     public function it_optimizes_queries_for_revenue_calculation()
     {
         // Create payments with different statuses
@@ -80,7 +84,7 @@ class DashboardMetricServiceComprehensiveTest extends TestCase
         $this->assertEquals(2450.00, $revenue['total']);
     }
 
-    /** @test */
+    #[Test]
     public function it_optimizes_queries_for_transport_needs()
     {
         // Create registrations with various transport combinations
@@ -115,7 +119,7 @@ class DashboardMetricServiceComprehensiveTest extends TestCase
         $this->assertEquals(18, $transportNeeds['total']);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_edge_case_with_null_amounts()
     {
         // Create payments with null amounts (edge case)
@@ -131,7 +135,7 @@ class DashboardMetricServiceComprehensiveTest extends TestCase
         $this->assertEquals(100.00, $revenue['total']);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_edge_case_with_extreme_dates()
     {
         // Create registrations with extreme dates
@@ -148,7 +152,7 @@ class DashboardMetricServiceComprehensiveTest extends TestCase
         $this->assertEquals(100.0, $result['trend']['percentage_change']); // (2-1)/1 * 100
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_concurrent_cache_operations()
     {
         // Simulate concurrent cache operations
@@ -176,7 +180,7 @@ class DashboardMetricServiceComprehensiveTest extends TestCase
         $this->assertEquals($result1['total'], $result3['total']);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_memory_efficient_once_memoization()
     {
         Registration::factory()->count(10)->create();
@@ -199,7 +203,7 @@ class DashboardMetricServiceComprehensiveTest extends TestCase
         $this->assertEquals($metrics2, $metrics3);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_critical_vs_non_critical_metrics_separation()
     {
         Registration::factory()->count(5)->create();
@@ -228,7 +232,7 @@ class DashboardMetricServiceComprehensiveTest extends TestCase
         $this->assertArrayNotHasKey('revenue', $nonCriticalMetrics);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_cache_ttl_behavior()
     {
         Registration::factory()->create();
@@ -244,7 +248,7 @@ class DashboardMetricServiceComprehensiveTest extends TestCase
         $this->service->getTotalRegistrations();
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_database_connection_issues_gracefully()
     {
         // Test graceful handling when database is unavailable
@@ -266,7 +270,7 @@ class DashboardMetricServiceComprehensiveTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_percentage_calculation_precision()
     {
         $currentMonth = now()->startOfMonth();
@@ -283,7 +287,7 @@ class DashboardMetricServiceComprehensiveTest extends TestCase
         $this->assertEquals(133.3, $result['trend']['percentage_change']); // Should be rounded to 1 decimal
     }
 
-    /** @test */
+    #[Test]
     public function it_warms_cache_efficiently()
     {
         Registration::factory()->count(5)->create();
@@ -303,7 +307,7 @@ class DashboardMetricServiceComprehensiveTest extends TestCase
         $this->assertTrue(Cache::has('dashboard.transport_needs'));
     }
 
-    /** @test */
+    #[Test]
     public function it_clears_all_caches_completely()
     {
         // Populate all caches
@@ -324,7 +328,7 @@ class DashboardMetricServiceComprehensiveTest extends TestCase
         $this->assertFalse(Cache::has('dashboard.transport_needs'));
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_registrations_with_null_categories_properly()
     {
         // Create registrations with valid categories

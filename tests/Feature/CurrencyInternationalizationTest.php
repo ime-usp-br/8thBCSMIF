@@ -19,7 +19,7 @@ class CurrencyInternationalizationTest extends TestCase
         $this->admin = $this->createAdmin();
     }
 
-    /** @test */
+    #[Test]
     public function currency_configuration_uses_default_brl()
     {
         // Clear any existing currency config
@@ -29,7 +29,7 @@ class CurrencyInternationalizationTest extends TestCase
         $this->assertEquals('BRL', config('currency.code', 'BRL'));
     }
 
-    /** @test */
+    #[Test]
     public function currency_configuration_respects_environment_variable()
     {
         // Set environment variable
@@ -38,7 +38,7 @@ class CurrencyInternationalizationTest extends TestCase
         $this->assertEquals('USD', config('currency.code'));
     }
 
-    /** @test */
+    #[Test]
     public function admin_dashboard_uses_configured_currency()
     {
         // Set currency to USD for testing
@@ -53,7 +53,7 @@ class CurrencyInternationalizationTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function admin_dashboard_displays_currency_formatted_values()
     {
         // Set BRL for testing
@@ -67,7 +67,7 @@ class CurrencyInternationalizationTest extends TestCase
         $response->assertSee('@currency');  // Check that blade directive is being used
     }
 
-    /** @test */
+    #[Test]
     public function locale_aware_date_formatting_works()
     {
         // Test Portuguese locale
@@ -81,7 +81,7 @@ class CurrencyInternationalizationTest extends TestCase
         // The view should use proper locale settings
     }
 
-    /** @test */
+    #[Test]
     public function recent_activity_feed_uses_locale_aware_timestamps()
     {
         // Set Portuguese locale
@@ -95,7 +95,7 @@ class CurrencyInternationalizationTest extends TestCase
         // Activity feed component should format timestamps according to locale
     }
 
-    /** @test */
+    #[Test]
     public function currency_blade_directive_formats_correctly()
     {
         // Test with different currencies
@@ -121,7 +121,7 @@ class CurrencyInternationalizationTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function date_blade_directives_work_correctly()
     {
         $timestamp = now()->toISOString();
@@ -141,7 +141,7 @@ class CurrencyInternationalizationTest extends TestCase
         $this->assertStringContains('diffForHumans', $compiled);
     }
 
-    /** @test */
+    #[Test]
     public function translations_exist_for_admin_dashboard()
     {
         $requiredTranslations = [
@@ -174,7 +174,7 @@ class CurrencyInternationalizationTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function currency_service_provider_sets_global_defaults()
     {
         // Test that the CurrencyServiceProvider boots correctly
@@ -190,7 +190,7 @@ class CurrencyInternationalizationTest extends TestCase
         $this->assertEquals('de', \Illuminate\Support\Number::defaultLocale());
     }
 
-    /** @test */
+    #[Test]
     public function admin_dashboard_controller_passes_currency_in_metrics()
     {
         // Set test currency

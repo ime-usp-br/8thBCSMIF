@@ -9,7 +9,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /**
@@ -28,8 +27,12 @@ class AdminDashboardPerformanceTest extends TestCase
     {
         parent::setUp();
 
-        // Create admin user with proper role
-        Role::create(['name' => 'admin']);
+        // Ensure database is properly migrated
+        $this->ensureDatabaseMigrated();
+
+        // Setup basic roles
+        $this->setupBasicRoles();
+
         $this->adminUser = User::factory()->create();
         $this->adminUser->assignRole('admin');
 
@@ -37,7 +40,7 @@ class AdminDashboardPerformanceTest extends TestCase
         $this->createTestData();
     }
 
-    /** @test */
+    #[Test]
     public function it_loads_admin_dashboard_within_performance_budget(): void
     {
         // Clear cache to ensure fresh performance test
@@ -69,7 +72,7 @@ class AdminDashboardPerformanceTest extends TestCase
         $response->assertSee('Revenue');
     }
 
-    /** @test */
+    #[Test]
     public function it_serves_critical_metrics_immediately_on_first_load(): void
     {
         // Clear cache
@@ -98,7 +101,7 @@ class AdminDashboardPerformanceTest extends TestCase
         $this->assertEmpty($metrics['transport_needs']);
     }
 
-    /** @test */
+    #[Test]
     public function it_provides_non_critical_metrics_via_ajax_endpoint(): void
     {
         // Clear cache
@@ -128,7 +131,7 @@ class AdminDashboardPerformanceTest extends TestCase
         $this->assertArrayHasKey('transport_needs', $data);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_cache_refresh_efficiently(): void
     {
         // Pre-warm cache
@@ -159,7 +162,7 @@ class AdminDashboardPerformanceTest extends TestCase
         $this->assertArrayHasKey('revenue', $data);
     }
 
-    /** @test */
+    #[Test]
     public function it_maintains_performance_with_large_dataset(): void
     {
         // Create a large dataset for performance testing
@@ -191,7 +194,7 @@ class AdminDashboardPerformanceTest extends TestCase
         $this->assertGreaterThan(100, $metrics['total_registrations']['count']);
     }
 
-    /** @test */
+    #[Test]
     public function it_provides_correct_cache_headers_for_optimization(): void
     {
         $response = $this->actingAs($this->adminUser)
@@ -204,7 +207,7 @@ class AdminDashboardPerformanceTest extends TestCase
         $this->assertTrue(true); // Placeholder - actual cache headers would be tested here
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_concurrent_requests_efficiently(): void
     {
         // Clear cache
@@ -238,7 +241,7 @@ class AdminDashboardPerformanceTest extends TestCase
         $this->assertLessThan(2500, $avgTime, 'Average response time under concurrent load should be under 2.5 seconds');
     }
 
-    /** @test */
+    #[Test]
     public function it_provides_proper_error_handling_without_performance_degradation(): void
     {
         // Simulate database connection issue by using invalid cache configuration

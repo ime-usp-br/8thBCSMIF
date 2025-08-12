@@ -27,7 +27,8 @@ class RegistrationFactory extends Factory
     public function definition(): array
     {
         $user = User::factory()->create();
-        $position = $this->faker->randomElement(['undergrad_student', 'grad_student', 'professor', 'professional', 'other']);
+        $validPositions = ['undergrad_student', 'grad_student', 'professor', 'professional', 'other'];
+        $position = $this->faker->randomElement($validPositions);
         $isBrazilian = $this->faker->boolean(70); // 70% chance of being Brazilian for testing variety
 
         return [
@@ -74,10 +75,23 @@ class RegistrationFactory extends Factory
 
             'requires_visa_letter' => ! $isBrazilian && $this->faker->boolean(30),
 
-            'registration_category_snapshot' => $position,
-            'payment_status' => $this->faker->randomElement(['pending', 'pending_approval', 'approved', 'rejected']),
+            'registration_category_snapshot' => $position, // Ensure this is always set from the position value above
+            'status' => $this->faker->randomElement(['pending', 'pending_approval', 'approved', 'rejected']),
             'invoice_sent_at' => null,
             'notes' => $this->faker->optional()->sentence(),
         ];
+    }
+
+    /**
+     * Create a registration with a specific category
+     */
+    public function withCategory(string $category): static
+    {
+        return $this->state(function (array $attributes) use ($category) {
+            return [
+                'position' => $category,
+                'registration_category_snapshot' => $category,
+            ];
+        });
     }
 }

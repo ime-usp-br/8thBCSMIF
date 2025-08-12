@@ -4,11 +4,12 @@ namespace Tests\Unit;
 
 use App\Helpers\CurrencyHelper;
 use Illuminate\Support\Facades\Config;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class CurrencyHelperTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function format_method_uses_configured_currency_and_locale()
     {
         Config::set('currency.code', 'BRL');
@@ -22,7 +23,7 @@ class CurrencyHelperTest extends TestCase
         $this->assertNotEmpty($formatted);
     }
 
-    /** @test */
+    #[Test]
     public function format_method_accepts_custom_parameters()
     {
         $formatted = CurrencyHelper::format(1000.00, 'USD', 'en', 0);
@@ -31,7 +32,7 @@ class CurrencyHelperTest extends TestCase
         $this->assertNotEmpty($formatted);
     }
 
-    /** @test */
+    #[Test]
     public function get_symbol_returns_correct_symbols()
     {
         $testCases = [
@@ -49,7 +50,7 @@ class CurrencyHelperTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function get_symbol_uses_configured_currency_when_null()
     {
         Config::set('currency.code', 'EUR');
@@ -58,14 +59,14 @@ class CurrencyHelperTest extends TestCase
         $this->assertEquals('€', $symbol);
     }
 
-    /** @test */
+    #[Test]
     public function get_symbol_handles_unknown_currency()
     {
         $symbol = CurrencyHelper::getSymbol('XYZ');
         $this->assertEquals('XYZ ', $symbol);
     }
 
-    /** @test */
+    #[Test]
     public function format_method_uses_fallback_values()
     {
         // Clear config to test fallbacks

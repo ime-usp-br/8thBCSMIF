@@ -112,6 +112,7 @@ class Registration extends Model
         'emergency_contact_phone',
         'requires_visa_letter',
         'registration_category_snapshot',
+        'status',
         'payment_status',
         'invoice_sent_at',
         'notes',

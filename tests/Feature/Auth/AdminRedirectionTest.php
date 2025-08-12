@@ -15,9 +15,11 @@ class AdminRedirectionTest extends TestCase
     {
         parent::setUp();
 
-        // Create roles
-        Role::create(['name' => 'admin']);
-        Role::create(['name' => 'user']);
+        // Ensure database is properly migrated
+        $this->ensureDatabaseMigrated();
+
+        // Setup basic roles
+        $this->setupBasicRoles();
     }
 
     public function test_admin_user_redirects_to_dashboard_after_email_verification(): void
@@ -28,12 +30,15 @@ class AdminRedirectionTest extends TestCase
         ]);
         $admin->assignRole('admin');
 
+        // Create a properly signed verification URL
+        $verificationUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => $admin->id, 'hash' => sha1($admin->email)]
+        );
+
         // Verify email and check redirection
-        $response = $this->actingAs($admin)
-            ->get(route('verification.verify', [
-                'id' => $admin->id,
-                'hash' => sha1($admin->email),
-            ]));
+        $response = $this->actingAs($admin)->get($verificationUrl);
 
         $response->assertRedirect(route('admin.dashboard').'?verified=1');
     }
@@ -46,12 +51,15 @@ class AdminRedirectionTest extends TestCase
         ]);
         $user->assignRole('user');
 
+        // Create a properly signed verification URL
+        $verificationUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => $user->id, 'hash' => sha1($user->email)]
+        );
+
         // Verify email and check redirection
-        $response = $this->actingAs($user)
-            ->get(route('verification.verify', [
-                'id' => $user->id,
-                'hash' => sha1($user->email),
-            ]));
+        $response = $this->actingAs($user)->get($verificationUrl);
 
         $response->assertRedirect(route('registrations.my').'?verified=1');
     }
