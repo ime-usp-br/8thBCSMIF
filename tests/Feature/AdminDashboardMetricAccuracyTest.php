@@ -210,8 +210,8 @@ class AdminDashboardMetricAccuracyTest extends TestCase
         Registration::factory()->count(8)->create(['registration_category_snapshot' => 'professor']);
         Registration::factory()->count(5)->create(['registration_category_snapshot' => 'professional']);
 
-        // Create registration with null category (should be excluded)
-        Registration::factory()->create(['registration_category_snapshot' => null]);
+        // Note: All registrations must have a valid category due to NOT NULL constraint
+        // This ensures data integrity in the registration system
 
         $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
 

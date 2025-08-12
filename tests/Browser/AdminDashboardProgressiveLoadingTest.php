@@ -38,7 +38,7 @@ class AdminDashboardProgressiveLoadingTest extends DuskTestCase
         $this->createTestData();
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_critical_widgets_immediately_and_loads_non_critical_progressively(): void
     {
         $this->browse(function (Browser $browser) {
@@ -78,7 +78,7 @@ class AdminDashboardProgressiveLoadingTest extends DuskTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_loads_dashboard_within_performance_budget(): void
     {
         $this->browse(function (Browser $browser) {
@@ -100,7 +100,7 @@ class AdminDashboardProgressiveLoadingTest extends DuskTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_proper_loading_states_for_progressive_widgets(): void
     {
         $this->browse(function (Browser $browser) {
@@ -134,7 +134,7 @@ class AdminDashboardProgressiveLoadingTest extends DuskTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_refresh_functionality_correctly(): void
     {
         $this->browse(function (Browser $browser) {
@@ -163,7 +163,7 @@ class AdminDashboardProgressiveLoadingTest extends DuskTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_maintains_responsiveness_during_loading(): void
     {
         $this->browse(function (Browser $browser) {
@@ -183,7 +183,7 @@ class AdminDashboardProgressiveLoadingTest extends DuskTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_correct_data_with_proper_formatting(): void
     {
         $this->browse(function (Browser $browser) {
@@ -211,7 +211,7 @@ class AdminDashboardProgressiveLoadingTest extends DuskTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_empty_data_states_gracefully(): void
     {
         // Create admin user with no data
@@ -247,7 +247,7 @@ class AdminDashboardProgressiveLoadingTest extends DuskTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_works_properly_on_different_screen_sizes(): void
     {
         $this->browse(function (Browser $browser) {
@@ -273,7 +273,7 @@ class AdminDashboardProgressiveLoadingTest extends DuskTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_network_delays_gracefully(): void
     {
         $this->browse(function (Browser $browser) {

@@ -33,7 +33,7 @@ class DashboardWidgetsTest extends TestCase
         $this->adminUser->assignRole('admin');
     }
 
-    /** @test */
+    #[Test]
     public function admin_dashboard_component_renders_successfully()
     {
         Livewire::actingAs($this->adminUser)
@@ -43,7 +43,7 @@ class DashboardWidgetsTest extends TestCase
             ->assertSee('Refresh Metrics');
     }
 
-    /** @test */
+    #[Test]
     public function admin_dashboard_refresh_metrics_clears_cache()
     {
         Livewire::actingAs($this->adminUser)
@@ -53,7 +53,7 @@ class DashboardWidgetsTest extends TestCase
             ->assertSee(__('Dashboard metrics refreshed successfully.'));
     }
 
-    /** @test */
+    #[Test]
     public function total_registrations_widget_displays_correct_data()
     {
         // Create registrations
@@ -70,7 +70,7 @@ class DashboardWidgetsTest extends TestCase
             ->assertSee('100.0%'); // Percentage change
     }
 
-    /** @test */
+    #[Test]
     public function total_registrations_widget_responds_to_refresh_event()
     {
         $component = Livewire::actingAs($this->adminUser)
@@ -84,7 +84,7 @@ class DashboardWidgetsTest extends TestCase
             ->assertStatus(200);
     }
 
-    /** @test */
+    #[Test]
     public function registrations_by_category_widget_displays_breakdown()
     {
         Registration::factory()->count(3)->create(['registration_category_snapshot' => 'undergrad_student']);
@@ -104,7 +104,7 @@ class DashboardWidgetsTest extends TestCase
             ->assertSee('6'); // Total
     }
 
-    /** @test */
+    #[Test]
     public function registrations_by_category_widget_calculates_percentages_correctly()
     {
         Registration::factory()->count(6)->create(['registration_category_snapshot' => 'undergrad_student']);
@@ -118,7 +118,7 @@ class DashboardWidgetsTest extends TestCase
         $this->assertEquals(40.0, $component->instance()->getPercentage(4));
     }
 
-    /** @test */
+    #[Test]
     public function pending_approvals_widget_displays_correct_counts()
     {
         // Create pending payment proofs
@@ -143,7 +143,7 @@ class DashboardWidgetsTest extends TestCase
             ->assertSee('Review'); // Review buttons should appear
     }
 
-    /** @test */
+    #[Test]
     public function pending_approvals_widget_navigation_methods_work()
     {
         Payment::factory()->create(['status' => Payment::STATUS_PENDING_APPROVAL]);
@@ -161,7 +161,7 @@ class DashboardWidgetsTest extends TestCase
             ->assertRedirect(route('admin.registrations.index', ['filterEnrollmentProofStatus' => 'pending_approval']));
     }
 
-    /** @test */
+    #[Test]
     public function revenue_widget_displays_correct_amounts()
     {
         // Create confirmed revenue
@@ -187,7 +187,7 @@ class DashboardWidgetsTest extends TestCase
         $this->assertEquals(80.0, $component->instance()->getConfirmedPercentage()); // 2000/2500 * 100
     }
 
-    /** @test */
+    #[Test]
     public function revenue_widget_handles_zero_revenue_gracefully()
     {
         Livewire::actingAs($this->adminUser)
@@ -197,7 +197,7 @@ class DashboardWidgetsTest extends TestCase
             ->assertSee('No revenue data available');
     }
 
-    /** @test */
+    #[Test]
     public function transport_needs_widget_displays_correct_counts()
     {
         // Create registrations with different transport needs
@@ -231,7 +231,7 @@ class DashboardWidgetsTest extends TestCase
             ->assertSee('1'); // Both count
     }
 
-    /** @test */
+    #[Test]
     public function transport_needs_widget_navigation_methods_work()
     {
         Registration::factory()->create(['needs_transport_from_usp' => true]);
@@ -253,7 +253,7 @@ class DashboardWidgetsTest extends TestCase
             ->assertRedirect(route('admin.reports.index'));
     }
 
-    /** @test */
+    #[Test]
     public function all_widgets_respond_to_dashboard_refresh_event()
     {
         $widgets = [
@@ -272,7 +272,7 @@ class DashboardWidgetsTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function widgets_require_admin_authentication()
     {
         $regularUser = User::factory()->create();
@@ -301,7 +301,7 @@ class DashboardWidgetsTest extends TestCase
         $this->assertTrue(true); // Placeholder assertion
     }
 
-    /** @test */
+    #[Test]
     public function dashboard_widgets_handle_empty_data_gracefully()
     {
         $testCases = [

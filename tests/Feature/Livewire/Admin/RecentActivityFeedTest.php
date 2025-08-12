@@ -18,7 +18,7 @@ class RecentActivityFeedTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function it_renders_successfully()
     {
         $component = Livewire::test(RecentActivityFeed::class);
@@ -27,7 +27,7 @@ class RecentActivityFeedTest extends TestCase
         $component->assertSee('Recent Activity');
     }
 
-    /** @test */
+    #[Test]
     public function it_initializes_with_recent_activities()
     {
         // Create test data
@@ -45,7 +45,7 @@ class RecentActivityFeedTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_activity_items_in_template()
     {
         $user = User::factory()->create(['name' => 'Jane Smith', 'email' => 'jane@example.com']);
@@ -65,7 +65,7 @@ class RecentActivityFeedTest extends TestCase
         $component->assertSee('View Registration');
     }
 
-    /** @test */
+    #[Test]
     public function it_shows_empty_state_when_no_activities()
     {
         $component = Livewire::test(RecentActivityFeed::class);
@@ -74,7 +74,7 @@ class RecentActivityFeedTest extends TestCase
         $component->assertSee('Activity will appear here as registrations, payments, and enrollment proofs are submitted.');
     }
 
-    /** @test */
+    #[Test]
     public function it_refreshes_activities_when_refresh_method_called()
     {
         $user = User::factory()->create();
@@ -96,7 +96,7 @@ class RecentActivityFeedTest extends TestCase
         $this->assertGreaterThan($initialCount, $newCount);
     }
 
-    /** @test */
+    #[Test]
     public function it_sets_loading_state_during_refresh()
     {
         $component = Livewire::test(RecentActivityFeed::class);
@@ -119,7 +119,7 @@ class RecentActivityFeedTest extends TestCase
         $component->assertSet('isLoading', false); // Should be false after completion
     }
 
-    /** @test */
+    #[Test]
     public function it_changes_limit_and_reloads_activities()
     {
         $user = User::factory()->create();
@@ -133,7 +133,7 @@ class RecentActivityFeedTest extends TestCase
         $this->assertLessThanOrEqual(5, $component->get('activities')->count());
     }
 
-    /** @test */
+    #[Test]
     public function it_constrains_limit_between_5_and_20()
     {
         $component = Livewire::test(RecentActivityFeed::class);
@@ -151,7 +151,7 @@ class RecentActivityFeedTest extends TestCase
         $component->assertSet('limit', 15);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_correct_activity_icon()
     {
         $component = Livewire::test(RecentActivityFeed::class);
@@ -162,7 +162,7 @@ class RecentActivityFeedTest extends TestCase
         $this->assertEquals('fas fa-credit-card text-green-500', $service->getActivityIcon('payment_proof_upload'));
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_correct_status_badge_class()
     {
         $component = Livewire::test(RecentActivityFeed::class);
@@ -173,7 +173,7 @@ class RecentActivityFeedTest extends TestCase
         $this->assertEquals('bg-green-100 text-green-800', $service->getStatusBadgeClass('approved'));
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_correct_status_text()
     {
         $component = Livewire::test(RecentActivityFeed::class);
@@ -184,7 +184,7 @@ class RecentActivityFeedTest extends TestCase
         $this->assertEquals('Rejected', $service->getStatusText('rejected'));
     }
 
-    /** @test */
+    #[Test]
     public function it_formats_timestamps_correctly()
     {
         $component = Livewire::test(RecentActivityFeed::class);
@@ -195,7 +195,7 @@ class RecentActivityFeedTest extends TestCase
         $this->assertStringContainsString('minutes ago', $result);
     }
 
-    /** @test */
+    #[Test]
     public function it_formats_string_timestamps()
     {
         $component = Livewire::test(RecentActivityFeed::class);
@@ -206,7 +206,7 @@ class RecentActivityFeedTest extends TestCase
         $this->assertStringContainsString('hours ago', $result);
     }
 
-    /** @test */
+    #[Test]
     public function it_detects_if_has_activities()
     {
         // Add activity first
@@ -220,7 +220,7 @@ class RecentActivityFeedTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_activity_count_by_type()
     {
         $user = User::factory()->create();
@@ -247,7 +247,7 @@ class RecentActivityFeedTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_unknown_activity_types()
     {
         $component = Livewire::test(RecentActivityFeed::class);
@@ -257,7 +257,7 @@ class RecentActivityFeedTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_correct_activity_counts_in_template()
     {
         $user = User::factory()->create();
@@ -289,7 +289,7 @@ class RecentActivityFeedTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_link_to_admin_registrations()
     {
         $user = User::factory()->create();
@@ -304,7 +304,7 @@ class RecentActivityFeedTest extends TestCase
         $component->assertSeeHtml('href="'.route('admin.registrations.index').'"');
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_polling_information()
     {
         // Create an activity to ensure the settings section renders
@@ -317,7 +317,7 @@ class RecentActivityFeedTest extends TestCase
         $component->assertSeeHtml('wire:poll.30s="refreshActivities"');
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_limit_selector()
     {
         // Create an activity to ensure the settings section renders
@@ -330,7 +330,7 @@ class RecentActivityFeedTest extends TestCase
         $component->assertSeeHtml('<option value="10">10</option>');
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_manual_refresh_button()
     {
         $component = Livewire::test(RecentActivityFeed::class);
@@ -339,7 +339,7 @@ class RecentActivityFeedTest extends TestCase
         $component->assertSee('Refresh activity feed');
     }
 
-    /** @test */
+    #[Test]
     public function it_shows_loading_indicator_during_refresh()
     {
         $component = Livewire::test(RecentActivityFeed::class);
@@ -349,7 +349,7 @@ class RecentActivityFeedTest extends TestCase
         $component->assertSee('Updating...');
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_debug_info_in_local_environment()
     {
         // Set app environment to local for debug info
@@ -362,7 +362,7 @@ class RecentActivityFeedTest extends TestCase
         $component->assertSee('Polling every 30s');
     }
 
-    /** @test */
+    #[Test]
     public function it_hides_debug_info_in_production_environment()
     {
         // Set app environment to production
@@ -374,7 +374,7 @@ class RecentActivityFeedTest extends TestCase
         $component->assertDontSee('Debug Info');
     }
 
-    /** @test */
+    #[Test]
     public function it_includes_wire_poll_directive_in_template()
     {
         $component = Livewire::test(RecentActivityFeed::class);

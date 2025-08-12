@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -12,12 +13,20 @@ use Tests\TestCase;
  */
 class AdminDashboardResponsiveTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @var User */
     private $adminUser;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Ensure database is properly migrated
+        $this->ensureDatabaseMigrated();
+
+        // Setup basic roles
+        $this->setupBasicRoles();
 
         $this->adminUser = User::factory()->create();
         $this->adminUser->assignRole('admin');
