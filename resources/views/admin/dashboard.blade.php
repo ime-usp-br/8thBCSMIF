@@ -123,23 +123,23 @@
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-600 dark:text-gray-400">{{ __('Confirmed') }}:</span>
                                     <span class="font-medium text-green-600 tabular-nums" 
-                                          aria-label="{{ __('Confirmed revenue') }}: R$ {{ number_format($metrics['revenue']['confirmed'], 2, ',', '.') }}">
-                                        R$ {{ number_format($metrics['revenue']['confirmed'], 2, ',', '.') }}
+                                          aria-label="{{ __('Confirmed revenue') }}: @currency($metrics['revenue']['confirmed'])">
+                                        @currency($metrics['revenue']['confirmed'])
                                     </span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-600 dark:text-gray-400">{{ __('Pending') }}:</span>
                                     <span class="font-medium text-orange-600 tabular-nums" 
-                                          aria-label="{{ __('Pending revenue') }}: R$ {{ number_format($metrics['revenue']['pending'], 2, ',', '.') }}">
-                                        R$ {{ number_format($metrics['revenue']['pending'], 2, ',', '.') }}
+                                          aria-label="{{ __('Pending revenue') }}: @currency($metrics['revenue']['pending'])">
+                                        @currency($metrics['revenue']['pending'])
                                     </span>
                                 </div>
                                 <div class="border-t pt-2 mt-3">
                                     <div class="flex justify-between font-semibold items-center">
                                         <span class="text-gray-900 dark:text-gray-100">{{ __('Total') }}:</span>
                                         <span class="text-gray-900 dark:text-gray-100 tabular-nums" 
-                                              aria-label="{{ __('Total revenue') }}: R$ {{ number_format($metrics['revenue']['confirmed'] + $metrics['revenue']['pending'], 2, ',', '.') }}">
-                                            R$ {{ number_format($metrics['revenue']['confirmed'] + $metrics['revenue']['pending'], 2, ',', '.') }}
+                                              aria-label="{{ __('Total revenue') }}: @currency($metrics['revenue']['confirmed'] + $metrics['revenue']['pending'])">
+                                            @currency($metrics['revenue']['confirmed'] + $metrics['revenue']['pending'])
                                         </span>
                                     </div>
                                 </div>

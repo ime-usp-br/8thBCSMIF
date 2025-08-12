@@ -11,6 +11,7 @@ use App\Observers\EnrollmentProofObserver;
 use App\Observers\PaymentObserver;
 use App\Observers\RegistrationObserver;
 use App\Policies\RegistrationPolicy;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -61,5 +62,20 @@ class AppServiceProvider extends ServiceProvider
         Registration::observe(RegistrationObserver::class);
         Payment::observe(PaymentObserver::class);
         EnrollmentProof::observe(EnrollmentProofObserver::class);
+
+        // Register Blade directive for currency formatting
+        Blade::directive('currency', function (string $expression): string {
+            return "<?php echo \Illuminate\Support\Number::currency({$expression}, in: (string) config('currency.code', 'BRL'), locale: (string) config('currency.locale', 'pt_BR'), precision: (int) config('currency.precision', 2)); ?>";
+        });
+
+        // Register Blade directive for locale-aware date formatting
+        Blade::directive('dateLocale', function (string $expression): string {
+            return "<?php echo \Carbon\Carbon::parse({$expression})->locale((string) config('app.locale', 'en'))->format((string) config('app.locale', 'en') === 'pt_BR' ? 'd/m/Y H:i' : 'M j, Y g:i A'); ?>";
+        });
+
+        // Register Blade directive for human-readable date formatting
+        Blade::directive('dateHuman', function (string $expression): string {
+            return "<?php echo \Carbon\Carbon::parse({$expression})->locale((string) config('app.locale', 'en'))->diffForHumans(); ?>";
+        });
     }
 }
