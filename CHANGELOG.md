@@ -5,6 +5,48 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/v2.0.0.html).
 
+## [0.2.0] - 2025-08-13
+
+### Adicionado
+
+*   **[ADMIN][FEATURE] Dashboard Administrativo Completo:** Sistema completo de dashboard administrativo com visão geral de métricas e estatísticas do evento.
+    *   **Dashboard Principal (`/admin/dashboard`):** Página inicial administrativa com widgets interativos e métricas em tempo real.
+    *   **Widgets Implementados:**
+        *   **Total de Inscrições:** Contador dinâmico com estatísticas de crescimento.
+        *   **Receita:** Monitoramento de receita confirmada e pendente com formatação internacionalizada.
+        *   **Aprovações Pendentes:** Links rápidos para comprovantes de pagamento e matrícula pendentes.
+        *   **Inscrições por Categoria:** Distribuição visual por categoria de participante.
+        *   **Necessidades de Transporte:** Contabilização de participantes para transporte USP e GRU.
+*   **[ADMIN][SERVICE] Serviços de Métricas e Atividades:**
+    *   **DashboardMetricService:** Serviço centralizado para cálculo de métricas administrativas com otimizações de performance.
+    *   **ActivityFeedService:** Sistema de feed de atividades em tempo real para monitoramento de ações do sistema.
+    *   **CurrencyHelper:** Helper para formatação de valores monetários com suporte a internacionalização.
+*   **[I18N][FEATURE] Sistema de Internacionalização Completo:**
+    *   **Formatação de Moedas:** Suporte completo a formatação de valores em Real (pt_BR) e outras moedas.
+    *   **Formatação de Datas:** Sistema de formatação de datas por localidade.
+    *   **CurrencyServiceProvider:** Provider dedicado para gerenciamento de configurações de moeda.
+*   **[ADMIN][DATABASE] Sistema de Status das Inscrições:**
+    *   **Coluna Status:** Nova coluna `status` na tabela `registrations` para controle de workflow.
+    *   **Workflow de Aprovação:** Sistema de aprovação/rejeição de inscrições com controle granular.
+*   **[UI/UX][FEATURE] Melhorias de Interface e Experiência:**
+    *   **Navegação por Breadcrumbs:** Sistema completo de breadcrumbs para navegação contextual.
+    *   **Design Responsivo:** Interface otimizada para desktop, tablet e mobile.
+    *   **Melhorias de Acessibilidade:** Implementação de padrões WCAG para melhor acessibilidade.
+    *   **Carregamento Progressivo:** Otimizações de performance com carregamento inteligente de componentes.
+*   **[TEST][COMPREHENSIVE] Suíte de Testes Abrangente:**
+    *   **Testes Browser (Dusk):** 6 novos arquivos de teste para interface administrativa (acessibilidade, performance, responsividade, interatividade).
+    *   **Testes Feature:** 8 novos testes de integração cobrindo dashboard, navegação, internacionalização e controllers.
+    *   **Testes Unit:** 5 novos testes unitários para services, helpers e controllers.
+
+### Alterado
+
+*   **[ADMIN] Aprimoramentos no Sistema de Inscrições:**
+    *   Lista de inscrições administrativas aprimorada com novos filtros e melhor visualização.
+    *   Interface de detalhes de inscrição reformulada para melhor usabilidade.
+*   **[CORE] Arquitetura de Serviços:**
+    *   Refatoração da arquitetura para incluir services especializados (DashboardMetricService, ActivityFeedService).
+    *   Integração melhorada entre componentes Livewire e services backend.
+
 ## [Não lançado]
 
 ### Adicionado
@@ -91,4 +133,5 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 *   Conteúdo padrão do `README.md` do Laravel.
 *   Logo `<x-application-logo />` do layout `guest.blade.php`.
 
-[Não lançado]: https://github.com/ime-usp-br/laravel_12_starter_kit/compare/HEAD
+[Não lançado]: https://github.com/ime-usp-br/8thBCSMIF/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/ime-usp-br/8thBCSMIF/compare/v0.1.0...v0.2.0
