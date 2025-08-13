@@ -284,6 +284,7 @@ class FixRegistrationStatus extends Command
             ['ID', 'Error'],
             array_map(function ($error) {
                 $errorMessage = is_string($error['error']) ? $error['error'] : 'Unknown error';
+
                 return [
                     $error['id'],
                     strlen($errorMessage) > 60 ? substr($errorMessage, 0, 57).'...' : $errorMessage,

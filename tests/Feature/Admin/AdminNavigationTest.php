@@ -49,7 +49,7 @@ class AdminNavigationTest extends TestCase
     {
         // Create a registration for the regular user so they have access to the system
         Registration::factory()->withCategory('undergrad_student')->create(['user_id' => $this->regularUser->id]);
-        
+
         // Check that when regular user visits home page, they don't see admin panel
         // The page may allow access or redirect depending on middleware configuration
         $response = $this->actingAs($this->regularUser)
@@ -62,10 +62,10 @@ class AdminNavigationTest extends TestCase
             // If redirected, follow the redirect and check the final page
             $response->assertStatus(302);
             $location = $response->headers->get('Location');
-            
+
             $response = $this->actingAs($this->regularUser)
                 ->get($location);
-                
+
             $response->assertStatus(200);
             $response->assertDontSee(__('Admin Panel'));
         }
@@ -228,7 +228,7 @@ class AdminNavigationTest extends TestCase
         $response->assertSee(__('Dashboard'));
         $response->assertSee(__('Registrations'));
         $response->assertSee(__('Reports'));
-        
+
         // Verify the responsive navigation structure exists
         $response->assertSee('class="', false); // Has CSS classes for responsive behavior
     }
