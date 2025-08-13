@@ -1,7 +1,7 @@
 # Site de Inscrições do 8th BCSMIF
 
-**Versão:** 0.1.0<br>
-**Data:** 2025-05-31
+**Versão:** 0.2.0<br>
+**Data:** 2025-08-13
 
 [![Status da Build](https://github.com/ime-usp-br/8thBCSMIF/actions/workflows/laravel.yml/badge.svg)](https://github.com/ime-usp-br/8thBCSMIF/actions/workflows/laravel.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -43,11 +43,14 @@ O site de inscrições do 8th BCSMIF visa oferecer as seguintes funcionalidades:
     *   Visualização das próprias inscrições realizadas.
     *   Acesso aos detalhes da inscrição.
     *   Upload de comprovante de pagamento (para inscrições elegíveis).
-*   **Área Administrativa (MVP):**
-    *   Listagem e visualização de todas as inscrições.
-    *   Filtros básicos para gerenciamento.
-    *   Download de comprovantes de pagamento.
-    *   Atualização de status de pagamento das inscrições.
+*   **Área Administrativa Completa:**
+    *   **Dashboard Administrativo:** Visão geral com métricas em tempo real, estatísticas de inscrições por categoria, receita, comprovantes pendentes e necessidades de transporte.
+    *   **Widgets Interativos:** Total de inscrições, receita gerada, aprovações pendentes, distribuição por categorias e necessidades de transporte.
+    *   **Feed de Atividades:** Monitoramento em tempo real das ações do sistema (novas inscrições, uploads de comprovantes, mudanças de status).
+    *   **Gerenciamento de Inscrições:** Listagem completa com filtros avançados, visualização detalhada e ferramentas de aprovação/rejeição.
+    *   **Sistema de Status:** Controle completo do status das inscrições com workflow de aprovação.
+    *   **Navegação por Breadcrumbs:** Interface intuitiva com navegação contextual.
+    *   **Design Responsivo:** Otimizado para desktop e dispositivos móveis com carregamento progressivo.
 *   **Notificações por Email:**
     *   Confirmação de nova inscrição para o participante e coordenador.
     *   Notificação de upload de comprovante para o coordenador.
@@ -72,7 +75,8 @@ Este projeto utiliza a stack tecnológica fornecida pelo Laravel 12 USP Starter 
     *   `uspdev/replicado` para acesso a dados corporativos (usado na validação de registro).
 *   **Autenticação Scaffolding:** `laravel/breeze` (adaptado).
 *   **Permissões:** `spatie/laravel-permission`.
-*   **Testes:** PHPUnit, Laravel Dusk.
+*   **Internacionalização:** Sistema completo de i18n com formatação de moedas e datas por localidade (pt_BR, en).
+*   **Testes:** PHPUnit, Laravel Dusk (com cobertura abrangente: Browser, Feature e Unit tests).
 *   **Qualidade:** Laravel Pint, Larastan.
 *   **Ferramentas Dev:** Python 3.x, `google-genai`, `python-dotenv`, `tqdm` (para scripts LLM auxiliares).
 
