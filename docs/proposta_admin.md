@@ -108,7 +108,7 @@ O `ReportsController` existente fornece a base para relatórios administrativos.
         7.  `emergency_contact_phone` (Telefone do Contato de Emergência)
     *   **Lógica Backend:**
         *   Criar um novo método no `ReportsController`, por exemplo, `transportReport(Request $request)`.
-        *   A query seria algo como: `Registration::where('needs_transport_from_usp', true)->where('payment_status', 'approved')->get([...colunas...]);`
+        *   A query seria algo como: `Registration::where('needs_transport_from_usp', true)->where('status', 'approved')->get([...colunas...]);`
         *   Para exportação, pacotes como `maatwebsite/excel` são excelentes.
 
 ---

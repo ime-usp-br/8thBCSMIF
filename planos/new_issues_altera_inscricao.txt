@@ -63,19 +63,19 @@ PROJECT: 8thBCSMIF
 CHORE_MOTIVATION:
 Com a introdução da tabela `payments`, as responsabilidades de armazenamento de informações financeiras foram movidas do model `Registration` para o novo model `Payment`. É necessário refatorar `Registration` para refletir essa mudança, removendo colunas legadas e estabelecendo o novo relacionamento `hasMany`.
 CHORE_DESCRIPTION:
-Esta tarefa consiste em modificar o model `App\Models\Registration` e sua migration correspondente para se adequar à nova estrutura de pagamentos múltiplos. As colunas `calculated_fee`, `payment_proof_path` e `payment_uploaded_at` serão removidas da tabela `registrations` através de uma nova migration. O model será atualizado para incluir o relacionamento `hasMany(Payment::class)`. A coluna `payment_status` será mantida, mas sua lógica será adaptada para refletir um status consolidado dos pagamentos associados.
+Esta tarefa consiste em modificar o model `App\Models\Registration` e sua migration correspondente para se adequar à nova estrutura de pagamentos múltiplos. As colunas `calculated_fee`, `payment_proof_path` e `payment_uploaded_at` serão removidas da tabela `registrations` através de uma nova migration. O model será atualizado para incluir o relacionamento `hasMany(Payment::class)`. A coluna `status` será mantida, mas sua lógica será adaptada para refletir um status consolidado dos pagamentos associados.
 TECHNICAL_DETAILS:
 1.  **Nova Migration:** Criar uma nova migration (ex: `update_registrations_for_multiple_payments`) que remove as colunas `calculated_fee`, `payment_proof_path`, e `payment_uploaded_at` da tabela `registrations`.
 2.  **Model `Registration`:**
     - Remover as colunas removidas da propriedade `$fillable` e `$casts`.
     - Adicionar o relacionamento inverso: `public function payments(): HasMany { return $this->hasMany(Payment::class); }`.
-    - (Opcional) Adicionar um accessor para o status consolidado, ex: `getConsolidatedPaymentStatusAttribute()`, que itera sobre `$this->payments` para determinar se o status geral é 'paid', 'partially_paid', 'pending', etc. A coluna `registrations.payment_status` será atualizada por esta lógica.
+    - (Opcional) Adicionar um accessor para o status consolidado, ex: `getConsolidatedStatusAttribute()`, que itera sobre `$this->payments` para determinar se o status geral é 'paid', 'partially_paid', 'pending', etc. A coluna `registrations.status` será atualizada por esta lógica.
 ACCEPTANCE_CRITERIA:
 - [ ] AC1: Nova migration para remover as colunas `calculated_fee`, `payment_proof_path`, e `payment_uploaded_at` da tabela `registrations` foi criada.
 - [ ] AC2: A migration executa (`up()`) e reverte (`down()`) com sucesso.
 - [ ] AC3: As propriedades `$fillable` e `$casts` no model `Registration` foram atualizadas para remover as colunas antigas.
 - [ ] AC4: O relacionamento `payments()` que retorna um `HasMany(Payment::class)` está implementado e funcional no model `Registration`.
-- [ ] AC5: O propósito da coluna `registrations.payment_status` está documentado no model como um status consolidado.
+- [ ] AC5: O propósito da coluna `registrations.status` está documentado no model como um status consolidado.
 - [ ] AC6: Testes automatizados (PHPUnit para Feature/Unit, Dusk para Browser/UI) criados/atualizados para cobrir a nova funcionalidade.
 - [ ] AC7: Todos os testes (existentes e novos) passam na CI.
 - [ ] AC8: Código PHP implementado segue estritamente os padrões PSR-12 (formatado com `./vendor/bin/pint`).

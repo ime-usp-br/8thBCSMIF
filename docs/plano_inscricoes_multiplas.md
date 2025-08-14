@@ -20,7 +20,7 @@ Este plano detalha as etapas necessárias para implementar a funcionalidade que 
         *   **Ação:** Modificar o model `App\Models\Registration` para refletir a nova estrutura.
         *   **Relacionamento:** Adicionar o relacionamento inverso `hasMany(Payment::class)` para permitir o acesso fácil a todos os pagamentos de uma inscrição (`$registration->payments`).
         *   **Revisão de Colunas:** As colunas `calculated_fee`, `payment_proof_path`, e `payment_uploaded_at` serão removidas da tabela `registrations`, pois essa responsabilidade agora pertence a cada registro individual na tabela `payments`.
-        *   **Status Geral:** A coluna `registrations.payment_status` será mantida, mas seu propósito mudará. Ela representará um **status geral consolidado**, computado a partir dos status de todos os `payments` associados. Por exemplo, 'completed' se todos os pagamentos estiverem 'paid'; 'partially_paid' se houver pagamentos concluídos e pendentes.
+        *   **Status Geral:** A coluna `registrations.status` será mantida, mas seu propósito mudará. Ela representará um **status geral consolidado**, computado a partir dos status de todos os `payments` associados. Por exemplo, 'completed' se todos os pagamentos estiverem 'paid'; 'partially_paid' se houver pagamentos concluídos e pendentes.
 
 #### **Fase 2: Backend - Lógica de Negócio e Serviços**
 

@@ -139,7 +139,7 @@ A seguinte ordem é sugerida, respeitando as dependências entre as fases e comp
     *   `LABELS: bcsmif, fase-2, backend, controller, livewire, validation, todo`
     *   `FEATURE_MOTIVATION:` Orquestrar o processo de salvar uma nova inscrição, desde a validação dos dados do formulário até o disparo de notificações.
     *   `FEATURE_DESCRIPTION:` Criar um `RegistrationController` (ou um Service `RegistrationService` chamado por um componente Livewire). O método `store` (ou equivalente) será responsável por: validar os dados, verificar duplicidade (opcional), usar o `FeeCalculationService`, salvar a `Registration` e suas associações com `Event` (via `sync()` na relação `belongsToMany`), e disparar a notificação por email.
-    *   `PROPOSED_SOLUTION:` Criar FormRequest `StoreRegistrationRequest` para validação robusta. No controller/service, obter usuário logado, chamar `FeeCalculationService`, criar `Registration` com `user_id`, `calculated_fee`, `registration_category`, `payment_status = 'pending'`, e demais dados do formulário. Associar eventos via `$registration->events()->sync($eventDataWithPrices)`. Disparar `NewRegistrationNotification`.
+    *   `PROPOSED_SOLUTION:` Criar FormRequest `StoreRegistrationRequest` para validação robusta. No controller/service, obter usuário logado, chamar `FeeCalculationService`, criar `Registration` com `user_id`, `calculated_fee`, `registration_category`, `status = 'pending'`, e demais dados do formulário. Associar eventos via `$registration->events()->sync($eventDataWithPrices)`. Disparar `NewRegistrationNotification`.
     *   `ACCEPTANCE_CRITERIA:`
         *   `[ ] StoreRegistrationRequest criado com todas as regras de validação necessárias para os campos do formulário.`
         *   `[ ] Controller/Service de Registro implementado com método 'store'.`
@@ -170,7 +170,7 @@ A seguinte ordem é sugerida, respeitando as dependências entre as fases e comp
     *   `LABELS: bcsmif, fase-2, backend, file-upload, storage, todo`
     *   `FEATURE_MOTIVATION:` Permitir que participantes brasileiros anexem seus comprovantes de pagamento.
     *   `FEATURE_DESCRIPTION:` Implementar a funcionalidade de upload de arquivo para o comprovante de pagamento. O arquivo deve ser armazenado de forma segura e associado à inscrição correspondente. O status da inscrição deve ser atualizado.
-    *   `PROPOSED_SOLUTION:` Criar um método em um Controller (ex: `UserProfileController` ou `RegistrationController`) ou em um componente Livewire na área do usuário. Utilizar o `Storage` facade do Laravel para salvar o arquivo em `storage/app/proofs/{registration_id}/` (ou similar, não público). Validar o tipo e tamanho do arquivo. Atualizar os campos `payment_proof_path`, `payment_uploaded_at` e `payment_status` (ex: para `'pending_approval'`) na `Registration`. Disparar `ProofUploadedNotification`.
+    *   `PROPOSED_SOLUTION:` Criar um método em um Controller (ex: `UserProfileController` ou `RegistrationController`) ou em um componente Livewire na área do usuário. Utilizar o `Storage` facade do Laravel para salvar o arquivo em `storage/app/proofs/{registration_id}/` (ou similar, não público). Validar o tipo e tamanho do arquivo. Atualizar os campos `payment_proof_path`, `payment_uploaded_at` e `status` (ex: para `'pending_approval'`) na `Registration`. Disparar `ProofUploadedNotification`.
     *   `ACCEPTANCE_CRITERIA:`
         *   `[ ] Método/Ação para upload de comprovante implementado.`
         *   `[ ] Arquivo de comprovante é validado (ex: PDF, JPG, PNG, tamanho máximo).`
@@ -211,7 +211,7 @@ A seguinte ordem é sugerida, respeitando as dependências entre as fases e comp
     *   `TYPE: ui`
     *   `LABELS: bcsmif, fase-3, frontend, livewire, volt, tailwind, user-dashboard, todo`
     *   `FEATURE_MOTIVATION:` Permitir que usuários gerenciem suas inscrições e realizem o upload de comprovantes.
-    *   `FEATURE_DESCRIPTION:` Criar uma seção "Minhas Inscrições" (ex: `/dashboard/my-registrations`). Listar as inscrições do usuário logado, com status e taxa. Permitir visualizar detalhes de cada inscrição. Para inscrições com `payment_status = 'pending'` (e usuário brasileiro), exibir um formulário para upload do comprovante de pagamento que interaja com a lógica de backend (Issue 2.4).
+    *   `FEATURE_DESCRIPTION:` Criar uma seção "Minhas Inscrições" (ex: `/dashboard/my-registrations`). Listar as inscrições do usuário logado, com status e taxa. Permitir visualizar detalhes de cada inscrição. Para inscrições com `status = 'pending'` (e usuário brasileiro), exibir um formulário para upload do comprovante de pagamento que interaja com a lógica de backend (Issue 2.4).
     *   `ACCEPTANCE_CRITERIA:`
         *   `[ ] Página/Componente "Minhas Inscrições" lista corretamente as inscrições do usuário autenticado.`
         *   `[ ] Detalhes da inscrição (eventos, taxa, status) são exibidos corretamente.`
@@ -255,9 +255,9 @@ A seguinte ordem é sugerida, respeitando as dependências entre as fases e comp
     *   `TYPE: feature`
     *   `LABELS: bcsmif, fase-4, backend, admin, ui, livewire, todo, payment`
     *   `FEATURE_MOTIVATION:` Permitir que administradores confirmem pagamentos e atualizem o status das inscrições.
-    *   `FEATURE_DESCRIPTION:` Na view de detalhes da inscrição (admin), adicionar funcionalidade (ex: botões, dropdown) para que o administrador possa alterar o `payment_status` de uma inscrição (ex: de `'pending_approval'` para `'paid_br'`, ou de `'pending'` para `'free'` ou `'cancelled'`).
+    *   `FEATURE_DESCRIPTION:` Na view de detalhes da inscrição (admin), adicionar funcionalidade (ex: botões, dropdown) para que o administrador possa alterar o `status` de uma inscrição (ex: de `'pending_approval'` para `'paid_br'`, ou de `'pending'` para `'free'` ou `'cancelled'`).
     *   `ACCEPTANCE_CRITERIA:`
-        *   `[ ] Administrador pode alterar o 'payment_status' de uma inscrição na interface de detalhes.`
+        *   `[ ] Administrador pode alterar o 'status' de uma inscrição na interface de detalhes.`
         *   `[ ] Alterações de status são refletidas corretamente no banco de dados e na interface.`
         *   `[ ] (Opcional) Disparar notificação ao usuário sobre a mudança de status de pagamento.`
 

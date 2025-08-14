@@ -32,7 +32,7 @@ class ActivityFeedService
         // Recent registration submissions (based on created_at)
         $recentRegistrations = Registration::query()
             ->with('user:id,name,email')
-            ->select('id', 'user_id', 'full_name', 'payment_status', 'created_at')
+            ->select('id', 'user_id', 'full_name', 'status', 'created_at')
             ->latest('created_at')
             ->limit($limit)
             ->get()
@@ -45,7 +45,7 @@ class ActivityFeedService
                     'timestamp' => $registration->created_at,
                     'user_name' => $registration->user->name ?? $registration->full_name,
                     'user_email' => $registration->user->email ?? __('N/A'),
-                    'status' => $registration->payment_status,
+                    'status' => $registration->status,
                     'link_url' => route('admin.registrations.show', $registration->id),
                     'link_text' => __('View Registration'),
                 ];
