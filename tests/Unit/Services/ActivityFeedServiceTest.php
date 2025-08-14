@@ -38,7 +38,7 @@ class ActivityFeedServiceTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'full_name' => 'John Doe',
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'created_at' => Carbon::now()->subMinutes(5),
         ]);
 
@@ -68,7 +68,7 @@ class ActivityFeedServiceTest extends TestCase
         Registration::factory()->create([
             'user_id' => $user->id,
             'full_name' => 'Jane Doe',
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'created_at' => Carbon::now()->subMinutes(10),
         ]);
 

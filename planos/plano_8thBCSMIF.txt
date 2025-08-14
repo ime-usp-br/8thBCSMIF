@@ -195,7 +195,7 @@ PROPOSED_SOLUTION:
         *   **Dados da Inscrição/Pagamento:**
             *   `registration_category_snapshot` (string) - Armazena a `participant_category` usada para calcular o preço no momento da inscrição.
             *   `calculated_fee` (decimal, 8, 2) - Taxa total calculada.
-            *   `payment_status` (string, index, default: 'pending') - Ex: 'pending', 'pending_approval', 'paid_br', 'invoice_sent_int', 'paid_int', 'free', 'cancelled'.
+            *   `status` (string, index, default: 'pending') - Ex: 'pending', 'pending_approval', 'paid_br', 'invoice_sent_int', 'paid_int', 'free', 'cancelled'.
             *   `payment_proof_path` (string, nullable) - Caminho para o comprovante (para BR).
             *   `payment_uploaded_at` (timestamp, nullable)
             *   `invoice_sent_at` (timestamp, nullable) - Para controle de envio de invoice internacional.
@@ -362,7 +362,7 @@ PROPOSED_SOLUTION:
             [
                 'registration_category_snapshot' => $participantCategory,
                 'calculated_fee' => $feeData['total_fee'],
-                'payment_status' => ($feeData['total_fee'] == 0) ? 'free' : 'pending',
+                'status' => ($feeData['total_fee'] == 0) ? 'free' : 'pending',
                 // Preencher outros campos não diretamente do formulário, se houver
             ]
         ));
@@ -386,7 +386,7 @@ ACCEPTANCE_CRITERIA:
 - [ ] AC6: Método `store` no `RegistrationController` (ou componente Livewire) utiliza `StoreRegistrationRequest` para validação.
 - [ ] AC7: `FeeCalculationService` é chamado corretamente para obter as taxas.
 - [ ] AC8: Uma nova `Registration` é criada e salva no banco de dados com os dados validados, `user_id`, `registration_category_snapshot` e `calculated_fee`.
-- [ ] AC9: Se `calculated_fee` for zero, `payment_status` é definido como 'free'; caso contrário, 'pending'.
+- [ ] AC9: Se `calculated_fee` for zero, `status` é definido como 'free'; caso contrário, 'pending'.
 - [ ] AC10: Os eventos selecionados são corretamente associados à inscrição na tabela `event_registration` com o `price_at_registration` correto para cada evento.
 - [ ] AC11: Evento `NewRegistrationCreated` (ou notificação por email) é disparado após a criação bem-sucedida da inscrição (coberto na Issue #23).
 - [ ] AC12: Usuário é redirecionado para uma página de confirmação/dashboard com mensagem de sucesso após a inscrição.
@@ -457,7 +457,7 @@ FEATURE_DESCRIPTION: Esta tarefa consiste em implementar a funcionalidade de bac
 1.  Criar um método em um Controller apropriado (ex: `RegistrationController` ou um novo `PaymentProofController`, ou dentro de um componente Livewire na área do usuário) para lidar com o request de upload.
 2.  Validar o arquivo enviado (tipo: PDF, JPG, PNG; tamanho máximo, ex: 5MB).
 3.  Armazenar o arquivo de forma segura no sistema de arquivos (ex: `storage/app/proofs/{registration_id}/` ou similar, usando o disco 'local' ou 'private'). O nome do arquivo deve ser sanitizado ou gerado unicamente para evitar conflitos/problemas.
-4.  Atualizar o registro da `Registration` correspondente no banco de dados com o caminho do arquivo (`payment_proof_path`), a data do upload (`payment_uploaded_at`), e mudar o `payment_status` para um status apropriado (ex: 'pending_approval').
+4.  Atualizar o registro da `Registration` correspondente no banco de dados com o caminho do arquivo (`payment_proof_path`), a data do upload (`payment_uploaded_at`), e mudar o `status` para um status apropriado (ex: 'pending_approval').
 5.  Disparar a notificação `ProofUploadedNotification` para o coordenador (conforme Issue #23).
 PROPOSED_SOLUTION:
 *   **Rota:** Definir uma rota POST, ex: `/my-registrations/{registration}/upload-proof`.
@@ -481,7 +481,7 @@ PROPOSED_SOLUTION:
         $registration->update([
             'payment_proof_path' => $path,
             'payment_uploaded_at' => now(),
-            'payment_status' => 'pending_approval',
+            'status' => 'pending_approval',
         ]);
         ```
     *   Disparar Notificação: `Mail::to(config('mail.coordinator_address'))->send(new ProofUploadedNotification($registration));` (ou via evento).
@@ -504,7 +504,7 @@ ACCEPTANCE_CRITERIA:
 - [ ] AC4: Arquivo de comprovante é validado quanto ao tipo (PDF, JPG, PNG) e tamanho máximo (ex: 5MB).
 - [ ] AC5: Arquivo é armazenado de forma segura em um disco não público (ex: `storage/app/private_uploads/proofs/{registration_id}/`).
 - [ ] AC6: Nome do arquivo armazenado é sanitizado ou gerado unicamente.
-- [ ] AC7: Caminho do arquivo (`payment_proof_path`), data de upload (`payment_uploaded_at`) e status de pagamento (`payment_status` para 'pending_approval') são corretamente atualizados na tabela `registrations`.
+- [ ] AC7: Caminho do arquivo (`payment_proof_path`), data de upload (`payment_uploaded_at`) e status de pagamento (`status` para 'pending_approval') são corretamente atualizados na tabela `registrations`.
 - [ ] AC8: Notificação `ProofUploadedNotification` é disparada para o coordenador após o upload bem-sucedido (coberto pela Issue #23).
 - [ ] AC9: Usuário é redirecionado com mensagem de sucesso após o upload.
 - [ ] AC10: Código PHP segue padrões PSR-12 (Pint) e passa no PHPStan.
@@ -663,7 +663,7 @@ PROPOSED_SOLUTION:
     *   Modal ou seção separada para exibir detalhes da inscrição.
     *   Formulário condicional para upload:
         ```html
-        @if ($selectedRegistration && $selectedRegistration->user->is_brazilian_document_type && $selectedRegistration->payment_status === 'pending')
+        @if ($selectedRegistration && $selectedRegistration->user->is_brazilian_document_type && $selectedRegistration->status === 'pending')
             <form wire:submit.prevent="uploadProof({{ $selectedRegistration->id }})">
                 <input type="file" wire:model="paymentProofFile">
                 @error('paymentProofFile') <span class="error">{{ $message }}</span> @enderror
@@ -808,7 +808,7 @@ ASSIGNEE: @me
 PROJECT: 8thBCSMIF
 MILESTONE: Fase 4: Administração (MVP)
 FEATURE_MOTIVATION: Permitir que administradores do evento possam confirmar os pagamentos recebidos (especialmente os comprovantes enviados por participantes brasileiros) e atualizar o status das inscrições no sistema.
-FEATURE_DESCRIPTION: Na interface de visualização de detalhes de uma inscrição (desenvolvida na Issue #41), adicionar a funcionalidade para que um administrador possa alterar o `payment_status` da inscrição.
+FEATURE_DESCRIPTION: Na interface de visualização de detalhes de uma inscrição (desenvolvida na Issue #41), adicionar a funcionalidade para que um administrador possa alterar o `status` da inscrição.
 1.  **Interface de Atualização:**
     *   Exibir o status de pagamento atual.
     *   Fornecer controles (ex: um dropdown ou botões) para selecionar um novo status de pagamento (ex: 'paid_br', 'paid_int', 'invoice_sent_int', 'free', 'cancelled').
@@ -816,7 +816,7 @@ FEATURE_DESCRIPTION: Na interface de visualização de detalhes de uma inscriç�
 2.  **Lógica de Backend:**
     *   Criar um método no `Admin/RegistrationController` (ou no componente Livewire de detalhes) para processar a atualização do status.
     *   Validar se o novo status é um valor permitido.
-    *   Atualizar o campo `payment_status` da `Registration` no banco de dados.
+    *   Atualizar o campo `status` da `Registration` no banco de dados.
     *   (Opcional, mas recomendado) Registrar quem e quando alterou o status (pode ser um log simples ou uma tabela de histórico de status).
     *   Redirecionar de volta com mensagem de sucesso.
     *   (Opcional) Disparar uma notificação por email para o usuário informando sobre a mudança de status do pagamento (ex: "Seu pagamento foi confirmado!").
@@ -828,7 +828,7 @@ PROPOSED_SOLUTION:
 *   **No backend do componente Livewire (ou `Admin/RegistrationController@updateStatus`):**
     *   Método `updatePaymentStatus(Registration $registration)`:
         *   Validar `$this->newPaymentStatus` contra uma lista de status permitidos.
-        *   `$registration->update(['payment_status' => $this->newPaymentStatus]);`
+        *   `$registration->update(['status' => $this->newStatus]);`
         *   (Opcional) Log da alteração.
         *   (Opcional) Disparar `PaymentStatusUpdatedNotification` para o usuário.
         *   Emitir evento Livewire ou mensagem flash de sucesso.
@@ -836,7 +836,7 @@ PROPOSED_SOLUTION:
 ACCEPTANCE_CRITERIA:
 - [ ] AC1: Na página de detalhes da inscrição (admin), o status de pagamento atual é exibido.
 - [ ] AC2: Controles (dropdown ou botões) para selecionar um novo status de pagamento estão disponíveis.
-- [ ] AC3: Ao submeter a alteração, o `payment_status` da inscrição é atualizado corretamente no banco de dados.
+- [ ] AC3: Ao submeter a alteração, o `status` da inscrição é atualizado corretamente no banco de dados.
 - [ ] AC4: A interface de detalhes da inscrição reflete o novo status de pagamento após a atualização.
 - [ ] AC5: Uma mensagem de sucesso é exibida ao administrador após a atualização.
 - [ ] AC6: (Opcional, mas bom) Um log da alteração de status é registrado (ex: na tabela `activity_log` se `spatie/laravel-activitylog` for usado, ou em `registrations.notes`).

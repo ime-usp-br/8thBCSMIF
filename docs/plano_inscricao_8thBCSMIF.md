@@ -24,7 +24,7 @@ Este plano assume que as funcionalidades de autenticação (login local, Senha �
             *   Campos para todos os dados do formulário (Informações Pessoais, Identificação, Contato, Profissionais, Participação no Evento, Restrições Alimentares, Contato de Emergência, Suporte a Visto).
             *   `registration_category` (string, para registrar a categoria no momento da inscrição).
             *   `calculated_fee` (decimal).
-            *   `payment_status` (enum/string: 'pending', 'pending_approval', 'paid_br', 'invoice_sent_int', 'paid_int', 'free', 'cancelled').
+            *   `status` (enum/string: 'pending', 'pending_approval', 'paid_br', 'invoice_sent_int', 'paid_int', 'free', 'cancelled').
             *   `payment_proof_path` (string, nullable).
             *   `payment_uploaded_at` (timestamp, nullable).
             *   Timestamps.
@@ -63,7 +63,7 @@ Este plano assume que as funcionalidades de autenticação (login local, Senha �
     *   **Ações:**
         *   Criar método no `RegistrationController` (ou Livewire component na área do usuário) para lidar com o upload.
         *   Armazenamento seguro do arquivo (`storage/app/proofs/...`).
-        *   Atualizar o `payment_proof_path`, `payment_uploaded_at` e `payment_status` na `Registration`.
+        *   Atualizar o `payment_proof_path`, `payment_uploaded_at` e `status` na `Registration`.
         *   Disparar `ProofUploadedNotification`.
 
 **Fase 3: Interface do Usuário (Frontend - TALL Stack)**
@@ -103,7 +103,7 @@ Este plano assume que as funcionalidades de autenticação (login local, Senha �
 2.  **Atualização de Status de Pagamento:**
     *   **Objetivo:** Permitir que administradores confirmem pagamentos.
     *   **Ações:**
-        *   Funcionalidade na view de detalhes da inscrição para atualizar o `payment_status`.
+        *   Funcionalidade na view de detalhes da inscrição para atualizar o `status`.
 
 **Fase 5: Testes, Qualidade e Configuração**
 

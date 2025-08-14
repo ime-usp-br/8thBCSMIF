@@ -113,7 +113,6 @@ class Registration extends Model
         'requires_visa_letter',
         'registration_category_snapshot',
         'status',
-        'payment_status',
         'invoice_sent_at',
         'notes',
     ];

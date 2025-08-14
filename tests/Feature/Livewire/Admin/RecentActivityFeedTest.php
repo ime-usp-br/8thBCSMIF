@@ -52,7 +52,7 @@ class RecentActivityFeedTest extends TestCase
         $registration = Registration::factory()->create([
             'user_id' => $user->id,
             'full_name' => 'Jane Smith',
-            'payment_status' => 'pending',
+            'status' => 'pending',
             'created_at' => Carbon::now()->subMinutes(10),
         ]);
 
