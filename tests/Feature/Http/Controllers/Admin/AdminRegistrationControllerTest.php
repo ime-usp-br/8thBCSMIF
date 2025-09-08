@@ -3,6 +3,7 @@
 namespace Tests\Feature\Http\Controllers\Admin;
 
 use App\Mail\PaymentApprovedNotification;
+use App\Mail\PaymentRejectedNotification;
 use App\Models\Registration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -196,9 +197,12 @@ class AdminRegistrationControllerTest extends TestCase
 
     public function test_reject_registration_with_reason(): void
     {
+        Mail::fake();
+
         $registration = Registration::factory()->create([
             'status' => Registration::STATUS_PENDING_APPROVAL,
             'full_name' => 'Bob Wilson',
+            'email' => 'bob@test.com',
             'notes' => null,
         ]);
 
@@ -220,6 +224,12 @@ class AdminRegistrationControllerTest extends TestCase
         // Check administrative logging with reason
         $this->assertStringContainsString('Registration rejected by Test Admin', $registration->notes);
         $this->assertStringContainsString($rejectionReason, $registration->notes);
+
+        // AC4: Check rejection email queued
+        Mail::assertQueued(PaymentRejectedNotification::class, function ($mail) use ($registration, $rejectionReason) {
+            return $mail->registration->id === $registration->id &&
+                   $mail->rejectionReason === $rejectionReason;
+        });
     }
 
     public function test_reject_requires_reason(): void
@@ -284,5 +294,82 @@ class AdminRegistrationControllerTest extends TestCase
         // Check both existing and new notes are present
         $this->assertStringContainsString($existingNotes, $registration->notes);
         $this->assertStringContainsString('Fee exemption granted by Test Admin', $registration->notes);
+    }
+
+    /**
+     * AC4: Test rejection notification email is sent with correct reason and recipient
+     */
+    public function test_rejection_notification_email_sent_with_reason(): void
+    {
+        Mail::fake();
+
+        $registration = Registration::factory()->create([
+            'status' => Registration::STATUS_PENDING_APPROVAL,
+            'full_name' => 'Jane Doe',
+            'email' => 'jane.doe@example.com',
+            'notes' => 'Initial notes',
+        ]);
+
+        $rejectionReason = 'Payment proof image is too blurry to verify details. Please upload a clearer image.';
+
+        $response = $this->actingAs($this->admin)
+            ->postJson(route('admin.registrations.reject', $registration), [
+                'reason' => $rejectionReason,
+            ]);
+
+        $response->assertOk();
+
+        // AC4: Verify rejection notification email was queued
+        Mail::assertQueued(PaymentRejectedNotification::class, function ($mail) use ($registration, $rejectionReason) {
+            return $mail->registration->id === $registration->id &&
+                   $mail->registration->email === 'jane.doe@example.com' &&
+                   $mail->registration->full_name === 'Jane Doe' &&
+                   $mail->rejectionReason === $rejectionReason;
+        });
+
+        // Ensure only one rejection email was queued
+        Mail::assertQueuedTimes(PaymentRejectedNotification::class, 1);
+
+        // Verify no other emails were queued
+        Mail::assertNotQueued(PaymentApprovedNotification::class);
+    }
+
+    /**
+     * AC4: Test rejection notification preserves existing notes and adds admin logging
+     */
+    public function test_rejection_preserves_existing_notes_and_adds_admin_logging(): void
+    {
+        Mail::fake();
+
+        $existingNotes = 'User submitted initial documentation';
+        $registration = Registration::factory()->create([
+            'status' => Registration::STATUS_PENDING_APPROVAL,
+            'full_name' => 'John Smith',
+            'email' => 'john.smith@example.com',
+            'notes' => $existingNotes,
+        ]);
+
+        $rejectionReason = 'Missing required signature on payment receipt';
+
+        $this->actingAs($this->admin)
+            ->postJson(route('admin.registrations.reject', $registration), [
+                'reason' => $rejectionReason,
+            ]);
+
+        $registration->refresh();
+
+        // Check existing notes are preserved
+        $this->assertStringContainsString($existingNotes, $registration->notes);
+
+        // Check administrative logging
+        $this->assertStringContainsString('Registration rejected by Test Admin', $registration->notes);
+        $this->assertStringContainsString($rejectionReason, $registration->notes);
+        $this->assertStringContainsString(now()->format('Y-m-d'), $registration->notes);
+
+        // AC4: Verify email queued with correct data
+        Mail::assertQueued(PaymentRejectedNotification::class, function ($mail) use ($registration, $rejectionReason) {
+            return $mail->registration->id === $registration->id &&
+                   $mail->rejectionReason === $rejectionReason;
+        });
     }
 }
