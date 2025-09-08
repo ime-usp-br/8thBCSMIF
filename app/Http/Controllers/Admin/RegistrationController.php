@@ -30,7 +30,7 @@ class RegistrationController extends Controller
         return view('admin.registrations.show', compact('registration'));
     }
 
-    public function downloadProof(Registration $registration): BinaryFileResponse|StreamedResponse|Response
+    public function downloadProof(Registration $registration)
     {
         // TODO: This method needs to be refactored to work with the new Payment model structure
         // where payment_proof_path is now stored in the payments table, not registrations
@@ -106,7 +106,7 @@ class RegistrationController extends Controller
             ->with('success', __('Status updated successfully.'));
     }
 
-    public function downloadEnrollmentProof(Registration $registration): BinaryFileResponse|StreamedResponse|Response
+    public function downloadEnrollmentProof(Registration $registration)
     {
         // Check authorization
         Gate::authorize('manageEnrollmentProofs');
@@ -193,5 +193,14 @@ class RegistrationController extends Controller
 
         return redirect()->route('admin.registrations.show', $registration)
             ->with('success', __('Enrollment proof rejected successfully.'));
+    }
+
+    /**
+     * AC1: Show the approvals queue page with pending validations.
+     * Displays all payment and enrollment proofs that require admin approval.
+     */
+    public function approvals(): View
+    {
+        return view('admin.approvals');
     }
 }

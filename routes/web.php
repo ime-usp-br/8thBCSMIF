@@ -94,6 +94,11 @@ Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
     ->middleware(['auth', 'role:admin'])
     ->name('admin.dashboard');
 
+// AC1: Admin approvals queue - dedicated page for pending validations
+Route::get('/admin/approvals', [AdminRegistrationController::class, 'approvals'])
+    ->middleware(['auth', 'role:admin'])
+    ->name('admin.approvals');
+
 // Admin dashboard API routes for progressive loading
 Route::prefix('admin/dashboard')
     ->middleware(['auth', 'role:admin'])
