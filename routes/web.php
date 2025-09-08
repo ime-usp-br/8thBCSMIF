@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\RegistrationController as AdminRegistrationController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminRegistrationController as NewAdminRegistrationController;
 use App\Http\Controllers\EnrollmentProofController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RegistrationController;
@@ -95,7 +96,7 @@ Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
     ->name('admin.dashboard');
 
 // AC1: Admin approvals queue - dedicated page for pending validations
-Route::get('/admin/approvals', [AdminRegistrationController::class, 'approvals'])
+Route::get('/admin/approvals', [NewAdminRegistrationController::class, 'approvals'])
     ->middleware(['auth', 'role:admin'])
     ->name('admin.approvals');
 
@@ -117,6 +118,10 @@ Route::prefix('admin/registrations')
         Route::get('/{registration}', [AdminRegistrationController::class, 'show'])->name('show');
         Route::get('/{registration}/download-proof', [AdminRegistrationController::class, 'downloadProof'])->name('download-proof');
         Route::patch('/{registration}/update-status', [AdminRegistrationController::class, 'updateStatus'])->name('update-status');
+
+        // AC3: Fee exemption and approval routes
+        Route::post('/{registration}/approve', [NewAdminRegistrationController::class, 'approve'])->name('approve');
+        Route::post('/{registration}/reject', [NewAdminRegistrationController::class, 'reject'])->name('reject');
 
         // Enrollment proof management integrated into registrations
         Route::get('/{registration}/enrollment-proof/download', [AdminRegistrationController::class, 'downloadEnrollmentProof'])->name('download-enrollment-proof');
