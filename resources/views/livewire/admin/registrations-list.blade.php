@@ -269,13 +269,19 @@
                                     </div>
                                     @php
                                         $statusColors = [
-                                            'pending' => 'bg-yellow-100 text-yellow-800',
-                                            'paid_br' => 'bg-green-100 text-green-800',
-                                            'paid_int' => 'bg-green-100 text-green-800',
-                                            'cancelled' => 'bg-red-100 text-red-800',
+                                            'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+                                            'pending_approval' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+                                            'approved' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                                            'rejected' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                                            'paid_br' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                                            'paid_int' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                                            'cancelled' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
                                         ];
                                         $statusLabels = [
-                                            'pending' => __('Pending Payment'),
+                                            'pending' => __('Pending'),
+                                            'pending_approval' => __('Pending Approval'),
+                                            'approved' => __('Approved'),
+                                            'rejected' => __('Rejected'),
                                             'paid_br' => __('Paid (BR)'),
                                             'paid_int' => __('Paid (International)'),
                                             'cancelled' => __('Cancelled'),
@@ -353,6 +359,8 @@
                                                 'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
                                                 'paid' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
                                                 'pending_approval' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+                                                'approved' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                                                'rejected' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
                                                 'cancelled' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
                                                 'refunded' => 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200',
                                             ];
@@ -465,13 +473,19 @@
                                     <td class="px-4 xl:px-6 py-4 whitespace-nowrap">
                                         @php
                                             $regStatusColors = [
-                                                'pending' => 'bg-yellow-100 text-yellow-800',
-                                                'paid_br' => 'bg-green-100 text-green-800',
-                                                'paid_int' => 'bg-green-100 text-green-800',
-                                                'cancelled' => 'bg-red-100 text-red-800',
+                                                'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+                                                'pending_approval' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+                                                'approved' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                                                'rejected' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                                                'paid_br' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                                                'paid_int' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                                                'cancelled' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
                                             ];
                                             $regStatusLabels = [
-                                                'pending' => __('Pending Payment'),
+                                                'pending' => __('Pending'),
+                                                'pending_approval' => __('Pending Approval'),
+                                                'approved' => __('Approved'),
+                                                'rejected' => __('Rejected'),
                                                 'paid_br' => __('Paid (BR)'),
                                                 'paid_int' => __('Paid (International)'),
                                                 'cancelled' => __('Cancelled'),
@@ -488,6 +502,8 @@
                                                     'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
                                                     'paid' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
                                                     'pending_approval' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+                                                    'approved' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                                                    'rejected' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
                                                     'cancelled' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
                                                     'refunded' => 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200',
                                                 ];

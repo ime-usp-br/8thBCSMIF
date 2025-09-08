@@ -70,6 +70,9 @@ new class extends Component
                             <x-dropdown-link :href="route('admin.registrations.index')" wire:navigate>
                                 {{ __('Registrations') }}
                             </x-dropdown-link>
+                            <x-dropdown-link :href="route('admin.approvals')" wire:navigate>
+                                {{ __('Approval Queue') }}
+                            </x-dropdown-link>
                             <x-dropdown-link :href="route('admin.reports.index')" wire:navigate>
                                 {{ __('Reports') }}
                             </x-dropdown-link>
@@ -129,6 +132,9 @@ new class extends Component
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.registrations.index')" wire:navigate>
                         {{ __('Registrations') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.approvals')" wire:navigate>
+                        {{ __('Approval Queue') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.reports.index')" wire:navigate>
                         {{ __('Reports') }}

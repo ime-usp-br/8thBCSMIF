@@ -83,6 +83,9 @@
                                     <x-dropdown-link :href="route('admin.registrations.index')">
                                         {{ __('Registrations') }}
                                     </x-dropdown-link>
+                                    <x-dropdown-link :href="route('admin.approvals')">
+                                        {{ __('Approval Queue') }}
+                                    </x-dropdown-link>
                                     <x-dropdown-link :href="route('admin.reports.index')">
                                         {{ __('Reports') }}
                                     </x-dropdown-link>
@@ -178,6 +181,9 @@
                         </x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.registrations.index')">
                             {{ __('Registrations') }}
+                        </x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('admin.approvals')">
+                            {{ __('Approval Queue') }}
                         </x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.reports.index')">
                             {{ __('Reports') }}
