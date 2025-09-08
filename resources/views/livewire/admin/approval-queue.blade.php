@@ -121,25 +121,58 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
-                            @foreach($pendingItems as $item)
-                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <!-- AC1: Type Column with Clear Differentiation -->
-                                    <td class="px-4 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                            {{ $item['type'] === 'payment' 
-                                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' 
-                                                : 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' }}">
-                                            @if($item['type'] === 'payment')
-                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
-                                                </svg>
-                                            @else
-                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/>
-                                                </svg>
+                            @foreach($pendingItems as $index => $item)
+                                @php
+                                    $prevItem = $index > 0 ? $pendingItems[$index - 1] : null;
+                                    $nextItem = $index < count($pendingItems) - 1 ? $pendingItems[$index + 1] : null;
+                                    $isFirstInGroup = !$prevItem || !$item['requires_dual_validation'] || $prevItem['registration_id'] !== $item['registration_id'];
+                                    $isLastInGroup = !$nextItem || !$item['requires_dual_validation'] || $nextItem['registration_id'] !== $item['registration_id'];
+                                    $isConnectedGroup = $item['requires_dual_validation'] && (!$isFirstInGroup || !$isLastInGroup);
+                                @endphp
+
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 
+                                    {{ $item['requires_dual_validation'] ? 'bg-usp-blue-pri/5 dark:bg-usp-blue-pri/10' : '' }}
+                                    {{ $isConnectedGroup && $isFirstInGroup ? 'border-t-2 border-t-usp-blue-pri/30' : '' }}
+                                    {{ $isConnectedGroup && $isLastInGroup ? 'border-b-2 border-b-usp-blue-pri/30' : '' }}
+                                    {{ $isConnectedGroup && !$isFirstInGroup && !$isLastInGroup ? 'border-l-4 border-l-usp-blue-pri/40' : '' }}">
+                                    
+                                    <!-- Type Column with Stacked Tags -->
+                                    <td class="px-4 py-4 w-32">
+                                        <div class="space-y-1">
+                                            <!-- Main Type Badge -->
+                                            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium w-full justify-center
+                                                {{ $item['type'] === 'payment' 
+                                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' 
+                                                    : 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' }}">
+                                                @if($item['type'] === 'payment')
+                                                    <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+                                                    </svg>
+                                                @else
+                                                    <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                @endif
+                                                <span class="truncate">{{ $item['type_label'] }}</span>
+                                            </div>
+
+                                            <!-- Dual Validation Badge -->
+                                            @if($item['requires_dual_validation'])
+                                                <div class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-usp-yellow/20 text-usp-blue-pri border border-usp-blue-pri/30 w-full justify-center">
+                                                    <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                                                    </svg>
+                                                    <span class="truncate">{{ __('Dual Validation') }}</span>
+                                                </div>
                                             @endif
-                                            {{ $item['type_label'] }}
-                                        </span>
+
+                                            <!-- Registration Category Indicator -->
+                                            @if($item['registration_category'] === 'grad_student' && $item['requires_dual_validation'])
+                                                <div class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100 w-full justify-center">
+                                                    <span class="truncate">{{ __('Graduate Student') }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </td>
 
                                     <!-- Participant Column -->
@@ -154,14 +187,37 @@
 
                                     <!-- Registration Column -->
                                     <td class="px-4 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900 dark:text-gray-100">
-                                            {{ __('ID: :id', ['id' => $item['registration']->id]) }}
-                                        </div>
-                                        @if($item['amount'])
-                                            <div class="text-sm text-gray-500 dark:text-gray-400">
-                                                {{ __('Amount: R$ :amount', ['amount' => number_format($item['amount'], 2, ',', '.')]) }}
+                                        <div class="space-y-1">
+                                            <!-- Registration ID with Dual Validation Progress -->
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    {{ __('ID: :id', ['id' => $item['registration']->id]) }}
+                                                </span>
+                                                @if($item['requires_dual_validation'])
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-usp-blue-pri/20 text-usp-blue-pri">
+                                                        {{ $item['dual_validation_type'] === 'payment_first' ? '1/2' : '2/2' }}
+                                                    </span>
+                                                @endif
                                             </div>
-                                        @endif
+
+                                            <!-- Amount Info -->
+                                            @if($item['amount'])
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                    {{ __('Amount: R$ :amount', ['amount' => number_format($item['amount'], 2, ',', '.')]) }}
+                                                </div>
+                                            @endif
+
+                                            <!-- Dual Validation Status Message -->
+                                            @if($item['requires_dual_validation'])
+                                                <div class="text-xs text-usp-blue-pri font-medium">
+                                                    @if($item['dual_validation_type'] === 'payment_first')
+                                                        {{ __('Payment validation (enrollment also required)') }}
+                                                    @else
+                                                        {{ __('Enrollment validation (payment also required)') }}
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
                                     </td>
 
                                     <!-- Events Column - Badges like registrations page -->

@@ -42,7 +42,9 @@ class ApprovalQueue extends Component
 
     /**
      * Get all pending approval items (payments and enrollment proofs)
-     * Returns a unified collection with clear type identification
+     * Returns a unified collection with dual-validation detection and visual grouping support
+     *
+     * @return Collection<int, array<string, mixed>>
      */
     private function getPendingApprovalItems(): Collection
     {
@@ -63,24 +65,7 @@ class ApprovalQueue extends Component
                 // Only payment proofs
                 return $query;
             })
-            ->get()
-            ->map(function ($payment) {
-                $events = $payment->registration->events;
-
-                return [
-                    'id' => $payment->id,
-                    'type' => 'payment',
-                    'type_label' => __('Payment Proof'),
-                    'registration' => $payment->registration,
-                    'participant_name' => $payment->registration->full_name,
-                    'participant_email' => $payment->registration->email ?? ($payment->registration->user ? $payment->registration->user->email : null),
-                    'events' => $events,
-                    'amount' => $payment->amount,
-                    'created_at' => $payment->created_at,
-                    'has_file' => ! empty($payment->payment_proof_path),
-                    'file_path' => $payment->payment_proof_path,
-                ];
-            });
+            ->get();
 
         // Get pending enrollment proofs
         $pendingEnrollments = EnrollmentProof::with(['registration.user', 'registration.events'])
@@ -99,41 +84,83 @@ class ApprovalQueue extends Component
                 // Only enrollment proofs
                 return $query;
             })
-            ->get()
-            ->map(function ($enrollmentProof) {
-                $events = $enrollmentProof->registration->events;
+            ->get();
 
-                return [
-                    'id' => $enrollmentProof->id,
-                    'type' => 'enrollment',
-                    'type_label' => __('Enrollment Proof'),
-                    'registration' => $enrollmentProof->registration,
-                    'participant_name' => $enrollmentProof->registration->full_name,
-                    'participant_email' => $enrollmentProof->registration->email ?? ($enrollmentProof->registration->user ? $enrollmentProof->registration->user->email : null),
-                    'events' => $events,
-                    'amount' => null, // No amount for enrollment proofs
-                    'created_at' => $enrollmentProof->created_at,
-                    'has_file' => ! empty($enrollmentProof->file_path),
-                    'file_path' => $enrollmentProof->file_path,
-                    'original_filename' => $enrollmentProof->original_filename,
-                ];
-            });
+        // Detect dual-validation scenarios by registration ID
+        $paymentRegistrationIds = $pendingPayments->pluck('registration_id')->unique();
+        $enrollmentRegistrationIds = $pendingEnrollments->pluck('registration_id')->unique();
+        $dualValidationRegistrationIds = $paymentRegistrationIds->intersect($enrollmentRegistrationIds);
+
+        // Map payment items with dual-validation metadata
+        $mappedPayments = $pendingPayments->map(function ($payment) use ($dualValidationRegistrationIds) {
+            $events = $payment->registration->events;
+            $requiresDualValidation = $dualValidationRegistrationIds->contains($payment->registration_id);
+
+            return [
+                'id' => $payment->id,
+                'type' => 'payment',
+                'type_label' => __('Payment Proof'),
+                'registration' => $payment->registration,
+                'registration_id' => $payment->registration_id,
+                'participant_name' => $payment->registration->full_name,
+                'participant_email' => $payment->registration->email ?? ($payment->registration->user->email ?? null),
+                'events' => $events,
+                'amount' => $payment->amount,
+                'created_at' => $payment->created_at,
+                'has_file' => ! empty($payment->payment_proof_path),
+                'file_path' => $payment->payment_proof_path,
+                'requires_dual_validation' => $requiresDualValidation,
+                'dual_validation_type' => $requiresDualValidation ? 'payment_first' : null,
+                'registration_category' => $payment->registration->registration_category_snapshot,
+            ];
+        });
+
+        // Map enrollment items with dual-validation metadata
+        $mappedEnrollments = $pendingEnrollments->map(function ($enrollmentProof) use ($dualValidationRegistrationIds) {
+            $events = $enrollmentProof->registration->events;
+            $requiresDualValidation = $dualValidationRegistrationIds->contains($enrollmentProof->registration_id);
+
+            return [
+                'id' => $enrollmentProof->id,
+                'type' => 'enrollment',
+                'type_label' => __('Enrollment Proof'),
+                'registration' => $enrollmentProof->registration,
+                'registration_id' => $enrollmentProof->registration_id,
+                'participant_name' => $enrollmentProof->registration->full_name,
+                'participant_email' => $enrollmentProof->registration->email ?? ($enrollmentProof->registration->user->email ?? null),
+                'events' => $events,
+                'amount' => null, // No amount for enrollment proofs
+                'created_at' => $enrollmentProof->created_at,
+                'has_file' => ! empty($enrollmentProof->file_path),
+                'file_path' => $enrollmentProof->file_path,
+                'original_filename' => $enrollmentProof->original_filename,
+                'requires_dual_validation' => $requiresDualValidation,
+                'dual_validation_type' => $requiresDualValidation ? 'enrollment_second' : null,
+                'registration_category' => $enrollmentProof->registration->registration_category_snapshot,
+            ];
+        });
 
         // Filter by type if specified
         $allItems = collect();
 
         if ($this->filterType === '' || $this->filterType === 'payment') {
-            $allItems = $allItems->concat($pendingPayments);
+            $allItems = $allItems->concat($mappedPayments);
         }
 
         if ($this->filterType === '' || $this->filterType === 'enrollment') {
-            $allItems = $allItems->concat($pendingEnrollments);
+            $allItems = $allItems->concat($mappedEnrollments);
         }
 
-        // Sort the combined collection
-        return $allItems->sortBy([
+        // Sort the combined collection - dual validation entries grouped by registration
+        /** @var Collection<int, array<string, mixed>> $sortedItems */
+        $sortedItems = $allItems->sortBy([
+            ['requires_dual_validation', 'desc'], // Dual validations first
+            ['registration_id', 'asc'], // Group by registration
+            ['dual_validation_type', 'asc'], // Payment first, then enrollment
             [$this->sortBy, $this->sortDirection],
         ])->values();
+
+        return $sortedItems;
     }
 
     /**
