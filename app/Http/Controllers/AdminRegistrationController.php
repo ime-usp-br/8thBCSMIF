@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\PaymentApprovedNotification;
+use App\Mail\PaymentRejectedNotification;
 use App\Models\Registration;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -165,10 +166,10 @@ class AdminRegistrationController extends Controller implements HasMiddleware
                 'notes' => $updatedNotes,
             ]);
 
-            // TODO: Send PaymentRejectedNotification (to be implemented in AC4)
-            // Mail::to($registration->email)->send(
-            //     new PaymentRejectedNotification($registration, $request->reason)
-            // );
+            // AC4: Send PaymentRejectedNotification with rejection reason
+            Mail::to($registration->email)->send(
+                new PaymentRejectedNotification($registration, $request->string('reason')->toString())
+            );
 
             return response()->json([
                 'success' => true,
