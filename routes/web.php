@@ -122,6 +122,10 @@ Route::prefix('admin/registrations')
         Route::get('/{registration}/enrollment-proof/download', [AdminRegistrationController::class, 'downloadEnrollmentProof'])->name('download-enrollment-proof');
         Route::patch('/{registration}/enrollment-proof/approve', [AdminRegistrationController::class, 'approveEnrollmentProof'])->name('approve-enrollment-proof');
         Route::patch('/{registration}/enrollment-proof/reject', [AdminRegistrationController::class, 'rejectEnrollmentProof'])->name('reject-enrollment-proof');
+
+        // AC2: Payment proof validation routes
+        Route::patch('/{registration}/payment/approve', [AdminRegistrationController::class, 'approvePayment'])->name('approve-payment');
+        Route::patch('/{registration}/payment/reject', [AdminRegistrationController::class, 'rejectPayment'])->name('reject-payment');
     });
 
 // Admin routes for enrollment proof management (integrated into registrations)
