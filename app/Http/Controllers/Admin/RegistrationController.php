@@ -125,7 +125,7 @@ class RegistrationController extends Controller
             ->with('success', __('Status updated successfully.'));
     }
 
-    public function downloadEnrollmentProof(Registration $registration)
+    public function downloadEnrollmentProof(Registration $registration): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         // Check authorization
         Gate::authorize('manageEnrollmentProofs');

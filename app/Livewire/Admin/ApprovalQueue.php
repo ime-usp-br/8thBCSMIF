@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Models\EnrollmentProof;
 use App\Models\Payment;
+use App\Models\Registration;
 use Illuminate\Support\Collection;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -41,7 +42,7 @@ class ApprovalQueue extends Component
     }
 
     /**
-     * Get all pending approval items (payments and enrollment proofs)
+     * Get all pending approval items (payments, enrollment proofs, and exemptions)
      * Returns a unified collection with dual-validation detection and visual grouping support
      *
      * @return Collection<int, array<string, mixed>>
@@ -63,6 +64,24 @@ class ApprovalQueue extends Component
             })
             ->when($this->filterType === 'payment', function ($query) {
                 // Only payment proofs
+                return $query;
+            })
+            ->get();
+
+        // AC3: Get registrations eligible for fee exemption (pending status with no payments)
+        $exemptionEligible = Registration::with(['user', 'events', 'payments'])
+            ->where('status', Registration::STATUS_PENDING)
+            ->whereDoesntHave('payments') // No payments created yet
+            ->when($this->search, function ($query, $search) {
+                $query->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            })
+            ->when($this->filterType === 'exemption', function ($query) {
+                // Only exemption eligible registrations
                 return $query;
             })
             ->get();
@@ -140,6 +159,29 @@ class ApprovalQueue extends Component
             ];
         });
 
+        // AC3: Map exemption eligible registrations
+        $mappedExemptions = $exemptionEligible->map(function ($registration) {
+            $events = $registration->events;
+
+            return [
+                'id' => $registration->id,
+                'type' => 'exemption',
+                'type_label' => __('Fee Exemption'),
+                'registration' => $registration,
+                'registration_id' => $registration->id,
+                'participant_name' => $registration->full_name,
+                'participant_email' => $registration->email ?? ($registration->user->email ?? null),
+                'events' => $events,
+                'amount' => $registration->calculateCorrectTotalFee(),
+                'created_at' => $registration->created_at,
+                'has_file' => false, // No file for exemptions
+                'file_path' => null,
+                'requires_dual_validation' => false,
+                'dual_validation_type' => null,
+                'registration_category' => $registration->registration_category_snapshot,
+            ];
+        });
+
         // Filter by type if specified
         $allItems = collect();
 
@@ -149,6 +191,11 @@ class ApprovalQueue extends Component
 
         if ($this->filterType === '' || $this->filterType === 'enrollment') {
             $allItems = $allItems->concat($mappedEnrollments);
+        }
+
+        // AC3: Include exemption eligible registrations
+        if ($this->filterType === '' || $this->filterType === 'exemption') {
+            $allItems = $allItems->concat($mappedExemptions);
         }
 
         // Sort the combined collection - dual validation entries grouped by registration
@@ -165,6 +212,7 @@ class ApprovalQueue extends Component
 
     /**
      * AC1: Quick approve action - removes item from queue asynchronously
+     * AC3: Extended to handle exemption approvals
      */
     public function quickApprove(string $type, int $id): void
     {
@@ -183,12 +231,47 @@ class ApprovalQueue extends Component
                 ]);
 
                 session()->flash('success', __('Enrollment proof approved successfully.'));
+            } elseif ($type === 'exemption') {
+                // AC3: Handle fee exemption approval
+                $this->approveExemption($id);
+
+                return; // approveExemption handles its own flash messages and refresh
             }
 
             // Refresh the component data
             $this->dispatch('$refresh');
         } catch (\Exception $e) {
             session()->flash('error', __('Error approving item: :message', ['message' => $e->getMessage()]));
+        }
+    }
+
+    /**
+     * AC3: Approve a fee exemption by calling the AdminRegistrationController
+     */
+    public function approveExemption(int $registrationId): void
+    {
+        try {
+            $registration = Registration::findOrFail($registrationId);
+
+            // Create instance of AdminRegistrationController and call approve method
+            $controller = new \App\Http\Controllers\AdminRegistrationController;
+            $request = request(); // Use current request context
+
+            // Call the approve method which handles exemption logic
+            $response = $controller->approve($request, $registration);
+            $content = $response->getContent();
+            $responseData = $content !== false ? json_decode($content, true) : null;
+
+            if (is_array($responseData) && ($responseData['success'] ?? false)) {
+                session()->flash('success', $responseData['message'] ?? __('Fee exemption approved successfully.'));
+            } else {
+                session()->flash('error', is_array($responseData) ? ($responseData['message'] ?? __('Error approving exemption.')) : __('Error approving exemption.'));
+            }
+
+            // Refresh the component data
+            $this->dispatch('$refresh');
+        } catch (\Exception $e) {
+            session()->flash('error', __('Error approving exemption: :message', ['message' => $e->getMessage()]));
         }
     }
 
