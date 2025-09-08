@@ -10,7 +10,7 @@ use Livewire\WithPagination;
 
 /**
  * AC1: ApprovalQueue Livewire Component
- * 
+ *
  * Displays a unified queue of pending payment and enrollment proof validations.
  * Provides asynchronous approve/reject actions without page reload.
  */
@@ -19,11 +19,11 @@ class ApprovalQueue extends Component
     use WithPagination;
 
     public string $search = '';
-    
+
     public string $filterType = ''; // all, payment, enrollment
-    
+
     public string $sortBy = 'created_at';
-    
+
     public string $sortDirection = 'desc';
 
     /**
@@ -33,7 +33,7 @@ class ApprovalQueue extends Component
     public function render(): \Illuminate\View\View
     {
         $pendingItems = $this->getPendingApprovalItems();
-        
+
         return view('livewire.admin.approval-queue', [
             'pendingItems' => $pendingItems,
             'totalPending' => $pendingItems->count(),
@@ -66,7 +66,7 @@ class ApprovalQueue extends Component
             ->get()
             ->map(function ($payment) {
                 $events = $payment->registration->events;
-                
+
                 return [
                     'id' => $payment->id,
                     'type' => 'payment',
@@ -77,7 +77,7 @@ class ApprovalQueue extends Component
                     'events' => $events,
                     'amount' => $payment->amount,
                     'created_at' => $payment->created_at,
-                    'has_file' => !empty($payment->payment_proof_path),
+                    'has_file' => ! empty($payment->payment_proof_path),
                     'file_path' => $payment->payment_proof_path,
                 ];
             });
@@ -102,7 +102,7 @@ class ApprovalQueue extends Component
             ->get()
             ->map(function ($enrollmentProof) {
                 $events = $enrollmentProof->registration->events;
-                    
+
                 return [
                     'id' => $enrollmentProof->id,
                     'type' => 'enrollment',
@@ -113,7 +113,7 @@ class ApprovalQueue extends Component
                     'events' => $events,
                     'amount' => null, // No amount for enrollment proofs
                     'created_at' => $enrollmentProof->created_at,
-                    'has_file' => !empty($enrollmentProof->file_path),
+                    'has_file' => ! empty($enrollmentProof->file_path),
                     'file_path' => $enrollmentProof->file_path,
                     'original_filename' => $enrollmentProof->original_filename,
                 ];
@@ -121,18 +121,18 @@ class ApprovalQueue extends Component
 
         // Filter by type if specified
         $allItems = collect();
-        
+
         if ($this->filterType === '' || $this->filterType === 'payment') {
             $allItems = $allItems->concat($pendingPayments);
         }
-        
+
         if ($this->filterType === '' || $this->filterType === 'enrollment') {
             $allItems = $allItems->concat($pendingEnrollments);
         }
 
         // Sort the combined collection
         return $allItems->sortBy([
-            [$this->sortBy, $this->sortDirection]
+            [$this->sortBy, $this->sortDirection],
         ])->values();
     }
 
@@ -145,7 +145,7 @@ class ApprovalQueue extends Component
             if ($type === 'payment') {
                 $payment = Payment::findOrFail($id);
                 $payment->update(['status' => Payment::STATUS_APPROVED]);
-                
+
                 session()->flash('success', __('Payment proof approved successfully.'));
             } elseif ($type === 'enrollment') {
                 $enrollmentProof = EnrollmentProof::findOrFail($id);
@@ -154,10 +154,10 @@ class ApprovalQueue extends Component
                     'approved_by' => auth()->id(),
                     'approved_at' => now(),
                 ]);
-                
+
                 session()->flash('success', __('Enrollment proof approved successfully.'));
             }
-            
+
             // Refresh the component data
             $this->dispatch('$refresh');
         } catch (\Exception $e) {
@@ -173,14 +173,14 @@ class ApprovalQueue extends Component
     {
         try {
             $defaultReason = __('Quick rejection from approval queue');
-            
+
             if ($type === 'payment') {
                 $payment = Payment::findOrFail($id);
                 $payment->update([
                     'status' => Payment::STATUS_REJECTED,
                     'notes' => $defaultReason,
                 ]);
-                
+
                 session()->flash('success', __('Payment proof rejected successfully.'));
             } elseif ($type === 'enrollment') {
                 $enrollmentProof = EnrollmentProof::findOrFail($id);
@@ -190,10 +190,10 @@ class ApprovalQueue extends Component
                     'approved_at' => now(),
                     'rejection_reason' => $defaultReason,
                 ]);
-                
+
                 session()->flash('success', __('Enrollment proof rejected successfully.'));
             }
-            
+
             // Refresh the component data
             $this->dispatch('$refresh');
         } catch (\Exception $e) {
@@ -225,5 +225,4 @@ class ApprovalQueue extends Component
         $this->reset(['search', 'filterType']);
         $this->resetPage();
     }
-
 }

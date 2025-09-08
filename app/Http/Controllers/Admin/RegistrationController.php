@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Mail\PaymentStatusUpdatedNotification;
 use App\Models\Registration;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -13,8 +14,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RegistrationController extends Controller
 {
@@ -30,11 +29,31 @@ class RegistrationController extends Controller
         return view('admin.registrations.show', compact('registration'));
     }
 
-    public function downloadProof(Registration $registration)
+    public function downloadProof(Registration $registration): \Symfony\Component\HttpFoundation\StreamedResponse
     {
-        // TODO: This method needs to be refactored to work with the new Payment model structure
-        // where payment_proof_path is now stored in the payments table, not registrations
-        abort(501, __('Payment proof download not yet implemented for new payment structure'));
+        // Get the most recent payment with a proof
+        $payment = $registration->payments()
+            ->whereNotNull('payment_proof_path')
+            ->latest()
+            ->first();
+
+        if (! $payment || ! $payment->payment_proof_path) {
+            abort(404, __('No payment proof found for this registration.'));
+        }
+
+        // Check if file exists in storage
+        if (! Storage::disk('private')->exists($payment->payment_proof_path)) {
+            abort(404, __('Payment proof file not found in storage.'));
+        }
+
+        // Generate a user-friendly filename for admin download
+        $extension = pathinfo($payment->payment_proof_path, PATHINFO_EXTENSION);
+        $friendlyFilename = 'payment_proof_reg_'.$registration->id.'_'.time().'.'.($extension ?: 'pdf');
+
+        return Storage::disk('private')->download(
+            $payment->payment_proof_path,
+            $friendlyFilename
+        );
     }
 
     public function updateStatus(Request $request, Registration $registration): RedirectResponse
@@ -193,6 +212,101 @@ class RegistrationController extends Controller
 
         return redirect()->route('admin.registrations.show', $registration)
             ->with('success', __('Enrollment proof rejected successfully.'));
+    }
+
+    /**
+     * AC2: Approve payment proof for a registration.
+     * Returns JSON response for async handling.
+     */
+    public function approvePayment(Registration $registration): JsonResponse
+    {
+        // Get the most recent payment with proof
+        $payment = $registration->payments()
+            ->whereNotNull('payment_proof_path')
+            ->where('status', 'pending_approval')
+            ->latest()
+            ->first();
+
+        if (! $payment) {
+            return response()->json([
+                'success' => false,
+                'message' => __('No pending payment proof found for this registration.'),
+            ], 404);
+        }
+
+        // Update payment status
+        $payment->update([
+            'status' => 'approved',
+        ]);
+
+        // Update registration status if needed
+        $registration->updateStatusFromRelatedModels();
+
+        // Create log entry
+        $user = request()->user();
+        $adminName = (! empty($user->name)) ? $user->name : ($user->email ?? 'Unknown Admin');
+        $timestamp = now()->format('Y-m-d H:i:s');
+        $logEntry = "[{$timestamp}] Payment proof approved by {$adminName}";
+
+        // Append to existing notes
+        $existingNotes = $registration->notes ? $registration->notes."\n" : '';
+        $registration->update(['notes' => $existingNotes.$logEntry]);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('Payment proof approved successfully.'),
+        ]);
+    }
+
+    /**
+     * AC2: Reject payment proof for a registration with reason.
+     * Returns JSON response for async handling.
+     */
+    public function rejectPayment(Request $request, Registration $registration): JsonResponse
+    {
+        // Validate rejection reason
+        /** @var array{reason: string} $validated */
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        // Get the most recent payment with proof
+        $payment = $registration->payments()
+            ->whereNotNull('payment_proof_path')
+            ->where('status', 'pending_approval')
+            ->latest()
+            ->first();
+
+        if (! $payment) {
+            return response()->json([
+                'success' => false,
+                'message' => __('No pending payment proof found for this registration.'),
+            ], 404);
+        }
+
+        // Update payment status and add rejection reason to notes
+        $payment->update([
+            'status' => 'rejected',
+            'notes' => $validated['reason'],
+        ]);
+
+        // Update registration status if needed
+        $registration->updateStatusFromRelatedModels();
+
+        // Create log entry
+        $user = $request->user();
+        $adminName = (! empty($user->name)) ? $user->name : ($user->email ?? 'Unknown Admin');
+        $timestamp = now()->format('Y-m-d H:i:s');
+        $logEntry = "[{$timestamp}] Payment proof rejected by {$adminName}: {$validated['reason']}";
+
+        // Append to existing notes
+        $existingNotes = $registration->notes ? $registration->notes."\n" : '';
+        $registration->update(['notes' => $existingNotes.$logEntry]);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('Payment proof rejected successfully.'),
+        ]);
     }
 
     /**
