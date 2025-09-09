@@ -79,7 +79,7 @@ class SendEarlyBirdRemindersTest extends TestCase
 
         $this->artisan('app:send-early-bird-reminders')
             ->expectsOutput(__('Processing event: :event', ['event' => $event->name]))
-            ->expectsOutput(__('Reminder sent to: :email', ['email' => $registration->email]))
+            ->expectsOutput(__('Reminder sent to: :email', ['email' => $user->email]))
             ->expectsOutput(__('Early bird reminders sent: :count', ['count' => 1]))
             ->assertExitCode(0);
 
