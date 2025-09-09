@@ -2,10 +2,15 @@
 
 namespace App\Livewire\Admin;
 
+use App\Mail\EnrollmentApprovedNotification;
+use App\Mail\EnrollmentRejectedNotification;
+use App\Mail\PaymentApprovedNotification;
+use App\Mail\PaymentRejectedNotification;
 use App\Models\EnrollmentProof;
 use App\Models\Payment;
 use App\Models\Registration;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -221,6 +226,13 @@ class ApprovalQueue extends Component
                 $payment = Payment::findOrFail($id);
                 $payment->update(['status' => Payment::STATUS_APPROVED]);
 
+                // Send approval notification email
+                $registration = $payment->registration;
+                $userEmail = $registration->user->email ?? $registration->email;
+                Mail::to($userEmail)->queue(
+                    new PaymentApprovedNotification($registration, 'approval')
+                );
+
                 session()->flash('success', __('Payment proof approved successfully.'));
             } elseif ($type === 'enrollment') {
                 $enrollmentProof = EnrollmentProof::findOrFail($id);
@@ -229,6 +241,13 @@ class ApprovalQueue extends Component
                     'approved_by' => auth()->id(),
                     'approved_at' => now(),
                 ]);
+
+                // Send enrollment approval notification email
+                $registration = $enrollmentProof->registration;
+                $userEmail = $registration->user->email ?? $registration->email;
+                Mail::to($userEmail)->queue(
+                    new EnrollmentApprovedNotification($registration)
+                );
 
                 session()->flash('success', __('Enrollment proof approved successfully.'));
             } elseif ($type === 'exemption') {
@@ -291,6 +310,13 @@ class ApprovalQueue extends Component
                     'notes' => $defaultReason,
                 ]);
 
+                // Send rejection notification email
+                $registration = $payment->registration;
+                $userEmail = $registration->user->email ?? $registration->email;
+                Mail::to($userEmail)->queue(
+                    new PaymentRejectedNotification($registration, $defaultReason)
+                );
+
                 session()->flash('success', __('Payment proof rejected successfully.'));
             } elseif ($type === 'enrollment') {
                 $enrollmentProof = EnrollmentProof::findOrFail($id);
@@ -300,6 +326,13 @@ class ApprovalQueue extends Component
                     'approved_at' => now(),
                     'rejection_reason' => $defaultReason,
                 ]);
+
+                // Send enrollment rejection notification email
+                $registration = $enrollmentProof->registration;
+                $userEmail = $registration->user->email ?? $registration->email;
+                Mail::to($userEmail)->queue(
+                    new EnrollmentRejectedNotification($registration, $defaultReason)
+                );
 
                 session()->flash('success', __('Enrollment proof rejected successfully.'));
             }
