@@ -84,8 +84,9 @@ class AdminRegistrationController extends Controller implements HasMiddleware
                     'notes' => $updatedNotes,
                 ]);
 
-                // Send approval notification for exemption (sync for testing)
-                Mail::to($registration->email)->send(
+                // Send approval notification for exemption
+                $userEmail = $registration->user->email ?? $registration->email;
+                Mail::to($userEmail)->queue(
                     new PaymentApprovedNotification($registration, 'exemption')
                 );
 
@@ -112,8 +113,9 @@ class AdminRegistrationController extends Controller implements HasMiddleware
                     'notes' => $updatedNotes,
                 ]);
 
-                // Send regular approval notification (sync for testing)
-                Mail::to($registration->email)->send(
+                // Send regular approval notification
+                $userEmail = $registration->user->email ?? $registration->email;
+                Mail::to($userEmail)->queue(
                     new PaymentApprovedNotification($registration, 'approval')
                 );
 
@@ -167,7 +169,8 @@ class AdminRegistrationController extends Controller implements HasMiddleware
             ]);
 
             // AC4: Send PaymentRejectedNotification with rejection reason
-            Mail::to($registration->email)->send(
+            $userEmail = $registration->user->email ?? $registration->email;
+            Mail::to($userEmail)->queue(
                 new PaymentRejectedNotification($registration, $request->string('reason')->toString())
             );
 
