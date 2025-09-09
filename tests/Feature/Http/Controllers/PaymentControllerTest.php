@@ -7,6 +7,7 @@ use App\Models\Registration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -206,10 +207,11 @@ class PaymentControllerTest extends TestCase
     }
 
     /**
-     * Test AC2: Verify upload fails for non-pending payments.
-     * This test ensures that proof can only be uploaded for pending payments.
+     * Test AC2: Verify upload fails for invalid payment statuses.
+     * This test ensures that proof can only be uploaded for pending and rejected payments.
+     * Updated for AC5: Now allows both 'pending' and 'rejected' statuses.
      */
-    public function test_upload_proof_fails_for_non_pendings(): void
+    public function test_upload_proof_fails_for_invalid_payment_statuses(): void
     {
         // Arrange: Create test data
         Storage::fake('private');
@@ -222,16 +224,17 @@ class PaymentControllerTest extends TestCase
             'user_id' => $user->id,
         ]);
 
+        // Test approved payment (should fail)
         $payment = Payment::factory()->create([
             'registration_id' => $registration->id,
-            'status' => 'completed', // Not pending
+            'status' => 'approved', // Neither pending nor rejected
             'amount' => 100.00,
             'payment_proof_path' => null, // Ensure it starts as null
         ]);
 
         $file = UploadedFile::fake()->create('proof.pdf', 100, 'application/pdf');
 
-        // Act: Try to upload proof for completed payment
+        // Act: Try to upload proof for approved payment
         $response = $this->actingAs($user)
             ->post(route('payments.upload-proof', $payment), [
                 'payment_proof' => $file,
@@ -240,6 +243,10 @@ class PaymentControllerTest extends TestCase
         // Assert: Upload should fail
         $response->assertRedirect();
         $response->assertSessionHas('error');
+
+        // AC5: Verify error message mentions both pending and rejected statuses
+        $errorMessage = $response->getSession()->get('error');
+        $this->assertStringContainsString('pending or rejected payments', $errorMessage);
 
         // AC2: Verify no file was associated with the payment
         $payment->refresh();
@@ -401,5 +408,124 @@ class PaymentControllerTest extends TestCase
         $serverErrorPt = __('Failed to upload payment proof. Please contact the organization for assistance.');
         $this->assertStringContainsString('organização', $serverErrorPt);
         $this->assertStringContainsString('assistência', $serverErrorPt);
+    }
+
+    /**
+     * Test AC5: Verify rejected payment proof can be re-uploaded successfully.
+     * This test ensures that users can re-upload payment proofs after rejection
+     * and the system handles the re-upload flow correctly.
+     */
+    public function test_rejected_payment_proof_can_be_reuploaded(): void
+    {
+        // Arrange: Create test data with mail fake for admin notifications
+        Storage::fake('private');
+        Mail::fake();
+
+        // Configure coordinator email for notifications
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        // Create a rejected payment with rejection reason in notes
+        $rejectionReason = 'Poor image quality. Please upload a clearer document.';
+        $payment = Payment::factory()->create([
+            'registration_id' => $registration->id,
+            'status' => 'rejected',
+            'amount' => 100.00,
+            'payment_proof_path' => 'old/path/rejected_proof.pdf', // Had previous upload
+            'notes' => $rejectionReason,
+        ]);
+
+        // Create a new file for re-upload
+        $newFile = UploadedFile::fake()->create('new_payment_proof.pdf', 100, 'application/pdf');
+
+        // Act: Re-upload proof for rejected payment
+        $response = $this->actingAs($user)
+            ->post(route('payments.upload-proof', $payment), [
+                'payment_proof' => $newFile,
+            ]);
+
+        // Assert: Verify successful re-upload response
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        // AC5: Verify re-upload specific success message
+        $successMessage = $response->getSession()->get('success');
+        $this->assertStringContainsString('re-uploaded successfully', $successMessage);
+        $this->assertStringContainsString('new submission', $successMessage);
+
+        // AC5: Verify payment status is updated back to pending_approval
+        $payment->refresh();
+        $this->assertEquals('pending_approval', $payment->status);
+
+        // AC5: Verify notes indicate this was a re-upload
+        $this->assertEquals(__('Payment proof re-uploaded by user after rejection'), $payment->notes);
+
+        // Verify the new file is stored correctly
+        $this->assertNotNull($payment->payment_proof_path);
+        $this->assertNotEquals('old/path/rejected_proof.pdf', $payment->payment_proof_path);
+        $this->assertStringContainsString('payment_'.$payment->id, $payment->payment_proof_path);
+        $this->assertTrue(Storage::disk('private')->exists($payment->payment_proof_path));
+
+        // Verify payment_date is updated
+        $this->assertNotNull($payment->payment_date);
+
+        // AC5: Verify admin notification is sent for re-upload
+        Mail::assertQueued(\App\Mail\ProofUploadedNotification::class);
+    }
+
+    /**
+     * Test AC5: Verify pending payment upload still works (regression test).
+     * This test ensures that the changes to allow rejected payment re-uploads
+     * don't break the existing functionality for pending payments.
+     */
+    public function test_pending_payment_upload_still_works_after_ac5_changes(): void
+    {
+        // Arrange: Create test data
+        Storage::fake('private');
+        Mail::fake();
+
+        // Configure coordinator email for notifications
+        config(['mail.coordinator_email' => 'coordinator@example.com']);
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $registration = Registration::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $payment = Payment::factory()->pending()->create([
+            'registration_id' => $registration->id,
+            'amount' => 100.00,
+        ]);
+
+        $file = UploadedFile::fake()->create('payment_proof.pdf', 100, 'application/pdf');
+
+        // Act: Upload proof for pending payment
+        $response = $this->actingAs($user)
+            ->post(route('payments.upload-proof', $payment), [
+                'payment_proof' => $file,
+            ]);
+
+        // Assert: Verify pending upload still works
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        // Verify original success message (not re-upload message)
+        $successMessage = $response->getSession()->get('success');
+        $this->assertStringNotContainsString('re-uploaded', $successMessage);
+        $this->assertStringContainsString('uploaded successfully', $successMessage);
+
+        $payment->refresh();
+        $this->assertEquals('pending_approval', $payment->status);
+        $this->assertEquals(__('Payment proof uploaded by user'), $payment->notes);
     }
 }

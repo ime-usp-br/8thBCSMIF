@@ -284,9 +284,11 @@ new #[Layout('layouts.app')] class extends Component {
                                                 ->orderBy('created_at', 'desc')
                                                 ->first();
                                                 
-                                            $showPaymentUpload = $payment->status === 'pending' 
-                                                && !$payment->payment_proof_path 
-                                                && $mostRecentPayment && $mostRecentPayment->id === $payment->id;
+                                            // AC5: Allow upload for both pending payments without proof AND rejected payments
+                                            $showPaymentUpload = (
+                                                ($payment->status === 'pending' && !$payment->payment_proof_path) || 
+                                                $payment->status === 'rejected'
+                                            ) && $mostRecentPayment && $mostRecentPayment->id === $payment->id;
                                             
                                         @endphp
 
@@ -300,6 +302,67 @@ new #[Layout('layouts.app')] class extends Component {
                                                         {{ __('This workshop is free for graduate students and has been automatically approved.') }}
                                                     </p>
                                                 </div>
+                                            </div>
+                                        @elseif($payment->status === 'rejected')
+                                            {{-- AC5: Show rejection reason and re-upload form for rejected payments --}}
+                                            <div class="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+                                                <div class="flex items-center mb-3">
+                                                    <svg class="w-5 h-5 text-red-600 dark:text-red-400 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                                    </svg>
+                                                    <h5 class="font-medium text-red-800 dark:text-red-300">
+                                                        {{ __('Payment Proof Rejected') }}
+                                                    </h5>
+                                                </div>
+                                                
+                                                @if($payment->notes)
+                                                    <div class="mb-4">
+                                                        <p class="text-sm font-medium text-red-800 dark:text-red-300 mb-2">{{ __('Rejection Reason') }}:</p>
+                                                        <p class="text-sm text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/40 p-3 rounded border border-red-200 dark:border-red-600">{{ $payment->notes }}</p>
+                                                    </div>
+                                                @endif
+                                                
+                                                <p class="text-sm text-red-600 dark:text-red-400 mb-4">
+                                                    {{ __('Please review the rejection reason above and upload a corrected payment proof document.') }}
+                                                </p>
+                                                
+                                                <form action="{{ route('payments.upload-proof', $payment) }}" method="POST" enctype="multipart/form-data" class="space-y-3">
+                                                    @csrf
+                                                    
+                                                    <div>
+                                                        <label for="payment_proof_{{ $payment->id }}" class="block text-sm font-medium text-red-800 dark:text-red-300 mb-2">
+                                                            {{ __('New Payment Proof Document') }}
+                                                        </label>
+                                                        <input 
+                                                            type="file" 
+                                                            id="payment_proof_{{ $payment->id }}" 
+                                                            name="payment_proof" 
+                                                            accept=".jpg,.jpeg,.png,.pdf"
+                                                            class="block w-full text-sm text-gray-500 dark:text-gray-400
+                                                                   file:mr-4 file:py-2 file:px-4
+                                                                   file:rounded-full file:border-0
+                                                                   file:text-sm file:font-semibold
+                                                                   file:bg-red-100 file:text-red-800
+                                                                   hover:file:bg-red-200
+                                                                   dark:file:bg-red-900 dark:file:text-red-300
+                                                                   dark:hover:file:bg-red-800"
+                                                            required
+                                                        >
+                                                        <p class="mt-1 text-xs text-red-700 dark:text-red-400">
+                                                            {{ __('Accepted formats: JPG, JPEG, PNG, PDF. Maximum size: 10MB.') }}
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div class="flex justify-end">
+                                                        <button 
+                                                            type="submit" 
+                                                            dusk="reupload-payment-proof-button-{{ $payment->id }}"
+                                                            class="inline-flex items-center px-3 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                                        >
+                                                            {{ __('Upload New Payment Proof') }}
+                                                        </button>
+                                                    </div>
+                                                </form>
                                             </div>
                                         @elseif($showPaymentUpload)
                                             <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
