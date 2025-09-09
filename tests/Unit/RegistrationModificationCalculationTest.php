@@ -139,10 +139,10 @@ class RegistrationModificationCalculationTest extends TestCase
         ]);
 
         $event = Event::where('code', 'BCSMIF2025')->first();
-        $registration->events()->attach($event->code, ['price_at_registration' => 600.00]);
+        $registration->events()->attach($event->code, ['price_at_registration' => 700.00]);
 
-        // Add payment that covers the fee
-        $registration->payments()->create(['amount' => 600.00, 'status' => 'approved']);
+        // Add payment that covers the fee (late period: 700.00)
+        $registration->payments()->create(['amount' => 700.00, 'status' => 'approved']);
 
         $feeData = $this->service->calculateFees(
             $registration->registration_category_snapshot,
@@ -152,7 +152,7 @@ class RegistrationModificationCalculationTest extends TestCase
             $registration
         );
 
-        $this->assertEquals(600.00, $feeData['total_paid']);
+        $this->assertEquals(700.00, $feeData['total_paid']);
         $this->assertEquals(0.0, $feeData['amount_due']);
     }
 
@@ -268,7 +268,7 @@ class RegistrationModificationCalculationTest extends TestCase
         // The service calculates current fee structure, not preserved original prices
         $eventDetails = collect($feeData['details'])->firstWhere('event_code', $event->code);
         $this->assertNotNull($eventDetails);
-        $this->assertEquals(600.00, $eventDetails['calculated_price']); // Current fee for grad_student in-person
+        $this->assertEquals(700.00, $eventDetails['calculated_price']); // Current fee for grad_student in-person (late period)
     }
 
     #[Test]

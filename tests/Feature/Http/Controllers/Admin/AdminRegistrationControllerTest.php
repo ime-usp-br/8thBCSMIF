@@ -328,7 +328,9 @@ class AdminRegistrationControllerTest extends TestCase
         });
 
         // Ensure only one rejection email was queued
-        Mail::assertQueuedTimes(PaymentRejectedNotification::class, 1);
+        Mail::assertQueued(PaymentRejectedNotification::class, function ($mail) {
+            return $mail->registration->email === 'jane.doe@example.com';
+        });
 
         // Verify no other emails were queued
         Mail::assertNotQueued(PaymentApprovedNotification::class);

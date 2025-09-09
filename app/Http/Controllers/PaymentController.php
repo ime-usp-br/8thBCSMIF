@@ -41,8 +41,9 @@ class PaymentController extends Controller
         ]);
 
         // Validate that payment is in correct status for proof upload
-        if ($payment->status !== 'pending') {
-            return redirect()->back()->with('error', __('Payment proof can only be uploaded for pending payments.'));
+        // AC5: Allow re-upload for rejected payments
+        if (! in_array($payment->status, ['pending', 'rejected'])) {
+            return redirect()->back()->with('error', __('Payment proof can only be uploaded for pending or rejected payments.'));
         }
 
         try {
@@ -61,19 +62,31 @@ class PaymentController extends Controller
             $path = $uploadedFile->storeAs("proofs/{$payment->registration->id}", $filename, 'private');
 
             // Update payment with proof details and status
+            // AC5: Handle re-upload case for rejected payments
+            $isReupload = $payment->status === 'rejected';
+            $notes = $isReupload
+                ? __('Payment proof re-uploaded by user after rejection')
+                : __('Payment proof uploaded by user');
+
             $payment->update([
                 'payment_proof_path' => $path,
                 'payment_date' => Carbon::now(),
                 'status' => 'pending_approval',
-                'notes' => __('Payment proof uploaded by user'),
+                'notes' => $notes,
             ]);
 
             $user = $request->user();
-            Log::info(__('Payment proof uploaded successfully'), [
+            // AC5: Log re-upload status for better tracking
+            $logMessage = $isReupload
+                ? __('Payment proof re-uploaded successfully after rejection')
+                : __('Payment proof uploaded successfully');
+
+            Log::info($logMessage, [
                 'registration_id' => $payment->registration->id,
                 'payment_id' => $payment->id,
                 'file_path' => $path,
                 'user_id' => $user?->id,
+                'is_reupload' => $isReupload,
             ]);
 
             // Check if all payments for this registration have proof uploaded
@@ -97,7 +110,12 @@ class PaymentController extends Controller
                 ]);
             }
 
-            return redirect()->back()->with('success', __('Payment proof uploaded successfully. The coordinator will review your submission.'));
+            // AC5: Different success message for re-uploads
+            $successMessage = $isReupload
+                ? __('Payment proof re-uploaded successfully. The coordinator will review your new submission.')
+                : __('Payment proof uploaded successfully. The coordinator will review your submission.');
+
+            return redirect()->back()->with('success', $successMessage);
 
         } catch (\Exception $e) {
             $user = $request->user();
