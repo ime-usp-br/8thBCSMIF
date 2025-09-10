@@ -60,14 +60,11 @@
 
 **{{ __('Important') }}**: {{ __('Your registration will remain in our system, and you can resubmit your enrollment proof at any time through your registration page. There is no deadline penalty for resubmission.') }}
 
-## {{ __('Need Help?') }}
+## {{ __('Contact Information') }}
 
-{{ __('Common questions we can help with:') }}
+{{ __('If you need assistance with your enrollment verification or have any questions about the registration process, please contact the event organization:') }}
 
-- 🎓 {{ __('What documents are acceptable for enrollment verification?') }}
-- 📄 {{ __('How to obtain official enrollment certificates from your institution?') }}
-- 🔍 {{ __('Document quality requirements and formatting guidelines?') }}
-- 📧 {{ __('Alternative submission methods if online upload fails?') }}
+**{{ __('Event Organization Email') }}:** {{ config('mail.coordinator_email') ?? config('mail.from.address') }}
 
 {{ __('Thank you for your understanding and patience. We look forward to your successful participation in the 8th BCSMIF.') }}
 
