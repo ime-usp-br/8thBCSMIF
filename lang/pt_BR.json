@@ -925,5 +925,8 @@
     "We are pleased to inform you that your payment for the 8th Brazilian Congress on Statistical Modeling in Insurance and Finance (8th BCSMIF) has been approved.": "Temos o prazer de informar que seu pagamento para o 8º Congresso Brasileiro de Modelagem Estatística em Seguros e Finanças (8º BCSMIF) foi aprovado.",
     "Please note that this exemption was granted by our administrative team based on your specific circumstances. If you have any questions about this exemption, please contact us.": "Por favor, note que esta isenção foi concedida por nossa equipe administrativa com base em suas circunstâncias específicas. Se você tiver alguma dúvida sobre esta isenção, entre em contato conosco.",
     "Fee Exemption": "Isenção de Taxa",
-    "Error approving exemption: :message": "Erro ao aprovar isenção: :message"
+    "Error approving exemption: :message": "Erro ao aprovar isenção: :message",
+    "Contact Information": "Informações de Contato",
+    "If you need assistance with your enrollment verification or have any questions about the registration process, please contact the event organization:": "Se precisar de ajuda com sua verificação de matrícula ou tiver dúvidas sobre o processo de inscrição, entre em contato com a organização do evento:",
+    "Event Organization Email": "Email da Organização do Evento"
 }
