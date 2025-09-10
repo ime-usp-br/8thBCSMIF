@@ -32,6 +32,14 @@ class ApprovalQueue extends Component
 
     public string $sortDirection = 'desc';
 
+    public bool $showRejectModal = false;
+
+    public string $rejectionReason = '';
+
+    public string $currentRejectType = '';
+
+    public int $currentRejectId = 0;
+
     /**
      * AC1: Render the approval queue with pending items
      * Shows both payment proofs and enrollment proofs requiring validation
@@ -307,7 +315,7 @@ class ApprovalQueue extends Component
                 $payment = Payment::findOrFail($id);
                 $payment->update([
                     'status' => Payment::STATUS_REJECTED,
-                    'notes' => $defaultReason,
+                    'rejection_reason' => $defaultReason,
                 ]);
 
                 // Send rejection notification email
@@ -367,5 +375,84 @@ class ApprovalQueue extends Component
     {
         $this->reset(['search', 'filterType']);
         $this->resetPage();
+    }
+
+    /**
+     * Open rejection modal for a specific item
+     */
+    public function openRejectModal(string $type, int $id): void
+    {
+        $this->currentRejectType = $type;
+        $this->currentRejectId = $id;
+        $this->rejectionReason = '';
+        $this->showRejectModal = true;
+    }
+
+    /**
+     * Close rejection modal and reset values
+     */
+    public function closeRejectModal(): void
+    {
+        $this->showRejectModal = false;
+        $this->currentRejectType = '';
+        $this->currentRejectId = 0;
+        $this->rejectionReason = '';
+        $this->resetErrorBag();
+    }
+
+    /**
+     * Reject an item with custom reason from modal
+     */
+    public function rejectWithReason(): void
+    {
+        $this->validate([
+            'rejectionReason' => 'required|string|min:10|max:500',
+        ], [
+            'rejectionReason.required' => __('Rejection reason is required.'),
+            'rejectionReason.min' => __('Rejection reason must be at least 10 characters.'),
+            'rejectionReason.max' => __('Rejection reason may not be greater than 500 characters.'),
+        ]);
+
+        try {
+            if ($this->currentRejectType === 'payment') {
+                $payment = Payment::findOrFail($this->currentRejectId);
+                $payment->update([
+                    'status' => Payment::STATUS_REJECTED,
+                    'rejection_reason' => $this->rejectionReason,
+                ]);
+
+                // Send rejection notification email
+                $registration = $payment->registration;
+                $userEmail = $registration->user->email ?? $registration->email;
+                Mail::to($userEmail)->queue(
+                    new PaymentRejectedNotification($registration, $this->rejectionReason)
+                );
+
+                session()->flash('success', __('Payment proof rejected successfully.'));
+            } elseif ($this->currentRejectType === 'enrollment') {
+                $enrollmentProof = EnrollmentProof::findOrFail($this->currentRejectId);
+                $enrollmentProof->update([
+                    'status' => EnrollmentProof::STATUS_REJECTED,
+                    'approved_by' => auth()->id(),
+                    'approved_at' => now(),
+                    'rejection_reason' => $this->rejectionReason,
+                ]);
+
+                // Send enrollment rejection notification email
+                $registration = $enrollmentProof->registration;
+                $userEmail = $registration->user->email ?? $registration->email;
+                Mail::to($userEmail)->queue(
+                    new EnrollmentRejectedNotification($registration, $this->rejectionReason)
+                );
+
+                session()->flash('success', __('Enrollment proof rejected successfully.'));
+            }
+
+            // Close modal and refresh data
+            $this->closeRejectModal();
+            $this->dispatch('$refresh');
+        } catch (\Exception $e) {
+            session()->flash('error', __('Error rejecting item: :message', ['message' => $e->getMessage()]));
+        }
     }
 }

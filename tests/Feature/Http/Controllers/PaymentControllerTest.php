@@ -432,14 +432,14 @@ class PaymentControllerTest extends TestCase
             'user_id' => $user->id,
         ]);
 
-        // Create a rejected payment with rejection reason in notes
+        // Create a rejected payment with rejection reason in dedicated field
         $rejectionReason = 'Poor image quality. Please upload a clearer document.';
         $payment = Payment::factory()->create([
             'registration_id' => $registration->id,
             'status' => 'rejected',
             'amount' => 100.00,
             'payment_proof_path' => 'old/path/rejected_proof.pdf', // Had previous upload
-            'notes' => $rejectionReason,
+            'rejection_reason' => $rejectionReason,
         ]);
 
         // Create a new file for re-upload
