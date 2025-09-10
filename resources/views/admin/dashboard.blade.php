@@ -109,7 +109,7 @@
                                 </div>
                             </div>
                             <div class="mt-4">
-                                <a href="{{ route('admin.registrations.index') }}" 
+                                <a href="{{ route('admin.approvals') }}" 
                                    class="inline-flex items-center px-4 py-3 bg-orange-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-400 focus:bg-orange-400 active:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition ease-in-out duration-150 min-h-[44px] min-w-[44px]" 
                                    aria-describedby="pending-approvals-heading"
                                    aria-label="{{ __('Review pending approvals queue') }}">
@@ -204,44 +204,43 @@
                                 id="registrations-by-category-heading">
                                 {{ __('Registrations by Category') }}
                             </h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4" role="group" aria-labelledby="registrations-by-category-heading">
-                                <div class="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 transition-shadow duration-200">
-                                    <div class="text-xl sm:text-2xl font-bold text-blue-600 tabular-nums" 
-                                         aria-label="{{ __('Undergraduate students') }}: {{ $metrics['registrations_by_category']['undergrad_student'] }}">
-                                        {{ $metrics['registrations_by_category']['undergrad_student'] }}
-                                    </div>
-                                    <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                        {{ __('Undergrad Students') }}
-                                    </div>
+                            @if(empty($metrics['registrations_by_category']))
+                                <div class="text-center py-8">
+                                    <p class="text-gray-500 dark:text-gray-400">
+                                        {{ __('No registration data available') }}
+                                    </p>
                                 </div>
-                                <div class="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-green-500 focus-within:ring-offset-2 transition-shadow duration-200">
-                                    <div class="text-xl sm:text-2xl font-bold text-green-600 tabular-nums" 
-                                         aria-label="{{ __('Graduate students') }}: {{ $metrics['registrations_by_category']['grad_student'] }}">
-                                        {{ $metrics['registrations_by_category']['grad_student'] }}
-                                    </div>
-                                    <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                        {{ __('Grad Students') }}
-                                    </div>
+                            @else
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4" role="group" aria-labelledby="registrations-by-category-heading">
+                                    @php
+                                        $colors = ['blue', 'green', 'purple', 'orange', 'red', 'indigo'];
+                                        $categoryLabels = [
+                                            'undergrad_student' => __('Undergrad Students'),
+                                            'grad_student' => __('Grad Students'),
+                                            'professor' => __('Professors'),
+                                            'professional' => __('Professionals'),
+                                            'professional_foreign' => __('Foreign Professionals'),
+                                        ];
+                                        $colorIndex = 0;
+                                    @endphp
+                                    @foreach($metrics['registrations_by_category'] as $category => $count)
+                                        @php
+                                            $color = $colors[$colorIndex % count($colors)];
+                                            $colorIndex++;
+                                            $label = $categoryLabels[$category] ?? ucfirst(str_replace('_', ' ', $category));
+                                        @endphp
+                                        <div class="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-{{ $color }}-500 focus-within:ring-offset-2 transition-shadow duration-200">
+                                            <div class="text-xl sm:text-2xl font-bold text-{{ $color }}-600 tabular-nums" 
+                                                 aria-label="{{ $label }}: {{ $count }}">
+                                                {{ number_format($count) }}
+                                            </div>
+                                            <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                                {{ $label }}
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
-                                <div class="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-purple-500 focus-within:ring-offset-2 transition-shadow duration-200">
-                                    <div class="text-xl sm:text-2xl font-bold text-purple-600 tabular-nums" 
-                                         aria-label="{{ __('Professors') }}: {{ $metrics['registrations_by_category']['professor'] }}">
-                                        {{ $metrics['registrations_by_category']['professor'] }}
-                                    </div>
-                                    <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                        {{ __('Professors') }}
-                                    </div>
-                                </div>
-                                <div class="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-orange-500 focus-within:ring-offset-2 transition-shadow duration-200">
-                                    <div class="text-xl sm:text-2xl font-bold text-orange-600 tabular-nums" 
-                                         aria-label="{{ __('Professionals') }}: {{ $metrics['registrations_by_category']['professional'] }}">
-                                        {{ $metrics['registrations_by_category']['professional'] }}
-                                    </div>
-                                    <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                        {{ __('Professionals') }}
-                                    </div>
-                                </div>
-                            </div>
+                            @endif
                         </div>
                     </div>
                 </section>
@@ -322,7 +321,7 @@
                                     </div>
                                 </a>
 
-                                <a href="{{ route('admin.registrations.index') }}?filter=pending_approval" 
+                                <a href="{{ route('admin.approvals') }}" 
                                    class="group block p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-orange-500 dark:hover:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:border-orange-500 transition-colors duration-200 min-h-[88px]"
                                    aria-describedby="pending-approvals-description"
                                    tabindex="0">
