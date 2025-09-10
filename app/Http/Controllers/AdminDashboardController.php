@@ -12,8 +12,11 @@ class AdminDashboardController extends Controller
     ) {}
 
     /**
-     * Show the admin dashboard with metrics overview.
-     * Uses real metrics from DashboardMetricService with performance optimizations.
+     * Show the admin dashboard with comprehensive metrics overview.
+     * Uses real-time data from DashboardMetricService with caching optimizations.
+     *
+     * All metrics are loaded immediately to ensure accurate data display,
+     * fixing the previous issue where transport needs showed incorrect values.
      */
     public function index(): View
     {
@@ -46,6 +49,10 @@ class AdminDashboardController extends Controller
         $pendingRevenue = $revenue['pending'] ?? 0;
         $totalRevenue = $revenue['total'] ?? 0;
 
+        // Get transport needs data from service
+        $transportNeeds = $this->metricsService->getTransportNeeds();
+        $registrationsByCategory = $this->metricsService->getRegistrationsByCategory();
+
         $metrics = [
             'total_registrations' => [
                 'count' => is_numeric($totalCount) ? (int) $totalCount : 0,
@@ -65,18 +72,12 @@ class AdminDashboardController extends Controller
                 'total' => is_numeric($totalRevenue) ? (float) $totalRevenue : 0.0,
                 'currency' => config('currency.code'),
             ],
-            // Progressive loading placeholders - will be loaded via AJAX
-            'registrations_by_category' => [
-                'undergrad_student' => 0,
-                'grad_student' => 0,
-                'professor' => 0,
-                'professional' => 0,
-            ],
+            'registrations_by_category' => $registrationsByCategory,
             'transport_needs' => [
-                'from_usp' => 0,
-                'from_gru' => 0,
-                'both' => 0,
-                'total' => 0,
+                'from_usp' => $transportNeeds['from_usp'],
+                'from_gru' => $transportNeeds['from_gru'],
+                'both' => $transportNeeds['both'],
+                'total' => $transportNeeds['total'],
             ],
         ];
 

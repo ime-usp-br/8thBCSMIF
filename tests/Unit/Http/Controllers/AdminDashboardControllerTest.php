@@ -29,7 +29,7 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_index_returns_view_instance(): void
     {
-        // Mock the service method
+        // Mock the service methods
         $this->mockMetricsService->shouldReceive('getCriticalMetrics')
             ->once()
             ->andReturn([
@@ -37,6 +37,14 @@ class AdminDashboardControllerTest extends TestCase
                 'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
                 'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
             ]);
+
+        $this->mockMetricsService->shouldReceive('getTransportNeeds')
+            ->once()
+            ->andReturn(['from_usp' => 1, 'from_gru' => 2, 'both' => 1, 'total' => 2]);
+
+        $this->mockMetricsService->shouldReceive('getRegistrationsByCategory')
+            ->once()
+            ->andReturn(['undergrad_student' => 2, 'grad_student' => 1, 'professor' => 1, 'professional' => 1]);
 
         $this->mockMetricsService->shouldReceive('warmCache')->once();
 
@@ -49,7 +57,7 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_index_returns_correct_view_name(): void
     {
-        // Mock the service method
+        // Mock the service methods
         $this->mockMetricsService->shouldReceive('getCriticalMetrics')
             ->once()
             ->andReturn([
@@ -57,6 +65,14 @@ class AdminDashboardControllerTest extends TestCase
                 'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
                 'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
             ]);
+
+        $this->mockMetricsService->shouldReceive('getTransportNeeds')
+            ->once()
+            ->andReturn(['from_usp' => 1, 'from_gru' => 2, 'both' => 1, 'total' => 2]);
+
+        $this->mockMetricsService->shouldReceive('getRegistrationsByCategory')
+            ->once()
+            ->andReturn(['undergrad_student' => 2, 'grad_student' => 1, 'professor' => 1, 'professional' => 1]);
 
         $this->mockMetricsService->shouldReceive('warmCache')->once();
 
@@ -69,7 +85,7 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_index_passes_metrics_data_to_view(): void
     {
-        // Mock the service method
+        // Mock the service methods
         $this->mockMetricsService->shouldReceive('getCriticalMetrics')
             ->once()
             ->andReturn([
@@ -77,6 +93,14 @@ class AdminDashboardControllerTest extends TestCase
                 'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
                 'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
             ]);
+
+        $this->mockMetricsService->shouldReceive('getTransportNeeds')
+            ->once()
+            ->andReturn(['from_usp' => 1, 'from_gru' => 2, 'both' => 1, 'total' => 2]);
+
+        $this->mockMetricsService->shouldReceive('getRegistrationsByCategory')
+            ->once()
+            ->andReturn(['undergrad_student' => 2, 'grad_student' => 1, 'professor' => 1, 'professional' => 1]);
 
         $this->mockMetricsService->shouldReceive('warmCache')->once();
 
@@ -92,7 +116,7 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_metrics_data_structure_is_complete(): void
     {
-        // Mock the service method
+        // Mock the service methods
         $this->mockMetricsService->shouldReceive('getCriticalMetrics')
             ->once()
             ->andReturn([
@@ -100,6 +124,14 @@ class AdminDashboardControllerTest extends TestCase
                 'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
                 'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
             ]);
+
+        $this->mockMetricsService->shouldReceive('getTransportNeeds')
+            ->once()
+            ->andReturn(['from_usp' => 1, 'from_gru' => 2, 'both' => 1, 'total' => 2]);
+
+        $this->mockMetricsService->shouldReceive('getRegistrationsByCategory')
+            ->once()
+            ->andReturn(['undergrad_student' => 2, 'grad_student' => 1, 'professor' => 1, 'professional' => 1]);
 
         $this->mockMetricsService->shouldReceive('warmCache')->once();
 
@@ -119,7 +151,7 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_total_registrations_metric_structure(): void
     {
-        // Mock the service method
+        // Mock the service methods
         $this->mockMetricsService->shouldReceive('getCriticalMetrics')
             ->once()
             ->andReturn([
@@ -127,6 +159,14 @@ class AdminDashboardControllerTest extends TestCase
                 'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
                 'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
             ]);
+
+        $this->mockMetricsService->shouldReceive('getTransportNeeds')
+            ->once()
+            ->andReturn(['from_usp' => 1, 'from_gru' => 2, 'both' => 1, 'total' => 2]);
+
+        $this->mockMetricsService->shouldReceive('getRegistrationsByCategory')
+            ->once()
+            ->andReturn(['undergrad_student' => 2, 'grad_student' => 1, 'professor' => 1, 'professional' => 1]);
 
         $this->mockMetricsService->shouldReceive('warmCache')->once();
 
@@ -147,7 +187,7 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_registrations_by_category_metric_structure(): void
     {
-        // Mock the service method
+        // Mock the service methods
         $this->mockMetricsService->shouldReceive('getCriticalMetrics')
             ->once()
             ->andReturn([
@@ -155,6 +195,14 @@ class AdminDashboardControllerTest extends TestCase
                 'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
                 'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
             ]);
+
+        $this->mockMetricsService->shouldReceive('getTransportNeeds')
+            ->once()
+            ->andReturn(['from_usp' => 1, 'from_gru' => 2, 'both' => 1, 'total' => 2]);
+
+        $this->mockMetricsService->shouldReceive('getRegistrationsByCategory')
+            ->once()
+            ->andReturn(['undergrad_student' => 2, 'grad_student' => 1, 'professor' => 1, 'professional' => 1]);
 
         $this->mockMetricsService->shouldReceive('warmCache')->once();
 
@@ -174,7 +222,7 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_pending_approvals_metric_structure(): void
     {
-        // Mock the service method
+        // Mock the service methods
         $this->mockMetricsService->shouldReceive('getCriticalMetrics')
             ->once()
             ->andReturn([
@@ -182,6 +230,14 @@ class AdminDashboardControllerTest extends TestCase
                 'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
                 'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
             ]);
+
+        $this->mockMetricsService->shouldReceive('getTransportNeeds')
+            ->once()
+            ->andReturn(['from_usp' => 1, 'from_gru' => 2, 'both' => 1, 'total' => 2]);
+
+        $this->mockMetricsService->shouldReceive('getRegistrationsByCategory')
+            ->once()
+            ->andReturn(['undergrad_student' => 2, 'grad_student' => 1, 'professor' => 1, 'professional' => 1]);
 
         $this->mockMetricsService->shouldReceive('warmCache')->once();
 
@@ -200,7 +256,7 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_revenue_metric_structure(): void
     {
-        // Mock the service method
+        // Mock the service methods
         $this->mockMetricsService->shouldReceive('getCriticalMetrics')
             ->once()
             ->andReturn([
@@ -208,6 +264,14 @@ class AdminDashboardControllerTest extends TestCase
                 'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
                 'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
             ]);
+
+        $this->mockMetricsService->shouldReceive('getTransportNeeds')
+            ->once()
+            ->andReturn(['from_usp' => 1, 'from_gru' => 2, 'both' => 1, 'total' => 2]);
+
+        $this->mockMetricsService->shouldReceive('getRegistrationsByCategory')
+            ->once()
+            ->andReturn(['undergrad_student' => 2, 'grad_student' => 1, 'professor' => 1, 'professional' => 1]);
 
         $this->mockMetricsService->shouldReceive('warmCache')->once();
 
@@ -229,7 +293,7 @@ class AdminDashboardControllerTest extends TestCase
 
     public function test_transport_needs_metric_structure(): void
     {
-        // Mock the service method
+        // Mock the service methods
         $this->mockMetricsService->shouldReceive('getCriticalMetrics')
             ->once()
             ->andReturn([
@@ -237,6 +301,14 @@ class AdminDashboardControllerTest extends TestCase
                 'pending_approvals' => ['payment_proofs' => 2, 'enrollment_proofs' => 1, 'total' => 3],
                 'revenue' => ['confirmed' => 1500.0, 'pending' => 500.0, 'total' => 2000.0],
             ]);
+
+        $this->mockMetricsService->shouldReceive('getTransportNeeds')
+            ->once()
+            ->andReturn(['from_usp' => 1, 'from_gru' => 2, 'both' => 1, 'total' => 2]);
+
+        $this->mockMetricsService->shouldReceive('getRegistrationsByCategory')
+            ->once()
+            ->andReturn(['undergrad_student' => 2, 'grad_student' => 1, 'professor' => 1, 'professional' => 1]);
 
         $this->mockMetricsService->shouldReceive('warmCache')->once();
 
