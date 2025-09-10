@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\PaymentRejectedNotification;
 use App\Mail\PaymentStatusUpdatedNotification;
 use App\Models\Registration;
+use App\Services\RegistrationExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -323,5 +324,132 @@ class RegistrationController extends Controller
     public function approvals(): View
     {
         return view('admin.approvals');
+    }
+
+    /**
+     * Export filtered registrations to CSV with selected columns
+     */
+    public function exportCsv(Request $request, RegistrationExportService $exportService): Response
+    {
+        // Validate request
+        /** @var array{columns: array<string>, filters?: array<string, string>} $validated */
+        $validated = $request->validate([
+            'columns' => ['required', 'array', 'min:1'],
+            'columns.*' => ['required', 'string'],
+            'filters' => ['sometimes', 'array'],
+            'filters.*' => ['nullable', 'string'],
+        ]);
+
+        // Build the same query as RegistrationsList component
+        $query = Registration::query()
+            ->with(['user', 'events', 'payments', 'enrollmentProof']);
+
+        // Apply filters if provided
+        if (isset($validated['filters'])) {
+            /** @var array<string, string> $filters */
+            $filters = $validated['filters'];
+
+            // Apply the same filtering logic as RegistrationsList
+            if (! empty($filters['search'])) {
+                $search = $filters['search'];
+                $query->where(function ($q) use ($search) {
+                    $q->where('full_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
+                });
+            }
+
+            if (! empty($filters['filterEventCode'])) {
+                $query->whereHas('events', function ($eventQuery) use ($filters) {
+                    $eventQuery->where('code', $filters['filterEventCode']);
+                });
+            }
+
+            if (! empty($filters['filterEnrollmentProofStatus'])) {
+                $status = $filters['filterEnrollmentProofStatus'];
+                if ($status === 'none') {
+                    $query->whereDoesntHave('enrollmentProof');
+                } else {
+                    $query->whereHas('enrollmentProof', function ($proofQuery) use ($status) {
+                        $proofQuery->where('status', $status);
+                    });
+                }
+            }
+
+            if (! empty($filters['filterPaymentStatus'])) {
+                $query->where('status', $filters['filterPaymentStatus']);
+            }
+
+            if (! empty($filters['filterDateFrom'])) {
+                $query->whereDate('created_at', '>=', $filters['filterDateFrom']);
+            }
+
+            if (! empty($filters['filterDateTo'])) {
+                $query->whereDate('created_at', '<=', $filters['filterDateTo']);
+            }
+
+            if (! empty($filters['filterFeeMin'])) {
+                $query->where('fee', '>=', $filters['filterFeeMin']);
+            }
+
+            if (! empty($filters['filterFeeMax'])) {
+                $query->where('fee', '<=', $filters['filterFeeMax']);
+            }
+
+            if (! empty($filters['filterStudentCategory'])) {
+                $category = $filters['filterStudentCategory'];
+                if ($category === 'student') {
+                    $query->whereIn('registration_category_snapshot', ['undergrad_student', 'grad_student']);
+                } else {
+                    $query->where('registration_category_snapshot', $category);
+                }
+            }
+
+            if (! empty($filters['filterCountry'])) {
+                $country = $filters['filterCountry'];
+                if ($country === 'Brazil') {
+                    $query->where('address_country', 'Brazil');
+                } elseif ($country === 'OTHER') {
+                    $query->where('address_country', '!=', 'Brazil');
+                }
+            }
+
+            if (! empty($filters['filterTransport'])) {
+                $transport = $filters['filterTransport'];
+                switch ($transport) {
+                    case 'gru':
+                        $query->where('needs_transport_from_gru', true);
+                        break;
+                    case 'usp':
+                        $query->where('needs_transport_from_usp', true);
+                        break;
+                    case 'both':
+                        $query->where('needs_transport_from_gru', true)
+                            ->where('needs_transport_from_usp', true);
+                        break;
+                    case 'none':
+                        $query->where('needs_transport_from_gru', false)
+                            ->where('needs_transport_from_usp', false);
+                        break;
+                }
+            }
+
+            if (! empty($filters['filterMinFee'])) {
+                $query->whereRaw('(SELECT SUM(CAST(price AS DECIMAL(10,2))) FROM fees WHERE fees.event_code IN (SELECT event_code FROM event_registration WHERE event_registration.registration_id = registrations.id)) >= ?', [$filters['filterMinFee']]);
+            }
+
+            if (! empty($filters['filterMaxFee'])) {
+                $query->whereRaw('(SELECT SUM(CAST(price AS DECIMAL(10,2))) FROM fees WHERE fees.event_code IN (SELECT event_code FROM event_registration WHERE event_registration.registration_id = registrations.id)) <= ?', [$filters['filterMaxFee']]);
+            }
+        }
+
+        // Order by creation date (same as RegistrationsList)
+        $query->orderBy('created_at', 'desc');
+
+        // Generate and return CSV
+        return $exportService->exportToCsv($query, $validated['columns']);
     }
 }

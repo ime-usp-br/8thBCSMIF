@@ -119,6 +119,9 @@ Route::prefix('admin/registrations')
         Route::get('/{registration}/download-proof', [AdminRegistrationController::class, 'downloadProof'])->name('download-proof');
         Route::patch('/{registration}/update-status', [AdminRegistrationController::class, 'updateStatus'])->name('update-status');
 
+        // CSV Export route
+        Route::post('/export-csv', [AdminRegistrationController::class, 'exportCsv'])->name('export-csv');
+
         // AC3: Fee exemption and approval routes
         Route::post('/{registration}/approve', [NewAdminRegistrationController::class, 'approve'])->name('approve');
         Route::post('/{registration}/reject', [NewAdminRegistrationController::class, 'reject'])->name('reject');

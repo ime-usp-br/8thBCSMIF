@@ -69,14 +69,14 @@
                     <x-enhanced-input 
                         type="select"
                         name="filterPaymentStatus"
-                        :label="__('Payment Status')"
+                        :label="__('Registration Status')"
                         wire:model.live="filterPaymentStatus"
                         :options="[
                             '' => __('All Statuses'),
-                            'pending' => __('Pending Payment'),
-                            'paid_br' => __('Paid (BR)'),
-                            'paid_int' => __('Paid (International)'),
-                            'cancelled' => __('Cancelled')
+                            'pending' => __('Pending'),
+                            'pending_approval' => __('Pending Approval'),
+                            'approved' => __('Approved'),
+                            'rejected' => __('Rejected')
                         ]"
                     />
 
@@ -112,6 +112,29 @@
                             'rejected' => __('Rejected')
                         ]"
                     />
+                </div>
+
+                <!-- Bulk Actions -->
+                <div class="border-t border-gray-200 dark:border-gray-600 pt-4 mt-4">
+                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{{ __('Bulk Actions') }}</h4>
+                    
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button wire:click="exportSelected" 
+                                class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm transition-colors duration-200">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            {{ __('Export Filtered') }}
+                        </button>
+
+                        <button wire:click="markDocumentsReviewed" 
+                                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition-colors duration-200">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {{ __('Batch Review Documents') }}
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Advanced Filters -->
@@ -190,36 +213,6 @@
                         />
                     </div>
 
-                    <!-- Bulk Actions -->
-                    <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
-                        <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{{ __('Bulk Actions') }}</h4>
-                        
-                        <div class="flex flex-wrap items-center gap-3">
-                            <button wire:click="exportSelected" 
-                                    class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm transition-colors duration-200">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                {{ __('Export Filtered') }}
-                            </button>
-
-                            <button wire:click="markDocumentsReviewed" 
-                                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition-colors duration-200">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                {{ __('Batch Review Documents') }}
-                            </button>
-
-                            <button wire:click="sendBulkEmail" 
-                                    class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg text-sm transition-colors duration-200">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 3.26a2 2 0 001.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                                {{ __('Send Email') }}
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Active Filters Summary -->
@@ -663,4 +656,217 @@
             @endif
         </div>
     </div>
+
+    <!-- CSV Export Modal -->
+    <div x-data="{ open: @entangle('showExportModal') }" 
+         x-show="open" 
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto"
+         style="display: none;">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div x-show="open" 
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+            <!-- Modal content -->
+            <div x-show="open"
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                
+                <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
+                                {{ __('Export Registrations') }}
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                    {{ __('Select which columns to include in the CSV export. Only filtered registrations will be exported.') }}
+                                </p>
+
+                                <!-- Global Selection Controls -->
+                                <div class="mb-4 pb-4 border-b border-gray-200 dark:border-gray-600">
+                                    <div class="flex flex-wrap gap-3">
+                                        <button wire:click="selectAllColumns"
+                                                type="button"
+                                                class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-usp-blue-pri">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                            {{ __('Select All') }}
+                                        </button>
+                                        <button wire:click="deselectAllColumns"
+                                                type="button"
+                                                class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-usp-blue-pri">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                            {{ __('Deselect All') }}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Column Groups -->
+                                <div class="max-h-96 overflow-y-auto space-y-4">
+                                    @foreach($columnGroups as $groupKey => $groupLabel)
+                                        @if(isset($availableColumns[$groupKey]))
+                                            <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                                                <!-- Group Header -->
+                                                <div class="flex items-center justify-between mb-3">
+                                                    <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 flex items-center">
+                                                        @switch($groupKey)
+                                                            @case('basic')
+                                                                <svg class="w-4 h-4 mr-2 text-usp-blue-pri" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                </svg>
+                                                                @break
+                                                            @case('personal')
+                                                                <svg class="w-4 h-4 mr-2 text-usp-blue-pri" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                                </svg>
+                                                                @break
+                                                            @case('contact')
+                                                                <svg class="w-4 h-4 mr-2 text-usp-blue-pri" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 3.26a2 2 0 001.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                                                </svg>
+                                                                @break
+                                                            @case('professional')
+                                                                <svg class="w-4 h-4 mr-2 text-usp-blue-pri" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 00-2 2H8a2 2 0 00-2-2V4"/>
+                                                                </svg>
+                                                                @break
+                                                            @case('conference')
+                                                                <svg class="w-4 h-4 mr-2 text-usp-blue-pri" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                                </svg>
+                                                                @break
+                                                            @case('administrative')
+                                                                <svg class="w-4 h-4 mr-2 text-usp-blue-pri" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                                </svg>
+                                                                @break
+                                                        @endswitch
+                                                        {{ $groupLabel }}
+                                                    </h4>
+                                                    <button wire:click="toggleGroupColumns('{{ $groupKey }}')"
+                                                            type="button"
+                                                            class="text-sm text-usp-blue-pri hover:text-usp-blue-sec dark:text-usp-blue-sec dark:hover:text-usp-blue-pri transition-colors duration-200">
+                                                        @if($this->isGroupFullySelected($groupKey))
+                                                            {{ __('Deselect All') }}
+                                                        @else
+                                                            {{ __('Select All') }}
+                                                        @endif
+                                                    </button>
+                                                </div>
+
+                                                <!-- Column Checkboxes -->
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                    @foreach($availableColumns[$groupKey] as $columnKey => $columnLabel)
+                                                        <label class="flex items-center p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                                                            <input type="checkbox" 
+                                                                   wire:model="selectedColumns" 
+                                                                   value="{{ $columnKey }}"
+                                                                   class="h-4 w-4 text-usp-blue-pri focus:ring-usp-blue-pri border-gray-300 dark:border-gray-600 rounded">
+                                                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300 flex-1">{{ $columnLabel }}</span>
+                                                        </label>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+
+                                @error('selectedColumns')
+                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button wire:click="exportCsv"
+                            wire:loading.attr="disabled"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
+                        <span wire:loading.remove>
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            {{ __('Export CSV') }}
+                        </span>
+                        <span wire:loading class="flex items-center">
+                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            {{ __('Exporting...') }}
+                        </span>
+                    </button>
+                    <button wire:click="closeExportModal"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-usp-blue-pri sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        {{ __('Cancel') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for CSV Export -->
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('export-csv', (data) => {
+                // Create form and submit to export endpoint
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route('admin.registrations.export-csv') }}';
+                form.style.display = 'none';
+
+                // CSRF Token
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                form.appendChild(csrfToken);
+
+                // Columns
+                data[0].columns.forEach(column => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'columns[]';
+                    input.value = column;
+                    form.appendChild(input);
+                });
+
+                // Filters
+                Object.keys(data[0].filters).forEach(filterKey => {
+                    if (data[0].filters[filterKey]) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = `filters[${filterKey}]`;
+                        input.value = data[0].filters[filterKey];
+                        form.appendChild(input);
+                    }
+                });
+
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+            });
+        });
+    </script>
 </div>

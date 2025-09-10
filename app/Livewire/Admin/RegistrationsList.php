@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Models\EnrollmentProof;
 use App\Models\Registration;
+use App\Services\RegistrationExportService;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -36,6 +37,28 @@ class RegistrationsList extends Component
     public string $filterMinFee = '';
 
     public string $filterMaxFee = '';
+
+    // CSV Export modal properties
+    public bool $showExportModal = false;
+
+    /** @var array<string> */
+    public array $selectedColumns = [];
+
+    /** @var array<string, array<string, string>> */
+    public array $availableColumns = [];
+
+    /** @var array<string, string> */
+    public array $columnGroups = [];
+
+    public function mount(RegistrationExportService $exportService): void
+    {
+        // Initialize export data
+        $this->availableColumns = $exportService->getAvailableColumns();
+        $this->columnGroups = $exportService->getColumnGroups();
+
+        // Default selected columns (basic info)
+        $this->selectedColumns = ['id', 'full_name', 'email', 'status', 'created_at'];
+    }
 
     public function render(): \Illuminate\View\View
     {
@@ -243,10 +266,143 @@ class RegistrationsList extends Component
         session()->flash('success', __('Document rejected.'));
     }
 
+    /**
+     * Open export modal with available columns
+     */
+    public function openExportModal(): void
+    {
+        $this->showExportModal = true;
+    }
+
+    /**
+     * Close export modal and reset state
+     */
+    public function closeExportModal(): void
+    {
+        $this->showExportModal = false;
+        $this->resetErrorBag();
+    }
+
+    /**
+     * Toggle all columns selection
+     */
+    public function selectAllColumns(): void
+    {
+        $allColumns = [];
+        foreach ($this->availableColumns as $group => $columns) {
+            $allColumns = array_merge($allColumns, array_keys($columns));
+        }
+        $this->selectedColumns = $allColumns;
+    }
+
+    /**
+     * Deselect all columns
+     */
+    public function deselectAllColumns(): void
+    {
+        $this->selectedColumns = [];
+    }
+
+    /**
+     * Toggle columns for a specific group
+     */
+    public function toggleGroupColumns(string $group): void
+    {
+        if (! isset($this->availableColumns[$group])) {
+            return;
+        }
+
+        $groupColumns = array_keys($this->availableColumns[$group]);
+        $selectedInGroup = array_intersect($this->selectedColumns, $groupColumns);
+
+        if (count($selectedInGroup) === count($groupColumns)) {
+            // All selected, deselect all
+            $this->selectedColumns = array_diff($this->selectedColumns, $groupColumns);
+        } else {
+            // Some or none selected, select all
+            $this->selectedColumns = array_unique(array_merge($this->selectedColumns, $groupColumns));
+        }
+    }
+
+    /**
+     * Check if all columns in a group are selected
+     */
+    public function isGroupFullySelected(string $group): bool
+    {
+        if (! isset($this->availableColumns[$group])) {
+            return false;
+        }
+
+        $groupColumns = array_keys($this->availableColumns[$group]);
+        $selectedInGroup = array_intersect($this->selectedColumns, $groupColumns);
+
+        return count($selectedInGroup) === count($groupColumns);
+    }
+
+    /**
+     * Check if some columns in a group are selected
+     */
+    public function isGroupPartiallySelected(string $group): bool
+    {
+        if (! isset($this->availableColumns[$group])) {
+            return false;
+        }
+
+        $groupColumns = array_keys($this->availableColumns[$group]);
+        $selectedInGroup = array_intersect($this->selectedColumns, $groupColumns);
+
+        return count($selectedInGroup) > 0 && count($selectedInGroup) < count($groupColumns);
+    }
+
+    /**
+     * Export CSV with selected columns and current filters
+     */
+    public function exportCsv(): void
+    {
+        $this->validate([
+            'selectedColumns' => 'required|array|min:1',
+            'selectedColumns.*' => 'required|string',
+        ], [
+            'selectedColumns.required' => __('Please select at least one column to export.'),
+            'selectedColumns.min' => __('Please select at least one column to export.'),
+        ]);
+
+        try {
+            // Collect all current filter values
+            $filters = [
+                'search' => $this->search,
+                'filterEventCode' => $this->filterEventCode,
+                'filterEnrollmentProofStatus' => $this->filterEnrollmentProofStatus,
+                'filterPaymentStatus' => $this->filterPaymentStatus,
+                'filterDateFrom' => $this->filterDateFrom,
+                'filterDateTo' => $this->filterDateTo,
+                'filterFeeMin' => $this->filterFeeMin,
+                'filterFeeMax' => $this->filterFeeMax,
+                'filterStudentCategory' => $this->filterStudentCategory,
+                'filterCountry' => $this->filterCountry,
+                'filterTransport' => $this->filterTransport,
+                'filterMinFee' => $this->filterMinFee,
+                'filterMaxFee' => $this->filterMaxFee,
+            ];
+
+            // Redirect to export route with POST data
+            $this->dispatch('export-csv', [
+                'columns' => $this->selectedColumns,
+                'filters' => $filters,
+            ]);
+
+            // Close modal on success
+            $this->closeExportModal();
+
+            session()->flash('success', __('CSV export initiated. Download should start shortly.'));
+        } catch (\Exception $e) {
+            session()->flash('error', __('Error exporting CSV: :message', ['message' => $e->getMessage()]));
+        }
+    }
+
     public function exportSelected(): void
     {
-        // TODO: Implement export functionality
-        session()->flash('info', __('Export functionality coming soon.'));
+        $this->openExportModal();
     }
 
     public function markDocumentsReviewed(): void
