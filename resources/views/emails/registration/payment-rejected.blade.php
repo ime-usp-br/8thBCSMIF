@@ -39,7 +39,7 @@
 - **{{ __('Wrong document type') }}**: {{ __('Submit official payment receipt or bank statement') }}
 - **{{ __('Missing information') }}**: {{ __('Ensure all payment details are visible') }}
 
-<x-mail::button :url="route('my-registration')" color="primary">
+<x-mail::button :url="route('registrations.my')" color="primary">
 {{ __('Upload New Payment Proof') }}
 </x-mail::button>
 

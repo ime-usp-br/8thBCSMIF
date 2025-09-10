@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $payment_proof_path
  * @property Carbon|null $payment_date
  * @property string|null $notes
+ * @property string|null $rejection_reason
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read \App\Models\Registration $registration
@@ -49,6 +50,7 @@ class Payment extends Model
         'payment_proof_path',
         'payment_date',
         'notes',
+        'rejection_reason',
     ];
 
     /**

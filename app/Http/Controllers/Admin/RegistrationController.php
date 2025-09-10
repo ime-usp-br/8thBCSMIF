@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\PaymentRejectedNotification;
 use App\Mail\PaymentStatusUpdatedNotification;
 use App\Models\Registration;
 use Illuminate\Http\JsonResponse;
@@ -284,10 +285,10 @@ class RegistrationController extends Controller
             ], 404);
         }
 
-        // Update payment status and add rejection reason to notes
+        // Update payment status and add rejection reason to dedicated field
         $payment->update([
             'status' => 'rejected',
-            'notes' => $validated['reason'],
+            'rejection_reason' => $validated['reason'],
         ]);
 
         // Update registration status if needed
@@ -302,6 +303,12 @@ class RegistrationController extends Controller
         // Append to existing notes
         $existingNotes = $registration->notes ? $registration->notes."\n" : '';
         $registration->update(['notes' => $existingNotes.$logEntry]);
+
+        // Send rejection notification email
+        $userEmail = $registration->user->email ?? $registration->email;
+        Mail::to($userEmail)->queue(
+            new PaymentRejectedNotification($registration, $validated['reason'])
+        );
 
         return response()->json([
             'success' => true,
