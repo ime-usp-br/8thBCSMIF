@@ -11,7 +11,7 @@ class RegistrationExportService
 {
     /**
      * Available columns for export organized by groups
-     * 
+     *
      * @return array<string, array<string, string>>
      */
     public function getAvailableColumns(): array
@@ -63,6 +63,7 @@ class RegistrationExportService
             ],
             'administrative' => [
                 'registration_category_snapshot' => __('Registration Category'),
+                'registration_fee_at_time' => __('Registration Fee at Time'),
                 'invoice_sent_at' => __('Invoice Sent Date'),
                 'payment_status' => __('Payment Status'),
                 'enrollment_proof_status' => __('Enrollment Proof Status'),
@@ -74,10 +75,9 @@ class RegistrationExportService
 
     /**
      * Export registrations to CSV with selected columns
-     * 
-     * @param Builder<Registration> $query
-     * @param array<string> $selectedColumns
-     * @return Response
+     *
+     * @param  Builder<Registration>  $query
+     * @param  array<string>  $selectedColumns
      */
     public function exportToCsv(Builder $query, array $selectedColumns): Response
     {
@@ -109,15 +109,14 @@ class RegistrationExportService
 
     /**
      * Generate CSV content from registrations data
-     * 
-     * @param Collection<int, Registration> $registrations
-     * @param array<string, string> $columns
-     * @return string
+     *
+     * @param  Collection<int, Registration>  $registrations
+     * @param  array<string, string>  $columns
      */
     private function generateCsvContent(Collection $registrations, array $columns): string
     {
         $output = fopen('php://temp', 'r+');
-        
+
         if ($output === false) {
             throw new \RuntimeException('Unable to create temporary file for CSV generation');
         }
@@ -183,6 +182,11 @@ class RegistrationExportService
             case 'registration_category_snapshot':
                 return __($registration->registration_category_snapshot);
 
+            case 'registration_fee_at_time':
+                $fee = $registration->calculateCorrectTotalFee();
+
+                return 'R$ '.number_format($fee, 2, ',', '.');
+
             case 'gender':
                 return $registration->gender ? __($registration->gender) : '';
 
@@ -205,16 +209,14 @@ class RegistrationExportService
 
             default:
                 $value = $registration->{$column} ?? '';
-                if ($value === null) {
-                    return '';
-                }
+
                 return is_string($value) || is_numeric($value) ? (string) $value : '';
         }
     }
 
     /**
      * Flatten available columns array for easier processing
-     * 
+     *
      * @return array<string, string>
      */
     private function flattenAvailableColumns(): array
@@ -229,7 +231,7 @@ class RegistrationExportService
 
     /**
      * Get column groups for modal organization
-     * 
+     *
      * @return array<string, string>
      */
     public function getColumnGroups(): array
